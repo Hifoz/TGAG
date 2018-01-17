@@ -118,7 +118,7 @@ public static class SimplexNoise {
     /// </summary>
     /// <param name="point"></param>
     /// <param name="frequency"></param>
-    /// <returns>float value noise</returns>
+    /// <returns>float value noise -1 to 1 range</returns>
     public static float SimplexValue1D(Vector3 point, float frequency) {
         point *= frequency;
 
@@ -136,7 +136,7 @@ public static class SimplexNoise {
     /// </summary>
     /// <param name="point"></param>
     /// <param name="frequency"></param>
-    /// <returns>float value noise</returns>
+    /// <returns>float value noise -1 to 1 range</returns>
     public static float SimplexValue2D(Vector3 point, float frequency) {
         point *= frequency;
 
@@ -165,7 +165,7 @@ public static class SimplexNoise {
     /// </summary>
     /// <param name="point"></param>
     /// <param name="frequency"></param>
-    /// <returns>float value noise</returns>
+    /// <returns>float value noise -1 to 1 range</returns>
     public static float SimplexValue3D(Vector3 point, float frequency) {
         point *= frequency;
 
@@ -289,7 +289,7 @@ public static class SimplexNoise {
     /// </summary>
     /// <param name="point"></param>
     /// <param name="frequency"></param>
-    /// <returns>float  noise</returns>
+    /// <returns>float  noise -1 to 1 range</returns>
     public static float Simplex1D(Vector3 point, float frequency) {
         point *= frequency;
 
@@ -307,7 +307,7 @@ public static class SimplexNoise {
     /// </summary>
     /// <param name="point"></param>
     /// <param name="frequency"></param>
-    /// <returns>float  noise</returns>
+    /// <returns>float  noise -1 to 1 range</returns>
     public static float Simplex2D(Vector3 point, float frequency) {
         point *= frequency;
 
@@ -336,7 +336,7 @@ public static class SimplexNoise {
     /// </summary>
     /// <param name="point"></param>
     /// <param name="frequency"></param>
-    /// <returns>float  noise</returns>
+    /// <returns>float  noise -1 to 1 range</returns>
     public static float Simplex3D(Vector3 point, float frequency) {
         point *= frequency;
 

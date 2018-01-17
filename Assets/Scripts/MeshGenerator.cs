@@ -19,7 +19,9 @@ public class MeshGenerator {
     }
 
 
-
+    /// <summary>
+    /// Initialiizes the contents of the generator
+    /// </summary>
     private void Initialize()
     {
         mesh = new Mesh();
@@ -35,7 +37,7 @@ public class MeshGenerator {
     /// <returns>a mesh made from the input data</returns>
     public static Mesh GenerateMesh(int[,,] pointmap)
     {
-        MeshGenerator vmg = new MeshGenerator(); // Hack to make interface towards mesh generator static. TODO: Do this in a better way.
+        MeshGenerator vmg = new MeshGenerator(); // Hack to make interface towards mesh generator static. TODO: Do this in a not so dirty way.
         vmg.Initialize();
 
         vmg.pointmap = pointmap;

@@ -10,8 +10,13 @@ public class ChunkVoxelMesh {
         CVD = new ChunkVoxelData();
     }
 
+    /// <summary>
+    /// Gets a new mesh for given position
+    /// </summary>
+    /// <param name="pos">position of chunk to get mesh for</param>
+    /// <returns></returns>
     public Mesh getVoxelMesh(Vector3 pos) {
-        int[,,] voxelData = testData();// CVD.getChunkVoxelData(pos);
+        int[,,] voxelData = CVD.getChunkVoxelData(pos);
 
         Mesh mesh = MeshGenerator.GenerateMesh(voxelData);
 
@@ -19,7 +24,10 @@ public class ChunkVoxelMesh {
     }
 
 
-
+    /// <summary>
+    /// Just some test data for mesh generator
+    /// </summary>
+    /// <returns>test data</returns>
     private int[,,] testData() {
         int[,,] points = new int[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize];
 
