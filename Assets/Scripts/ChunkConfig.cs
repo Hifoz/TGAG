@@ -6,5 +6,5 @@ public static class ChunkConfig {
     public static float voxelSize = 1;
     public static int chunkSize = 10;
     public static int chunkCount = 11;
-    public static int chunkHeight = 64;
+    public static int chunkHeight = 50; // Chunk height must not exceed 5376 / chunkSize^2
 }

@@ -205,6 +205,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 2079808781}
+  chunkPrefab: {fileID: 1818736290914746, guid: 418521e80a6a4c64e8a2f9d1d24db817,
+    type: 2}
 --- !u!4 &988479787
 Transform:
   m_ObjectHideFlags: 0

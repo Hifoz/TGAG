@@ -9,6 +9,7 @@ using UnityEngine;
 public class ChunkManager : MonoBehaviour {
 
     public Transform player;
+    public GameObject chunkPrefab;
     Vector3 offset = new Vector3(-ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize);
     List<GameObject> activeChunks = new List<GameObject>();
     List<GameObject> inactiveChunks = new List<GameObject>();
@@ -16,7 +17,7 @@ public class ChunkManager : MonoBehaviour {
 
 
 
-    ChunkVoxelMesh CVM;
+    ChunkVoxelMesh CVM = new ChunkVoxelMesh();
 
 	// Use this for initialization
 	void Start () {
@@ -114,12 +115,13 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="pos">The position of the chunk</param>
     /// <returns>GameObject Chunk</returns>
     private GameObject createChunk(float size, Vector3 pos) {
-        var chunk = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        chunk.transform.localScale = new Vector3(size, size, size);
+
+        GameObject chunk = Instantiate(chunkPrefab);
+        chunk.transform.parent = transform;
+        chunk.name = "chunk";
+        chunk.GetComponent<MeshFilter>().mesh = CVM.getVoxelMesh(pos);
         chunk.transform.position = pos;
         return chunk;
-
-        //Make a gameobject with the mesh from getVoxelMesh
     }
 
     private Mesh getVoxelMesh(Vector3 pos) {
