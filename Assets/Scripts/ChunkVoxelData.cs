@@ -23,7 +23,7 @@ public class ChunkVoxelData {
         for(int x = 0; x < ChunkConfig.chunkSize; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize; z++) {
-                    Vector3 samplePos = new Vector3(x, y, z) + pos;
+                    Vector3 samplePos = new Vector3(x + pos.x, z + pos.z, 0);
                     if (y < calcHeight(samplePos))
                         data[x, y, z] = 1;
                     else
@@ -42,6 +42,6 @@ public class ChunkVoxelData {
     private float calcHeight(Vector3 pos) {
         float noise = SimplexNoise.Simplex2D(pos, ChunkConfig.frequency);
         float noise01 = (noise + 1f) / 2f;
-        return noise * ChunkConfig.chunkHeight;
+        return noise01 * ChunkConfig.chunkHeight;
     }
 }
