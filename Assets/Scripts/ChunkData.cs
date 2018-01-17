@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+/// <summary>
+/// A structure containing data on a chunk
+/// </summary>
 class ChunkData {
-    private Mesh mesh;
+    ChunkVoxelMesh CVM = new ChunkVoxelMesh();
 
+    private Mesh mesh; // Might want to use multiple meshes for each chunk?, as each mesh can only be 53 tall with a chunkSize of 10 (current)
     private Vector3 position;
 
-    ChunkVoxelMesh CVM = new ChunkVoxelMesh();
 
     /// <summary>
     /// Construct a new chunk
@@ -17,7 +19,7 @@ class ChunkData {
     public ChunkData(Vector3 pos) {
         position = pos;
 
-        mesh = CVM.getVoxelMesh(pos); // This part can be threaded out.
+        mesh = CVM.getVoxelMesh(pos); // This part seems like an easy place to start threading out the resource heavy parts of chunk generation :P
     }
 
     public Mesh getMesh() {
