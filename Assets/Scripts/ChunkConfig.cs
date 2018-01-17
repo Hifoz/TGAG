@@ -7,4 +7,7 @@ public static class ChunkConfig {
     public static int chunkSize = 10;
     public static int chunkCount = 11;
     public static int chunkHeight = 64;
+
+    //Noise parameters:
+    public static float frequency = 0.02f;
 }
