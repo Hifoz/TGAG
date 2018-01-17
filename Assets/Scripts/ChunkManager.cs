@@ -9,19 +9,22 @@ using UnityEngine;
 public class ChunkManager : MonoBehaviour {
 
     public Transform player;
-    const int chunkCount = 11;
-    const float chunkSize = 10;
-    Vector3 offset = new Vector3(-chunkSize / 2f * chunkSize, 0, -chunkSize / 2f * chunkSize);
+    Vector3 offset = new Vector3(-ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize);
     List<GameObject> activeChunks = new List<GameObject>();
     List<GameObject> inactiveChunks = new List<GameObject>();
-    GameObject[,] chunkGrid = new GameObject[chunkCount, chunkCount];
+    GameObject[,] chunkGrid;
+
+
+
+    ChunkVoxelMesh CVM;
 
 	// Use this for initialization
-	void Start () {  
-        for (int x = 0; x < chunkCount; x++) {
-            for (int z = 0; z < chunkCount; z++) {
-                Vector3 chunkPos = new Vector3(x, 0, z) * chunkSize + offset + getPlayerPos();
-                activeChunks.Add(createChunk(chunkSize, chunkPos));
+	void Start () {
+        chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
+            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
+                activeChunks.Add(createChunk(ChunkConfig.chunkSize, chunkPos));
             }
         }	
 	}
@@ -37,8 +40,8 @@ public class ChunkManager : MonoBehaviour {
     /// Clears all elements in the chunkGrid
     /// </summary>
     private void clearChunkGrid() {
-        for (int x = 0; x < chunkCount; x++) {
-            for (int z = 0; z < chunkCount; z++) {
+        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
+            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 chunkGrid[x, z] = null;
             }
         }
@@ -50,7 +53,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void updateChunkGrid() {
         for (int i = 0; i < activeChunks.Count; i++) {
-            Vector3 chunkPos = (activeChunks[i].transform.position - offset - getPlayerPos()) / chunkSize;
+            Vector3 chunkPos = (activeChunks[i].transform.position - offset - getPlayerPos()) / ChunkConfig.chunkSize;
             int ix = Mathf.FloorToInt(chunkPos.x);
             int iz = Mathf.FloorToInt(chunkPos.z);
             if (checkBounds(ix, iz)) {
@@ -67,14 +70,14 @@ public class ChunkManager : MonoBehaviour {
     /// Deploys inactive chunks into empty cells of the chunkgrid.
     /// </summary>
     private void deployInactiveChunks() {
-        for (int x = 0; x < chunkCount; x++) {
-            for (int z = 0; z < chunkCount; z++) {
+        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
+            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 if (inactiveChunks.Count == 0) return;
                 if (chunkGrid[x, z] == null) {
                     var chunk = inactiveChunks[0];
                     inactiveChunks.RemoveAt(0);
                     chunkGrid[x, z] = chunk;
-                    Vector3 chunkPos = new Vector3(x, 0, z) * chunkSize + offset + getPlayerPos();
+                    Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                     chunk.transform.position = chunkPos;
                     activeChunks.Add(chunk);
                 }
@@ -101,7 +104,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="y">y index (worldspace z)</param>
     /// <returns>bool in bound</returns>
     private bool checkBounds(int x, int y) {
-        return (x >= 0 && x < chunkCount && y >= 0 && y < chunkCount);
+        return (x >= 0 && x < ChunkConfig.chunkCount && y >= 0 && y < ChunkConfig.chunkCount);
     }
 
     /// <summary>
@@ -115,5 +118,12 @@ public class ChunkManager : MonoBehaviour {
         chunk.transform.localScale = new Vector3(size, size, size);
         chunk.transform.position = pos;
         return chunk;
+
+        //Make a gameobject with the mesh from getVoxelMesh
+    }
+
+    private Mesh getVoxelMesh(Vector3 pos) {
+        //Some ChunkVoxelMesh magic here
+        return new Mesh();
     }
 }
