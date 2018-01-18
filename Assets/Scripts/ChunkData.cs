@@ -19,7 +19,7 @@ class ChunkData {
     public ChunkData(Vector3 pos) {
         position = pos;
 
-        mesh = CVM.getVoxelMesh(pos); // This part seems like an easy place to start threading out the resource heavy parts of chunk generation :P
+        mesh = CVM.getVoxelMesh(pos);
     }
 
     public Mesh getMesh() {
