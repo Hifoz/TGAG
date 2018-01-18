@@ -13,8 +13,7 @@ public class MeshGenerator {
     private Mesh mesh;
     private int[,,] pointmap;
 
-    public enum FaceDirection
-    {
+    public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
 
@@ -22,8 +21,7 @@ public class MeshGenerator {
     /// <summary>
     /// Initialiizes the contents of the generator
     /// </summary>
-    private void Initialize()
-    {
+    private void Initialize() {
         mesh = new Mesh();
         vertices = new List<Vector3>();
         triangles = new List<int>();
@@ -35,8 +33,7 @@ public class MeshGenerator {
     /// </summary>
     /// <param name="pointmap">data used to build cubes</param>
     /// <returns>a mesh made from the input data</returns>
-    public static Mesh GenerateMesh(int[,,] pointmap)
-    {
+    public static Mesh GenerateMesh(int[,,] pointmap) {
         MeshGenerator vmg = new MeshGenerator(); // Hack to make interface towards mesh generator static. TODO: Do this in a not so dirty way.
         vmg.Initialize();
 
@@ -63,8 +60,7 @@ public class MeshGenerator {
     /// </summary>
     /// <param name="cubePos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is</param>
-    private void GenerateCube(Vector3 cubePos, int cubetype)
-    {
+    private void GenerateCube(Vector3 cubePos, int cubetype) {
         if (cubePos.x == pointmap.GetLength(0) - 1 || pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z] == 0) GenerateCubeFace(FaceDirection.xp, cubePos, cubetype);
         if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z] == 0) GenerateCubeFace(FaceDirection.yp, cubePos, cubetype);
         if (cubePos.z == pointmap.GetLength(2) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1] == 0) GenerateCubeFace(FaceDirection.zp, cubePos, cubetype);
@@ -80,8 +76,7 @@ public class MeshGenerator {
     /// <param name="dir">direction of face</param>
     /// <param name="pointPos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
-    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, int cubetype)
-    {
+    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, int cubetype) {
         int vertIndex = vertices.Count;
         switch (dir) {
             case FaceDirection.xp:
@@ -141,8 +136,7 @@ public class MeshGenerator {
     /// <summary>
     /// Clears the mesh
     /// </summary>
-    private void ClearMesh()
-    {
+    private void ClearMesh() {
         vertices.Clear();
         triangles.Clear();
         colors.Clear();
@@ -153,8 +147,7 @@ public class MeshGenerator {
     /// <summary>
     /// Recalculates the mesh
     /// </summary>
-    private void Recalculate()
-    {
+    private void Recalculate() {
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.colors = colors.ToArray();

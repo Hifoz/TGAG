@@ -15,13 +15,13 @@ public class ChunkManager : MonoBehaviour {
     List<GameObject> inactiveChunks = new List<GameObject>();
     GameObject[,] chunkGrid;
 
-    Dictionary<Vector3, Mesh> meshStorage = new Dictionary<Vector3, Mesh>();
+    Dictionary<Vector3, ChunkData> chunkStorage = new Dictionary<Vector3, ChunkData>();
 
 
 
-    ChunkVoxelMesh CVM = new ChunkVoxelMesh();
-
-	// Use this for initialization
+	/// <summary>
+    /// Generate an initial set of chunks in the world
+    /// </summary>
 	void Start () {
         chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
@@ -82,7 +82,7 @@ public class ChunkManager : MonoBehaviour {
                     chunkGrid[x, z] = chunk;
                     Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                     chunk.transform.position = chunkPos;
-                    chunk.GetComponent<MeshFilter>().mesh = getVoxelMesh(chunkPos);
+                    chunk.GetComponent<MeshFilter>().mesh = getChunkData(chunkPos).getMesh();
                     activeChunks.Add(chunk);
                 }
             }
@@ -122,28 +122,27 @@ public class ChunkManager : MonoBehaviour {
         GameObject chunk = Instantiate(chunkPrefab);
         chunk.transform.parent = transform;
         chunk.name = "chunk";
-        chunk.GetComponent<MeshFilter>().mesh = getVoxelMesh(pos);
+        ChunkData chunkData = new ChunkData(pos);
+        chunk.GetComponent<MeshFilter>().mesh = chunkData.getMesh();
         chunk.transform.position = pos;
         return chunk;
     }
 
 
     /// <summary>
-    /// Gets a mesh for a chunk.
-    /// Tries to get an existing, but will create a new mesh if there is none for the given chunk
+    /// Gets chunkdata for a chunk.
+    /// Tries to get an existing, but will create a new ChunkData object if there is none for the given chunk
     /// </summary>
-    /// <param name="pos">position of chunk to get mesh for</param>
-    /// <returns>mesh for a chunk</returns>
-    private Mesh getVoxelMesh(Vector3 pos) {
-
-        if (meshStorage.ContainsKey(pos)) {
-            Debug.Log("Getting existing mesh");
-            return meshStorage[pos];
-        } else {
-            Debug.Log("Creating new mesh");
-            Mesh newMesh = CVM.getVoxelMesh(pos);
-            meshStorage.Add(pos, newMesh);
-            return newMesh;
+    /// <param name="pos">position of chunk</param>
+    /// <returns>a chunk</returns>
+    private ChunkData getChunkData(Vector3 pos) {
+        if (chunkStorage.ContainsKey(pos)) {
+            return chunkStorage[pos];
+        }
+        else {
+            ChunkData newChunk = new ChunkData(pos);
+            chunkStorage.Add(pos, newChunk);
+            return newChunk;
         }
     }
 }
