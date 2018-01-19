@@ -8,13 +8,12 @@ using UnityEngine;
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshGenerator {
-    private List<Vector3> vertices;
-    private List<int> triangles;
-    private List<Color> colors;
-    private List<Vector2> uvs;
-    private Mesh mesh;
+    private List<Vector3> vertices = new List<Vector3>();
+    private List<int> triangles = new List<int>();
+    private List<Color> colors = new List<Color>();
+    private List<Vector2> uvs = new List<Vector2>();
+    private Mesh mesh = new Mesh();
     private int[,,] pointmap;
-    public static Texture textureMap;
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -22,24 +21,12 @@ public class MeshGenerator {
 
 
     /// <summary>
-    /// Initialiizes the contents of the generator
-    /// </summary>
-    private void Initialize() {
-        mesh = new Mesh();
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
-        colors = new List<Color>();
-        uvs = new List<Vector2>();
-    }
-
-    /// <summary>
     /// Generates a mesh of cubes
     /// </summary>
     /// <param name="pointmap">data used to build cubes</param>
     /// <returns>a mesh made from the input data</returns>
     public static Mesh GenerateMesh(int[,,] pointmap) {
-        MeshGenerator vmg = new MeshGenerator(); // Hack to make interface towards mesh generator static. TODO: Do this in a not so dirty way.
-        vmg.Initialize();
+        MeshGenerator vmg = new MeshGenerator();
 
         vmg.pointmap = pointmap;
         for (int x = 0; x < pointmap.GetLength(0); x++) {
@@ -50,7 +37,6 @@ public class MeshGenerator {
                 }
             }
         }
-
 
         vmg.Recalculate();
 
@@ -82,8 +68,8 @@ public class MeshGenerator {
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
     private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, int cubetype) {
         int vertIndex = vertices.Count;
-        int xOffset = 0;
-        int yOffset = 1;
+
+        int textureYoffset = 1;
 
         switch (dir) {
             case FaceDirection.xp:
@@ -103,14 +89,14 @@ public class MeshGenerator {
                                                 pointPos + new Vector3(-0.5f, 0.5f,  0.5f),
                                                 pointPos + new Vector3(0.5f,  0.5f, -0.5f),
                                                 pointPos + new Vector3(0.5f,  0.5f,  0.5f)});
-                yOffset = 2;
+                textureYoffset = 2;
                 break;
             case FaceDirection.ym:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, -0.5f),
                                                 pointPos + new Vector3(0.5f,  -0.5f, -0.5f),
                                                 pointPos + new Vector3(-0.5f, -0.5f,  0.5f),
                                                 pointPos + new Vector3(0.5f,  -0.5f,  0.5f)});
-                yOffset = 0;
+                textureYoffset = 0;
                 break;
             case FaceDirection.zp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, 0.5f),
@@ -128,22 +114,22 @@ public class MeshGenerator {
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
-        AddTextureCoordinates(xOffset, yOffset, dir);
+
+        AddTextureCoordinates(cubetype + 1, textureYoffset, dir);
 
     }
 
     /// <summary>
     /// Adds texture coordinates for a cube face
     /// </summary>
-    /// <param name="xOffset">Decided by the type of cube</param>
-    /// <param name="yOffset">Decided by the  direction of the face</param>
+    /// <param name="xOffset">Decided by the cubetype</param>
+    /// <param name="yOffset">Decided by the direction of the face</param>
+    /// <param name="dir">Direction of the face</param>
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir) {
         int textureSize = 512;
         int numberOfTextures = Resources.Load<Texture>("Textures/terrainTextures").width / textureSize;
         float padding = 20;
-
-
-        xOffset %= numberOfTextures;
+        
         xOffset /= numberOfTextures;
         float xOffsetO = xOffset + 1f/numberOfTextures;
 
@@ -166,7 +152,8 @@ public class MeshGenerator {
             { 0, 1, 2, 3 },
             { 2, 0, 3, 1 },
             { 3, 2, 1, 0 },
-            { 1, 3, 0, 2 }};
+            { 1, 3, 0, 2 }
+        };
 
 
         int rotation;
@@ -179,8 +166,7 @@ public class MeshGenerator {
             case FaceDirection.zp:
                 rotation = 1;
                 break;
-            default:
-                // Select random rotation for top and bottom faces
+            default: // yp & ym
                 rotation = UnityEngine.Random.Range(0, 4);
                 break;
         }
