@@ -82,7 +82,7 @@ public class MeshGenerator {
     private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, int cubetype) {
         int vertIndex = vertices.Count;
         int xOffset = 0;
-        int yOffset = 0;
+        int yOffset = 1;
 
         switch (dir) {
             case FaceDirection.xp:
@@ -109,7 +109,7 @@ public class MeshGenerator {
                                                 pointPos + new Vector3(0.5f,  -0.5f, -0.5f),
                                                 pointPos + new Vector3(-0.5f, -0.5f,  0.5f),
                                                 pointPos + new Vector3(0.5f,  -0.5f,  0.5f)});
-                yOffset = 1;
+                yOffset = 0;
                 break;
             case FaceDirection.zp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, 0.5f),
@@ -127,18 +127,6 @@ public class MeshGenerator {
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
-
-        switch (cubetype) {
-            case 1:
-                colors.AddRange(Enumerable.Repeat(Color.white, 4).ToArray());
-                xOffset = 0;
-                break;
-            case 2:
-                colors.AddRange(Enumerable.Repeat(Color.gray, 4).ToArray());
-                // xOffset = 1;
-                break;
-        }
-
         AddTextureCoordinates(xOffset, yOffset, dir);
 
     }
@@ -151,27 +139,47 @@ public class MeshGenerator {
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir) {
         int numberOfTextures = 1;
         xOffset /= numberOfTextures;
+        float xOffsetO = xOffset + 1f/numberOfTextures;
+
+        yOffset /= 3;
+        float yOffsetO = yOffset + 1f/3;
+
+
 
         Vector2[] coords = new Vector2[]{
-            new Vector2(0, (yOffset) / 3),
-            new Vector2(0, (yOffset + 1) / 3),
-            new Vector2(1, (yOffset) / 3),
-            new Vector2(1, (yOffset + 1) / 3)
+            new Vector2(xOffset  + 0.05f, yOffset  + 0.05f),
+            new Vector2(xOffset  + 0.05f, yOffsetO - 0.05f),
+            new Vector2(xOffsetO - 0.05f, yOffset  + 0.05f),
+            new Vector2(xOffsetO - 0.05f, yOffsetO - 0.05f)
         };
 
+        int[,] rotations = new int[,] {
+            { 0, 1, 2, 3 },
+            { 2, 0, 3, 1 },
+            { 3, 2, 1, 0 },
+            { 1, 3, 0, 2 }};
 
+
+        int rotation;
         switch (dir) {
+            case FaceDirection.xp:
+            case FaceDirection.zm:
+                rotation = 0;
+                break;
             case FaceDirection.xm:
             case FaceDirection.zp:
-                uvs.AddRange(new Vector2[] { coords[2], coords[0], coords[3], coords[1] });
-                break;
-            case FaceDirection.ym:
-                uvs.AddRange(new Vector2[] { coords[1], coords[3], coords[0], coords[2] });
+                rotation = 1;
                 break;
             default:
-                uvs.AddRange(coords);
+                // Select random rotation for top and bottom faces
+                rotation = UnityEngine.Random.Range(0, 4);
                 break;
         }
+
+        for(int i = 0; i < 4; i++) {
+            uvs.Add(coords[rotations[rotation, i]]);
+        }
+
         
     }
 
