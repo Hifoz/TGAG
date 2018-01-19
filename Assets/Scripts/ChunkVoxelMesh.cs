@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,6 +22,15 @@ public class ChunkVoxelMesh {
         Mesh mesh = MeshGenerator.GenerateMesh(voxelData);
 
         return mesh;
+    }
+
+    /// <summary>
+    /// Only for testing
+    /// </summary>
+    /// <returns>a single cube</returns>
+    private int[,,] singleCube()
+    {
+        return new int[,,] { { { 1 } } };
     }
 
 
