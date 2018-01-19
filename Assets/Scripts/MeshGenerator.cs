@@ -14,6 +14,7 @@ public class MeshGenerator {
     private List<Vector2> uvs;
     private Mesh mesh;
     private int[,,] pointmap;
+    public static Texture textureMap;
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -137,20 +138,28 @@ public class MeshGenerator {
     /// <param name="xOffset">Decided by the type of cube</param>
     /// <param name="yOffset">Decided by the  direction of the face</param>
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir) {
-        int numberOfTextures = 1;
+        int textureSize = 512;
+        int numberOfTextures = Resources.Load<Texture>("Textures/terrainTextures").width / textureSize;
+        float padding = 20;
+
+
+        xOffset %= numberOfTextures;
         xOffset /= numberOfTextures;
         float xOffsetO = xOffset + 1f/numberOfTextures;
 
         yOffset /= 3;
         float yOffsetO = yOffset + 1f/3;
 
+        int texturemapwidth = numberOfTextures * textureSize;
+        float paddingx = padding / texturemapwidth;
+        float paddingy = padding / (textureSize * 3);
 
 
         Vector2[] coords = new Vector2[]{
-            new Vector2(xOffset  + 0.05f, yOffset  + 0.05f),
-            new Vector2(xOffset  + 0.05f, yOffsetO - 0.05f),
-            new Vector2(xOffsetO - 0.05f, yOffset  + 0.05f),
-            new Vector2(xOffsetO - 0.05f, yOffsetO - 0.05f)
+            new Vector2(xOffset  + paddingx, yOffset  + paddingy),
+            new Vector2(xOffset  + paddingx, yOffsetO - paddingy),
+            new Vector2(xOffsetO - paddingx, yOffset  + paddingy),
+            new Vector2(xOffsetO - paddingx, yOffsetO - paddingy)
         };
 
         int[,] rotations = new int[,] {

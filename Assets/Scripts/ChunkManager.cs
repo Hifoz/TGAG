@@ -19,18 +19,18 @@ public class ChunkManager : MonoBehaviour {
 
 
 
-	/// <summary>
+    /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
-	void Start () {
+    void Start () {
         chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                 activeChunks.Add(createChunk(ChunkConfig.chunkSize, chunkPos));
             }
-        }	
-	}
+        }
+    }
 	
 	// Update is called once per frame
 	void Update () {
