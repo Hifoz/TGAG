@@ -5,6 +5,9 @@ using UnityEngine;
 /// <summary>
 /// First draft of ChunkManager, the class responsible for handling the chunks in the game world.
 /// In the future it will depend on a multithreaded system for procedurally generating voxel meshes for the chunks.
+/// 
+/// Edit 20.01.18:
+/// The class now uses threads for generation.
 /// </summary>
 public class ChunkManager : MonoBehaviour {
 
@@ -18,7 +21,7 @@ public class ChunkManager : MonoBehaviour {
     private Dictionary<Vector3, ChunkData> chunkStorage = new Dictionary<Vector3, ChunkData>();
 
     private const int CVDTCount = 3;
-    private ChunVoxelDataThread[] CVDT = new ChunVoxelDataThread[CVDTCount];
+    private ChunkVoxelDataThread[] CVDT = new ChunkVoxelDataThread[CVDTCount];
     private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
@@ -28,14 +31,14 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     void Start () {
         for (int i = 0; i < CVDTCount; i++) {
-            CVDT[i] = new ChunVoxelDataThread(orders, results);
+            CVDT[i] = new ChunkVoxelDataThread(orders, results);
         }
 
         chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-                inactiveChunks.Add(createChunk(ChunkConfig.chunkSize, chunkPos));
+                inactiveChunks.Add(createChunk(chunkPos));
             }
         }
     }
@@ -115,24 +118,6 @@ public class ChunkManager : MonoBehaviour {
     }
 
     /// <summary>
-    /// Not implemented.
-    /// </summary>
-    /// <param name="pos"></param>
-    /// <returns></returns>
-    private Vector3 world2ChunkPos(Vector3 pos) {
-        throw new NotImplementedException("NOT IMPLEMENTED");
-    }
-
-    /// <summary>
-    /// Not implemented.
-    /// </summary>
-    /// <param name="pos"></param>
-    /// <returns></returns>
-    private Vector3 chunk2WorldPos(Vector3 pos) {
-        throw new NotImplementedException("NOT IMPLEMENTED");
-    }
-
-    /// <summary>
     /// Checks if X and Y are in bound for the ChunkGrid array.
     /// </summary>
     /// <param name="x">x index</param>
@@ -148,8 +133,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="size">The size of the chunk</param>
     /// <param name="pos">The position of the chunk</param>
     /// <returns>GameObject Chunk</returns>
-    private GameObject createChunk(float size, Vector3 pos) {
-
+    private GameObject createChunk(Vector3 pos) {
         GameObject chunk = Instantiate(chunkPrefab);
         chunk.transform.parent = transform;
         chunk.name = "chunk";
@@ -160,10 +144,11 @@ public class ChunkManager : MonoBehaviour {
 
     /// <summary>
     /// Gets chunkdata for a chunk.
-    /// Tries to get an existing, but will create a new ChunkData object if there is none for the given chunk
+    /// Tries to get an existing, but will create an order for the ChunkVoxelDataThread(s) to make a new ChunkData object if there is none for the given chunk.
+    /// Returns success status.
     /// </summary>
     /// <param name="pos">position of chunk</param>
-    /// <returns>a chunk</returns>
+    /// <returns>bool success</returns>
     private bool tryGetChunkData(Vector3 pos, out ChunkData chunkData) {
         while(results.getCount() > 0) {
             var chunk = results.Dequeue();
@@ -185,15 +170,18 @@ public class ChunkManager : MonoBehaviour {
         }
     }
 
-    private void OnDestroy() {
+    private void stopThreads() {
         foreach (var thread in CVDT) {
+            orders.Enqueue(Vector3.down);
             thread.stop();
         }
     }
 
+    private void OnDestroy() {
+        stopThreads();
+    }
+
     private void OnApplicationQuit() {
-        foreach (var thread in CVDT) {
-            thread.stop();
-        }
+        stopThreads();
     }
 }

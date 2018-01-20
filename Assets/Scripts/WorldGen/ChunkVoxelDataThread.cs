@@ -11,7 +11,7 @@ public class ChunkVoxelData {
 /// <summary>
 /// A thread that generates chunkdata based on positions.
 /// </summary>
-public class ChunVoxelDataThread {
+public class ChunkVoxelDataThread {
 
     private Thread thread;
     private BlockingQueue<Vector3> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
@@ -24,7 +24,7 @@ public class ChunVoxelDataThread {
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunVoxelDataThread(BlockingQueue<Vector3> orders, LockingQueue<ChunkVoxelData> results) {        
+    public ChunkVoxelDataThread(BlockingQueue<Vector3> orders, LockingQueue<ChunkVoxelData> results) {        
         this.orders = orders;
         this.results = results;
         run = true;
@@ -55,6 +55,9 @@ public class ChunVoxelDataThread {
         while (run) {
             var order = orders.Dequeue();
             var result = new ChunkVoxelData();
+            if (result.chunkPos == Vector3.down) {
+                break;
+            }
             result.chunkPos = order;
             result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
             results.Enqueue(result);
