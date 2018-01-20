@@ -31,7 +31,9 @@ class BlockingQueue<T> {
     /// </summary>
     /// <param name="data">The item T to enqueue</param>
     public void Enqueue(T data) {
-        if (data == null) throw new ArgumentNullException("data");
+        if (data == null) {
+            throw new ArgumentNullException("data");
+        }
 
         lock (queue) {
             queue.Enqueue(data);

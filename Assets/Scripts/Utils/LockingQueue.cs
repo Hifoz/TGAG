@@ -32,7 +32,9 @@ class LockingQueue<T> {
     /// </summary>
     /// <param name="data">The item to enqueue</param>
     public void Enqueue(T data) {
-        if (data == null) throw new ArgumentNullException("data");
+        if (data == null) {
+            throw new ArgumentNullException("data");
+        }
 
         lock (queue) {
             queue.Enqueue(data);
@@ -46,9 +48,7 @@ class LockingQueue<T> {
     /// <returns>int count</returns>
     public int getCount() {
         lock (queue) {
-            lock (count) {
-                return count;
-            }
+            return count;
         }
     }
 }
