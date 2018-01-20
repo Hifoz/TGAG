@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class ChunkVoxelMesh {
 
-    ChunkVoxelData CVD;
+    ChunkVoxelDataGenerator CVDG;
 
     public ChunkVoxelMesh() {
-        CVD = new ChunkVoxelData();
+        CVDG = new ChunkVoxelDataGenerator();
     }
 
     /// <summary>
@@ -17,10 +17,20 @@ public class ChunkVoxelMesh {
     /// <param name="pos">position of chunk to get mesh for</param>
     /// <returns></returns>
     public Mesh getVoxelMesh(Vector3 pos) {
-        int[,,] voxelData = CVD.getChunkVoxelData(pos);
+        int[,,] voxelData = CVDG.getChunkVoxelData(pos);
 
         Mesh mesh = MeshGenerator.GenerateMesh(voxelData);
 
+        return mesh;
+    }
+
+    /// <summary>
+    /// Gets a new mesh for given position
+    /// </summary>
+    /// <param name="pos">position of chunk to get mesh for</param>
+    /// <returns></returns>
+    public Mesh getVoxelMesh(ChunkVoxelData CVD) {
+        Mesh mesh = MeshGenerator.GenerateMesh(CVD.voxelData);
         return mesh;
     }
 

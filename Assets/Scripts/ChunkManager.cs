@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,12 +10,19 @@ public class ChunkManager : MonoBehaviour {
 
     public Transform player;
     public GameObject chunkPrefab;
-    Vector3 offset = new Vector3(-ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize);
-    List<GameObject> activeChunks = new List<GameObject>();
-    List<GameObject> inactiveChunks = new List<GameObject>();
-    GameObject[,] chunkGrid;
+    private Vector3 offset = new Vector3(-ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize);
+    private List<GameObject> activeChunks = new List<GameObject>();
+    private List<GameObject> inactiveChunks = new List<GameObject>();
+    private GameObject[,] chunkGrid;
 
-    Dictionary<Vector3, ChunkData> chunkStorage = new Dictionary<Vector3, ChunkData>();
+    private Dictionary<Vector3, ChunkData> chunkStorage = new Dictionary<Vector3, ChunkData>();
+
+    private const int CVDTCount = 3;
+    private ChunVoxelDataThread[] CVDT = new ChunVoxelDataThread[CVDTCount];
+    private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
+    private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+    private Dictionary<Vector3, ChunkData> pendingChunks = new Dictionary<Vector3, ChunkData>(); //Chunks that are currently worked on my CVDT
+
 
 
 
@@ -23,6 +30,10 @@ public class ChunkManager : MonoBehaviour {
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start () {
+        for (int i = 0; i < CVDTCount; i++) {
+            CVDT[i] = new ChunVoxelDataThread(orders, results);
+        }
+
         chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
@@ -75,14 +86,19 @@ public class ChunkManager : MonoBehaviour {
     private void deployInactiveChunks() {
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-                if (inactiveChunks.Count == 0) return;
-                if (chunkGrid[x, z] == null) {
+                if (inactiveChunks.Count == 0) {
+                    return;
+                }
+
+                ChunkData cd;
+                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
+                if (chunkGrid[x, z] == null && tryGetChunkData(chunkPos, out cd)) {
                     var chunk = inactiveChunks[0];
                     inactiveChunks.RemoveAt(0);
                     chunkGrid[x, z] = chunk;
-                    Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
+                    
                     chunk.transform.position = chunkPos;
-                    chunk.GetComponent<MeshFilter>().mesh = getChunkData(chunkPos).getMesh();
+                    chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
                     activeChunks.Add(chunk);
                 }
             }
@@ -99,6 +115,24 @@ public class ChunkManager : MonoBehaviour {
         x = Mathf.Floor(x / 10) * 10;
         z = Mathf.Floor(z / 10) * 10;
         return new Vector3(x, 0, z);
+    }
+
+    /// <summary>
+    /// Not implemented.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    private Vector3 world2ChunkPos(Vector3 pos) {
+        throw new NotImplementedException("NOT IMPLEMENTED");
+    }
+
+    /// <summary>
+    /// Not implemented.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    private Vector3 chunk2WorldPos(Vector3 pos) {
+        throw new NotImplementedException("NOT IMPLEMENTED");
     }
 
     /// <summary>
@@ -135,14 +169,35 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     /// <param name="pos">position of chunk</param>
     /// <returns>a chunk</returns>
-    private ChunkData getChunkData(Vector3 pos) {
+    private bool tryGetChunkData(Vector3 pos, out ChunkData chunkData) {
+        while(results.getCount() > 0) {
+            var chunk = results.Dequeue();
+            pendingChunks.Remove(chunk.chunkPos);
+            chunkStorage.Add(chunk.chunkPos, new ChunkData(chunk));
+        }
+
         if (chunkStorage.ContainsKey(pos)) {
-            return chunkStorage[pos];
+            chunkData = chunkStorage[pos];
+            return true;
         }
         else {
-            ChunkData newChunk = new ChunkData(pos);
-            chunkStorage.Add(pos, newChunk);
-            return newChunk;
+            if (!pendingChunks.ContainsKey(pos)) {
+                orders.Enqueue(pos);
+            }
+            chunkData = new ChunkData();
+            return false;
+        }
+    }
+
+    private void OnDestroy() {
+        foreach (var thread in CVDT) {
+            thread.stop();
+        }
+    }
+
+    private void OnApplicationQuit() {
+        foreach (var thread in CVDT) {
+            thread.stop();
         }
     }
 }

@@ -11,6 +11,12 @@ public class ChunkData {
     private Mesh mesh; // Might want to use multiple meshes for each chunk?, as each mesh can only be 53 tall with a chunkSize of 10 (current)
     private Vector3 position;
 
+    /// <summary>
+    /// Empty constructor
+    /// </summary>
+    public ChunkData() {
+
+    }
 
     /// <summary>
     /// Construct a new chunk
@@ -22,8 +28,21 @@ public class ChunkData {
         mesh = CVM.getVoxelMesh(pos);
     }
 
+    /// <summary>
+    /// Construct a new chunk
+    /// </summary>
+    /// <param name="pos">position of the chunk</param>
+    public ChunkData(ChunkVoxelData CVD) {
+        position = CVD.chunkPos;
+
+        mesh = CVM.getVoxelMesh(CVD.chunkPos);
+    }
+
+    public Vector3 getPos() {
+        return position;
+    }
+
     public Mesh getMesh() {
         return mesh;
     }
-
 }

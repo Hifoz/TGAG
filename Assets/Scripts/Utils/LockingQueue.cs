@@ -19,7 +19,7 @@ public class LockingQueue<T> {
             try {
                 T item = queue.Dequeue();
                 count--;
-                return queue.Dequeue();
+                return item;
             } catch (InvalidOperationException e) {
                 throw e;
             }
