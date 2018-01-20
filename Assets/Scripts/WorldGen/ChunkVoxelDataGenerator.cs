@@ -5,12 +5,12 @@ using UnityEngine;
 /// <summary>
 /// Generates int[,,] arrays of voxel data for creation of chunk meshes.
 /// </summary>
-public class ChunkVoxelData {
+public class ChunkVoxelDataGenerator {
 
     /// <summary>
     /// Empty constructor
     /// </summary>
-    public ChunkVoxelData() { }
+    public ChunkVoxelDataGenerator() { }
 
     /// <summary>
     /// A function that creates voxel data for a chunk using simplex noise.
