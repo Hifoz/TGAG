@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// A structure containing data on a chunk
 /// </summary>
-class ChunkData {
+public class ChunkData {
     ChunkVoxelMesh CVM = new ChunkVoxelMesh();
 
     private Mesh mesh; // Might want to use multiple meshes for each chunk?, as each mesh can only be 53 tall with a chunkSize of 10 (current)

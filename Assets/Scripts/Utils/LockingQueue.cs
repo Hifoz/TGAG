@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 /// <summary>
 /// A locking queue based on a blocking queue made by Stephen Toub (Microsoft).
 /// https://blogs.msdn.microsoft.com/toub/2006/04/12/blocking-queues/
 /// </summary>
 /// <typeparam name="T"></typeparam>
-class LockingQueue<T> {
+public class LockingQueue<T> {
     private int count = 0;
     private Queue<T> queue = new Queue<T>();
 

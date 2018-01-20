@@ -7,7 +7,7 @@ using System.Threading;
 /// https://blogs.msdn.microsoft.com/toub/2006/04/12/blocking-queues/
 /// </summary>
 /// <typeparam name="T"></typeparam>
-class BlockingQueue<T> {
+public class BlockingQueue<T> {
     private int count = 0;
     private Queue<T> queue = new Queue<T>();
 
