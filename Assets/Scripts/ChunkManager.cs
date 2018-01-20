@@ -21,10 +21,7 @@ public class ChunkManager : MonoBehaviour {
     private ChunVoxelDataThread[] CVDT = new ChunVoxelDataThread[CVDTCount];
     private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
-    private Dictionary<Vector3, ChunkData> pendingChunks = new Dictionary<Vector3, ChunkData>(); //Chunks that are currently worked on my CVDT
-
-
-
+    private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -38,7 +35,7 @@ public class ChunkManager : MonoBehaviour {
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-                activeChunks.Add(createChunk(ChunkConfig.chunkSize, chunkPos));
+                inactiveChunks.Add(createChunk(ChunkConfig.chunkSize, chunkPos));
             }
         }
     }
@@ -156,8 +153,6 @@ public class ChunkManager : MonoBehaviour {
         GameObject chunk = Instantiate(chunkPrefab);
         chunk.transform.parent = transform;
         chunk.name = "chunk";
-        ChunkData chunkData = new ChunkData(pos);
-        chunk.GetComponent<MeshFilter>().mesh = chunkData.getMesh();
         chunk.transform.position = pos;
         return chunk;
     }
@@ -181,7 +176,8 @@ public class ChunkManager : MonoBehaviour {
             return true;
         }
         else {
-            if (!pendingChunks.ContainsKey(pos)) {
+            if (!pendingChunks.Contains(pos)) {
+                pendingChunks.Add(pos);
                 orders.Enqueue(pos);
             }
             chunkData = new ChunkData();

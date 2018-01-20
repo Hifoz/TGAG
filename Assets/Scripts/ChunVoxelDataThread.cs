@@ -4,7 +4,7 @@ using System.Threading;
 using UnityEngine;
 
 public class ChunkVoxelData {
-    public int[,,] voxelData;
+    public MeshData meshData;
     public Vector3 chunkPos;
 }
 
@@ -56,9 +56,9 @@ public class ChunVoxelDataThread {
             var order = orders.Dequeue();
             var result = new ChunkVoxelData();
             result.chunkPos = order;
-            result.voxelData = CVDG.getChunkVoxelData(order);
+            result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
             results.Enqueue(result);
         }
+        Debug.Log("Thread stopped!");
     }
-
 }

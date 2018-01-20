@@ -4,15 +4,23 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+// had to change this to make it more thread compatible.
+
+public class MeshData {
+    public Vector3[] vertices;
+    public int[] triangles;
+    public Color[] colors;
+    public Vector2[] uvs;
+}
+
 /// <summary>
 /// A Voxel Mesh generator 
 /// </summary>
-public class MeshGenerator {
+public class MeshDataGenerator {
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
     private List<Color> colors = new List<Color>();
     private List<Vector2> uvs = new List<Vector2>();
-    private Mesh mesh = new Mesh();
     private int[,,] pointmap;
 
     public enum FaceDirection {
@@ -21,29 +29,31 @@ public class MeshGenerator {
 
 
     /// <summary>
-    /// Generates a mesh of cubes
+    /// Generates all data needed for a mesh of cubes
     /// </summary>
     /// <param name="pointmap">data used to build cubes</param>
     /// <returns>a mesh made from the input data</returns>
-    public static Mesh GenerateMesh(int[,,] pointmap) {
-        MeshGenerator vmg = new MeshGenerator();
+    public static MeshData GenerateMeshData(int[,,] pointmap) {
+        MeshDataGenerator MDG = new MeshDataGenerator();
 
-        vmg.pointmap = pointmap;
+        MDG.pointmap = pointmap;
         for (int x = 0; x < pointmap.GetLength(0); x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 0; z < pointmap.GetLength(2); z++) {
                     if (pointmap[x, y, z] != 0)
-                        vmg.GenerateCube(new Vector3(x, y, z), pointmap[x, y, z]);
+                        MDG.GenerateCube(new Vector3(x, y, z), pointmap[x, y, z]);
                 }
             }
         }
 
-        vmg.Recalculate();
+        var meshData = new MeshData();
+        meshData.vertices = MDG.vertices.ToArray();
+        meshData.triangles = MDG.triangles.ToArray();
+        meshData.colors = MDG.colors.ToArray();
+        meshData.uvs = MDG.uvs.ToArray();
 
-        return vmg.mesh;
+        return meshData;
     }
-
-
 
     /// <summary>
     /// Generates the mesh data for a cube
@@ -127,7 +137,9 @@ public class MeshGenerator {
     /// <param name="dir">Direction of the face</param>
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir) {
         int textureSize = 512;
-        int numberOfTextures = Resources.Load<Texture>("Textures/terrainTextures").width / textureSize;
+        //Can't call resources.load from thread.
+        //int numberOfTextures = Resources.Load<Texture>("Textures/terrainTextures").width / textureSize;
+        int numberOfTextures = 1024 / textureSize;
         float padding = 20;
         
         xOffset /= numberOfTextures;
@@ -167,7 +179,8 @@ public class MeshGenerator {
                 rotation = 1;
                 break;
             default: // yp & ym
-                rotation = UnityEngine.Random.Range(0, 4);
+                //rotation = UnityEngine.Random.Range(0, 4); not callable from thread.
+                rotation = 2;
                 break;
         }
 
@@ -178,8 +191,6 @@ public class MeshGenerator {
         
     }
 
-
-
     /// <summary>
     /// Clears the mesh
     /// </summary>
@@ -188,19 +199,5 @@ public class MeshGenerator {
         triangles.Clear();
         colors.Clear();
         uvs.Clear();
-        mesh.Clear();
     }
-
-
-    /// <summary>
-    /// Recalculates the mesh
-    /// </summary>
-    private void Recalculate() {
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.colors = colors.ToArray();
-        mesh.uv = uvs.ToArray();
-        mesh.RecalculateNormals();
-    }
-
 }
