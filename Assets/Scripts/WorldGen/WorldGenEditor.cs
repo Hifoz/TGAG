@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+/// A custom editor window used for changing WorldGen settings at runtime.
+/// </summary>
 public class WorldGenEditor : EditorWindow {
 
     public static float voxelSize = 1;
@@ -41,6 +44,9 @@ public class WorldGenEditor : EditorWindow {
         }
     }
 
+    /// <summary>
+    /// Copies settings from ChunkConfig to the editor window.
+    /// </summary>
     private static void copyFromConfig() {
         voxelSize = ChunkConfig.voxelSize;
         chunkSize = ChunkConfig.chunkSize;
@@ -49,6 +55,9 @@ public class WorldGenEditor : EditorWindow {
         frequency = ChunkConfig.frequency;
     }
 
+    /// <summary>
+    /// Applies the WorldGen settings provided by the user.
+    /// </summary>
     private void apply() {
         Debug.Log("Applying settings!");
         if (chunkManager != null) {
@@ -60,5 +69,9 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.chunkCount = chunkCount;
         ChunkConfig.chunkHeight = chunkHeight;
         ChunkConfig.frequency = frequency;
-    }
+
+        if (chunkManager != null) {
+            chunkManager.init();
+        }
+    }    
 }
