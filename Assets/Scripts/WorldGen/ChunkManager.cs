@@ -15,10 +15,9 @@ public class ChunkManager : MonoBehaviour {
     public GameObject chunkPrefab;
     private Vector3 offset;
     private List<GameObject> activeChunks = new List<GameObject>();
-    private List<GameObject> inactiveChunks = new List<GameObject>();
+    private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
     private GameObject[,] chunkGrid;
 
-    private Dictionary<Vector3, ChunkData> chunkStorage = new Dictionary<Vector3, ChunkData>();
 
     private const int CVDTCount = 3;
     private ChunkVoxelDataThread[] CVDT = new ChunkVoxelDataThread[CVDTCount];
@@ -40,14 +39,14 @@ public class ChunkManager : MonoBehaviour {
 	void Update () {
         clearChunkGrid();
         updateChunkGrid();
-        deployInactiveChunks();
+        orderNewChunks();
+        launchOrderedChunks();
     }
 
     /// <summary>
     /// Clears and resets the ChunkManager, used when changing WorldGen settings at runtime.
     /// </summary>
     public void clear() {        
-        chunkStorage.Clear();
         while (pendingChunks.Count > 0) {
             while (results.getCount() > 0) {
                 var chunk = results.Dequeue();
@@ -59,8 +58,7 @@ public class ChunkManager : MonoBehaviour {
             activeChunks.RemoveAt(0);
         }
         while (inactiveChunks.Count > 0) {
-            Destroy(inactiveChunks[0]);
-            inactiveChunks.RemoveAt(0);
+            Destroy(inactiveChunks.Pop());
         }
     }
 
@@ -74,7 +72,7 @@ public class ChunkManager : MonoBehaviour {
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-                inactiveChunks.Add(createChunk(chunkPos));
+                inactiveChunks.Push(createChunk(chunkPos));
             }
         }
     }
@@ -102,7 +100,8 @@ public class ChunkManager : MonoBehaviour {
             if (checkBounds(ix, iz)) {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
-                inactiveChunks.Add(activeChunks[i]);
+                inactiveChunks.Push(activeChunks[i]);
+                inactiveChunks.Peek().SetActive(false);
                 activeChunks.RemoveAt(i);
                 i--;
             }
@@ -110,30 +109,39 @@ public class ChunkManager : MonoBehaviour {
     }
 
     /// <summary>
-    /// Deploys inactive chunks into empty cells of the chunkgrid.
+    /// Orders needed chunks from the ChunkVoxelDataThreads.
     /// </summary>
-    private void deployInactiveChunks() {
+    private void orderNewChunks() {
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-                if (inactiveChunks.Count == 0) {
-                    return;
-                }
-
-                ChunkData cd;
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-                if (chunkGrid[x, z] == null && tryGetChunkData(chunkPos, out cd)) {
-                    var chunk = inactiveChunks[0];
-                    inactiveChunks.RemoveAt(0);
-                    chunkGrid[x, z] = chunk;
-                    
-                    chunk.transform.position = chunkPos;
-                    chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
-                    chunk.GetComponent<MeshCollider>().sharedMesh = cd.getMesh();
-                    activeChunks.Add(chunk);
+                if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
+                    orders.Enqueue(chunkPos);
+                    pendingChunks.Add(chunkPos);
                 }
             }
         }
     }
+
+    /// <summary>
+    /// Deploys ordered chunks from the ChunkVoxelDataThreads.
+    /// </summary>
+    private void launchOrderedChunks() {
+        while (results.getCount() > 0) {
+            var chunkMeshData = results.Dequeue();
+            pendingChunks.Remove(chunkMeshData.chunkPos);
+
+            ChunkData cd = new ChunkData(chunkMeshData);
+
+            var chunk = getChunk();
+
+            chunk.transform.position = cd.getPos();
+            chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
+            chunk.GetComponent<MeshCollider>().sharedMesh = cd.getMesh();
+            activeChunks.Add(chunk);
+        }
+    }
+    
 
     /// <summary>
     /// Gets the "chunk normalized" player position.
@@ -158,6 +166,23 @@ public class ChunkManager : MonoBehaviour {
     }
 
     /// <summary>
+    /// Gets an inactive chunk, or creates a new chunk.
+    /// </summary>
+    /// <returns>An instance of a chunk gameobject</returns>
+    private GameObject getChunk() {
+        if (inactiveChunks.Count > 0) {
+            var chunk = inactiveChunks.Pop();
+            chunk.SetActive(true);
+            activeChunks.Add(chunk);
+            return chunk;
+        } else {
+            var chunk = createChunk(Vector3.zero);
+            activeChunks.Add(chunk);
+            return chunk;
+        }
+    }
+
+    /// <summary>
     /// A temporary function for creating a cube chunk.
     /// </summary>
     /// <param name="size">The size of the chunk</param>
@@ -169,35 +194,6 @@ public class ChunkManager : MonoBehaviour {
         chunk.name = "chunk";
         chunk.transform.position = pos;
         return chunk;
-    }
-
-
-    /// <summary>
-    /// Gets chunkdata for a chunk.
-    /// Tries to get an existing, but will create an order for the ChunkVoxelDataThread(s) to make a new ChunkData object if there is none for the given chunk.
-    /// Returns success status.
-    /// </summary>
-    /// <param name="pos">position of chunk</param>
-    /// <returns>bool success</returns>
-    private bool tryGetChunkData(Vector3 pos, out ChunkData chunkData) {
-        while(results.getCount() > 0) {
-            var chunk = results.Dequeue();
-            pendingChunks.Remove(chunk.chunkPos);
-            chunkStorage.Add(chunk.chunkPos, new ChunkData(chunk));
-        }
-
-        if (chunkStorage.ContainsKey(pos)) {
-            chunkData = chunkStorage[pos];
-            return true;
-        }
-        else {
-            if (!pendingChunks.Contains(pos)) {
-                pendingChunks.Add(pos);
-                orders.Enqueue(pos);
-            }
-            chunkData = new ChunkData();
-            return false;
-        }
     }
 
     private void stopThreads() {
