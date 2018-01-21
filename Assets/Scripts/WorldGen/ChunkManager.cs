@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// First draft of ChunkManager, the class responsible for handling the chunks in the game world.
-/// In the future it will depend on a multithreaded system for procedurally generating voxel meshes for the chunks.
-/// 
-/// Edit 20.01.18:
-/// The class now uses threads for generation.
+/// This class is responsible for handling the chunks that makes up the world.
+/// It creates and places chunks into the world, keeping the player at the center of the world.
 /// </summary>
 public class ChunkManager : MonoBehaviour {
 
@@ -197,6 +194,9 @@ public class ChunkManager : MonoBehaviour {
         return chunk;
     }
 
+    /// <summary>
+    /// Stops all of the ChunkVoxelDataThreads.
+    /// </summary>
     private void stopThreads() {
         foreach (var thread in CVDT) {
             orders.Enqueue(Vector3.down);

@@ -32,6 +32,9 @@ public class CameraController : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Toggles the crusor lockstate when called.
+    /// </summary>
     private void toggleMouse() {
         if (Cursor.lockState != CursorLockMode.Locked) {
             Cursor.lockState = CursorLockMode.Locked;
