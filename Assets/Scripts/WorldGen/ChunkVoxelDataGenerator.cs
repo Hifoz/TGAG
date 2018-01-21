@@ -40,8 +40,19 @@ public class ChunkVoxelDataGenerator {
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
     private float calcHeight(Vector3 pos) {
-        float noise = SimplexNoise.Simplex2D(pos, ChunkConfig.frequency);
-        float noise01 = (noise + 1f) / 2f;
-        return noise01 * ChunkConfig.chunkHeight;
+        float finalNoise = 0;
+        float noiseScaler = 0;
+        float octaveStrength = 1;
+        for (int octave = 0; octave < ChunkConfig.octaves; octave++) {
+            Vector3 samplePos = pos + new Vector3(1, 0, 1) * ChunkConfig.seed * octaveStrength;
+            float noise = SimplexNoise.Simplex2D(samplePos, ChunkConfig.frequency / octaveStrength);
+            float noise01 = (noise + 1f) / 2f;
+            finalNoise += noise01 * octaveStrength;
+            noiseScaler += octaveStrength;
+            octaveStrength = octaveStrength / 2;
+        }
+        finalNoise = finalNoise / noiseScaler;
+        finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent);
+        return  finalNoise * ChunkConfig.chunkHeight;
     }
 }

@@ -13,7 +13,7 @@ public class ChunkManager : MonoBehaviour {
 
     public Transform player;
     public GameObject chunkPrefab;
-    private Vector3 offset = new Vector3(-ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkSize / 2f * ChunkConfig.chunkSize);
+    private Vector3 offset;
     private List<GameObject> activeChunks = new List<GameObject>();
     private List<GameObject> inactiveChunks = new List<GameObject>();
     private GameObject[,] chunkGrid;
@@ -29,18 +29,11 @@ public class ChunkManager : MonoBehaviour {
     /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
-    void Start () {
+    void Start () { 
         for (int i = 0; i < CVDTCount; i++) {
             CVDT[i] = new ChunkVoxelDataThread(orders, results);
         }
-
-        chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-                inactiveChunks.Add(createChunk(chunkPos));
-            }
-        }
+        init();
     }
 	
 	// Update is called once per frame
@@ -48,6 +41,42 @@ public class ChunkManager : MonoBehaviour {
         clearChunkGrid();
         updateChunkGrid();
         deployInactiveChunks();
+    }
+
+    /// <summary>
+    /// Clears and resets the ChunkManager, used when changing WorldGen settings at runtime.
+    /// </summary>
+    public void clear() {        
+        chunkStorage.Clear();
+        while (pendingChunks.Count > 0) {
+            while (results.getCount() > 0) {
+                var chunk = results.Dequeue();
+                pendingChunks.Remove(chunk.chunkPos);
+            }
+        }
+        while (activeChunks.Count > 0) {
+            Destroy(activeChunks[0]);
+            activeChunks.RemoveAt(0);
+        }
+        while (inactiveChunks.Count > 0) {
+            Destroy(inactiveChunks[0]);
+            inactiveChunks.RemoveAt(0);
+        }
+    }
+
+    /// <summary>
+    /// Initializes the ChunkManager
+    /// </summary>
+    public void init() {
+        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
+        chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+
+        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
+            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
+                inactiveChunks.Add(createChunk(chunkPos));
+            }
+        }
     }
 
     /// <summary>
@@ -113,8 +142,8 @@ public class ChunkManager : MonoBehaviour {
     private Vector3 getPlayerPos() {
         float x = player.position.x;
         float z = player.position.z;
-        x = Mathf.Floor(x / 10) * 10;
-        z = Mathf.Floor(z / 10) * 10;
+        x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
+        z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
         return new Vector3(x, 0, z);
     }
 
