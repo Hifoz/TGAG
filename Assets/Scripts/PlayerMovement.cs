@@ -4,8 +4,11 @@ using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour {
-    public float moveSpeed = 5f;
-    public float mass = .2f;
+    public float moveSpeed = 10f;
+    public float gravity = 6f;
+    public float flyingSmoothTime = 1.2f;
+    public float groundedSmoothTime = 0.1f;
+    public float flapStrength = 0.05f;
 
     private CharacterController characterController;
 
@@ -41,15 +44,30 @@ public class PlayerMovement : MonoBehaviour {
     /// </summary>
     private void updateMovement() {
         Vector2 inputDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+
+        float smoothTime = groundedSmoothTime;
+        if (!characterController.isGrounded) {
+            smoothTime = flyingSmoothTime;
+
+            Mathf.Clamp01(inputDir.y);
+        }
+
+
         Vector3 moveDir = transform.TransformDirection(inputDir.x, 0, inputDir.y);
 
+        if (characterController.isGrounded) {
+            moveDir.y = 0;
+        }
+        moveDir.Normalize();
+
         Vector3 targetSpeed = moveDir * moveSpeed;
-        currentSpeed = Vector3.SmoothDamp(currentSpeed, targetSpeed, ref currentVelocity, 1);
+        currentSpeed = Vector3.SmoothDamp(currentSpeed, targetSpeed, ref currentVelocity, smoothTime);
 
-        Vector3 velocity = currentSpeed + Physics.gravity * mass;
-        if (Input.GetKey(KeyCode.Space))
-            velocity.y += 5;
+        if (Input.GetKey(KeyCode.Space)) {
+            currentSpeed.y += flapStrength;
+        }
 
+        Vector3 velocity = currentSpeed - Vector3.up * gravity * (1.1f - currentSpeed.magnitude/moveSpeed);
 
         characterController.Move(velocity * Time.deltaTime);
     }
@@ -60,7 +78,6 @@ public class PlayerMovement : MonoBehaviour {
     private void updateRotation() {
         yaw += Input.GetAxis("Mouse X");
         pitch = Mathf.Clamp(pitch - Input.GetAxis("Mouse Y"), -80, 80);
-        Debug.Log(pitch);
 
         rotation = Vector3.SmoothDamp(rotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, 0);
 
