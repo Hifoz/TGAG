@@ -127,7 +127,9 @@ public class ChunkManager : MonoBehaviour {
     /// Deploys ordered chunks from the ChunkVoxelDataThreads.
     /// </summary>
     private void launchOrderedChunks() {
-        while (results.getCount() > 0) {
+        const int maxLaunchPerUpdate = 2;
+        int launchCount = 0;
+        while (results.getCount() > 0 && launchCount < maxLaunchPerUpdate) {
             var chunkMeshData = results.Dequeue();
             pendingChunks.Remove(chunkMeshData.chunkPos);
 
@@ -139,6 +141,8 @@ public class ChunkManager : MonoBehaviour {
             chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
             chunk.GetComponent<MeshCollider>().sharedMesh = cd.getMesh();
             activeChunks.Add(chunk);
+
+            launchCount++;
         }
     }
     
@@ -173,12 +177,9 @@ public class ChunkManager : MonoBehaviour {
         if (inactiveChunks.Count > 0) {
             var chunk = inactiveChunks.Pop();
             chunk.SetActive(true);
-            activeChunks.Add(chunk);
             return chunk;
         } else {
-            var chunk = createChunk(Vector3.zero);
-            activeChunks.Add(chunk);
-            return chunk;
+            return createChunk(Vector3.zero);
         }
     }
 
