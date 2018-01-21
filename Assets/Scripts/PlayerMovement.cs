@@ -13,31 +13,19 @@ public class PlayerMovement : MonoBehaviour {
 
     private CharacterController characterController;
 
-
     // Movement
-    Vector3 currentSpeed;
-    Vector3 currentVelocity;
-
-    // Rotation
-    float yaw;
-    float pitch;
-    Vector3 rotation;
-    Vector3 rotationSmoothVelocity;
+    private Vector3 currentSpeed;
+    private Vector3 currentVelocity;
 
 
-	// Use this for initialization
+
 	void Start () {
         characterController = GetComponent<CharacterController>();
 	}
 	
-	// Update is called once per frame
 	void Update () {
-
         updateMovement();
         updateRotation();
-
-
-
 	}
 
     /// <summary>
@@ -51,20 +39,19 @@ public class PlayerMovement : MonoBehaviour {
         if (!characterController.isGrounded) {
             moveSpeed = flyingSpeed;
             smoothTime = flyingSmoothTime;
-
-            Mathf.Clamp01(inputDir.y);
         }
 
 
         Vector3 moveDir = Camera.main.transform.TransformDirection(inputDir.x, 0, inputDir.y);
-
         if (characterController.isGrounded) {
             moveDir.y = 0;
-            moveDir.Normalize();
         }
+        moveDir.Normalize();
+
 
         Vector3 targetSpeed = moveDir * moveSpeed;
         currentSpeed = Vector3.SmoothDamp(currentSpeed, targetSpeed, ref currentVelocity, smoothTime);
+
 
         if (Input.GetKey(KeyCode.Space)) {
             if (!characterController.isGrounded)
@@ -82,6 +69,9 @@ public class PlayerMovement : MonoBehaviour {
     /// Updates the rotation of the player
     /// </summary>
     private void updateRotation() {
+        if (currentSpeed.magnitude < 0.1f)
+            return;
+
         Vector3 relativePos = transform.position + currentSpeed;
         Quaternion rotation = Quaternion.LookRotation(currentSpeed);
         transform.rotation = rotation;

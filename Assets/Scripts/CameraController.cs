@@ -8,25 +8,20 @@ public class CameraController : MonoBehaviour {
     public float cameraHeight = 0.75f;
 
 
-    // Rotation
-    float yaw;
-    float pitch;
-    Vector3 rotation;
-    Vector3 rotationSmoothVelocity;
+    private float yaw;
+    private float pitch;
+    private Vector3 rotation;
+    private Vector3 rotationSmoothVelocity;
 
 
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
+    /// <summary>
+    /// Update the rotation of the camera
+    /// </summary>
 	void LateUpdate () {
         yaw += Input.GetAxis("Mouse X");
         pitch = Mathf.Clamp(pitch - Input.GetAxis("Mouse Y"), -80, 80);
 
         rotation = Vector3.SmoothDamp(rotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, 0);
-
 
         transform.eulerAngles = rotation;
 
