@@ -128,6 +128,7 @@ public class ChunkManager : MonoBehaviour {
                     
                     chunk.transform.position = chunkPos;
                     chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
+                    chunk.GetComponent<MeshCollider>().sharedMesh = cd.getMesh();
                     activeChunks.Add(chunk);
                 }
             }
