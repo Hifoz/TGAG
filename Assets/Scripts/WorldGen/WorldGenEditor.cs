@@ -8,11 +8,13 @@ using UnityEditor;
 /// </summary>
 public class WorldGenEditor : EditorWindow {
 
-    public static float voxelSize = 1;
-    public static int chunkSize = 10;
-    public static int chunkCount = 11;
-    public static int chunkHeight = 50; // Chunk height must not exceed (5376/(chunkSize^2))
-    public static float frequency = 0.02f;
+    private static int seed = 1337;
+    private static int chunkSize = 10;
+    private static int chunkCount = 11;
+    private static int chunkHeight = 50; // Chunk height must not exceed (5376/(chunkSize^2))
+    private static float frequency = 0.02f;
+    private static float noiseExponent;
+    private static int octaves = 1;
 
     private static ChunkManager chunkManager;
 
@@ -23,11 +25,13 @@ public class WorldGenEditor : EditorWindow {
     }
 
     void OnGUI() {
-        voxelSize = EditorGUILayout.FloatField("Voxel Size (Not used, might remove)", voxelSize);
+        seed = EditorGUILayout.IntField("Seed", seed);
         chunkSize = EditorGUILayout.IntField("Chunk Size", chunkSize);
         chunkCount = EditorGUILayout.IntField("Chunk Count", chunkCount);
         chunkHeight = EditorGUILayout.IntField("Chunk Height", chunkHeight);
         frequency = EditorGUILayout.FloatField("Frequency", frequency);
+        noiseExponent = EditorGUILayout.FloatField("Noise Exponent", noiseExponent);
+        octaves = EditorGUILayout.IntSlider("Octaves", octaves, 0, 10);
 
         if (chunkManager == null) {
             GUILayout.Label("No ChunkManager found!", EditorStyles.boldLabel);
@@ -48,11 +52,13 @@ public class WorldGenEditor : EditorWindow {
     /// Copies settings from ChunkConfig to the editor window.
     /// </summary>
     private static void copyFromConfig() {
-        voxelSize = ChunkConfig.voxelSize;
+        seed = ChunkConfig.seed;
         chunkSize = ChunkConfig.chunkSize;
         chunkCount = ChunkConfig.chunkCount;
         chunkHeight = ChunkConfig.chunkHeight;
         frequency = ChunkConfig.frequency;
+        noiseExponent = ChunkConfig.noiseExponent; 
+        octaves = ChunkConfig.octaves;
     }
 
     /// <summary>
@@ -64,11 +70,13 @@ public class WorldGenEditor : EditorWindow {
             chunkManager.clear();
         }
 
-        ChunkConfig.voxelSize = voxelSize;
+        ChunkConfig.seed = seed;
         ChunkConfig.chunkSize = chunkSize;
         ChunkConfig.chunkCount = chunkCount;
         ChunkConfig.chunkHeight = chunkHeight;
         ChunkConfig.frequency = frequency;
+        ChunkConfig.noiseExponent = noiseExponent;
+        ChunkConfig.octaves = octaves;
 
         if (chunkManager != null) {
             chunkManager.init();
