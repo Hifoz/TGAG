@@ -50,6 +50,20 @@ public class ChunkManager : MonoBehaviour {
         deployInactiveChunks();
     }
 
+    public void clear() {
+        chunkStorage.Clear();
+        while (pendingChunks.Count > 0) {
+            while (results.getCount() > 0) {
+                var chunk = results.Dequeue();
+                pendingChunks.Remove(chunk.chunkPos);
+            }
+        }
+        while (activeChunks.Count > 0) {
+            inactiveChunks.Add(activeChunks[0]);
+            activeChunks.RemoveAt(0);
+        }
+    }
+
     /// <summary>
     /// Clears all elements in the chunkGrid
     /// </summary>
@@ -112,8 +126,8 @@ public class ChunkManager : MonoBehaviour {
     private Vector3 getPlayerPos() {
         float x = player.position.x;
         float z = player.position.z;
-        x = Mathf.Floor(x / 10) * 10;
-        z = Mathf.Floor(z / 10) * 10;
+        x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
+        z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
         return new Vector3(x, 0, z);
     }
 
