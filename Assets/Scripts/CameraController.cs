@@ -27,5 +27,17 @@ public class CameraController : MonoBehaviour {
 
         this.transform.position = target.position - transform.forward * targetDistance + transform.TransformDirection(0, cameraHeight, 0);
 
+        if (Input.GetKeyDown(KeyCode.L)) {
+            toggleMouse();
+        }
+    }
+
+    private void toggleMouse() {
+        if (Cursor.lockState != CursorLockMode.Locked) {
+            Cursor.lockState = CursorLockMode.Locked;
+        } else {
+            Cursor.lockState = CursorLockMode.None;
+        }
+
     }
 }
