@@ -13,7 +13,7 @@ public class WorldGenEditor : EditorWindow {
     private static int chunkCount = 11;
     private static int chunkHeight = 50; // Chunk height must not exceed (5376/(chunkSize^2))
     private static float frequency = 0.02f;
-    private static float noiseExponent;
+    private static float noiseExponent = 1;
     private static int octaves = 1;
 
     private static ChunkManager chunkManager;
@@ -44,7 +44,9 @@ public class WorldGenEditor : EditorWindow {
         }
 
         if (GUILayout.Button("Apply")) {
-            apply();
+            if (chunkManager != null) {
+                apply();
+            }
         }
     }
 
@@ -66,9 +68,8 @@ public class WorldGenEditor : EditorWindow {
     /// </summary>
     private void apply() {
         Debug.Log("Applying settings!");
-        if (chunkManager != null) {
-            chunkManager.clear();
-        }
+
+        chunkManager.clear();
 
         ChunkConfig.seed = seed;
         ChunkConfig.chunkSize = chunkSize;
@@ -78,8 +79,6 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.noiseExponent = noiseExponent;
         ChunkConfig.octaves = octaves;
 
-        if (chunkManager != null) {
-            chunkManager.init();
-        }
+        chunkManager.init();
     }    
 }
