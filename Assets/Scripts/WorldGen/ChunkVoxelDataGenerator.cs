@@ -1,6 +1,15 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+/// <summary>
+/// 
+/// </summary>
+public enum BlockType {
+    AIR = 0, DIRT, GRASS, SNOW, 
+}
+
 
 /// <summary>
 /// Generates int[,,] arrays of voxel data for creation of chunk meshes.
@@ -12,26 +21,59 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     public ChunkVoxelDataGenerator() { }
 
-    /// <summary>
-    /// A function that creates voxel data for a chunk using simplex noise.
-    /// </summary>
-    /// <param name="pos">The position of the chunk in world space</param>
-    /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
-    public int[,,] getChunkVoxelData(Vector3 pos) {
-        int[,,] data = new int[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize]; 
+
+        /// <summary>
+        /// A function that creates voxel data for a chunk using simplex noise.
+        /// </summary>
+        /// <param name="pos">The position of the chunk in world space</param>
+        /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
+        public BlockType[,,] getChunkVoxelData(Vector3 pos) {
+        BlockType[,,] data = new BlockType[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize]; 
 
         for(int x = 0; x < ChunkConfig.chunkSize; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize; z++) {
                     Vector3 samplePos = new Vector3(x + pos.x, z + pos.z, 0);
                     if (y < calcHeight(samplePos))
-                        data[x, y, z] = 1;
+                        data[x, y, z] = BlockType.DIRT;
                     else
-                        data[x, y, z] = 0;
+                        data[x, y, z] = BlockType.AIR;
                 }
             }
         }
+
+        for (int x = 0; x < ChunkConfig.chunkSize; x++) {
+            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
+                for (int z = 0; z < ChunkConfig.chunkSize; z++) {
+                    if (data[x, y, z] != BlockType.AIR)
+                        data[x, y, z] = decideBlockType(data, new Vector3Int(x, y, z));
+                }
+            }
+        }
+
+
+
         return data;
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="data">the generated terrain data</param>
+    /// <param name="pos">position of block to find type for</param>
+    private BlockType decideBlockType(BlockType[,,] data, Vector3Int pos) {
+        BlockType blocktype = BlockType.DIRT;
+
+        // Check if air above
+        if((pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z] == BlockType.AIR) && blocktype == BlockType.DIRT) {
+            if (pos.y > 40)
+                blocktype = BlockType.SNOW;
+            else
+                blocktype = BlockType.GRASS; 
+        }
+
+        return blocktype;
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ public class MeshDataGenerator {
     private List<int> triangles = new List<int>();
     private List<Color> colors = new List<Color>();
     private List<Vector2> uvs = new List<Vector2>();
-    private int[,,] pointmap;
+    private BlockType[,,] pointmap;
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -33,7 +33,7 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="pointmap">data used to build cubes</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(int[,,] pointmap) {
+    public static MeshData GenerateMeshData(BlockType[,,] pointmap) {
         MeshDataGenerator MDG = new MeshDataGenerator();
 
         MDG.pointmap = pointmap;
@@ -60,7 +60,7 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="cubePos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is</param>
-    private void GenerateCube(Vector3 cubePos, int cubetype) {
+    private void GenerateCube(Vector3 cubePos, BlockType cubetype) {
         if (cubePos.x == pointmap.GetLength(0) - 1 || pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z] == 0) GenerateCubeFace(FaceDirection.xp, cubePos, cubetype);
         if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z] == 0) GenerateCubeFace(FaceDirection.yp, cubePos, cubetype);
         if (cubePos.z == pointmap.GetLength(2) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1] == 0) GenerateCubeFace(FaceDirection.zp, cubePos, cubetype);
@@ -76,7 +76,7 @@ public class MeshDataGenerator {
     /// <param name="dir">direction of face</param>
     /// <param name="pointPos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
-    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, int cubetype) {
+    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockType cubetype) {
         int vertIndex = vertices.Count;
 
         int textureYoffset = 1;
@@ -125,7 +125,7 @@ public class MeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
 
-        AddTextureCoordinates(cubetype + 1, textureYoffset, dir);
+        AddTextureCoordinates((int)cubetype - 1, textureYoffset, dir);
 
     }
 
@@ -139,7 +139,7 @@ public class MeshDataGenerator {
         int textureSize = 512;
         //Can't call resources.load from thread.
         //int numberOfTextures = Resources.Load<Texture>("Textures/terrainTextures").width / textureSize;
-        int numberOfTextures = 1024 / textureSize;
+        int numberOfTextures = 3;
         float padding = 20;
         
         xOffset /= numberOfTextures;
