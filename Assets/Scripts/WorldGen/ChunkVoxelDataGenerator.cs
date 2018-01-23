@@ -28,9 +28,9 @@ public class ChunkVoxelDataGenerator {
                 for (int z = 0; z < ChunkConfig.chunkSize; z++) {
                     Vector3 samplePos = new Vector3(x + pos.x, z + pos.z, 0);
                     if (y < calcHeight(samplePos))
-                        data[x, y, z] = new BlockData(BlockData.BlockType.AIR);
-                    else
                         data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
+                    else
+                        data[x, y, z] = new BlockData(BlockData.BlockType.AIR);
                 }
             }
         }
@@ -43,8 +43,6 @@ public class ChunkVoxelDataGenerator {
                 }
             }
         }
-
-
 
         return data;
     }

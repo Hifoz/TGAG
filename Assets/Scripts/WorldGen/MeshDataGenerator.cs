@@ -129,6 +129,7 @@ public class MeshDataGenerator {
 
 
         AddTextureCoordinates((int)blockData.blockType - 1, textureYoffset, dir, true);
+        // Modifier textures:
         if (blockData.modifier != BlockData.ModifierType.NONE)
             AddTextureCoordinates((int)blockData.modifier - 1, textureYoffset, dir, false);
         else
@@ -144,8 +145,7 @@ public class MeshDataGenerator {
     /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir, bool isBaseType) {
         int textureSize = 512;
-        //Can't call resources.load from thread.
-        //int numberOfTextures = Resources.Load<Texture>("Textures/terrainTextures").width / textureSize;
+
         int numberOfTextures = isBaseType ? 3 : 2;
 
         float padding = 20;
