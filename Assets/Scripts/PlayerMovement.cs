@@ -72,7 +72,6 @@ public class PlayerMovement : MonoBehaviour {
         if (currentSpeed.magnitude < 0.1f)
             return;
 
-        Vector3 relativePos = transform.position + currentSpeed;
         Quaternion rotation = Quaternion.LookRotation(currentSpeed);
         transform.rotation = rotation;
 
