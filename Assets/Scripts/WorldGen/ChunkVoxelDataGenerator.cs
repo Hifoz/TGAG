@@ -49,7 +49,7 @@ public class ChunkVoxelDataGenerator {
 
 
     /// <summary>
-    /// 
+    /// Used to decide what type of block goes on a position
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>

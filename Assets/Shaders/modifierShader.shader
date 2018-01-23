@@ -1,4 +1,10 @@
-﻿Shader "Custom/modifier" {
+﻿///
+/// Custom Shader for the modifier layer of the block textures
+/// Has transparency and uses the second uv set on the mesh
+///
+
+
+Shader "Custom/modifier" {
 	Properties{
 		_MainTex("Metallic (RGB)", 2D) = "white" {}
 		_Glossiness("Smoothness", Range(0,1)) = 0.0

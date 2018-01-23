@@ -25,6 +25,8 @@ public class MeshDataGenerator {
     private List<Vector2> uvs2 = new List<Vector2>();
     private BlockData[,,] pointmap;
 
+    private static System.Random rng = new System.Random(); // Used to randomize orientation of textures
+
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
@@ -144,8 +146,7 @@ public class MeshDataGenerator {
     /// <param name="dir">Direction of the face</param>
     /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir, bool isBaseType) {
-        int textureSize = 512;
-
+        int blockTextureSize = 512;
         int numberOfTextures = isBaseType ? 3 : 2;
 
         float padding = 20;
@@ -156,9 +157,9 @@ public class MeshDataGenerator {
         yOffset /= 3;
         float yOffsetO = yOffset + 1f/3;
 
-        int texturemapwidth = numberOfTextures * textureSize;
+        int texturemapwidth = numberOfTextures * blockTextureSize;
         float paddingx = padding / texturemapwidth;
-        float paddingy = padding / (textureSize * 3);
+        float paddingy = padding / (blockTextureSize * 3);
 
 
         Vector2[] coords = new Vector2[]{
@@ -176,20 +177,25 @@ public class MeshDataGenerator {
         };
 
 
+        // Select a rotation for the texture
         int rotation;
-        switch (dir) {
-            case FaceDirection.xp:
-            case FaceDirection.zm:
-                rotation = 0;
-                break;
-            case FaceDirection.xm:
-            case FaceDirection.zp:
-                rotation = 1;
-                break;
-            default: // yp & ym
-                //rotation = UnityEngine.Random.Range(0, 4); not callable from thread.
-                rotation = 2;
-                break;
+
+        if (isBaseType)
+            rotation = rng.Next() % 4;
+        else {
+            switch (dir) {
+                case FaceDirection.xp:
+                case FaceDirection.zm:
+                    rotation = 0;
+                    break;
+                case FaceDirection.xm:
+                case FaceDirection.zp:
+                    rotation = 1;
+                    break;
+                default: // yp & ym
+                    rotation = rng.Next() % 4;
+                    break;
+            }
         }
 
         if (isBaseType) {
