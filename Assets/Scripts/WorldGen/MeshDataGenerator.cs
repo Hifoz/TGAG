@@ -25,7 +25,7 @@ public class MeshDataGenerator {
     private List<Vector2> uvs2 = new List<Vector2>();
     private BlockData[,,] pointmap;
 
-    private static System.Random rng = new System.Random(); // Used to randomize orientation of textures
+   // private static System.Random rng = new System.Random(); // Used to randomize orientation of textures
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -180,9 +180,6 @@ public class MeshDataGenerator {
         // Select a rotation for the texture
         int rotation;
 
-        if (isBaseType)
-            rotation = rng.Next() % 4;
-        else {
             switch (dir) {
                 case FaceDirection.xp:
                 case FaceDirection.zm:
@@ -193,10 +190,10 @@ public class MeshDataGenerator {
                     rotation = 1;
                     break;
                 default: // yp & ym
-                    rotation = rng.Next() % 4;
+                    rotation = 2;
                     break;
             }
-        }
+
 
         if (isBaseType) {
             for(int i = 0; i < 4; i++) {
