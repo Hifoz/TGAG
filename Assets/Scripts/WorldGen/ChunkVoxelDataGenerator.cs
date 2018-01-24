@@ -21,21 +21,29 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     public ChunkVoxelDataGenerator() { }
 
+    /// <summary>
+    /// Determines if there is a voxel at the given location.
+    /// </summary>
+    /// <param name="pos">The position to investigate</param>
+    /// <returns>bool contains voxel</returns>
+    public static bool posContainsVoxel(Vector3 pos) {
+        Vector3 pos2D = new Vector3(pos.x, pos.z, 0);
+        return (pos.y < calcHeight(pos2D) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+    }
 
-        /// <summary>
-        /// A function that creates voxel data for a chunk using simplex noise.
-        /// </summary>
-        /// <param name="pos">The position of the chunk in world space</param>
-        /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
-        public BlockType[,,] getChunkVoxelData(Vector3 pos) {
+    /// <summary>
+    /// A function that creates voxel data for a chunk using simplex noise.
+    /// </summary>
+    /// <param name="pos">The position of the chunk in world space</param>
+    /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
+    public BlockType[,,] getChunkVoxelData(Vector3 pos) {
         BlockType[,,] data = new BlockType[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize]; 
 
         for(int x = 0; x < ChunkConfig.chunkSize; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize; z++) {
-                    Vector3 pos2D = new Vector3(x + pos.x, z + pos.z, 0);
-                    Vector3 pos3D = new Vector3(x, y, z) + pos;
-                    if ((y < calcHeight(pos2D) || calc3DStructure(pos3D)) && calc3DUnstructure(pos3D))
+                    Vector3 position = new Vector3(x, y, z) + pos;
+                    if (posContainsVoxel(position))
                         data[x, y, z] = BlockType.DIRT;
                     else
                         data[x, y, z] = BlockType.AIR;
@@ -82,7 +90,7 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
-    private float calcHeight(Vector3 pos) {
+    private static float calcHeight(Vector3 pos) {
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
@@ -99,14 +107,26 @@ public class ChunkVoxelDataGenerator {
         return  finalNoise * ChunkConfig.chunkHeight;
     }
 
-    private bool calc3DStructure(Vector3 pos) {
+    /// <summary>
+    /// Used to calculate areas of the world that should have voxels.
+    /// Uses 3D simplex noise.
+    /// </summary>
+    /// <param name="pos">Sample pos</param>
+    /// <returns>bool</returns>
+    private static bool calc3DStructure(Vector3 pos) {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(noise01, 0, pos.y / ChunkConfig.chunkHeight);
         return ChunkConfig.Structure3DRate < noise01;
     }
 
-    private bool calc3DUnstructure(Vector3 pos) {
+    /// <summary>
+    /// Used to calculate areas of the world that should not have voxels.
+    /// Uses 3D simplex noise.
+    /// </summary>
+    /// <param name="pos">Sample pos</param>
+    /// <returns>bool</returns>
+    private static bool calc3DUnstructure(Vector3 pos) {
         float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(0, noise01, pos.y / ChunkConfig.chunkHeight);

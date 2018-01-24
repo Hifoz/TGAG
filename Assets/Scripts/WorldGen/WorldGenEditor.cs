@@ -9,15 +9,15 @@ using UnityEditor;
 public class WorldGenEditor : EditorWindow {
 
     private static int seed = 1337;
-    private static int chunkSize = 10;
-    private static int chunkCount = 40;
+    private static int chunkSize = 20;
+    private static int chunkCount = 20;
     private static int chunkHeight = 100; // Chunk height must not exceed (5376/(chunkSize^2))
     private static float frequency2D = 0.01f;
     private static float noiseExponent2D = 2;
     private static int octaves2D = 2;
     private static float Structure3DRate = 0.2f;
     private static float Unstructure3DRate = 0.2f;
-    private static float frequency3D = 0.1f;
+    private static float frequency3D = 0.01f;
 
     private static ChunkManager chunkManager;
 
