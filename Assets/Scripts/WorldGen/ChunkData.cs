@@ -29,6 +29,7 @@ public class ChunkData {
         mesh.triangles = chunkVoxelData.meshData.triangles;
         mesh.colors = chunkVoxelData.meshData.colors;
         mesh.uv = chunkVoxelData.meshData.uvs;
+        mesh.uv2 = chunkVoxelData.meshData.uvs2;
         mesh.RecalculateNormals();
     }
 

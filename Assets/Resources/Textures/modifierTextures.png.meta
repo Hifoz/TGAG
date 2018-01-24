@@ -1,9 +1,10 @@
 fileFormatVersion: 2
-guid: e4f4b25f483dcbc42a35c253e7df2e37
-timeCreated: 1516377416
+guid: 1dc55495b4b250a47a2f147f2950ed76
+timeCreated: 1516710959
 licenseType: Free
 TextureImporter:
-  fileIDToRecycleName: {}
+  fileIDToRecycleName:
+    8900000: generatedCubemap
   externalObjects: {}
   serializedVersion: 4
   mipmaps:
@@ -15,7 +16,7 @@ TextureImporter:
     borderMipMap: 0
     mipMapsPreserveCoverage: 0
     alphaTestReferenceValue: 0.5
-    mipMapFadeDistanceStart: 6
+    mipMapFadeDistanceStart: 5
     mipMapFadeDistanceEnd: 10
   bumpmap:
     convertToNormalMap: 0
@@ -37,10 +38,10 @@ TextureImporter:
     wrapU: 1
     wrapV: 1
     wrapW: 1
-  nPOTScale: 0
+  nPOTScale: 1
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 0
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
