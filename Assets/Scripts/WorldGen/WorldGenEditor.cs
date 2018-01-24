@@ -9,12 +9,15 @@ using UnityEditor;
 public class WorldGenEditor : EditorWindow {
 
     private static int seed = 1337;
-    private static int chunkSize = 10;
-    private static int chunkCount = 11;
-    private static int chunkHeight = 50; // Chunk height must not exceed (5376/(chunkSize^2))
-    private static float frequency = 0.02f;
-    private static float noiseExponent = 1;
-    private static int octaves = 1;
+    private static int chunkSize = 20;
+    private static int chunkCount = 20;
+    private static int chunkHeight = 100; // Chunk height must not exceed (5376/(chunkSize^2))
+    private static float frequency2D = 0.005f;
+    private static float noiseExponent2D = 2;
+    private static int octaves2D = 2;
+    private static float Structure3DRate = 0.75f;
+    private static float Unstructure3DRate = 0.85f;
+    private static float frequency3D = 0.0075f;
 
     private static ChunkManager chunkManager;
 
@@ -25,13 +28,19 @@ public class WorldGenEditor : EditorWindow {
     }
 
     void OnGUI() {
+        GUILayout.Label("Chunk settings");
         seed = EditorGUILayout.IntField("Seed", seed);
         chunkSize = EditorGUILayout.IntField("Chunk Size", chunkSize);
         chunkCount = EditorGUILayout.IntField("Chunk Count", chunkCount);
         chunkHeight = EditorGUILayout.IntField("Chunk Height", chunkHeight);
-        frequency = EditorGUILayout.FloatField("Frequency", frequency);
-        noiseExponent = EditorGUILayout.FloatField("Noise Exponent", noiseExponent);
-        octaves = EditorGUILayout.IntSlider("Octaves", octaves, 0, 10);
+        GUILayout.Label("2D noise settings");
+        frequency2D = EditorGUILayout.FloatField("Frequency 2D", frequency2D);
+        noiseExponent2D = EditorGUILayout.FloatField("Noise Exponent 2D", noiseExponent2D);
+        octaves2D = EditorGUILayout.IntSlider("Octaves 2D", octaves2D, 0, 10);
+        GUILayout.Label("3D noise settings");
+        Structure3DRate = EditorGUILayout.FloatField("Structure 3D Rate", Structure3DRate);
+        Unstructure3DRate = EditorGUILayout.FloatField("Unstructure 3D Rate", Unstructure3DRate);
+        frequency3D = EditorGUILayout.FloatField("Frequency 3D", frequency3D);
 
         if (chunkManager == null) {
             GUILayout.Label("No ChunkManager found!", EditorStyles.boldLabel);
@@ -58,9 +67,12 @@ public class WorldGenEditor : EditorWindow {
         chunkSize = ChunkConfig.chunkSize;
         chunkCount = ChunkConfig.chunkCount;
         chunkHeight = ChunkConfig.chunkHeight;
-        frequency = ChunkConfig.frequency;
-        noiseExponent = ChunkConfig.noiseExponent; 
-        octaves = ChunkConfig.octaves;
+        frequency2D = ChunkConfig.frequency2D;
+        noiseExponent2D = ChunkConfig.noiseExponent2D; 
+        octaves2D = ChunkConfig.octaves2D;
+        Structure3DRate = ChunkConfig.Structure3DRate;
+        Unstructure3DRate = ChunkConfig.Unstructure3DRate;
+        frequency3D = ChunkConfig.frequency3D;
     }
 
     /// <summary>
@@ -75,9 +87,12 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.chunkSize = chunkSize;
         ChunkConfig.chunkCount = chunkCount;
         ChunkConfig.chunkHeight = chunkHeight;
-        ChunkConfig.frequency = frequency;
-        ChunkConfig.noiseExponent = noiseExponent;
-        ChunkConfig.octaves = octaves;
+        ChunkConfig.frequency2D = frequency2D;
+        ChunkConfig.noiseExponent2D = noiseExponent2D;
+        ChunkConfig.octaves2D = octaves2D;
+        ChunkConfig.Structure3DRate = Structure3DRate;
+        ChunkConfig.Unstructure3DRate = Unstructure3DRate;
+        ChunkConfig.frequency3D = frequency3D;
 
         chunkManager.init();
     }    
