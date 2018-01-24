@@ -33,8 +33,9 @@ public class ChunkVoxelDataGenerator {
         for(int x = 0; x < ChunkConfig.chunkSize; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize; z++) {
-                    Vector3 samplePos = new Vector3(x + pos.x, z + pos.z, 0);
-                    if (y < calcHeight(samplePos))
+                    Vector3 pos2D = new Vector3(x + pos.x, z + pos.z, 0);
+                    Vector3 pos3D = new Vector3(x, y, z) + pos;
+                    if ((y < calcHeight(pos2D) || calc3DStructure(pos3D)) && calc3DUnstructure(pos3D))
                         data[x, y, z] = BlockType.DIRT;
                     else
                         data[x, y, z] = BlockType.AIR;
@@ -85,16 +86,30 @@ public class ChunkVoxelDataGenerator {
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
-        for (int octave = 0; octave < ChunkConfig.octaves; octave++) {
+        for (int octave = 0; octave < ChunkConfig.octaves2D; octave++) {
             Vector3 samplePos = pos + new Vector3(1, 0, 1) * ChunkConfig.seed * octaveStrength;
-            float noise = SimplexNoise.Simplex2D(samplePos, ChunkConfig.frequency / octaveStrength);
+            float noise = SimplexNoise.Simplex2D(samplePos, ChunkConfig.frequency2D / octaveStrength);
             float noise01 = (noise + 1f) / 2f;
             finalNoise += noise01 * octaveStrength;
             noiseScaler += octaveStrength;
             octaveStrength = octaveStrength / 2;
         }
         finalNoise = finalNoise / noiseScaler;
-        finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent);
+        finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent2D);
         return  finalNoise * ChunkConfig.chunkHeight;
+    }
+
+    private bool calc3DStructure(Vector3 pos) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+        float noise01 = (noise + 1f) / 2f;
+        noise01 = Mathf.Lerp(noise01, 0, pos.y / ChunkConfig.chunkHeight);
+        return ChunkConfig.Structure3DRate < noise01;
+    }
+
+    private bool calc3DUnstructure(Vector3 pos) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+        float noise01 = (noise + 1f) / 2f;
+        noise01 = Mathf.Lerp(0, noise01, pos.y / ChunkConfig.chunkHeight);
+        return ChunkConfig.Unstructure3DRate > noise01;
     }
 }
