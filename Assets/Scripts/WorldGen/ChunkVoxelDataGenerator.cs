@@ -110,8 +110,8 @@ public class ChunkVoxelDataGenerator {
     private static bool calc3DStructure(Vector3 pos) {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
         float noise01 = (noise + 1f) / 2f;
-        noise01 = Mathf.Lerp(noise01, 0, pos.y / ChunkConfig.chunkHeight);
-        return ChunkConfig.Structure3DRate < noise01;
+        noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
+        return ChunkConfig.Structure3DRate > noise01;
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public class ChunkVoxelDataGenerator {
     private static bool calc3DUnstructure(Vector3 pos) {
         float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
         float noise01 = (noise + 1f) / 2f;
-        noise01 = Mathf.Lerp(0, noise01, pos.y / ChunkConfig.chunkHeight);
-        return ChunkConfig.Unstructure3DRate > noise01;
+        noise01 = Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
+        return ChunkConfig.Unstructure3DRate < noise01;
     }
 }
