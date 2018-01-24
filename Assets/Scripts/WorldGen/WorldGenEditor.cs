@@ -12,7 +12,7 @@ public class WorldGenEditor : EditorWindow {
     private static int chunkSize = 20;
     private static int chunkCount = 20;
     private static int chunkHeight = 100; // Chunk height must not exceed (5376/(chunkSize^2))
-    private static float frequency2D = 0.01f;
+    private static float frequency2D = 0.005f;
     private static float noiseExponent2D = 2;
     private static int octaves2D = 2;
     private static float Structure3DRate = 0.75f;
