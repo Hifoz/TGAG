@@ -15,8 +15,8 @@ public class WorldGenEditor : EditorWindow {
     private static float frequency2D = 0.01f;
     private static float noiseExponent2D = 2;
     private static int octaves2D = 2;
-    private static float Structure3DRate = 0.2f;
-    private static float Unstructure3DRate = 0.2f;
+    private static float Structure3DRate = 0.25f;
+    private static float Unstructure3DRate = 0.15f;
     private static float frequency3D = 0.01f;
 
     private static ChunkManager chunkManager;
