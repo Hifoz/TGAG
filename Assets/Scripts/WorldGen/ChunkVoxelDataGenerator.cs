@@ -29,15 +29,14 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
     /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
-    public BlockType[,,] getChunkVoxelData(Vector3 pos) {
-        BlockType[,,] data = new BlockType[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize]; 
+    public BlockData[,,] getChunkVoxelData(Vector3 pos) {
+        BlockData[,,] data = new BlockData[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize];
 
-        for(int x = 0; x < ChunkConfig.chunkSize; x++) {
+        for (int x = 0; x < ChunkConfig.chunkSize; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize; z++) {
-                    Vector3 position = new Vector3(x, y, z) + pos;
-                    if (posContainsVoxel(position))
-                        data[x, y, z] = BlockType.DIRT;
+                    if (posContainsVoxel(new Vector3(x, y, z) + pos))
+                        data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
                     else
                         data[x, y, z] = new BlockData(BlockData.BlockType.AIR);
                 }
@@ -70,11 +69,10 @@ public class ChunkVoxelDataGenerator {
 
 
         // Add modifier type:
-        if((pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.AIR) && blockData.blockType != BlockData.BlockType.AIR) {
+        if ((pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.AIR) && blockData.blockType != BlockData.BlockType.AIR) {
             if (pos.y > 40) {
                 blockData.modifier = BlockData.ModifierType.SNOW;
-            }
-            else if(blockData.blockType == BlockData.BlockType.DIRT) {
+            } else if (blockData.blockType == BlockData.BlockType.DIRT) {
                 blockData.modifier = BlockData.ModifierType.GRASS;
             }
         }
