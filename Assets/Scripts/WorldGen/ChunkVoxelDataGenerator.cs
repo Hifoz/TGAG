@@ -30,11 +30,11 @@ public class ChunkVoxelDataGenerator {
     /// <param name="pos">The position of the chunk in world space</param>
     /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
     public BlockData[,,] getChunkVoxelData(Vector3 pos) {
-        BlockData[,,] data = new BlockData[ChunkConfig.chunkSize, ChunkConfig.chunkHeight, ChunkConfig.chunkSize];
+        BlockData[,,] data = new BlockData[ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2];
 
-        for (int x = 0; x < ChunkConfig.chunkSize; x++) {
+        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
-                for (int z = 0; z < ChunkConfig.chunkSize; z++) {
+                for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (posContainsVoxel(new Vector3(x, y, z) + pos))
                         data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
                     else
@@ -43,9 +43,9 @@ public class ChunkVoxelDataGenerator {
             }
         }
 
-        for (int x = 0; x < ChunkConfig.chunkSize; x++) {
+        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
-                for (int z = 0; z < ChunkConfig.chunkSize; z++) {
+                for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (data[x, y, z].blockType != BlockData.BlockType.AIR)
                         decideBlockType(data, new Vector3Int(x, y, z));
                 }

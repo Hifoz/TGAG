@@ -41,9 +41,9 @@ public class MeshDataGenerator {
         MeshDataGenerator MDG = new MeshDataGenerator();
 
         MDG.pointmap = pointmap;
-        for (int x = 0; x < pointmap.GetLength(0); x++) {
+        for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
-                for (int z = 0; z < pointmap.GetLength(2); z++) {
+                for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
                     if (pointmap[x, y, z].blockType != 0)
                         MDG.GenerateCube(new Vector3(x, y, z), pointmap[x, y, z]);
                 }
