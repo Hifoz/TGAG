@@ -1,4 +1,4 @@
-﻿Shader "Custom/modifier"
+﻿Shader "Custom/block"
 {
 	Properties
 	{
@@ -27,11 +27,11 @@
 
 			struct appdata {
 				float4 vertex : POSITION;
-				float2 uv2_MainTex : TEXCOORD1;
+				float2 uv_MainTex : TEXCOORD0;
 			};
 
 			struct v2f {
-				float2 uv2_MainTex : TEXCOORD1;
+				float2 uv_MainTex : TEXCOORD0;
 				UNITY_FOG_COORDS(2)
 				float4 vertex : SV_POSITION;
 			};
@@ -42,17 +42,19 @@
 			v2f vert(appdata v) {
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv2_MainTex = TRANSFORM_TEX(v.uv2_MainTex, _MainTex);
-				UNITY_TRANSFER_FOG(o,o.vertex);
+				o.uv_MainTex = TRANSFORM_TEX(v.uv_MainTex, _MainTex);
+				//UNITY_TRANSFER_FOG(o,o.vertex);
 				return o;
 			}
 
 			fixed4 frag(v2f i) : SV_Target {
 				// sample the texture
-				fixed4 col = tex2D(_MainTex, i.uv2_MainTex);
-	
-				// apply fog
+				fixed4 col = tex2D(_MainTex, i.uv_MainTex);
 				//UNITY_APPLY_FOG(i.fogCoord, col);
+
+				//if(i.fogCoord < 1)
+				//	col.a *= (i.fogCoord * 0.9f);
+
 				return col;
 		}
 
