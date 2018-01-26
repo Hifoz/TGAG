@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -53,14 +54,18 @@ public class ChunkVoxelDataThread {
     void threadRunner() {
         Debug.Log("Thread alive!");
         while (run) {
-            var order = orders.Dequeue();
-            var result = new ChunkVoxelData();
-            if (result.chunkPos == Vector3.down) {
-                break;
+            try {
+                var order = orders.Dequeue();
+                var result = new ChunkVoxelData();
+                if (result.chunkPos == Vector3.down) {
+                    break;
+                }
+                result.chunkPos = order;
+                result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
+                results.Enqueue(result);
+            } catch(Exception e) {
+                Debug.LogException(e);
             }
-            result.chunkPos = order;
-            result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
-            results.Enqueue(result);
         }
         Debug.Log("Thread stopped!");
     }
