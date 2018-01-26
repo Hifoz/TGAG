@@ -12,12 +12,17 @@ public class OptionsMenu : MonoBehaviour {
     // Use this for initialization
     void Start () {
         MaxChunkLaunchesPerUpdate.text = PlayerPrefs.GetInt("MaxChunkLaunchesPerUpdate").ToString();
+        WorldGenThreads.minValue = 1;
         WorldGenThreads.maxValue = Environment.ProcessorCount;
         WorldGenThreads.value = PlayerPrefs.GetInt("WorldGenThreads");
     }	
 
     public void OptionMaxChunkLaunchesPerUpdate() {
         int value = int.Parse(MaxChunkLaunchesPerUpdate.text);
+        if (value < 1) {
+            value = 1;
+            MaxChunkLaunchesPerUpdate.text = value.ToString();
+        }
         Settings.MaxChunkLaunchesPerUpdate = value;
         Settings.save();
     }
