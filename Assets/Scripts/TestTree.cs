@@ -6,7 +6,7 @@ public class TestTree : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        MeshData md = TreeGenerator.generateMeshData();
+        MeshData md = TreeGenerator.generateMeshData(Vector3.zero);
         GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(md);
 	}
 	
