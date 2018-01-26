@@ -15,7 +15,7 @@ public class ChunkManager : MonoBehaviour {
     private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
     private GameObject[,] chunkGrid;
 
-    private ChunkVoxelDataThread[] CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
+    private ChunkVoxelDataThread[] CVDT;
     private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
@@ -23,7 +23,9 @@ public class ChunkManager : MonoBehaviour {
     /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
-    void Start () { 
+    void Start () {
+        Settings.load();
+        CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
         for (int i = 0; i < Settings.WorldGenThreads; i++) {
             CVDT[i] = new ChunkVoxelDataThread(orders, results);
         }
@@ -128,7 +130,6 @@ public class ChunkManager : MonoBehaviour {
         while (results.getCount() > 0 && launchCount < maxLaunchPerUpdate) {
             var chunkMeshData = results.Dequeue();
             pendingChunks.Remove(chunkMeshData.chunkPos);
-            Debug.Log("Launching chunk!");
             ChunkData cd = new ChunkData(chunkMeshData);
 
             var chunk = getChunk();
