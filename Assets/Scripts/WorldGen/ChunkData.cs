@@ -24,13 +24,7 @@ public class ChunkData {
     public ChunkData(ChunkVoxelData chunkVoxelData) {
         position = chunkVoxelData.chunkPos;
 
-        mesh = new Mesh();
-        mesh.vertices = chunkVoxelData.meshData.vertices;
-        mesh.triangles = chunkVoxelData.meshData.triangles;
-        mesh.colors = chunkVoxelData.meshData.colors;
-        mesh.uv = chunkVoxelData.meshData.uvs;
-        mesh.uv2 = chunkVoxelData.meshData.uvs2;
-        mesh.RecalculateNormals();
+        mesh = MeshDataGenerator.applyMeshData(chunkVoxelData.meshData);
     }
 
     public Vector3 getPos() {
