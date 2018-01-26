@@ -6,12 +6,18 @@ using UnityEngine;
 /// This class is for settings in the options menu.
 /// </summary>
 public static class Settings {
-
+    
+    /// <summary>
+    /// Loads settings from playerprefs.
+    /// </summary>
     public static void load() {
         WorldGenThreads = PlayerPrefs.GetInt("MaxChunkLaunchesPerUpdate");
         MaxChunkLaunchesPerUpdate = PlayerPrefs.GetInt("WorldGenThreads");
     }
 
+    /// <summary>
+    /// Saves settings to playerprefs.
+    /// </summary>
     public static void save() {
         PlayerPrefs.SetInt("MaxChunkLaunchesPerUpdate", MaxChunkLaunchesPerUpdate);
         PlayerPrefs.SetInt("WorldGenThreads", WorldGenThreads);

@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Class for the camera in the main menu.
+/// </summary>
 public class MainMenuCamera : MonoBehaviour {
     public float radius;
     public float height;
