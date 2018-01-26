@@ -20,8 +20,6 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			// make fog work
-			#pragma multi_compile_fog
 
 			#include "UnityCG.cginc"
 
@@ -32,7 +30,6 @@
 
 			struct v2f {
 				float2 uv2_MainTex : TEXCOORD1;
-				UNITY_FOG_COORDS(2)
 				float4 vertex : SV_POSITION;
 			};
 
@@ -43,16 +40,13 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv2_MainTex = TRANSFORM_TEX(v.uv2_MainTex, _MainTex);
-				UNITY_TRANSFER_FOG(o,o.vertex);
 				return o;
 			}
 
 			fixed4 frag(v2f i) : SV_Target {
 				// sample the texture
 				fixed4 col = tex2D(_MainTex, i.uv2_MainTex);
-	
-				// apply fog
-				//UNITY_APPLY_FOG(i.fogCoord, col);
+
 				return col;
 		}
 
