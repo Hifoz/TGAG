@@ -12,11 +12,11 @@ TextureImporter:
     enableMipMap: 1
     sRGBTexture: 1
     linearTexture: 0
-    fadeOut: 0
+    fadeOut: 1
     borderMipMap: 0
     mipMapsPreserveCoverage: 0
     alphaTestReferenceValue: 0.5
-    mipMapFadeDistanceStart: 5
+    mipMapFadeDistanceStart: 7
     mipMapFadeDistanceEnd: 10
   bumpmap:
     convertToNormalMap: 0
