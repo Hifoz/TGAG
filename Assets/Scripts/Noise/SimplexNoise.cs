@@ -103,6 +103,15 @@ public static class SimplexNoise {
         return g.x * x + g.y * y + g.z * z;
     }
 
+    /// <summary>
+    /// Scales the -1 to 1 range numbers to 0 to 1.
+    /// </summary>
+    /// <param name="input">float</param>
+    /// <returns>float</returns>
+    public static float scale01(float input) {
+        return (input + 1f) / 2f;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     /// __      __   _              _   _       _                               /// 
     /// \ \    / /  | |            | \ | |     (_)                              /// 

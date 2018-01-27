@@ -6,12 +6,14 @@ public class TestTree : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        MeshData md = TreeGenerator.generateMeshData(Vector3.zero);
+        MeshData md = TreeGenerator.generateMeshData(transform.position);
         GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(md);
 	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.R)) {
+            MeshData md = TreeGenerator.generateMeshData(transform.position);
+            GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(md);
+        }
+    }
 }
