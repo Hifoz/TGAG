@@ -49,46 +49,57 @@ public class TreeGenerator {
         return MeshDataGenerator.GenerateMeshData(pointMap, 0.1f, true);
     }
 
-
-
+    /// <summary>
+    /// Generates a tree built of lines.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
     private static List<LineSegment> generateTree(Vector3 pos) {
         List<LineSegment> tree = new List<LineSegment>();
-        LineSegment root = new LineSegment(Vector3.zero, new Vector3(0, 5, 0));
+        LineSegment root = new LineSegment(Vector3.zero, new Vector3(1, 5, 1));
         LineSegment current = root;
         tree.Add(current);
         System.Random rng = new System.Random((int)(pos.x + pos.y + pos.z));
 
-        int trunkLines = (int)(rng.NextDouble() * 9);
+        const float maxLineLength = 7f;
+        const float minLineLength = 3f;
+        int trunkLines = (int)(rng.NextDouble() * 6) + 3;
         Debug.Log(trunkLines);
         for (int i = 0; i < trunkLines; i++) {
-            Vector3 point = randomPointOnHalfSphere(rng);
-            current.child = new LineSegment();
+            current.child = nextLineDirection(rng, current, Mathf.PI / 8f);
+            current.child.b *= (float)rng.NextDouble() * (maxLineLength - minLineLength) + minLineLength;
             current.child.a = current.b;
+            current.child.b = current.b + current.child.b;
             current = current.child;
-            current.b = point * (float)rng.NextDouble() * 7f;
-            current.b = current.b + current.a;
+            Debug.Log(current.a + "___" + current.b);
             tree.Add(current);
         }
 
         return tree;
     }
 
-    private static float positionalNoise(ref Vector3 pos2D) {
-        Vector3 sampleIncrement = Vector3.one * 0.93f;
-        const float frequency = 2237.17f;
-        return SimplexNoise.scale01(SimplexNoise.Simplex2D(pos2D, frequency));
-    }
+    /// <summary>
+    /// Generates a direction that deviates at most radianCap radiasn from the passed line.
+    /// </summary>
+    /// <param name="rng"></param>
+    /// <param name="line"></param>
+    /// <param name="radianCap"></param>
+    /// <returns>LineSegment that deviates from input line</returns>
+    private static LineSegment nextLineDirection(System.Random rng, LineSegment line, float radianCap) {
+        Vector3 parent = line.b - line.a;
+        parent.Normalize();
 
-    private static Vector3 randomPointOnHalfSphere(System.Random rng) {
-        float angle1 = (float)rng.NextDouble() * Mathf.PI * 2f;
-        float angle2 = (float)(rng.NextDouble() - 0.5f) * Mathf.PI;
+        float angle1 = Mathf.Acos(parent.y);
+        float angle2 = Mathf.Acos(parent.x / Mathf.Sin(angle1));
+        angle1 += (float)(rng.NextDouble() - 0.5f) * 2f * radianCap;
+        angle2 += (float)(rng.NextDouble() - 0.5f) * 2f * radianCap;
 
         Vector3 point = new Vector3();
 
-        point.x = Mathf.Cos(angle1) * Mathf.Sin(angle2);
-        point.z = Mathf.Sin(angle1) * Mathf.Sin(angle2);
-        point.y = Mathf.Cos(angle2);
-        return point;
+        point.x = Mathf.Cos(angle2) * Mathf.Sin(angle1);
+        point.z = Mathf.Sin(angle2) * Mathf.Sin(angle1);
+        point.y = Mathf.Cos(angle1);
+        return new LineSegment(Vector3.zero, point);
     }
 
     /// <summary>
@@ -99,11 +110,27 @@ public class TreeGenerator {
     /// <returns>Blocktype for position</returns>
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
         foreach(var line in tree) {
-            if (distance(pos, line) < 1.5f) {
+            float dist = distance(pos, line);
+            if (dist < 1.5f) {
                 return BlockData.BlockType.DIRT;
+            } else if (line.child == null && dist < 10f && leafPos(pos)) {
+                return BlockData.BlockType.STONE;
             }
         }
         return BlockData.BlockType.AIR;
+    }
+
+    /// <summary>
+    /// Is this a position for a leaf?
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    private static bool leafPos(Vector3 pos) {
+        pos += Vector3.one * 1000; // remove offset
+        Vector3Int p = new Vector3Int((int)pos.x, (int)pos.y, (int)pos.z);
+        bool evenPos = (p.x % 2 == 0 && p.y % 2 == 0 && p.z % 2 == 0);
+        bool oddPos = (p.x % 2 == 1 && p.y % 2 == 1 && p.z % 2 == 1);
+        return evenPos || oddPos;
     }
 
     /// <summary>
