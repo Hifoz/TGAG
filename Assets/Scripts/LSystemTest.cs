@@ -9,13 +9,18 @@ public class LSystemTest : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        for (int i = 1; i < 100; i += 11) {
-            for (int j = 1; j < 100; j += 11) {
-                trees.Add(LSystemTreeGenerator.GenerateLSystemTree(new Vector3(i, 0, j)));
-                locations.Add(new Vector3(i, 0, j));
-            }
-        }        
-	}
+        //for (int i = 1; i < 100; i += 11) {
+        //    for (int j = 1; j < 100; j += 11) {
+        //        trees.Add(LSystemTreeGenerator.GenerateLSystemTree(new Vector3(i, 0, j)));
+        //        locations.Add(new Vector3(i, 0, j));
+        //    }
+        //}
+
+        trees.Add(LSystemTreeGenerator.GenerateLSystemTree(transform.position).tree);
+        locations.Add(transform.position);
+        MeshData md = LSystemTreeGenerator.generateMeshData(transform.position);
+        GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(md);
+    }
 	
 	// Update is called once per frame
 	void Update () {
