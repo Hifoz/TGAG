@@ -29,7 +29,8 @@ public static class LSystemTreeGenerator {
     }
 
     private static char[] language = new char[] {
-        'N', //Nothing
+        'N', //Variable
+        'M', //Second Variable
         'D', //Draw
         'X', //X axis
         'Y', //Y axis
@@ -46,7 +47,10 @@ public static class LSystemTreeGenerator {
     private static Dictionary<Axis, Vector3> axis = new Dictionary<Axis, Vector3>();
 
     static LSystemTreeGenerator() {
-        rules.Add('N', "D[-XND]+XD+XD[-D+D]N");
+        rules.Add('N', "D[-ZND]+M+XD[-D+ZD]N" +
+            "|YDN-Y" +
+            "|ZDM+ZD-");
+        rules.Add('M', "D[+N]-X");
 
         axis.Add(Axis.X, new Vector3(1, 0, 0));
         axis.Add(Axis.Y, new Vector3(0, 1, 0));
@@ -55,11 +59,10 @@ public static class LSystemTreeGenerator {
 
     public static List<LineSegment> GenerateLSystemTree(Vector3 pos) {
         List<LineSegment> tree = new List<LineSegment>();
-        //tree.Add(new LineSegment(new Vector3(0, 0, 0), new Vector3(0, 10, 5)));
-        //tree.Add(new LineSegment(new Vector3(0, 10, 5), new Vector3(10, 15, 5)));
-        //tree.Add(new LineSegment(new Vector3(0, 10, 5), new Vector3(15, 15, 5)));
 
-        string word = recurseString(start.ToString(), 4);
+        System.Random rng = new System.Random((int)(pos.x * 1849 + pos.y * 150 + pos.z * 4079));
+        string word = recurseString(start.ToString(), 4, rng);
+
         Stack<Turtle> states = new Stack<Turtle>();
         Turtle turtle = new Turtle();
         turtle.heading = Vector3.up;
@@ -75,6 +78,12 @@ public static class LSystemTreeGenerator {
                 case 'X':
                     turtle.axis = Axis.X;
                     break;
+                case 'Y':
+                    turtle.axis = Axis.Y;
+                    break;
+                case 'Z':
+                    turtle.axis = Axis.Z;
+                    break;
                 case '+':
                     turtle.heading = Quaternion.AngleAxis(angle, axis[turtle.axis]) * turtle.heading;
                     break;
@@ -88,12 +97,11 @@ public static class LSystemTreeGenerator {
                     turtle = states.Pop();
                     break;
             }
-        }
-            
+        }            
         return tree;
     }
 
-    private static string recurseString(string input, int depth) {
+    private static string recurseString(string input, int depth, System.Random rng) {
         if (depth == 0) {
             return input;
         }
@@ -101,11 +109,12 @@ public static class LSystemTreeGenerator {
         string output = "";
         foreach (char c in input) {
             if (rules.ContainsKey(c)) {
-                output += rules[c];
+                string[] rule = rules[c].Split('|');
+                output += rule[(int)(rng.NextDouble() * rule.Length)];
             } else {
                 output += c;
             }
         }
-        return recurseString(output, depth - 1);
+        return recurseString(output, depth - 1, rng);
     }
 }
