@@ -4,27 +4,6 @@ using UnityEngine;
 using System;
 
 public class TreeGenerator {
-    private class LineSegment{
-        public LineSegment() {
-            child = null;
-        }
-
-        public LineSegment(Vector3 a, Vector3 b) {
-            this.a = a;
-            this.b = b;
-            child = null;
-        }
-
-        public LineSegment(Vector3 a, Vector3 b, LineSegment child) {
-            this.a = a;
-            this.b = b;
-            child = null;
-        }
-
-        public Vector3 a;
-        public Vector3 b;
-        public LineSegment child;
-    }
 
     const int size = 80;
     const int height = 80;
@@ -46,7 +25,7 @@ public class TreeGenerator {
                 }
             }
         }
-        return MeshDataGenerator.GenerateMeshData(pointMap, 0.1f, true);
+        return MeshDataGenerator.GenerateMeshData(pointMap, 0.2f, true);
     }
 
     /// <summary>
@@ -55,25 +34,27 @@ public class TreeGenerator {
     /// <param name="pos"></param>
     /// <returns></returns>
     private static List<LineSegment> generateTree(Vector3 pos) {
-        List<LineSegment> tree = new List<LineSegment>();
-        LineSegment root = new LineSegment(Vector3.zero, new Vector3(1, 5, 1));
-        LineSegment current = root;
-        tree.Add(current);
-        System.Random rng = new System.Random((int)(pos.x + pos.y + pos.z));
+        //const float maxLineLength = 7f;
+        //const float minLineLength = 3f;
 
-        const float maxLineLength = 7f;
-        const float minLineLength = 3f;
-        int trunkLines = (int)(rng.NextDouble() * 6) + 3;
-        Debug.Log(trunkLines);
-        for (int i = 0; i < trunkLines; i++) {
-            current.child = nextLineDirection(rng, current, Mathf.PI / 8f);
-            current.child.b *= (float)rng.NextDouble() * (maxLineLength - minLineLength) + minLineLength;
-            current.child.a = current.b;
-            current.child.b = current.b + current.child.b;
-            current = current.child;
-            Debug.Log(current.a + "___" + current.b);
-            tree.Add(current);
-        }
+        //System.Random rng = new System.Random((int)(pos.x + pos.y + pos.z));
+        List<LineSegment> tree = new List<LineSegment>();
+        //LineSegment root = nextLineDirection(rng, new LineSegment(Vector3.zero, Vector3.one), Mathf.PI / 8f);
+        //root.b *= (float)rng.NextDouble() * (maxLineLength - minLineLength) + minLineLength;
+        //LineSegment current = root;
+        //tree.Add(current);       
+
+        //int trunkLines = (int)(rng.NextDouble() * 6) + 3;
+        //Debug.Log(trunkLines);
+        //for (int i = 0; i < trunkLines; i++) {
+        //    current.child = nextLineDirection(rng, current, Mathf.PI / 8f);
+        //    current.child.b *= (float)rng.NextDouble() * (maxLineLength - minLineLength) + minLineLength;
+        //    current.child.a = current.b;
+        //    current.child.b = current.b + current.child.b;
+        //    current = current.child;
+        //    //Debug.Log(current.a + "___" + current.b);
+        //    tree.Add(current);
+        //}
 
         return tree;
     }
@@ -109,14 +90,14 @@ public class TreeGenerator {
     /// <param name="tree">Tree lines</param>
     /// <returns>Blocktype for position</returns>
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
-        foreach(var line in tree) {
-            float dist = distance(pos, line);
-            if (dist < 1.5f) {
-                return BlockData.BlockType.DIRT;
-            } else if (line.child == null && dist < 10f && leafPos(pos)) {
-                return BlockData.BlockType.STONE;
-            }
-        }
+        //foreach(var line in tree) {
+        //    float dist = distance(pos, line);
+        //    if (dist < 1.5f) {
+        //        return BlockData.BlockType.DIRT;
+        //    } else if (line.child == null && dist < 10f && leafPos(pos)) {
+        //        return BlockData.BlockType.STONE;
+        //    }
+        //}
         return BlockData.BlockType.AIR;
     }
 
