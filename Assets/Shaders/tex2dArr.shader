@@ -1,12 +1,10 @@
 ﻿Shader "Custom/2DArrayTexture" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
-		_Color("Color", Color) = (1,1,1,1)
-		_Type("Type (0: Base block type, 1: Modifier type)", Int) = 0
 	}
 	SubShader {
 		Pass {
-			Tags{ "Queue" = "Opaque" }
+			Tags{ "Queue" = "Transparent" }
 			LOD 200
 
 			Blend SrcAlpha OneMinusSrcAlpha
@@ -26,8 +24,7 @@
 				float4 color : COLOR;
 				float2 uv : TEXCOORD0;
 
-			};	
-
+			};
 
 			struct v2f {
 				float4 vertex : SV_POSITION;
@@ -47,15 +44,14 @@
 			UNITY_DECLARE_TEX2DARRAY(_TexArr);
 
 			half4 frag(v2f i) : SV_Target {
-				int slice = i.color.r - 1;
-				int modSlice = i.color.g - 1;
-
-
-				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
+				int slice = i.color.r - 1.5;
+				int modSlice = i.color.g - 1.5;
+				
 				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
-
 				if (modTex.a != 0)
 					return modTex;
+
+				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
 				return baseTex;
 
 			}

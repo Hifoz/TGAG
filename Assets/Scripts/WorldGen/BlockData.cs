@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Stores data about a block
+/// </summary>
 public class BlockData {
     public enum BlockType {
         NONE,
@@ -13,7 +16,10 @@ public class BlockData {
         
         // Modifiers:
         GRASS,
-        SNOW
+        SNOW,
+
+
+        COUNT
     }
 
     public BlockType blockType;

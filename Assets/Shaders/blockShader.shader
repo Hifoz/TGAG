@@ -10,7 +10,7 @@
 	{
 		Pass
 		{
-			Tags{ "Queue" = "Geometry" }
+			Tags{ "Queue" = "Transparent" }
 			LOD 200
 
 			Blend SrcAlpha OneMinusSrcAlpha

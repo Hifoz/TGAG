@@ -13,13 +13,13 @@ public class TextureGenerationTest : MonoBehaviour {
     /// </summary>
     public void Generate() {
         // Create a texturearray with some textures
-        TextureGenerator textureGenerator = new TextureGenerator(512, 6);
+        TextureGenerator textureGenerator = new TextureGenerator(512, (int)BlockData.BlockType.COUNT);
+        textureGenerator.generateTexture(testData());
+        textureGenerator.generateTexture(testData());
         textureGenerator.generateTexture(testData());
         textureGenerator.generateTexture(testData(200, 0.01f));
-        textureGenerator.generateTexture(testData());
         textureGenerator.generateTexture(testData(600, 0.02f));
-        textureGenerator.generateTexture(testData());
-        textureGenerator.generateTexture(testData(600, 0.02f));
+        textureGenerator.generateTexture(testData(600, 0.03f));
 
         // Create the mesh
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();

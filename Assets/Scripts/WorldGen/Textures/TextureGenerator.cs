@@ -11,12 +11,17 @@ public class TextureGenerator {
     private int texturesUsed;
     private string path;
 
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="size"></param>
+    /// <param name="maxTextures">Max number of textures that can be added</param>
+    /// <param name="path"></param>
     public TextureGenerator(int size, int maxTextures, string path = "textureArray") {
         this.size = size;
-        this.maxTextures = maxTextures;
+        this.maxTextures = maxTextures + 1;
         this.path = path;
-        textureArray = new Texture2DArray(size, size, maxTextures, TextureFormat.RGBAFloat, false);
+        textureArray = new Texture2DArray(size, size, this.maxTextures, TextureFormat.RGBAFloat, false);
 
         generateEmpty();
     }
@@ -38,7 +43,8 @@ public class TextureGenerator {
     }
 
     /// <summary>
-    /// Used to generate one fully transparent texture to be used if modifier = BlocType.NONE
+    /// Used to generate one fully transparent texture to be used if modifier == BlockType.NONE
+    /// !! Not part of maxTextures!!
     /// </summary>
     private void generateEmpty() {
         Color[] e = new Color[size * size];
@@ -71,7 +77,12 @@ public class TextureGenerator {
         return textureArray;
     }
 
+    public bool loadTextureFromFile(string path) {
+        Texture2D loadedTexture = Resources.Load<Texture2D>(path);
+        if (loadedTexture == null)
+            return false;
 
-
+        return generateTexture(loadedTexture.GetPixels());
+    }
 
 }
