@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if UNITY_EDITOR
 using UnityEditor;
 
 /// <summary>
@@ -28,7 +30,7 @@ public class WorldGenEditor : EditorWindow {
     public static int grammarRecursionDepth = 5;
 
     private static ChunkManager chunkManager;
-
+    
     [MenuItem("TGAG/WorldGenEditor")]
     public static void ShowWindow() {
         EditorWindow.GetWindow(typeof(WorldGenEditor));        
@@ -115,5 +117,6 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.grammarRecursionDepth = grammarRecursionDepth;
 
         chunkManager.init();
-    }    
+    }
 }
+#endif
