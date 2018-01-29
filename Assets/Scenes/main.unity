@@ -612,6 +612,7 @@ GameObject:
   - component: {fileID: 1106974671}
   - component: {fileID: 1106974670}
   - component: {fileID: 1106974669}
+  - component: {fileID: 1106974674}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -683,8 +684,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 840.5, y: 464.5, z: 0}
-  m_LocalScale: {x: 0.8601852, y: 0.8601852, z: 0.8601852}
+  m_LocalPosition: {x: 840.5, y: 488, z: 0}
+  m_LocalScale: {x: 0.8755208, y: 0.8755208, z: 0.8755208}
   m_Children:
   - {fileID: 1043064330}
   m_Father: {fileID: 0}
@@ -710,6 +711,18 @@ MonoBehaviour:
   _useRadialDistance: 1
   _fadeToSkybox: 1
   _shader: {fileID: 4800000, guid: 3514cc2676a6c4db294c28459f22c359, type: 3}
+--- !u!114 &1106974674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1106974668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25b58c2b09748e8448704a883300d4b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menu: {fileID: 1043064329}
 --- !u!1 &1214379194
 GameObject:
   m_ObjectHideFlags: 0
@@ -1017,7 +1030,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1106974673}
+      - m_Target: {fileID: 1106974674}
         m_MethodName: BackToMainMenu
         m_Mode: 1
         m_Arguments:
