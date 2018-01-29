@@ -13,19 +13,29 @@ public class TextureGenerationTest : MonoBehaviour {
     /// </summary>
     public void Generate() {
         // Create a texturearray with some textures
-        TextureGenerator textureGenerator = new TextureGenerator(512, (int)BlockData.BlockType.COUNT);
-        textureGenerator.generateTexture(testData());
-        textureGenerator.generateTexture(testData());
-        textureGenerator.generateTexture(testData());
-        textureGenerator.generateTexture(testData(200, 0.01f));
-        textureGenerator.generateTexture(testData(600, 0.02f));
-        textureGenerator.generateTexture(testData(600, 0.03f));
+        TextureManager textureManager = new TextureManager(512, (int)BlockData.BlockType.COUNT * 3);
+        string sharedPath = "Textures/temp/";
+        textureManager.loadTextureFromFile(sharedPath + "temp_dirt");
+        textureManager.loadTextureFromFile(sharedPath + "temp_dirt");
+        textureManager.loadTextureFromFile(sharedPath + "temp_dirt");
+        textureManager.loadTextureFromFile(sharedPath + "temp_stone");
+        textureManager.loadTextureFromFile(sharedPath + "temp_stone");
+        textureManager.loadTextureFromFile(sharedPath + "temp_stone");
+        textureManager.loadTextureFromFile(sharedPath + "temp_sand");
+        textureManager.loadTextureFromFile(sharedPath + "temp_sand");
+        textureManager.loadTextureFromFile(sharedPath + "temp_sand");
+        textureManager.loadTextureFromFile(sharedPath + "temp_grass_top");
+        textureManager.loadTextureFromFile(sharedPath + "temp_grass_side");
+        textureManager.skipIndex();
+        textureManager.loadTextureFromFile(sharedPath + "temp_snow_top");
+        textureManager.loadTextureFromFile(sharedPath + "temp_snow_side");
+        textureManager.skipIndex();
 
         // Create the mesh
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();
         GenerateTestCubes();
 
-        GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureGenerator.getTextureArray());
+        GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
     }
 
 

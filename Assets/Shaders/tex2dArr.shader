@@ -47,8 +47,10 @@
 				int slice = i.color.r - 1.5;
 				int modSlice = i.color.g - 1.5;
 				
+
+
 				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
-				if (modTex.a != 0)
+				if (modTex.a > 0.5f)
 					return modTex;
 
 				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));

@@ -11,8 +11,8 @@ public class BlockData {
         NONE,
         // Base types:
         DIRT,
-       // STONE,
-       // SAND,
+        STONE,
+        SAND,
         
         // Modifiers:
         GRASS,
