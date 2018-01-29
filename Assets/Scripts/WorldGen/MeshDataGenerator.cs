@@ -132,12 +132,66 @@ public class MeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
 
+
+
+
+        AddTextureStuff(blockData, dir, true);
+
+        return;
+
+        // IGNORE FOR NOW:
         AddTextureCoordinates((int)blockData.blockType - 1, textureYoffset, dir, true);
         // Modifier textures:
         if (blockData.modifier != BlockData.ModifierType.NONE)
             AddTextureCoordinates((int)blockData.modifier - 1, textureYoffset, dir, false);
         else
             AddTextureCoordinates(0, 0, dir, false);
+    }
+
+
+
+    private void AddTextureStuff(BlockData blockData, FaceDirection faceDir, bool isBaseType) {
+        float slice = (int)blockData.blockType - 1;// The slice is the index of the texture in the Texture2dArray we want to set the face to
+
+        for(int i = 0; i < 4; i++)
+            colors.Add(new Color(slice/255f, 1, 1)); // Because Unity does not have an official way of sending the slice info to the shader, we store it in the colour, in the red channel
+
+
+        Vector2[] coords = new Vector2[]{
+            new Vector2(0, 0),
+            new Vector2(0, 1),
+            new Vector2(1, 0),
+            new Vector2(1, 1)
+        };
+
+        int[,] rotations = new int[,] {
+            { 0, 1, 2, 3 },
+            { 2, 0, 3, 1 },
+            { 3, 2, 1, 0 },
+            { 1, 3, 0, 2 }
+        };
+
+        // Select a rotation for the texture
+        int rotation;
+
+        switch (faceDir) {
+            case FaceDirection.xp:
+            case FaceDirection.zm:
+                rotation = 0;
+                break;
+            case FaceDirection.xm:
+            case FaceDirection.zp:
+                rotation = 1;
+                break;
+            default: // yp & ym
+                rotation = 2;
+                break;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            uvs.Add(coords[rotations[rotation, i]]);
+        }
+
     }
 
     /// <summary>
@@ -148,6 +202,8 @@ public class MeshDataGenerator {
     /// <param name="dir">Direction of the face</param>
     /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir, bool isBaseType) {
+
+
         int blockTextureSize = 512;
         int numberOfTextures = isBaseType ? 3 : 2;
 

@@ -1,33 +1,47 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class TextureGenerator {
-    Texture2DArray textures;
-    int maxTextures;
-    int size;
+    private Texture2DArray textureArray;
+    private int maxTextures;
+    private int size;
+    private int texturesUsed;
+    private string path;
 
-    public TextureGenerator(int size, int maxTextures) {
+
+    public TextureGenerator(int size, int maxTextures, string path) {
         this.size = size;
         this.maxTextures = maxTextures;
-        textures = new Texture2DArray(size, size, maxTextures, TextureFormat.RGBAFloat, false);
+        this.path = path;
+        textureArray = new Texture2DArray(size, size, maxTextures, TextureFormat.RGBAFloat, false);
     }
 
 
-    public void GenerateTexture(Color[] pixelData, int index) {
-        textures.SetPixels(pixelData, 0);
+    public void generateTexture(Color[] pixelData, int index) {
+        textureArray.SetPixels(pixelData, texturesUsed);
+        texturesUsed++;
+    }
+
+    public int getTexturesUsed() {
+        return texturesUsed;
+    }
+
+    public string buildAsset() {
+        textureArray.Apply();
+        AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
+
+        return path;
+    }
+
+    public Texture2DArray getTextureArray() {
+        textureArray.Apply();
+        return textureArray;
     }
 
 
-    public Texture2DArray GetTextureArray() {
-        return textures;
-    }
 
-    public Color[] GetTexture(int index) {
-        if (index < maxTextures)
-            return textures.GetPixels(index);
 
-        return null;
-    }
 }
