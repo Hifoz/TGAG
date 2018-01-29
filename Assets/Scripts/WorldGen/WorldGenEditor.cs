@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if UNITY_EDITOR
 using UnityEditor;
 
 /// <summary>
@@ -20,7 +22,7 @@ public class WorldGenEditor : EditorWindow {
     private static float frequency3D = 0.0075f;
 
     private static ChunkManager chunkManager;
-
+    
     [MenuItem("TGAG/WorldGenEditor")]
     public static void ShowWindow() {
         EditorWindow.GetWindow(typeof(WorldGenEditor));        
@@ -95,5 +97,6 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.frequency3D = frequency3D;
 
         chunkManager.init();
-    }    
+    }
 }
+#endif
