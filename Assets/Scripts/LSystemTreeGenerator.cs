@@ -6,18 +6,15 @@ using UnityEngine;
 /// Class representing a line, this is used to represent trees
 /// </summary>
 public class LineSegment {
-    public LineSegment(Vector3 a, Vector3 b) {
+    public LineSegment(Vector3 a, Vector3 b, bool leaf = false) {
         this.a = a;
         this.b = b;
-    }
-
-    public LineSegment(Vector3 a, Vector3 b, LineSegment child) {
-        this.a = a;
-        this.b = b;
+        this.leaf = leaf;
     }
 
     public Vector3 a;
     public Vector3 b;
+    public bool leaf;
 }
 
 /// <summary>
@@ -91,6 +88,17 @@ public static class LSystemTreeGenerator {
         axis.Add(Axis.Z, new Vector3(0, 0, 1));
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //  __  __           _           __  _____      _       _   __  __                _____          _      	//
+    // |  \/  |         | |         / / |  __ \    (_)     | | |  \/  |              / ____|        | |     	//
+    // | \  / | ___  ___| |__      / /  | |__) |__  _ _ __ | |_| \  / | __ _ _ __   | |     ___   __| | ___ 	//
+    // | |\/| |/ _ \/ __| '_ \    / /   |  ___/ _ \| | '_ \| __| |\/| |/ _` | '_ \  | |    / _ \ / _` |/ _ \	//
+    // | |  | |  __/\__ \ | | |  / /    | |  | (_) | | | | | |_| |  | | (_| | |_) | | |___| (_) | (_| |  __/	//
+    // |_|  |_|\___||___/_| |_| /_/     |_|   \___/|_|_| |_|\__|_|  |_|\__,_| .__/   \_____\___/ \__,_|\___|	//
+    //                                                                      | |                             	//
+    //                                                                      |_|                             	//
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     /// <summary>
     /// Generates the MeshData for a tree
     /// </summary>
@@ -109,7 +117,7 @@ public static class LSystemTreeGenerator {
                 }
             }
         }
-        return MeshDataGenerator.GenerateMeshData(pointMap, 0.2f, true);
+        return MeshDataGenerator.GenerateMeshData(pointMap, 0.4f, true);
     }
     
     /// <summary>
@@ -124,12 +132,36 @@ public static class LSystemTreeGenerator {
             if (dist < ChunkConfig.treeThickness) {
                 Debug.Log("TRUNK");
                 return BlockData.BlockType.DIRT;
-            }// else if (line.child == null && dist < 10f && leafPos(pos)) {
-            //    return BlockData.BlockType.STONE;
-            //}
+            } else if (line.leaf == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+                return BlockData.BlockType.STONE;
+            }
         }
         return BlockData.BlockType.AIR;
     }
+
+    /// <summary>
+    /// Is this a position for a leaf?
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    private static bool leafPos(Vector3 pos) {
+        pos += Vector3.one * 1000; // remove offset
+        Vector3Int p = new Vector3Int((int)pos.x, (int)pos.y, (int)pos.z);
+        bool evenPos = (p.x % 2 == 0 && p.y % 2 == 0 && p.z % 2 == 0);
+        bool oddPos = (p.x % 2 == 1 && p.y % 2 == 1 && p.z % 2 == 1);
+        return evenPos || oddPos;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //  _          _____           _                    _____          _      	//
+    // | |        / ____|         | |                  / ____|        | |     	//
+    // | |  _____| (___  _   _ ___| |_ ___ _ __ ___   | |     ___   __| | ___ 	//
+    // | | |______\___ \| | | / __| __/ _ \ '_ ` _ \  | |    / _ \ / _` |/ _ \	//
+    // | |____    ____) | |_| \__ \ ||  __/ | | | | | | |___| (_) | (_| |  __/	//
+    // |______|  |_____/ \__, |___/\__\___|_| |_| |_|  \_____\___/ \__,_|\___|	//
+    //                    __/ |                                               	//
+    //                   |___/                                                	//
+    //////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
     /// Generates a Tree based on the grammar defined in this class.
@@ -152,7 +184,7 @@ public static class LSystemTreeGenerator {
         turtle.heading = Vector3.up;
         turtle.pos = Vector3.zero;
         turtle.axis = Axis.X;
-        turtle.lineLen = 5f;
+        turtle.lineLen = 3.0f;
         
         //Make the turtle proccess the word.
         foreach(char c in word) {
@@ -182,13 +214,16 @@ public static class LSystemTreeGenerator {
                     states.Push(turtle);
                     break;
                 case ']':
+                    tree.tree[tree.tree.Count - 1].leaf = true; //When the turtle pops, the branch is complete.
                     turtle = states.Pop();
                     break;
             }
         }
+        tree.tree[tree.tree.Count - 1].leaf = true; //Last line is a leaf branch.
         //Ready the result and return.
-        tree.lowerBounds -= new Vector3(1, 0, 1) * ChunkConfig.treeThickness * boundingBoxModifier;
-        tree.upperBounds += Vector3.one * ChunkConfig.treeThickness * boundingBoxModifier;
+        float modifier = (ChunkConfig.treeThickness + ChunkConfig.treeLeafThickness) * boundingBoxModifier;
+        tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
+        tree.upperBounds += Vector3.one * modifier;
         tree.size = (tree.upperBounds - tree.lowerBounds);
         //Debug.Log(tree.size + "__" + tree.lowerBounds + "__" + tree.upperBounds);
         return tree;
