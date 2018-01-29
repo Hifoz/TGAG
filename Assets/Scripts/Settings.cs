@@ -11,8 +11,8 @@ public static class Settings {
     /// Loads settings from playerprefs.
     /// </summary>
     public static void load() {
-        tryGetInt("MaxChunkLaunchesPerUpdate", ref MaxChunkLaunchesPerUpdate);
-        tryGetInt("WorldGenThreads", ref WorldGenThreads);
+        MaxChunkLaunchesPerUpdate = PlayerPrefs.GetInt("MaxChunkLaunchesPerUpdate", MaxChunkLaunchesPerUpdate);
+        WorldGenThreads = PlayerPrefs.GetInt("WorldGenThreads", WorldGenThreads);
     }
 
     /// <summary>
@@ -21,13 +21,6 @@ public static class Settings {
     public static void save() {
         PlayerPrefs.SetInt("MaxChunkLaunchesPerUpdate", MaxChunkLaunchesPerUpdate);
         PlayerPrefs.SetInt("WorldGenThreads", WorldGenThreads);
-    }
-
-    private static void tryGetInt(string name, ref int target) {
-        int value = PlayerPrefs.GetInt(name);
-        if (value != 0) {
-            target = value;
-        }
     }
 
     public static int WorldGenThreads = 3;
