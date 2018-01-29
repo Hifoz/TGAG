@@ -86,8 +86,6 @@ public class MeshDataGenerator {
     private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData) {
         int vertIndex = vertices.Count;
 
-        int textureYoffset = 1;
-
         switch (dir) {
             case FaceDirection.xp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(0.5f, -0.5f, -0.5f),
@@ -106,14 +104,12 @@ public class MeshDataGenerator {
                                                 pointPos + new Vector3(-0.5f, 0.5f,  0.5f),
                                                 pointPos + new Vector3(0.5f,  0.5f, -0.5f),
                                                 pointPos + new Vector3(0.5f,  0.5f,  0.5f)});
-                textureYoffset = 2;
                 break;
             case FaceDirection.ym:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, -0.5f),
                                                 pointPos + new Vector3(0.5f,  -0.5f, -0.5f),
                                                 pointPos + new Vector3(-0.5f, -0.5f,  0.5f),
                                                 pointPos + new Vector3(0.5f,  -0.5f,  0.5f)});
-                textureYoffset = 0;
                 break;
             case FaceDirection.zp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, 0.5f),
@@ -136,16 +132,6 @@ public class MeshDataGenerator {
 
 
         AddTextureStuff(blockData, dir, true);
-
-        return;
-
-        // IGNORE FOR NOW:
-        AddTextureCoordinates((int)blockData.blockType - 1, textureYoffset, dir, true);
-        // Modifier textures:
-        if (blockData.modifier != BlockData.ModifierType.NONE)
-            AddTextureCoordinates((int)blockData.modifier - 1, textureYoffset, dir, false);
-        else
-            AddTextureCoordinates(0, 0, dir, false);
     }
 
 
@@ -154,7 +140,7 @@ public class MeshDataGenerator {
         float slice = (int)blockData.blockType - 1;// The slice is the index of the texture in the Texture2dArray we want to set the face to
 
         for(int i = 0; i < 4; i++)
-            colors.Add(new Color(slice/255f, 1, 1)); // Because Unity does not have an official way of sending the slice info to the shader, we store it in the colour, in the red channel
+            colors.Add(new Color(slice/255f, 0, 0)); // Because Unity does not have an official way of sending the slice info to the shader, we store it in the colour, in the red channel
 
 
         Vector2[] coords = new Vector2[]{

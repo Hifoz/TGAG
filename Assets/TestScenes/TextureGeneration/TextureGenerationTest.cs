@@ -30,6 +30,7 @@ public class TextureGenerationTest : MonoBehaviour {
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();
         GenerateCube();
 
+
         GetComponent<MeshRenderer>().sharedMaterial.SetTexture("Tex", Resources.Load<Texture2DArray>("Textures/" + subpath));
     }
 
