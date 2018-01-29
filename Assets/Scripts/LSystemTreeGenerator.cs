@@ -130,7 +130,6 @@ public static class LSystemTreeGenerator {
         foreach (var line in tree) {
             float dist = distance(pos, line);
             if (dist < ChunkConfig.treeThickness) {
-                Debug.Log("TRUNK");
                 return BlockData.BlockType.DIRT;
             } else if (line.leaf == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.STONE;
@@ -176,8 +175,8 @@ public static class LSystemTreeGenerator {
         tree.lowerBounds = new Vector3(99999, 0, 99999);
         tree.upperBounds = new Vector3(-99999, -99999, -99999);
 
-        System.Random rng = new System.Random((int)(pos.x * 1849 + pos.y * 150 + pos.z * 4079));
-        string word = recurseString(start.ToString(), 6, rng);
+        System.Random rng = new System.Random(NoiseUtils.Vector2Seed(pos));
+        string word = recurseString(start.ToString(), 5, rng);
 
         Stack<Turtle> states = new Stack<Turtle>();
         Turtle turtle = new Turtle();
@@ -221,7 +220,7 @@ public static class LSystemTreeGenerator {
         }
         tree.tree[tree.tree.Count - 1].leaf = true; //Last line is a leaf branch.
         //Ready the result and return.
-        float modifier = (ChunkConfig.treeThickness + ChunkConfig.treeLeafThickness) * boundingBoxModifier;
+        float modifier = ((ChunkConfig.treeThickness < ChunkConfig.treeLeafThickness) ? ChunkConfig.treeLeafThickness : ChunkConfig.treeThickness) * boundingBoxModifier;
         tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
         tree.upperBounds += Vector3.one * modifier;
         tree.size = (tree.upperBounds - tree.lowerBounds);

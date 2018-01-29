@@ -20,8 +20,7 @@ public class ChunkVoxelDataGenerator {
     /// <param name="pos">The position to investigate</param>
     /// <returns>bool contains voxel</returns>
     public static bool posContainsVoxel(Vector3 pos) {
-        Vector3 pos2D = new Vector3(pos.x, pos.z, 0);
-        return (pos.y < calcHeight(pos2D) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+        return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
     }
 
     /// <summary>
@@ -84,7 +83,7 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
-    private static float calcHeight(Vector3 pos) {
+    public static float calcHeight(Vector3 pos) {
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;

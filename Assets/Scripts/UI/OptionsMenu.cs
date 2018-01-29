@@ -4,19 +4,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Class for OptionsMenu UI
+/// </summary>
 public class OptionsMenu : MonoBehaviour {
 
     public InputField MaxChunkLaunchesPerUpdate;
     public Slider WorldGenThreads;
 
     // Use this for initialization
-    void Start () {
-        MaxChunkLaunchesPerUpdate.text = PlayerPrefs.GetInt("MaxChunkLaunchesPerUpdate").ToString();
-        WorldGenThreads.minValue = 1;
+    void Awake () {
+        Settings.load();
+        MaxChunkLaunchesPerUpdate.text = Settings.MaxChunkLaunchesPerUpdate.ToString();        
         WorldGenThreads.maxValue = Environment.ProcessorCount;
-        WorldGenThreads.value = PlayerPrefs.GetInt("WorldGenThreads");
+        WorldGenThreads.value = Settings.WorldGenThreads;
+        WorldGenThreads.minValue = 1;
     }	
 
+    /// <summary>
+    /// Function called when MaxChunkLaunchesPerUpdate field is used.
+    /// Keeps value above 0.
+    /// </summary>
     public void OptionMaxChunkLaunchesPerUpdate() {
         int value = int.Parse(MaxChunkLaunchesPerUpdate.text);
         if (value < 1) {
@@ -27,6 +35,9 @@ public class OptionsMenu : MonoBehaviour {
         Settings.save();
     }
 
+    /// <summary>
+    /// Function called when the WorldGenThreads slider is used.
+    /// </summary>
     public void OptionWorldGenThreads() {
         int value = (int)WorldGenThreads.value;
         Settings.WorldGenThreads = value;
