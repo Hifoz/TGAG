@@ -5,18 +5,22 @@ using UnityEngine;
 
 public class BlockData {
     public enum BlockType {
-        AIR, DIRT, STONE, SAND
-    }
-
-    public enum ModifierType {
-        NONE, GRASS, SNOW
+        NONE,
+        // Base types:
+        DIRT,
+       // STONE,
+       // SAND,
+        
+        // Modifiers:
+        GRASS,
+        SNOW
     }
 
     public BlockType blockType;
-    public ModifierType modifier;
+    public BlockType modifier;
 
-    public BlockData(BlockType baseType, ModifierType modifierType = ModifierType.NONE) {
-        blockType = baseType;
-        modifier = modifierType;
+    public BlockData(BlockType baseType, BlockType modifier = BlockType.NONE) {
+        this.blockType = baseType;
+        this.modifier = modifier;
     }
 }

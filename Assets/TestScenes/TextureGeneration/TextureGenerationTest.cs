@@ -8,28 +8,22 @@ public class TextureGenerationTest : MonoBehaviour {
     Mesh mesh;
 
 
-	// Use this for initialization
-	void Start () {
-        Generate();
-    }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-
+    /// <summary>
+    /// Used to test the texture generator.
+    /// </summary>
     public void Generate() {
         // Create a texturearray with some textures
-        TextureGenerator textureGenerator = new TextureGenerator(512, 3, "tex2dArr");
-        textureGenerator.generateTexture(testData(), 0);
-        textureGenerator.generateTexture(testData(200, 0.01f), 0);
-        textureGenerator.generateTexture(testData(600, 0.02f), 0);
-        string subpath = textureGenerator.buildAsset();
+        TextureGenerator textureGenerator = new TextureGenerator(512, 6);
+        textureGenerator.generateTexture(testData());
+        textureGenerator.generateTexture(testData(200, 0.01f));
+        textureGenerator.generateTexture(testData());
+        textureGenerator.generateTexture(testData(600, 0.02f));
+        textureGenerator.generateTexture(testData());
+        textureGenerator.generateTexture(testData(600, 0.02f));
 
         // Create the mesh
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();
-        GenerateCube();
+        GenerateTestCubes();
 
         GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureGenerator.getTextureArray());
     }
@@ -45,7 +39,7 @@ public class TextureGenerationTest : MonoBehaviour {
         Color[] data = new Color[512*512];
         for(int i = 0; i < data.Length; i++) {
             float pV = SimplexNoise.Simplex2D(new Vector3((i/512)+seed,(i%512)+seed), freq);
-            data[i] = new Color(pV, pV, pV);
+            data[i] = new Color(pV, pV, pV, 1);
         }
 
         return data;
@@ -53,21 +47,21 @@ public class TextureGenerationTest : MonoBehaviour {
 
 
     /// <summary>
-    /// Generates a single cube surrounded by air
+    /// Generates cubes for testing texture generation.
     /// </summary>
-    public void GenerateCube() {
+    public void GenerateTestCubes() {
         BlockData[,,] blockdata = new BlockData[,,] {
-            { { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) },
-            { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) },
-            { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) } },
+            { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) } },
 
-            { { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) },
-            { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.SAND),new BlockData(BlockData.BlockType.AIR) },
-            { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.DIRT),new BlockData(BlockData.BlockType.AIR) } },
+            { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT),new BlockData(BlockData.BlockType.NONE) },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT, BlockData.BlockType.GRASS),new BlockData(BlockData.BlockType.NONE) } },
 
-            { { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) },
-            { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) },
-            { new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR),new BlockData(BlockData.BlockType.AIR) } },
+            { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) } },
         };
 
 

@@ -131,23 +131,55 @@ public class MeshDataGenerator {
 
 
 
-        AddTextureStuff(blockData, dir, true);
+        addTextureCoordinates(blockData, dir);
+        addSliceData(blockData, dir);
+
     }
 
+    /// <summary>
+    /// Stores the indices of the texture slices to use for a face of a block.
+    /// </summary>
+    /// <param name="blockData">Data of the block</param>
+    /// <param name="faceDir">Direction of the face</param>
+    private void addSliceData(BlockData blockData, FaceDirection faceDir) {
+        int slice = ((int)blockData.blockType) * 3;   // The slice is the index of the texture in the Texture2dArray we want to set the face to.
+        int modSlice = ((int)blockData.modifier) * 3;
+        if (blockData.modifier == BlockData.BlockType.NONE)
+            modSlice = 0;
 
+        switch (faceDir) {
+            case FaceDirection.xp:
+            case FaceDirection.xm:
+            case FaceDirection.zp:
+            case FaceDirection.zm:
+                slice += 1;
+                modSlice += 1;
+                break;
+            case FaceDirection.ym:
+                slice += 2;
+                modSlice += 2;
+                break;
+        }
 
-    private void AddTextureStuff(BlockData blockData, FaceDirection faceDir, bool isBaseType) {
-        float slice = (int)blockData.blockType - 1;// The slice is the index of the texture in the Texture2dArray we want to set the face to
+        for (int i = 0; i < 4; i++)
+            colors.Add(new Color(slice, modSlice, 0));                  // Because Unity does not have an official way of sending 
+                                                                        //  the slice info to the shader we store it in the colour.
+                                                                        //  Basetype in red channel and modifier in green channel.
+                                                                        // If we ever need to use the color channels for something
+                                                                        //  more important, this could probably be sent via uv2 instead.
+    }
 
-        for(int i = 0; i < 4; i++)
-            colors.Add(new Color(slice/255f, 0, 0)); // Because Unity does not have an official way of sending the slice info to the shader, we store it in the colour, in the red channel
-
+    /// <summary>
+    /// Adds texture coordinates for a face of a block.
+    /// </summary>
+    /// <param name="blockData">Data of the block</param>
+    /// <param name="faceDir">Direction of the face</param>
+    /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
+    private void addTextureCoordinates(BlockData blockData, FaceDirection faceDir) {
 
         Vector2[] coords = new Vector2[]{
-            new Vector2(0, 0),
-            new Vector2(0, 1),
-            new Vector2(1, 0),
-            new Vector2(1, 1)
+            new Vector2(0, 0), new Vector2(0, 1),
+            new Vector2(1, 0), new Vector2(1, 1)
         };
 
         int[,] rotations = new int[,] {
@@ -187,6 +219,7 @@ public class MeshDataGenerator {
     /// <param name="yOffset">Decided by the direction of the face</param>
     /// <param name="dir">Direction of the face</param>
     /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
+    [Obsolete("This function is deprecated, please use 'addTextureCoordinates(BlockData, FaceDirection, bool) instead'")]
     private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir, bool isBaseType) {
 
 
