@@ -68,7 +68,7 @@ public static class LSystemTreeGenerator {
     private const float angle = 25f;
 
     private static Dictionary<Axis, Vector3> axis = new Dictionary<Axis, Vector3>();
-    private const float boundingBoxModifier = 2.5f; //Constant that modifies the size of the bounding box for the tree
+    private const float boundingBoxModifier = 2.0f; //Constant that modifies the size of the bounding box for the tree
 
     /// <summary>
     /// Constructor, populates the dictionaries.
@@ -176,7 +176,7 @@ public static class LSystemTreeGenerator {
         tree.upperBounds = new Vector3(-99999, -99999, -99999);
 
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(pos));
-        string word = recurseString(start.ToString(), 5, rng);
+        string word = recurseString(start.ToString(), ChunkConfig.grammarRecursionDepth, rng);
 
         Stack<Turtle> states = new Stack<Turtle>();
         Turtle turtle = new Turtle();

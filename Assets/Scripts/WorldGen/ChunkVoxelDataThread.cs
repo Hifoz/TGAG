@@ -82,7 +82,7 @@ public class ChunkVoxelDataThread {
         result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order));
-        int trees = (int)(rng.NextDouble() * ChunkConfig.maxTreesPerChunk);
+        int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
         result.trees = new MeshData[trees];
         result.treePositions = new Vector3[trees];
 
