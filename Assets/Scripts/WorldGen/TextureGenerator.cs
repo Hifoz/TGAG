@@ -32,7 +32,6 @@ public class TextureGenerator {
     public string buildAsset() {
         textureArray.Apply();
         AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
-
         return path;
     }
 

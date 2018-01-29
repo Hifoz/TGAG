@@ -1,4 +1,4 @@
-﻿Shader "Example/Sample2DArrayTexture" {
+﻿Shader "Custom/2DArrayTexture" {
 	Properties {
 		_TexArr("Tex", 2DArray) = "" {}
 		_Color("Color", Color) = (1,1,1,1)
@@ -6,6 +6,13 @@
 	}
 	SubShader {
 		Pass {
+			Tags{ "Queue" = "Transparent" }
+			LOD 200
+
+			Blend SrcAlpha OneMinusSrcAlpha
+			AlphaToMask On
+
+
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -16,15 +23,23 @@
 
 			struct appdata {
 				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;
 				float4 color : COLOR;
-			};
+#if _Type == 0
+				float2 uv : TEXCOORD0;
+#else
+				float2 uv : TEXCOORD1;
+#endif
+			};	
 
 
 			struct v2f {
-				float3 uv : TEXCOORD0;
 				float4 vertex : SV_POSITION;
 				float4 color : COLOR;
+#if _Type == 0
+				float3 uv : TEXCOORD0;
+#else
+				float3 uv : TEXCOORD1;
+#endif
 			};
 
 
@@ -47,4 +62,5 @@
 			ENDCG
 		}
 	}
+	FallBack "Diffuse"
 }

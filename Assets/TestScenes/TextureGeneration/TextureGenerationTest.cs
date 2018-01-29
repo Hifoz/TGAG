@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -20,7 +21,7 @@ public class TextureGenerationTest : MonoBehaviour {
 
     public void Generate() {
         // Create a texturearray with some textures
-        TextureGenerator textureGenerator = new TextureGenerator(512, 3, "tex2dArr.asset");
+        TextureGenerator textureGenerator = new TextureGenerator(512, 3, "tex2dArr");
         textureGenerator.generateTexture(testData(), 0);
         textureGenerator.generateTexture(testData(200, 0.01f), 0);
         textureGenerator.generateTexture(testData(600, 0.02f), 0);
@@ -30,8 +31,7 @@ public class TextureGenerationTest : MonoBehaviour {
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();
         GenerateCube();
 
-
-        GetComponent<MeshRenderer>().sharedMaterial.SetTexture("Tex", Resources.Load<Texture2DArray>("Textures/" + subpath));
+        GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureGenerator.getTextureArray());
     }
 
 
