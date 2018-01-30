@@ -10,11 +10,14 @@ public class ChunkManager : MonoBehaviour {
 
     public Transform player;
     public GameObject chunkPrefab;
-    public TextureManager textureManager;
+    public TextureManager terrainTextureManager;
+    public TextureManager treeTextureManager;
+    public GameObject treePrefab;
     private Vector3 offset;
-    private List<GameObject> activeChunks = new List<GameObject>();
+    private List<ChunkData> activeChunks = new List<ChunkData>();
     private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
-    private GameObject[,] chunkGrid;
+    private Stack<GameObject> inactiveTrees = new Stack<GameObject>();
+    private ChunkData[,] chunkGrid;
 
     private ChunkVoxelDataThread[] CVDT;
     private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
@@ -52,7 +55,10 @@ public class ChunkManager : MonoBehaviour {
             }
         }
         while (activeChunks.Count > 0) {
-            Destroy(activeChunks[0]);
+            Destroy(activeChunks[0].chunk);
+            foreach (var tree in activeChunks[0].trees) {
+                Destroy(tree);
+            }
             activeChunks.RemoveAt(0);
         }
         while (inactiveChunks.Count > 0) {
@@ -65,14 +71,14 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     public void init() {
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
-        chunkGrid = new GameObject[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+        chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
 
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-                inactiveChunks.Push(createChunk(chunkPos));
-            }
-        }
+        //for (int x = 0; x < ChunkConfig.chunkCount; x++) {
+        //    for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+        //        Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
+        //        inactiveChunks.Push(createChunk());
+        //    }
+        //}
     }
 
     /// <summary>
@@ -92,14 +98,20 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void updateChunkGrid() {
         for (int i = 0; i < activeChunks.Count; i++) {
-            Vector3 chunkPos = (activeChunks[i].transform.position - offset - getPlayerPos()) / ChunkConfig.chunkSize;
+            Vector3 chunkPos = (activeChunks[i].chunk.transform.position - offset - getPlayerPos()) / ChunkConfig.chunkSize;
             int ix = Mathf.FloorToInt(chunkPos.x);
             int iz = Mathf.FloorToInt(chunkPos.z);
             if (checkBounds(ix, iz)) {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
-                inactiveChunks.Push(activeChunks[i]);
+                inactiveChunks.Push(activeChunks[i].chunk);
                 inactiveChunks.Peek().SetActive(false);
+
+                foreach(var tree in activeChunks[i].trees) {
+                    inactiveTrees.Push(tree);
+                    tree.SetActive(false); 
+                }
+
                 activeChunks.RemoveAt(i);
                 i--;
             }
@@ -131,16 +143,30 @@ public class ChunkManager : MonoBehaviour {
         while (results.getCount() > 0 && launchCount < maxLaunchPerUpdate) {
             var chunkMeshData = results.Dequeue();
             pendingChunks.Remove(chunkMeshData.chunkPos);
-            ChunkData cd = new ChunkData(chunkMeshData);
+            ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
             var chunk = getChunk();
 
-            chunk.transform.position = cd.getPos();
-            chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
-            chunk.GetComponent<MeshCollider>().sharedMesh = cd.getMesh();
-            chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
 
-            activeChunks.Add(chunk);
+            chunk.transform.position = chunkMeshData.chunkPos;
+            chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
+            chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
+            chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+            cd.chunk = chunk;
+
+            GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
+            for (int i = 0; i < trees.Length; i++) {
+                GameObject tree = getTree();
+                tree.transform.position = chunkMeshData.treePositions[i];
+                tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
+                tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
+
+
+                trees[i] = tree;
+            }
+            cd.trees = trees;
+
+            activeChunks.Add(cd);
 
             launchCount++;
         }
@@ -179,22 +205,45 @@ public class ChunkManager : MonoBehaviour {
             chunk.SetActive(true);
             return chunk;
         } else {
-            return createChunk(Vector3.zero);
+            return createChunk();
         }
     }
 
     /// <summary>
-    /// A temporary function for creating a cube chunk.
+    /// Gets an inactive tree, or creates a new tree.
     /// </summary>
-    /// <param name="size">The size of the chunk</param>
-    /// <param name="pos">The position of the chunk</param>
+    /// <returns>An instance of a tree gameobject</returns>
+    private GameObject getTree() {
+        if (inactiveTrees.Count > 0) {
+            var tree = inactiveTrees.Pop();
+            tree.SetActive(true);
+            return tree;
+        } else {
+            return createTree();
+        }
+    }
+
+    /// <summary>
+    /// Creates a chunk GameObject
+    /// </summary>
     /// <returns>GameObject Chunk</returns>
-    private GameObject createChunk(Vector3 pos) {
+    private GameObject createChunk() {
         GameObject chunk = Instantiate(chunkPrefab);
         chunk.transform.parent = transform;
         chunk.name = "chunk";
-        chunk.transform.position = pos;
         return chunk;
+    }
+
+
+    /// <summary>
+    /// Creates a tree GameObject
+    /// </summary>
+    /// <returns>GameObject tree</returns>
+    private GameObject createTree() {
+        GameObject tree = Instantiate(treePrefab);
+        tree.transform.parent = transform;
+        tree.name = "tree";
+        return tree;
     }
 
     /// <summary>

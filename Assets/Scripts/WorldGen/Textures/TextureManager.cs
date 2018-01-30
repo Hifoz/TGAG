@@ -20,7 +20,7 @@ public class TextureManager : MonoBehaviour {
     private bool hasChanged = true;
 
 
-    private void Start() {
+    private void Awake() {
         addEmpty(); // We want the first entry to be clear, so that whenever a block has no modifier, the modifier can pick slice 0
     }
 
@@ -41,9 +41,9 @@ public class TextureManager : MonoBehaviour {
     public void addEmpty() {
         Color[] e = new Color[textureSize * textureSize];
         for (int i = 0; i < e.Length; i++)
-            e[i] = new Color(0, 0, 0, 0);
+            e[i] = new Color(1, 1, 1, 0);
 
-        addTexture(new Color[textureSize * textureSize]);
+        addTexture(e);
     }
 
     /// <summary>

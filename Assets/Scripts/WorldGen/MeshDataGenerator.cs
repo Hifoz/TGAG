@@ -32,6 +32,22 @@ public class MeshDataGenerator {
         xp, xm, yp, ym, zp, zm
     }
 
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    /// <returns>Mesh</returns>
+    public static Mesh applyMeshData(MeshData md) {
+        Mesh mesh = new Mesh();
+        mesh.vertices = md.vertices;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        mesh.uv2 = md.uvs2;
+        mesh.RecalculateNormals();
+        return mesh;
+    }
 
     /// <summary>
     /// Generates all data needed for a mesh of cubes
@@ -39,15 +55,20 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(BlockData[,,] pointmap) {
+    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, bool center = false) {
         MeshDataGenerator MDG = new MeshDataGenerator();
 
         MDG.pointmap = pointmap;
+        Vector3 offset = Vector3.zero;
+        if (center) {
+            offset = new Vector3(pointmap.GetLength(0) / 2f, 0, pointmap.GetLength(0) / 2f);
+        }
+
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
-                    if (pointmap[x, y, z].blockType != 0)
-                        MDG.GenerateCube(new Vector3(x, y, z), pointmap[x, y, z]);
+                    if (pointmap[x, y, z].blockType != 0)                        
+                        MDG.GenerateCube(new Vector3(x, y, z), offset, pointmap[x, y, z], voxelSize);                        
                 }
             }
         }
@@ -67,13 +88,13 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="cubePos">point position of the cube</param>
     /// <param name="blockData">data on the block</param>
-    private void GenerateCube(Vector3 cubePos, BlockData blockData) {
-        if (cubePos.x != pointmap.GetLength(0) - 1 && pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xp, cubePos, blockData);
-        if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.yp, cubePos, blockData); // Obs. On y up we also want a face even if it is the outermost layer
-        if (cubePos.z != pointmap.GetLength(2) - 1 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1].blockType == 0) GenerateCubeFace(FaceDirection.zp, cubePos, blockData);
-        if (cubePos.x != 0 && pointmap[(int)cubePos.x - 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xm, cubePos, blockData);
-        if (cubePos.y != 0 && pointmap[(int)cubePos.x, (int)cubePos.y - 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.ym, cubePos, blockData);
-        if (cubePos.z != 0 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z - 1].blockType == 0) GenerateCubeFace(FaceDirection.zm, cubePos, blockData);
+    private void GenerateCube(Vector3 cubePos, Vector3 offset, BlockData blockData, float voxelSize) {
+        if (cubePos.x != pointmap.GetLength(0) - 1 && pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
+        if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
+        if (cubePos.z != pointmap.GetLength(2) - 1 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1].blockType == 0) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
+        if (cubePos.x != 0 && pointmap[(int)cubePos.x - 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
+        if (cubePos.y != 0 && pointmap[(int)cubePos.x, (int)cubePos.y - 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
+        if (cubePos.z != 0 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z - 1].blockType == 0) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
     }
 
 
@@ -83,45 +104,49 @@ public class MeshDataGenerator {
     /// <param name="dir">direction of face</param>
     /// <param name="pointPos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
-    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData) {
+    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData, float voxelSize) {
         int vertIndex = vertices.Count;
+
+        float delta = voxelSize / 2f;
+        pointPos = pointPos * voxelSize;
+
 
         switch (dir) {
             case FaceDirection.xp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(0.5f, -0.5f, -0.5f),
-                                                pointPos + new Vector3(0.5f,  0.5f, -0.5f),
-                                                pointPos + new Vector3(0.5f, -0.5f,  0.5f),
-                                                pointPos + new Vector3(0.5f,  0.5f,  0.5f)});
+                vertices.AddRange(new Vector3[]{pointPos + new Vector3(delta, -delta, -delta),
+                                                pointPos + new Vector3(delta,  delta, -delta),
+                                                pointPos + new Vector3(delta, -delta,  delta),
+                                                pointPos + new Vector3(delta,  delta,  delta)});
                 break;
             case FaceDirection.xm:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, -0.5f),
-                                                pointPos + new Vector3(-0.5f, -0.5f,  0.5f),
-                                                pointPos + new Vector3(-0.5f,  0.5f, -0.5f),
-                                                pointPos + new Vector3(-0.5f,  0.5f,  0.5f)});
+                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
+                                                pointPos + new Vector3(-delta, -delta,  delta),
+                                                pointPos + new Vector3(-delta,  delta, -delta),
+                                                pointPos + new Vector3(-delta,  delta,  delta)});
                 break;
             case FaceDirection.yp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, 0.5f, -0.5f),
-                                                pointPos + new Vector3(-0.5f, 0.5f,  0.5f),
-                                                pointPos + new Vector3(0.5f,  0.5f, -0.5f),
-                                                pointPos + new Vector3(0.5f,  0.5f,  0.5f)});
+                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, delta, -delta),
+                                                pointPos + new Vector3(-delta, delta,  delta),
+                                                pointPos + new Vector3(delta,  delta, -delta),
+                                                pointPos + new Vector3(delta,  delta,  delta)});
                 break;
             case FaceDirection.ym:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, -0.5f),
-                                                pointPos + new Vector3(0.5f,  -0.5f, -0.5f),
-                                                pointPos + new Vector3(-0.5f, -0.5f,  0.5f),
-                                                pointPos + new Vector3(0.5f,  -0.5f,  0.5f)});
+                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
+                                                pointPos + new Vector3(delta,  -delta, -delta),
+                                                pointPos + new Vector3(-delta, -delta,  delta),
+                                                pointPos + new Vector3(delta,  -delta,  delta)});
                 break;
             case FaceDirection.zp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, 0.5f),
-                                                pointPos + new Vector3(0.5f,  -0.5f, 0.5f),
-                                                pointPos + new Vector3(-0.5f,  0.5f, 0.5f),
-                                                pointPos + new Vector3(0.5f,   0.5f, 0.5f)});
+                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, delta),
+                                                pointPos + new Vector3(delta,  -delta, delta),
+                                                pointPos + new Vector3(-delta,  delta, delta),
+                                                pointPos + new Vector3(delta,   delta, delta)});
                 break;
             case FaceDirection.zm:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-0.5f, -0.5f, -0.5f),
-                                                pointPos + new Vector3(-0.5f,  0.5f, -0.5f),
-                                                pointPos + new Vector3(0.5f,  -0.5f, -0.5f),
-                                                pointPos + new Vector3(0.5f,   0.5f, -0.5f)});
+                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
+                                                pointPos + new Vector3(-delta,  delta, -delta),
+                                                pointPos + new Vector3(delta,  -delta, -delta),
+                                                pointPos + new Vector3(delta,   delta, -delta)});
                 break;
         }
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
@@ -144,8 +169,6 @@ public class MeshDataGenerator {
     private void addSliceData(BlockData blockData, FaceDirection faceDir) {
         int slice = ((int)blockData.blockType) * 3;   // The slice is the index of the texture in the Texture2dArray we want to set the face to.
         int modSlice = ((int)blockData.modifier) * 3;
-        if (blockData.modifier == BlockData.BlockType.NONE)
-            modSlice = 0;
 
         switch (faceDir) {
             case FaceDirection.xp:
@@ -160,6 +183,9 @@ public class MeshDataGenerator {
                 modSlice += 2;
                 break;
         }
+
+        if (blockData.modifier == 0)
+            modSlice = 0;
 
         for (int i = 0; i < 4; i++)
             colors.Add(new Color(slice, modSlice, 0));                  // Because Unity does not have an official way of sending 
