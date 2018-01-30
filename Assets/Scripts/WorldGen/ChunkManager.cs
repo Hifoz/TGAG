@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Diagnostics;
+using System.IO;
 
 /// <summary>
 /// This class is responsible for handling the chunks that makes up the world.
@@ -31,22 +33,44 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     void Start () {
         Settings.load();
-        CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
-        for (int i = 0; i < Settings.WorldGenThreads; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(orders, results);
-        }
-        init();
-
-        stopwatch = new Stopwatch();
-        stopwatch.Start();
+        StartCoroutine(TestAllCoreCounts());
     }
 	
 	// Update is called once per frame
-	void Update () {
-        clearChunkGrid();
-        updateChunkGrid();
-        orderNewChunks();
-        launchOrderedChunks();
+	IEnumerator TestAllCoreCounts () {
+        string path = string.Format("C:/temp/TGAG_MultiThreading_Benchmark_{0}.txt", DateTime.Now.Ticks);
+        Directory.CreateDirectory("C:/temp");
+        StreamWriter file = File.CreateText(path);
+
+        file.WriteLine(string.Format("Testing from 1 to {0} threads ({1}):", Environment.ProcessorCount, DateTime.Now.ToString()));
+
+        for (int run = 1; run < Environment.ProcessorCount; run++) {
+            UnityEngine.Debug.Log(String.Format("Testing with {0} threads!", run));
+            clear();
+            CVDT = new ChunkVoxelDataThread[run];
+            for (int i = 0; i < run; i++) {
+                CVDT[i] = new ChunkVoxelDataThread(orders, results);
+            }
+            init();
+
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            while (!clearChunkGrid()) {
+                updateChunkGrid();
+                orderNewChunks();
+                launchOrderedChunks();
+                yield return 0;
+            }
+            stopThreads();
+            double time = stopwatch.Elapsed.TotalSeconds;
+
+            stopwatch.Stop();
+            UnityEngine.Debug.Log(String.Format("Took {0} seconds with {1} threads!", time, run));
+            file.WriteLine(String.Format("Time: {0} Seconds | Threads: {1}", time, run));
+        }
+        file.Close();
+        UnityEngine.Debug.Log("DONE TESTING!")
     }
 
     /// <summary>
@@ -82,7 +106,7 @@ public class ChunkManager : MonoBehaviour {
     /// <summary>
     /// Clears all elements in the chunkGrid
     /// </summary>
-    private void clearChunkGrid() {
+    private bool clearChunkGrid() {
         int occupied = 0;
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
@@ -93,9 +117,9 @@ public class ChunkManager : MonoBehaviour {
             }
         }
         if (occupied == ChunkConfig.chunkCount * ChunkConfig.chunkCount && stopwatch.IsRunning) {
-            UnityEngine.Debug.Log(stopwatch.Elapsed.TotalSeconds.ToString());
-            stopwatch.Stop();
+            return true;
         }
+        return false;
     }
 
     /// <summary>
@@ -143,10 +167,7 @@ public class ChunkManager : MonoBehaviour {
     /// Deploys ordered chunks from the ChunkVoxelDataThreads.
     /// </summary>
     private void launchOrderedChunks() {
-        int maxLaunchPerUpdate = Settings.MaxChunkLaunchesPerUpdate;
-        
-        int launchCount = 0;
-        while (results.getCount() > 0 && launchCount < maxLaunchPerUpdate) {
+        while (results.getCount() > 0) {
             var chunkMeshData = results.Dequeue();
             pendingChunks.Remove(chunkMeshData.chunkPos);
             ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
@@ -173,8 +194,6 @@ public class ChunkManager : MonoBehaviour {
             cd.trees = trees;
 
             activeChunks.Add(cd);
-
-            launchCount++;
         }
     }
     
