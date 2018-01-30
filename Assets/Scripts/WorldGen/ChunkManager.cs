@@ -44,7 +44,7 @@ public class ChunkManager : MonoBehaviour {
 
         file.WriteLine(string.Format("Testing from 1 to {0} threads ({1}):", Environment.ProcessorCount, DateTime.Now.ToString()));
 
-        for (int run = 1; run < Environment.ProcessorCount; run++) {
+        for (int run = 1; run <= Environment.ProcessorCount; run++) {
             UnityEngine.Debug.Log(String.Format("Testing with {0} threads!", run));
             clear();
             CVDT = new ChunkVoxelDataThread[run];
