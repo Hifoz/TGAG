@@ -70,7 +70,7 @@ public class ChunkManager : MonoBehaviour {
             file.WriteLine(String.Format("Time: {0} Seconds | Threads: {1}", time, run));
         }
         file.Close();
-        UnityEngine.Debug.Log("DONE TESTING!")
+        UnityEngine.Debug.Log("DONE TESTING!");
     }
 
     /// <summary>
