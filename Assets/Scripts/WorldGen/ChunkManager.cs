@@ -72,13 +72,6 @@ public class ChunkManager : MonoBehaviour {
     public void init() {
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
         chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
-
-        //for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-        //    for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-        //        Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
-        //        inactiveChunks.Push(createChunk());
-        //    }
-        //}
     }
 
     /// <summary>
@@ -160,7 +153,7 @@ public class ChunkManager : MonoBehaviour {
                 tree.transform.position = chunkMeshData.treePositions[i];
                 tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
                 tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
-
+                tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
 
                 trees[i] = tree;
             }
