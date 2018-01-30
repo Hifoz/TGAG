@@ -21,7 +21,9 @@ public static class ChunkConfig {
     public static float frequency3D = 0.0075f;
     //Foliage
     public static int maxTreesPerChunk = 1;
-    public static float treeThickness = 1f;
-    public static float treeLeafThickness = 4f;
-    public static int grammarRecursionDepth = 5;
+    public static float treeLineLength = 2.0f;
+    public static float treeVoxelSize = 1.0f;
+    public static float treeThickness = 0.5f;
+    public static float treeLeafThickness = 3f;
+    public static int grammarRecursionDepth = 4;
 }

@@ -63,7 +63,7 @@ public static class LSystemTreeGenerator {
         '[', //Push to stack
         ']'  //Pop from stack
     };
-    private const char start = 'N';
+    private const string start = "DDN";
     private static Dictionary<char, string> rules = new Dictionary<char, string>();
     private const float angle = 25f;
 
@@ -78,10 +78,11 @@ public static class LSystemTreeGenerator {
         //The '|' character delimits the different rules
         // for the given character.
         //Rules are chosen in a stochastic manner when more then one apply.
-        rules.Add('N', "D[-ZND]+M+XD[-D+ZD]N" +
-            "|YDN-Y" +
-            "|ZDM+ZD-");
+        rules.Add('N', "[-ZND]+M+XD[-D+XD]N" +
+            "|-YDN-Y" +
+            "|ZDDM+ZD-");
         rules.Add('M', "D[+N]-X");
+        //rules.Add('N', "ND"); Generates straight trees
 
         axis.Add(Axis.X, new Vector3(1, 0, 0));
         axis.Add(Axis.Y, new Vector3(0, 1, 0));
@@ -113,11 +114,13 @@ public static class LSystemTreeGenerator {
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
-                    pointMap[x, y, z] = new BlockData(calcBlockType(new Vector3(x + tree.lowerBounds.x, y, z + tree.lowerBounds.z), tree.tree), BlockData.BlockType.NONE);
+                    Vector3 samplePos = new Vector3(x, y, z) + tree.lowerBounds;
+                    samplePos = WorldUtils.floor(samplePos);
+                    pointMap[x, y, z] = new BlockData(calcBlockType(samplePos, tree.tree), BlockData.BlockType.NONE);
                 }
             }
         }
-        return MeshDataGenerator.GenerateMeshData(pointMap, 0.4f, true);
+        return MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds));
     }
     
     /// <summary>
@@ -183,7 +186,7 @@ public static class LSystemTreeGenerator {
         turtle.heading = Vector3.up;
         turtle.pos = Vector3.zero;
         turtle.axis = Axis.X;
-        turtle.lineLen = 3.0f;
+        turtle.lineLen = ChunkConfig.treeLineLength;
         
         //Make the turtle proccess the word.
         foreach(char c in word) {

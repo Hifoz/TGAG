@@ -91,6 +91,7 @@ public class ChunkVoxelDataThread {
             pos += order;
             pos = WorldUtils.floor(pos);
             pos = findGroundLevel(pos);
+            pos = WorldUtils.floor(pos);
             if (pos != Vector3.negativeInfinity) {
                 result.trees[i] = LSystemTreeGenerator.generateMeshData(pos);
                 result.treePositions[i] = pos;
@@ -112,21 +113,24 @@ public class ChunkVoxelDataThread {
         int iter = 0;
 
         float height = ChunkVoxelDataGenerator.calcHeight(pos);
-        pos.y = height;
+        pos.y = (int)height;
         bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
-        //TODO - Make accurate.
         while (iter < maxIter) {
             pos.y += dir;
             lastVoxel = currentVoxel;
             currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
             if (lastVoxel != currentVoxel) {
+                if (!lastVoxel) { //Put the tree in an empty voxel
+                    pos.y -= dir;
+                }
                 return pos;
             }
             iter++;
         }
+        Debug.Log("Failed to find ground");
         return Vector3.negativeInfinity;
     }
 }
