@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Diagnostics;
 
 /// <summary>
 /// This class is responsible for handling the chunks that makes up the world.
@@ -24,6 +25,7 @@ public class ChunkManager : MonoBehaviour {
     private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
+    Stopwatch stopwatch;
     /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
@@ -34,6 +36,9 @@ public class ChunkManager : MonoBehaviour {
             CVDT[i] = new ChunkVoxelDataThread(orders, results);
         }
         init();
+
+        stopwatch = new Stopwatch();
+        stopwatch.Start();
     }
 	
 	// Update is called once per frame
@@ -78,10 +83,18 @@ public class ChunkManager : MonoBehaviour {
     /// Clears all elements in the chunkGrid
     /// </summary>
     private void clearChunkGrid() {
+        int occupied = 0;
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+                if (chunkGrid[x, z] != null) {
+                    occupied++;
+                }
                 chunkGrid[x, z] = null;
             }
+        }
+        if (occupied == ChunkConfig.chunkCount * ChunkConfig.chunkCount && stopwatch.IsRunning) {
+            UnityEngine.Debug.Log(stopwatch.Elapsed.TotalSeconds.ToString());
+            stopwatch.Stop();
         }
     }
 
