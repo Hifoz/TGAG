@@ -7,27 +7,21 @@ using UnityEngine;
 /// <summary>
 /// Manages the textures for the terrain
 /// </summary>
-public class TextureManager {
+public class TextureManager : MonoBehaviour {
+    public int textureSize = 512;
+
+    private List<Color[]> textureList = new List<Color[]>();
     private Texture2DArray textureArray;
-    private int maxTextures;
-    private int size;
-    private int texturesUsed;
+
+    // Settings for the textureArray
+    public bool mipmap = true;
+    public TextureFormat textureFormat = TextureFormat.RGBA32;
+
+    private bool hasChanged = true;
 
 
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="size">size of the textures in x and y dimensions</param>
-    /// <param name="maxTextures">Max number of textures that can be added</param>
-    /// <param name="textureFormat">Format of the texture</param>
-    /// <param name="mipmap">Should mipmaps be created?</param>
-    public TextureManager(int size, int maxTextures, TextureFormat textureFormat = TextureFormat.RGBAFloat, bool mipmap = false) {
-        this.size = size;
-        this.maxTextures = maxTextures + 1;
-        textureArray = new Texture2DArray(size, size, this.maxTextures, textureFormat, mipmap);
-
-        addEmpty();
+    private void Start() {
+        addEmpty(); // We want the first entry to be clear, so that whenever a block has no modifier, the modifier can pick slice 0
     }
 
 
@@ -36,67 +30,91 @@ public class TextureManager {
     /// </summary>
     /// <param name="pixelData">Data to create texture from</param>
     /// <returns>Whether the texture was successfully created and stored.</returns>
-    public bool addTexture(Color[] pixelData) {
-        if (texturesUsed == maxTextures || pixelData.Length != size*size)
-            return false;
-
-        textureArray.SetPixels(pixelData, texturesUsed);
-        texturesUsed++;
-
-        return true;
+    public void addTexture(Color[] pixelData) {
+        textureList.Add(pixelData);
+        hasChanged = true;
     }
 
     /// <summary>
     /// Used to generate one fully transparent texture to be used if modifier == BlockType.NONE
     /// </summary>
-    private void addEmpty() {
-        Color[] e = new Color[size * size];
+    public void addEmpty() {
+        Color[] e = new Color[textureSize * textureSize];
         for (int i = 0; i < e.Length; i++)
             e[i] = new Color(0, 0, 0, 0);
 
-        addTexture(new Color[size * size]);
-    }
-
-    public void skipIndex() {
-        texturesUsed++;
-    }
-
-
-    /// <returns>How many textures have been created.</returns>
-    public int getTexturesUsed() {
-        return texturesUsed;
+        addTexture(new Color[textureSize * textureSize]);
     }
 
     /// <summary>
-    /// Saves the texture array as an asset.
+    /// Generates and return a textureArray with the textures added.
     /// </summary>
-    /// <returns>Path to the asset, relative to "Resources/Textures/"</returns>
-    public string buildAsset(string path) {
-        textureArray.Apply();
-        AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
-        return path;
-    }
-
-
     /// <returns>Returns a texture array with all generated textures.</returns>
     public Texture2DArray getTextureArray() {
+        if (!hasChanged)
+            return textureArray;
+
+
+        hasChanged = false;
+        textureArray = new Texture2DArray(textureSize, textureSize, textureList.Count, textureFormat, mipmap);
+
+        for (int i = 0; i < textureList.Count; i++) {
+            textureArray.SetPixels(textureList[i], i);
+        }
+        textureArray.wrapMode = TextureWrapMode.Clamp;
+        textureArray.filterMode = FilterMode.Bilinear;
         textureArray.Apply();
         return textureArray;
     }
 
+
     /// <summary>
-    /// Tries to load a texture from file and add it to the texture array.
+    /// Saves the texture array as an asset.
     /// </summary>
-    /// <param name="path">path to the file, relative to "Resources/"</param>
-    /// <returns>Whether the texture was successfully loaded and stored.</returns>
+    /// <param name="path">Path for saving asset, relative to "Resources/"</param>
+    public void saveArrayToFile(string path) {
+        textureArray.Apply();
+        AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
+    }
+
+    /// <summary>
+    /// Tries to load a Texture2DArray from file.
+    /// </summary>
+    /// <param name="path">Path of asset, relative to "Resources/"</param>
+    /// <returns>Whether it could successfullly load the asset</returns>
+    public bool loadArrayFromFile(string path) {
+        Texture2DArray arr = Resources.Load<Texture2DArray>("Textures/" + path);
+        if (arr == null)
+            return false;
+
+        for(int i = 0; i < arr.depth; i++) {
+            textureList.Add(arr.GetPixels(i));
+        }
+        hasChanged = true;
+
+        return true;
+    }
+
+
+    /// <summary>
+    /// Tries to load a single texture from file and add it to the texture array.
+    /// </summary>
+    /// <param name="path">Path to the file, relative to "Resources/"</param>
+    /// <returns>Whether the texture was successfully loaded.</returns>
     public bool loadTextureFromFile(string path) {
         Texture2D loadedTexture = Resources.Load<Texture2D>(path);
         if (loadedTexture == null) {
             Debug.Log("Could not find file");
             return false;
         }
-
-        return addTexture(loadedTexture.GetPixels());
+        addTexture(loadedTexture.GetPixels());
+        return true;
     }
 
+
+
+    public void Clear() {
+        hasChanged = true;
+        textureList = new List<Color[]>();
+    }
 }

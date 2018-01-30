@@ -10,6 +10,7 @@ public class ChunkManager : MonoBehaviour {
 
     public Transform player;
     public GameObject chunkPrefab;
+    public TextureManager textureManager;
     private Vector3 offset;
     private List<GameObject> activeChunks = new List<GameObject>();
     private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
@@ -137,6 +138,8 @@ public class ChunkManager : MonoBehaviour {
             chunk.transform.position = cd.getPos();
             chunk.GetComponent<MeshFilter>().mesh = cd.getMesh();
             chunk.GetComponent<MeshCollider>().sharedMesh = cd.getMesh();
+            chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
+
             activeChunks.Add(chunk);
 
             launchCount++;
