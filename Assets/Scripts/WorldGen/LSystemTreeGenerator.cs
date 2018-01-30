@@ -113,7 +113,7 @@ public static class LSystemTreeGenerator {
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
-                    pointMap[x, y, z] = new BlockData(calcBlockType(new Vector3(x + tree.lowerBounds.x, y, z + tree.lowerBounds.z), tree.tree));
+                    pointMap[x, y, z] = new BlockData(calcBlockType(new Vector3(x + tree.lowerBounds.x, y, z + tree.lowerBounds.z), tree.tree), BlockData.BlockType.NONE);
                 }
             }
         }
@@ -135,7 +135,7 @@ public static class LSystemTreeGenerator {
                 return BlockData.BlockType.STONE;
             }
         }
-        return BlockData.BlockType.AIR;
+        return BlockData.BlockType.NONE;
     }
 
     /// <summary>

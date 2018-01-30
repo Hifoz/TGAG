@@ -10,8 +10,9 @@ public class ChunkManager : MonoBehaviour {
 
     public Transform player;
     public GameObject chunkPrefab;
+    public TextureManager terrainTextureManager;
+    public TextureManager treeTextureManager;
     public GameObject treePrefab;
-
     private Vector3 offset;
     private List<ChunkData> activeChunks = new List<ChunkData>();
     private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
@@ -146,9 +147,11 @@ public class ChunkManager : MonoBehaviour {
 
             var chunk = getChunk();
 
+
             chunk.transform.position = chunkMeshData.chunkPos;
             chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
             chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
+            chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
             cd.chunk = chunk;
 
             GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
@@ -156,6 +159,9 @@ public class ChunkManager : MonoBehaviour {
                 GameObject tree = getTree();
                 tree.transform.position = chunkMeshData.treePositions[i];
                 tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
+                tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
+
+
                 trees[i] = tree;
             }
             cd.trees = trees;
