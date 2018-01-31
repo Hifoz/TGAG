@@ -55,14 +55,10 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, bool center = false) {
+    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
         MeshDataGenerator MDG = new MeshDataGenerator();
 
         MDG.pointmap = pointmap;
-        Vector3 offset = Vector3.zero;
-        if (center) {
-            offset = new Vector3(pointmap.GetLength(0) / 2f, 0, pointmap.GetLength(0) / 2f);
-        }
 
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {

@@ -9,6 +9,7 @@ public class ChunkVoxelData {
     public Vector3 chunkPos;
 
     public MeshData[] trees;
+    public MeshData[] treeTrunks;
     public Vector3[] treePositions;
 }
 
@@ -84,6 +85,7 @@ public class ChunkVoxelDataThread {
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order));
         int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
         result.trees = new MeshData[trees];
+        result.treeTrunks = new MeshData[trees];
         result.treePositions = new Vector3[trees];
 
         for (int i = 0; i < trees; i++) {
@@ -91,8 +93,11 @@ public class ChunkVoxelDataThread {
             pos += order;
             pos = WorldUtils.floor(pos);
             pos = findGroundLevel(pos);
+            pos = WorldUtils.floor(pos);
             if (pos != Vector3.negativeInfinity) {
-                result.trees[i] = LSystemTreeGenerator.generateMeshData(pos);
+                MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
+                result.trees[i] = tree[0];
+                result.treeTrunks[i] = tree[1];
                 result.treePositions[i] = pos;
             } else {
                 i--; //Try again
@@ -112,21 +117,24 @@ public class ChunkVoxelDataThread {
         int iter = 0;
 
         float height = ChunkVoxelDataGenerator.calcHeight(pos);
-        pos.y = height;
+        pos.y = (int)height;
         bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
-        //TODO - Make accurate.
         while (iter < maxIter) {
             pos.y += dir;
             lastVoxel = currentVoxel;
             currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
             if (lastVoxel != currentVoxel) {
+                if (!lastVoxel) { //Put the tree in an empty voxel
+                    pos.y -= dir;
+                }
                 return pos;
             }
             iter++;
         }
+        Debug.Log("Failed to find ground");
         return Vector3.negativeInfinity;
     }
 }
