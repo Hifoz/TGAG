@@ -138,9 +138,7 @@ public class ChunkManager : MonoBehaviour {
             pendingChunks.Remove(chunkMeshData.chunkPos);
             ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
-            var chunk = getChunk();
-
-
+            GameObject chunk = getChunk();
             chunk.transform.position = chunkMeshData.chunkPos;
             chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
             chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
@@ -152,8 +150,8 @@ public class ChunkManager : MonoBehaviour {
                 GameObject tree = getTree();
                 tree.transform.position = chunkMeshData.treePositions[i];
                 tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
-                tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
                 tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
+                tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
 
                 trees[i] = tree;
             }

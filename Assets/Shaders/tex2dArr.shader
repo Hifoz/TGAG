@@ -8,7 +8,7 @@
 				"Queue" = "Transparent"
 				"LightMode" = "ForwardBase" 
 			}
-			//LOD 800
+			LOD 300
 
 			Blend SrcAlpha OneMinusSrcAlpha
 			AlphaToMask On
@@ -81,12 +81,13 @@
 
 				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
 				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
-				if (i.color.g == 0)
+				if (i.color.g == 0) {
+					baseTex.rbg *= light;
 					return baseTex;
+				}
 
 				half4 o = lerp(modTex, baseTex, 1 - modTex.a);
 				o.rbg *= light;
-				//o.a = 1;
 				return o;
 			}
 			ENDCG
