@@ -20,7 +20,7 @@ public static class ChunkConfig {
     public static float Unstructure3DRate = 0.85f;
     public static float frequency3D = 0.0075f;
     //Foliage
-    public static int maxTreesPerChunk = 1;
+    public static int maxTreesPerChunk = 0;
     public static float treeLineLength = 2.0f;
     public static float treeVoxelSize = 1.0f;
     public static float treeThickness = 0.5f;
