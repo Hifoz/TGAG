@@ -24,6 +24,11 @@ public class TextureManager : MonoBehaviour {
         addEmpty(); // We want the first entry to be clear, so that whenever a block has no modifier, the modifier can pick slice 0
     }
 
+    /// <returns>size required for textures</returns>
+    public int getTextureSize() {
+        return textureSize;
+    }
+
 
     /// <summary>
     /// Generates a texture and stores it.

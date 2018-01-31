@@ -11,28 +11,16 @@ public class TextureGenerationTest : MonoBehaviour {
     /// <summary>
     /// Used to test the texture generator.
     /// </summary>
-    public void Generate() {
+    public void Start() {
         // Create a texturearray with some textures
         //TextureManager textureManager = new TextureManager(512, (int)BlockData.BlockType.COUNT * 3);
 
-        TextureManager textureManager = GameObject.Find("TerrainTextureManager").GetComponent<TextureManager>();
-        textureManager.Clear();
-        string sharedPath = "Textures/temp/";
-        textureManager.loadTextureFromFile(sharedPath + "temp_dirt");
-        textureManager.loadTextureFromFile(sharedPath + "temp_dirt");
-        textureManager.loadTextureFromFile(sharedPath + "temp_dirt");
-        textureManager.loadTextureFromFile(sharedPath + "temp_stone");
-        textureManager.loadTextureFromFile(sharedPath + "temp_stone");
-        textureManager.loadTextureFromFile(sharedPath + "temp_stone");
-        textureManager.loadTextureFromFile(sharedPath + "temp_sand");
-        textureManager.loadTextureFromFile(sharedPath + "temp_sand");
-        textureManager.loadTextureFromFile(sharedPath + "temp_sand");
-        textureManager.loadTextureFromFile(sharedPath + "temp_grass_top");
-        textureManager.loadTextureFromFile(sharedPath + "temp_grass_side");
-        textureManager.addEmpty();
-        textureManager.loadTextureFromFile(sharedPath + "temp_snow_top");
-        textureManager.loadTextureFromFile(sharedPath + "temp_snow_side");
-        textureManager.addEmpty();
+        GameObject ttm = GameObject.Find("TerrainTextureManager");
+
+        TextureManager textureManager = ttm.GetComponent<TextureManager>();
+        TerrainTextureGenerator ttg = ttm.GetComponent<TerrainTextureGenerator>();
+
+        //ttg.
 
         // Create the mesh
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();

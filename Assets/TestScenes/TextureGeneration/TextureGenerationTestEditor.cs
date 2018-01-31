@@ -5,8 +5,8 @@ using UnityEditor;
 [ExecuteInEditMode]
 public class TextureGenerationTestEditor : Editor {
 
-    public override void OnInspectorGUI() {
+    /*public override void OnInspectorGUI() {
         if (GUILayout.Button("Regenerate"))
             ((TextureGenerationTest)target).Generate();
-    }
+    }*/
 }

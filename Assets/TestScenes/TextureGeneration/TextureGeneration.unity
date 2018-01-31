@@ -269,6 +269,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1160125793}
   - component: {fileID: 1160125794}
+  - component: {fileID: 1160125795}
   m_Layer: 0
   m_Name: TerrainTextureManager
   m_TagString: Untagged
@@ -301,8 +302,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   textureSize: 512
-  mipmap: 0
+  mipmap: 1
   textureFormat: 4
+--- !u!114 &1160125795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1160125792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8ad3c5e75ce5134b9c1b65bce7677f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!43 &1518041227
 Mesh:
   m_ObjectHideFlags: 0
@@ -504,10 +516,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2077798696}
-  m_LocalRotation: {x: -0.000000014516758, y: 0.7074972, z: -0.70671624, w: 0.0000000021391313}
-  m_LocalPosition: {x: 0.82, y: 3.82, z: 1.11}
+  m_LocalRotation: {x: 0.07811119, y: 0.9202128, z: -0.29027426, w: 0.25069505}
+  m_LocalPosition: {x: 0.245, y: 1.158, z: 2.719}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 90.05899, y: 180, z: -0.000015258789}
+  m_LocalEulerAnglesHint: {x: 34.987003, y: 149.48201, z: -0.125}
