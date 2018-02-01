@@ -45,7 +45,7 @@ public class MeshDataGenerator {
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
         mesh.uv2 = md.uvs2;
-        mesh.RecalculateNormals();
+        mesh.RecalculateNormals(); //Normals could be provided by MeshData instead, to save mainthread cpu time.
         return mesh;
     }
 
