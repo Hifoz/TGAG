@@ -25,9 +25,6 @@ public class MeshDataGenerator {
     private List<Vector2> uvs2 = new List<Vector2>();
     private BlockData[,,] pointmap;
 
-
-    // private static System.Random rng = new System.Random(); // Used to randomize orientation of textures
-
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
@@ -147,10 +144,6 @@ public class MeshDataGenerator {
         }
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
-
-
-
-
 
         addTextureCoordinates(blockData, dir);
         addSliceData(blockData, dir);
