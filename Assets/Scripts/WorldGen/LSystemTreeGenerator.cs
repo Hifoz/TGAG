@@ -119,15 +119,15 @@ public static class LSystemTreeGenerator {
                     samplePos = WorldUtils.floor(samplePos);
                     pointMap[x, y, z] = new BlockData(calcBlockType(samplePos, tree.tree), BlockData.BlockType.NONE);
                     pointMapTrunk[x, y, z] = pointMap[x, y, z];
-                    if (pointMap[x, y, z].blockType == BlockData.BlockType.STONE) {
+                    if (pointMap[x, y, z].blockType == BlockData.BlockType.LEAF) {
                         pointMapTrunk[x, y, z] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
                     }
                 }
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds));
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds));
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
         return meshData;
     }
     
@@ -141,9 +141,9 @@ public static class LSystemTreeGenerator {
         foreach (var line in tree) {
             float dist = distance(pos, line);
             if (dist < ChunkConfig.treeThickness) {
-                return BlockData.BlockType.DIRT;
+                return BlockData.BlockType.WOOD;
             } else if (line.leaf == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
-                return BlockData.BlockType.STONE;
+                return BlockData.BlockType.LEAF;
             }
         }
         return BlockData.BlockType.NONE;

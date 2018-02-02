@@ -72,6 +72,9 @@ public class ChunkManager : MonoBehaviour {
     public void init() {
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
         chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+
+        MeshDataGenerator.terrainTextureTypes = terrainTextureManager.getSliceTypeList();
+        MeshDataGenerator.treeTextureTypes = treeTextureManager.getSliceTypeList();
     }
 
     /// <summary>

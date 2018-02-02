@@ -18,6 +18,9 @@ public class MeshData {
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
+    public static List<int>[] terrainTextureTypes;
+    public static List<int>[] treeTextureTypes;
+
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
     private List<Color> colors = new List<Color>();
@@ -25,12 +28,16 @@ public class MeshDataGenerator {
     private List<Vector2> uvs2 = new List<Vector2>();
     private BlockData[,,] pointmap;
 
+    System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
 
-    // private static System.Random rng = new System.Random(); // Used to randomize orientation of textures
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
+    public enum MeshDataType {
+        TERRAIN, TREE
+    }
+    MeshDataType meshDataType;
 
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
@@ -55,8 +62,9 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
+    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         MeshDataGenerator MDG = new MeshDataGenerator();
+        MDG.meshDataType = meshDataType;
 
         MDG.pointmap = pointmap;
 
@@ -148,10 +156,6 @@ public class MeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
-
-
-
-
         addTextureCoordinates(blockData, dir);
         addSliceData(blockData, dir);
 
@@ -163,25 +167,39 @@ public class MeshDataGenerator {
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     private void addSliceData(BlockData blockData, FaceDirection faceDir) {
-        int slice = ((int)blockData.blockType) * 3;   // The slice is the index of the texture in the Texture2dArray we want to set the face to.
-        int modSlice = ((int)blockData.modifier) * 3;
+        TextureManager.TextureType[] texTypes = new TextureManager.TextureType[2];
 
-        switch (faceDir) {
-            case FaceDirection.xp:
-            case FaceDirection.xm:
-            case FaceDirection.zp:
-            case FaceDirection.zm:
-                slice += 1;
-                modSlice += 1;
-                break;
-            case FaceDirection.ym:
-                slice += 2;
-                modSlice += 2;
-                break;
+        // Get texture types for base and modifier
+        for (int i = 0; i < 2; i++) {
+            BlockData.BlockType blockType = (i == 0 ? blockData.blockType : blockData.modifier);
+
+            // Convert block type to texture type:
+            string typeName = blockType.ToString();
+            if(blockType == BlockData.BlockType.GRASS || blockType == BlockData.BlockType.SNOW) {
+                if (faceDir == FaceDirection.yp)
+                    typeName += "_TOP";
+                else if (faceDir == FaceDirection.ym)
+                    typeName = "NONE";
+                else
+                    typeName += "_SIDE";
+            }
+            texTypes[i] = (TextureManager.TextureType)Enum.Parse(typeof(TextureManager.TextureType), typeName);
+
         }
 
-        if (blockData.modifier == 0)
-            modSlice = 0;
+
+
+
+        // Get a slice from the textureType list of choice:
+        int slice;
+        int modSlice;
+        if (meshDataType == MeshDataType.TERRAIN) {
+            slice = terrainTextureTypes[(int)texTypes[0]][rnd.Next(0, terrainTextureTypes[(int)texTypes[0]].Count)];
+            modSlice = terrainTextureTypes[(int)texTypes[1]][rnd.Next(0, terrainTextureTypes[(int)texTypes[1]].Count)];
+        } else {
+            slice = treeTextureTypes[(int)texTypes[0]][rnd.Next(0, treeTextureTypes[(int)texTypes[0]].Count)];
+            modSlice = treeTextureTypes[(int)texTypes[1]][rnd.Next(0, treeTextureTypes[(int)texTypes[1]].Count)];
+        }
 
         for (int i = 0; i < 4; i++)
             colors.Add(new Color(slice, modSlice, 0));                  // Because Unity does not have an official way of sending 
@@ -230,79 +248,6 @@ public class MeshDataGenerator {
 
         for (int i = 0; i < 4; i++) {
             uvs.Add(coords[rotations[rotation, i]]);
-        }
-
-    }
-
-    /// <summary>
-    /// Adds texture coordinates for a cube face
-    /// </summary>
-    /// <param name="xOffset">Decided by the cubetype</param>
-    /// <param name="yOffset">Decided by the direction of the face</param>
-    /// <param name="dir">Direction of the face</param>
-    /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
-    [Obsolete("This function is deprecated, please use 'addTextureCoordinates(BlockData, FaceDirection, bool) instead'")]
-    private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir, bool isBaseType) {
-
-
-        int blockTextureSize = 512;
-        int numberOfTextures = isBaseType ? 3 : 2;
-
-        float padding = 20;
-        
-        xOffset /= numberOfTextures;
-        float xOffsetO = xOffset + 1f/numberOfTextures;
-
-        yOffset /= 3;
-        float yOffsetO = yOffset + 1f/3;
-
-        int texturemapwidth = numberOfTextures * blockTextureSize;
-        float paddingx = padding / texturemapwidth;
-        float paddingy = padding / (blockTextureSize * 3);
-
-
-        Vector2[] coords = new Vector2[]{
-            new Vector2(xOffset  + paddingx, yOffset  + paddingy),
-            new Vector2(xOffset  + paddingx, yOffsetO - paddingy),
-            new Vector2(xOffsetO - paddingx, yOffset  + paddingy),
-            new Vector2(xOffsetO - paddingx, yOffsetO - paddingy)
-        };
-
-        int[,] rotations = new int[,] {
-            { 0, 1, 2, 3 },
-            { 2, 0, 3, 1 },
-            { 3, 2, 1, 0 },
-            { 1, 3, 0, 2 }
-        };
-
-
-        // Select a rotation for the texture
-        int rotation;
-
-            switch (dir) {
-                case FaceDirection.xp:
-                case FaceDirection.zm:
-                    rotation = 0;
-                    break;
-                case FaceDirection.xm:
-                case FaceDirection.zp:
-                    rotation = 1;
-                    break;
-                default: // yp & ym
-                    rotation = 2;
-                    break;
-            }
-
-
-        if (isBaseType) {
-            for(int i = 0; i < 4; i++) {
-                uvs.Add(coords[rotations[rotation, i]]);
-            }
-        }
-        else {
-            for (int i = 0; i < 4; i++) {
-                uvs2.Add(coords[rotations[rotation, i]]);
-            }
         }
 
     }
