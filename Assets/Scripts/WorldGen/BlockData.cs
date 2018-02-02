@@ -13,6 +13,8 @@ public class BlockData {
         DIRT,
         STONE,
         SAND,
+        WOOD,
+        LEAF,
         
         // Modifiers:
         GRASS,

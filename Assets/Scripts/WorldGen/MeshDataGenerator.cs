@@ -18,6 +18,9 @@ public class MeshData {
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
+    public static List<int>[] terrainTextureTypes;
+    public static List<int>[] treeTextureTypes;
+
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
     private List<Color> colors = new List<Color>();
@@ -28,6 +31,10 @@ public class MeshDataGenerator {
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
+    public enum MeshDataType {
+        TERRAIN, TREE
+    }
+    MeshDataType meshDataType;
 
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
@@ -52,8 +59,9 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
+    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         MeshDataGenerator MDG = new MeshDataGenerator();
+        MDG.meshDataType = meshDataType;
 
         MDG.pointmap = pointmap;
 
@@ -156,25 +164,36 @@ public class MeshDataGenerator {
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     private void addSliceData(BlockData blockData, FaceDirection faceDir) {
-        int slice = ((int)blockData.blockType) * 3;   // The slice is the index of the texture in the Texture2dArray we want to set the face to.
-        int modSlice = ((int)blockData.modifier) * 3;
+        TextureManager.TextureType[] texTypes = new TextureManager.TextureType[2];
 
-        switch (faceDir) {
-            case FaceDirection.xp:
-            case FaceDirection.xm:
-            case FaceDirection.zp:
-            case FaceDirection.zm:
-                slice += 1;
-                modSlice += 1;
-                break;
-            case FaceDirection.ym:
-                slice += 2;
-                modSlice += 2;
-                break;
+        // Get texture types for base and modifier
+        for (int i = 0; i < 2; i++) {
+            BlockData.BlockType blockType = (i == 0 ? blockData.blockType : blockData.modifier);
+
+            // Convert block type to texture type:
+            string typeName = blockType.ToString();
+            if(blockType == BlockData.BlockType.GRASS || blockType == BlockData.BlockType.SNOW) {
+                if (faceDir == FaceDirection.yp)
+                    typeName += "_TOP";
+                else if (faceDir == FaceDirection.ym)
+                    typeName = "NONE";
+                else
+                    typeName += "_SIDE";
+            }
+            texTypes[i] = (TextureManager.TextureType)Enum.Parse(typeof(TextureManager.TextureType), typeName);
+
         }
 
-        if (blockData.modifier == 0)
-            modSlice = 0;
+        // Get a slice from the textureType list of choice:
+        int slice;
+        int modSlice;
+        if (meshDataType == MeshDataType.TERRAIN) {
+            slice = terrainTextureTypes[(int)texTypes[0]][0];
+            modSlice = terrainTextureTypes[(int)texTypes[1]][0];
+        } else {
+            slice = treeTextureTypes[(int)texTypes[0]][0];
+            modSlice = treeTextureTypes[(int)texTypes[1]][0];
+        }
 
         for (int i = 0; i < 4; i++)
             colors.Add(new Color(slice, modSlice, 0));                  // Because Unity does not have an official way of sending 
