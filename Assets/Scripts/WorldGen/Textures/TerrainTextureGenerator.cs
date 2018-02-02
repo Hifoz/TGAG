@@ -16,8 +16,8 @@ class TerrainTextureGenerator : MonoBehaviour {
         textureManager.Clear();
         string sharedPath = "Textures/temp/";
         textureManager.addTexture(createDirtTexture(textureManager.getTextureSize()));
-        textureManager.addTexture(createDirtTexture(textureManager.getTextureSize()));
-        textureManager.addTexture(createDirtTexture(textureManager.getTextureSize()));
+        textureManager.addTexture(createDirtTexture(textureManager.getTextureSize(), 152313));
+        textureManager.addTexture(createDirtTexture(textureManager.getTextureSize(), 661321));
         textureManager.loadTextureFromFile(sharedPath + "temp_stone");
         textureManager.loadTextureFromFile(sharedPath + "temp_stone");
         textureManager.loadTextureFromFile(sharedPath + "temp_stone");
@@ -45,7 +45,7 @@ class TerrainTextureGenerator : MonoBehaviour {
         float valueNoiseFrequency = 0.004f;
         float saturationNoiseFrequency = 0.02f;
 
-        const float baseHue = 0.1f;
+        const float baseHue = 0.083f;
         const float baseSaturation = 0.6f;
         const float baseValue = 0.9f;
 
@@ -56,8 +56,8 @@ class TerrainTextureGenerator : MonoBehaviour {
 
 
         for (int i = 0; i < size * size; i++) {
-            int x = i / size;
-            int y = i % size;
+            int x = i / size + seed;
+            int y = i % size + seed;
 
             hue[i] = baseHue;
 
