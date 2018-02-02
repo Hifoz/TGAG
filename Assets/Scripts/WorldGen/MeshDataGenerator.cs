@@ -28,6 +28,9 @@ public class MeshDataGenerator {
     private List<Vector2> uvs2 = new List<Vector2>();
     private BlockData[,,] pointmap;
 
+    System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
+
+
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
@@ -184,15 +187,18 @@ public class MeshDataGenerator {
 
         }
 
+
+
+
         // Get a slice from the textureType list of choice:
         int slice;
         int modSlice;
         if (meshDataType == MeshDataType.TERRAIN) {
-            slice = terrainTextureTypes[(int)texTypes[0]][0];
-            modSlice = terrainTextureTypes[(int)texTypes[1]][0];
+            slice = terrainTextureTypes[(int)texTypes[0]][rnd.Next(0, terrainTextureTypes[(int)texTypes[0]].Count)];
+            modSlice = terrainTextureTypes[(int)texTypes[1]][rnd.Next(0, terrainTextureTypes[(int)texTypes[1]].Count)];
         } else {
-            slice = treeTextureTypes[(int)texTypes[0]][0];
-            modSlice = treeTextureTypes[(int)texTypes[1]][0];
+            slice = treeTextureTypes[(int)texTypes[0]][rnd.Next(0, treeTextureTypes[(int)texTypes[0]].Count)];
+            modSlice = treeTextureTypes[(int)texTypes[1]][rnd.Next(0, treeTextureTypes[(int)texTypes[1]].Count)];
         }
 
         for (int i = 0; i < 4; i++)
@@ -242,79 +248,6 @@ public class MeshDataGenerator {
 
         for (int i = 0; i < 4; i++) {
             uvs.Add(coords[rotations[rotation, i]]);
-        }
-
-    }
-
-    /// <summary>
-    /// Adds texture coordinates for a cube face
-    /// </summary>
-    /// <param name="xOffset">Decided by the cubetype</param>
-    /// <param name="yOffset">Decided by the direction of the face</param>
-    /// <param name="dir">Direction of the face</param>
-    /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
-    [Obsolete("This function is deprecated, please use 'addTextureCoordinates(BlockData, FaceDirection, bool) instead'")]
-    private void AddTextureCoordinates(float xOffset, float yOffset, FaceDirection dir, bool isBaseType) {
-
-
-        int blockTextureSize = 512;
-        int numberOfTextures = isBaseType ? 3 : 2;
-
-        float padding = 20;
-        
-        xOffset /= numberOfTextures;
-        float xOffsetO = xOffset + 1f/numberOfTextures;
-
-        yOffset /= 3;
-        float yOffsetO = yOffset + 1f/3;
-
-        int texturemapwidth = numberOfTextures * blockTextureSize;
-        float paddingx = padding / texturemapwidth;
-        float paddingy = padding / (blockTextureSize * 3);
-
-
-        Vector2[] coords = new Vector2[]{
-            new Vector2(xOffset  + paddingx, yOffset  + paddingy),
-            new Vector2(xOffset  + paddingx, yOffsetO - paddingy),
-            new Vector2(xOffsetO - paddingx, yOffset  + paddingy),
-            new Vector2(xOffsetO - paddingx, yOffsetO - paddingy)
-        };
-
-        int[,] rotations = new int[,] {
-            { 0, 1, 2, 3 },
-            { 2, 0, 3, 1 },
-            { 3, 2, 1, 0 },
-            { 1, 3, 0, 2 }
-        };
-
-
-        // Select a rotation for the texture
-        int rotation;
-
-            switch (dir) {
-                case FaceDirection.xp:
-                case FaceDirection.zm:
-                    rotation = 0;
-                    break;
-                case FaceDirection.xm:
-                case FaceDirection.zp:
-                    rotation = 1;
-                    break;
-                default: // yp & ym
-                    rotation = 2;
-                    break;
-            }
-
-
-        if (isBaseType) {
-            for(int i = 0; i < 4; i++) {
-                uvs.Add(coords[rotations[rotation, i]]);
-            }
-        }
-        else {
-            for (int i = 0; i < 4; i++) {
-                uvs2.Add(coords[rotations[rotation, i]]);
-            }
         }
 
     }
