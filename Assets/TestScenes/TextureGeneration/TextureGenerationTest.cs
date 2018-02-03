@@ -19,8 +19,8 @@ public class TextureGenerationTest : MonoBehaviour {
 
         TextureManager textureManager = ttm.GetComponent<TextureManager>();
         TerrainTextureGenerator ttg = ttm.GetComponent<TerrainTextureGenerator>();
-
-        //ttg.
+        MeshDataGenerator.terrainTextureTypes = textureManager.getSliceTypeList();
+        
 
         // Create the mesh
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();
@@ -58,7 +58,7 @@ public class TextureGenerationTest : MonoBehaviour {
 
             { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT),new BlockData(BlockData.BlockType.NONE) },
             { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
-            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT, BlockData.BlockType.GRASS),new BlockData(BlockData.BlockType.NONE) } },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT, BlockData.BlockType.GRASS),new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.GRASS) } },
 
             { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
             { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },

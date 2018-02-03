@@ -196,9 +196,13 @@ public class MeshDataGenerator {
         if (meshDataType == MeshDataType.TERRAIN) {
             slice = terrainTextureTypes[(int)texTypes[0]][rnd.Next(0, terrainTextureTypes[(int)texTypes[0]].Count)];
             modSlice = terrainTextureTypes[(int)texTypes[1]][rnd.Next(0, terrainTextureTypes[(int)texTypes[1]].Count)];
-        } else {
+        } else if (meshDataType == MeshDataType.TREE) {
             slice = treeTextureTypes[(int)texTypes[0]][rnd.Next(0, treeTextureTypes[(int)texTypes[0]].Count)];
             modSlice = treeTextureTypes[(int)texTypes[1]][rnd.Next(0, treeTextureTypes[(int)texTypes[1]].Count)];
+        } else {
+            Debug.Log("MeshDataGenerator.meshDataType not set.");
+            slice = 0;
+            modSlice = 0;
         }
 
         for (int i = 0; i < 4; i++)
