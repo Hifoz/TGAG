@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -17,13 +16,15 @@ public class AnimalSkeleton {
     List<LineSegment> leftLegs = new List<LineSegment>();//left legs
     List<LineSegment> tail = new List<LineSegment>();//tail
 
+    private static ThreadSafeRng rng = new ThreadSafeRng();
+
     public AnimalSkeleton generate() {
-        float headSize = 2.5f;
-        float neckLen = 3f;
-        float spineLen = 10f;
-        int legPairs = 2;
-        float legLen = 5f;
-        float tailLen = 5f;
+        float headSize = rng.randomFloat(1, 3);
+        float neckLen = rng.randomFloat(1, 3);
+        float spineLen = rng.randomFloat(2, 7);
+        int legPairs = rng.randomInt(2, 6);
+        float legLen = rng.randomFloat(2, 6);
+        float tailLen = rng.randomFloat(1, 5);
 
         var headLines = createHead(headSize);
         allBones.AddRange(headLines);
@@ -45,7 +46,7 @@ public class AnimalSkeleton {
         allBones.AddRange(leftLegs);
         allBones.AddRange(rightLegs);
 
-        LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, -0.5f, 0.5f).normalized * tailLen);
+        LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * tailLen);
         tail.Add(tailLine);
         allBones.Add(tailLine);
 
