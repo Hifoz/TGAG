@@ -33,7 +33,6 @@ class TerrainTextureGenerator : MonoBehaviour {
 
 
         // Old
-        textureManager.loadTextureFromFile(sharedPath + "temp_grass_side", TextureManager.TextureType.GRASS_SIDE);
         textureManager.loadTextureFromFile(sharedPath + "temp_stone", TextureManager.TextureType.STONE);
         textureManager.loadTextureFromFile(sharedPath + "temp_sand", TextureManager.TextureType.SAND);
         textureManager.loadTextureFromFile(sharedPath + "temp_snow_top", TextureManager.TextureType.SNOW_TOP);
@@ -93,7 +92,7 @@ class TerrainTextureGenerator : MonoBehaviour {
 
         const float baseHue = 0.083f;
         const float baseSaturation = 0.6f;
-        const float baseValue = 0.9f;
+        const float baseValue = 0.8f;
 
         // Calulate Hue:
         float hue = baseHue;
@@ -139,24 +138,19 @@ class TerrainTextureGenerator : MonoBehaviour {
         float baseGrassHeight = 0.85f * textureManager.getTextureSize();
         float baseGrass2Height = 0.85f * textureManager.getTextureSize();
 
-        /*
-        Vector3 modPos = new Vector3(
-            x + SimplexNoise.Simplex1D(new Vector3(x + seed, y + seed * 2), 0.05f),
-            y + SimplexNoise.Simplex1D(new Vector3(x + seed * 3, y - seed), 0.05f)
-        );
-        */
 
         Vector3 modPos = new Vector3(
             x + SimplexNoise.Simplex2D(new Vector3(x, y), 0.02f),
             y + SimplexNoise.Simplex2D(new Vector3(x, y), 0.02f)
         );
+
         float grassHeight = baseGrassHeight +
-            SimplexNoise.Simplex1D(new Vector3(x + seed, y), noiseFrequency) * 20 +
-            SimplexNoise.Simplex1D(new Vector3(x + seed, y), noiseFrequency * 5) * 15;
+            SimplexNoise.Simplex2D(new Vector3(x + seed, y), noiseFrequency) * 20 +
+            SimplexNoise.Simplex2D(new Vector3(x + seed, y), noiseFrequency * 5) * 15;
 
         float grass2Height = baseGrass2Height +
-            SimplexNoise.Simplex1D(new Vector3(x + seed * 2, y), noiseFrequency) * 10 +
-            SimplexNoise.Simplex1D(new Vector3(x + seed * 2, y), noiseFrequency * 5) * 5;
+            SimplexNoise.Simplex2D(new Vector3(x + seed * 2, y), noiseFrequency) * 10 +
+            SimplexNoise.Simplex2D(new Vector3(x + seed * 2, y), noiseFrequency * 5) * 5;
 
 
         float alpha = 0;
