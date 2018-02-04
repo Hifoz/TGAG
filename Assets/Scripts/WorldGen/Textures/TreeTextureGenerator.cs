@@ -16,7 +16,7 @@ class TreeTextureGenerator : MonoBehaviour {
     /// Used to generate/load textures for trees
     /// </summary>
     private void Start() {
-        TextureManager textureManager = GameObject.Find("TreeTextureManager").GetComponent<TextureManager>();
+        textureManager = GameObject.Find("TreeTextureManager").GetComponent<TextureManager>();
         textureManager.Clear();
 
         // Generate 3 variations for each texture type
@@ -56,7 +56,7 @@ class TreeTextureGenerator : MonoBehaviour {
                     pixelHSV = createLeafPixelHSV(x + seed, y + seed, seed);
                     break;
                 default:
-                    pixelHSV = new float[3];
+                    pixelHSV = new float[4];
                     break;
             }
 
@@ -76,11 +76,13 @@ class TreeTextureGenerator : MonoBehaviour {
     /// <param name="seed">Seed for texture</param>
     /// <returns>HSV of a pixel in a wood texture texture</returns>
     private float[] createWoodPixelHSV(int x, int y, int seed) {
-        const float valueNoiseFrequency = 0.004f;
+        const float valueNoiseFrequency = 0.01f;
 
-        const float baseHue = 0.55f;
-        const float baseSaturation = 0.05f;
-        const float baseValue = 0.9f;
+        const float baseHue = 0.083f;
+        const float baseSaturation = 0.5f;
+        const float baseValue = 0.8f;
+
+        Vector2 pos = new Vector2(x, y);
 
         // Calulate Hue:
         float hue = baseHue;
@@ -90,6 +92,15 @@ class TreeTextureGenerator : MonoBehaviour {
 
         // Calculate Value:
         float value = baseValue;
+
+
+        float mV = SimplexNoise.Simplex2D(pos, 0.003f) * SimplexNoise.Simplex2D(pos + new Vector2(seed, seed), 0.003f);// +
+            //SimplexNoise.Simplex2D(pos, 0.01f) +
+            //SimplexNoise.Simplex2D(pos, 0.001f);
+
+
+        value = mV;
+
 
         return new float[] { hue, saturation, value, 1 };
     }
@@ -104,9 +115,9 @@ class TreeTextureGenerator : MonoBehaviour {
     private float[] createLeafPixelHSV(int x, int y, int seed) {
         const float valueNoiseFrequency = 0.004f;
 
-        const float baseHue = 0.55f;
-        const float baseSaturation = 0.05f;
-        const float baseValue = 0.9f;
+        const float baseHue = 0.2f;
+        const float baseSaturation = 0.85f;
+        const float baseValue = 0.6f;
 
         // Calulate Hue:
         float hue = baseHue;

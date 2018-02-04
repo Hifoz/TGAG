@@ -45,6 +45,21 @@
 				fixed3 diff : COLOR2;
 				fixed3 ambient : COLOR3;
 			};
+
+			float4 testGrassTex(v2f i, int s) {
+				float v = noise(i.worldPos * 80);
+				v += noise(i.worldPos * 40);
+				v += noise(i.worldPos * 10);
+
+				v *= 0.2;
+
+				float4 o = float4(v + 0.4, v + 0.6, v, 1);
+
+
+				return o;
+			}
+
+
 	
 			v2f vert(appdata v) {
 				v2f o;
@@ -82,6 +97,8 @@
 				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
 				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
 				
+				modTex = testGrassTex(i, modSlice);
+
 				half4 o;
 				if (i.color.g == 0) {
 					o = baseTex;

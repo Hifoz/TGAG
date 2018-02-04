@@ -19,8 +19,7 @@ class TerrainTextureGenerator : MonoBehaviour {
         textureManager.Clear();
 
 
-        // Generate 3 variations for each texture type
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 1; i++) {
             textureManager.addTexture(createTexture(TextureData.TextureType.DIRT, rnd.Next(9999)));
             textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE, rnd.Next(9999)));
             textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_TOP, rnd.Next(9999)));
@@ -174,8 +173,6 @@ class TerrainTextureGenerator : MonoBehaviour {
 
         return new float[] { hue, saturation, value, 1 };
     }
-
-
 
     /// <summary>
     /// Used to create border for grass side.
