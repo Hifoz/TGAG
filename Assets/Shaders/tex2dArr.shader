@@ -74,7 +74,7 @@
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
-				fixed3 light = (i.diff + specular * 0.4) * shadow + i.ambient;
+				fixed3 light = (i.diff /*+ specular * 0.4*/) * shadow + i.ambient;
 
 				int slice = i.color.r + 0.5;
 				int modSlice = i.color.g + 0.5;

@@ -65,7 +65,8 @@ public class ChunkVoxelDataGenerator {
 
         // Add block type here:
 
-
+        if (pos.y < 15)
+            blockData.blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:
         if ((pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.NONE) && blockData.blockType != BlockData.BlockType.NONE) {

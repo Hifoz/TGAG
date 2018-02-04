@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
 
 [CustomEditor(typeof(TextureGenerationTest))]
@@ -10,3 +11,4 @@ public class TextureGenerationTestEditor : Editor {
             ((TextureGenerationTest)target).Generate();
     }*/
 }
+#endif

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 /// <summary>
@@ -90,7 +89,9 @@ public class TextureManager : MonoBehaviour {
     /// <param name="path">Path for saving asset, relative to "Resources/"</param>
     public void saveArrayToFile(string path) {
         textureArray.Apply();
-        AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
+#if UNITY_EDITOR
+        UnityEditor.AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
+#endif
     }
 
     /// <summary>
