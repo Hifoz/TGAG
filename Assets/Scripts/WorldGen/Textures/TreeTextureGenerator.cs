@@ -16,8 +16,8 @@ class TreeTextureGenerator : MonoBehaviour {
         TextureManager textureManager = GameObject.Find("TreeTextureManager").GetComponent<TextureManager>();
         textureManager.Clear();
         string sharedPath = "Textures/temp/";
-        textureManager.loadTextureFromFile(sharedPath + "temp_dirt", TextureManager.TextureType.WOOD);
-        textureManager.loadTextureFromFile(sharedPath + "temp_grass_top", TextureManager.TextureType.LEAF);
+        textureManager.loadTextureFromFile(sharedPath + "temp_dirt", TextureData.TextureType.WOOD);
+        textureManager.loadTextureFromFile(sharedPath + "temp_grass_top", TextureData.TextureType.LEAF);
     }
 
 }

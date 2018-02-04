@@ -8,8 +8,8 @@ using UnityEngine;
 /// Used to generate textures
 /// </summary>
 class TerrainTextureGenerator : MonoBehaviour {
-    TextureManager textureManager;
-    System.Random rnd = new System.Random(DateTime.Now.Millisecond);
+    private TextureManager textureManager;
+    private System.Random rnd = new System.Random(DateTime.Now.Millisecond);
 
     /// <summary>
     /// Used to generate/load textures for the terrain.
@@ -17,26 +17,22 @@ class TerrainTextureGenerator : MonoBehaviour {
     private void Start() {
         textureManager = GameObject.Find("TerrainTextureManager").GetComponent<TextureManager>();
         textureManager.Clear();
+
+        // Generate 3 variations for each texture type
+        for(int i = 0; i < 4; i++) {
+            textureManager.addTexture(createTexture(TextureData.TextureType.DIRT, rnd.Next(9999)));
+            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE, rnd.Next(9999)));
+            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_TOP, rnd.Next(9999)));
+            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_SIDE, rnd.Next(9999)));
+            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_TOP, rnd.Next(9999)));
+        }
+
         string sharedPath = "Textures/temp/";
-        // Dirt
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.DIRT, rnd.Next(9999)), TextureManager.TextureType.DIRT);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.DIRT, rnd.Next(9999)), TextureManager.TextureType.DIRT);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.DIRT, rnd.Next(9999)), TextureManager.TextureType.DIRT);
-        // Grass
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_SIDE, rnd.Next(9999)), TextureManager.TextureType.GRASS_SIDE);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_SIDE, rnd.Next(9999)), TextureManager.TextureType.GRASS_SIDE);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_SIDE, rnd.Next(9999)), TextureManager.TextureType.GRASS_SIDE);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_SIDE, rnd.Next(9999)), TextureManager.TextureType.GRASS_SIDE);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_TOP, rnd.Next(9999)), TextureManager.TextureType.GRASS_TOP);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_TOP, rnd.Next(9999)), TextureManager.TextureType.GRASS_TOP);
-        textureManager.addTexture(createTexture(textureManager.getTextureSize(), TextureManager.TextureType.GRASS_TOP, rnd.Next(9999)), TextureManager.TextureType.GRASS_TOP);
-
-
         // Old
-        textureManager.loadTextureFromFile(sharedPath + "temp_stone", TextureManager.TextureType.STONE);
-        textureManager.loadTextureFromFile(sharedPath + "temp_sand", TextureManager.TextureType.SAND);
-        textureManager.loadTextureFromFile(sharedPath + "temp_snow_top", TextureManager.TextureType.SNOW_TOP);
-        textureManager.loadTextureFromFile(sharedPath + "temp_snow_side", TextureManager.TextureType.SNOW_SIDE);
+        textureManager.loadTextureFromFile(sharedPath + "temp_stone", TextureData.TextureType.STONE);
+        textureManager.loadTextureFromFile(sharedPath + "temp_sand", TextureData.TextureType.SAND);
+        textureManager.loadTextureFromFile(sharedPath + "temp_snow_top", TextureData.TextureType.SNOW_TOP);
+        textureManager.loadTextureFromFile(sharedPath + "temp_snow_side", TextureData.TextureType.SNOW_SIDE);
     }
 
     /// <summary>
@@ -46,7 +42,8 @@ class TerrainTextureGenerator : MonoBehaviour {
     /// <param name="texType">What textureType</param>
     /// <param name="seed">seed to use</param>
     /// <returns>A Color[] containing the pixels for a texture</returns>
-    public Color[] createTexture(int size, TextureManager.TextureType texType, int seed = 42) {
+    public TextureData createTexture(TextureData.TextureType texType, int seed = 42) {
+        int size = textureManager.getTextureSize();
         Color[] pixels = new Color[size * size];
 
         for (int i = 0; i < size * size; i++) {
@@ -56,15 +53,22 @@ class TerrainTextureGenerator : MonoBehaviour {
             float[] pixelHSV;
 
             switch (texType) {
-                case TextureManager.TextureType.DIRT:
+                case TextureData.TextureType.DIRT:
                     pixelHSV = createDirtPixelHSV(x + seed, y + seed, seed);
                     break;
-                case TextureManager.TextureType.GRASS_SIDE:
+                case TextureData.TextureType.GRASS_SIDE:
                     pixelHSV = createGrassPixelHSV(x + seed, y + seed, seed);
-                    pixelHSV[3] = createGrassSideBorder(x, y, seed);
+                    pixelHSV[3] = createGrassSideEdge(x, y, seed);
                     break;
-                case TextureManager.TextureType.GRASS_TOP:
+                case TextureData.TextureType.GRASS_TOP:
                     pixelHSV = createGrassPixelHSV(x + seed, y + seed, seed);
+                    break;
+                case TextureData.TextureType.SNOW_SIDE:
+                    pixelHSV = createSnowPixelHSV(x + seed, y + seed, seed);
+                    pixelHSV[3] = createSnowSideEdge(x, y, seed);
+                    break;
+                case TextureData.TextureType.SNOW_TOP:
+                    pixelHSV = createSnowPixelHSV(x + seed, y + seed, seed);
                     break;
                 default:
                     pixelHSV = new float[3];
@@ -76,7 +80,7 @@ class TerrainTextureGenerator : MonoBehaviour {
             pixels[i].a = pixelHSV[3];
         }
 
-        return pixels;
+        return new TextureData(pixels, texType);
     }
 
     /// <summary>
@@ -132,7 +136,7 @@ class TerrainTextureGenerator : MonoBehaviour {
     /// <param name="y">y position of pixel</param>
     /// <param name="seed">Seed for texture</param>
     /// <returns>alpha of pixel</returns>
-    private float createGrassSideBorder(int x, int y, int seed) {
+    private float createGrassSideEdge(int x, int y, int seed) {
         const float noiseFrequency = 0.04f;
 
         float baseGrassHeight = 0.85f * textureManager.getTextureSize();
@@ -170,7 +174,7 @@ class TerrainTextureGenerator : MonoBehaviour {
     /// <param name="x">x position of pixel</param>
     /// <param name="y">y position of pixel</param>
     /// <param name="seed">Seed for texture</param>
-    /// <returns>HSV of a pixel in a grass
+    /// <returns>HSV of a pixel in a grass texture
     /// texture</returns>
     private float[] createGrassPixelHSV(int x, int y, int seed) {
         const float noiseFrequency = 0.004f;
@@ -206,6 +210,80 @@ class TerrainTextureGenerator : MonoBehaviour {
 
         return new float[] { hue, saturation, value, 1 };
     }
+    
+    /// <summary>
+    /// Used to create border for snow side.
+    /// </summary>
+    /// <param name="x">x position of pixel</param>
+    /// <param name="y">y position of pixel</param>
+    /// <param name="seed">Seed for texture</param>
+    /// <returns>alpha of pixel</returns>
+    private float createSnowSideEdge(int x, int y, int seed) {
+        const float noiseFrequency = 0.02f;
+
+        float baseSnowHeight = 0.85f * textureManager.getTextureSize();
 
 
+        Vector3 modPos = new Vector3(
+            x + SimplexNoise.Simplex2D(new Vector3(x, y), 0.02f),
+            y + SimplexNoise.Simplex2D(new Vector3(x, y), 0.02f)
+        );
+
+        float snowHeight = baseSnowHeight +
+            SimplexNoise.Simplex2D(new Vector3(x + seed, y), noiseFrequency) * 10;
+
+        float alpha = 0;
+        if (modPos.y > snowHeight)
+            alpha = 1;
+
+
+
+        return alpha;
+    }
+
+    /// <summary>
+    /// Used to create a pixel for a snow texture
+    /// </summary>
+    /// <param name="x">x position of pixel</param>
+    /// <param name="y">y position of pixel</param>
+    /// <param name="seed">Seed for texture</param>
+    /// <returns>HSV of a pixel in a snow texture texture</returns>
+    private float[] createSnowPixelHSV(int x, int y, int seed) {
+        const float valueNoiseFrequency = 0.004f;
+        const float saturationNoiseFrequency = 0.02f;
+
+        const float baseHue = 0.55f;
+        const float baseSaturation = 0.05f;
+        const float baseValue = 0.9f;
+
+        // Calulate Hue:
+        float hue = baseHue;
+
+        // Calculate Saturation:
+        float saturation = baseSaturation;
+
+        // Calculate Value:
+        Vector3 modPos = new Vector3(
+            x + SimplexNoise.Simplex2D(new Vector3(x, y), 0.01f) * 25,
+            y + SimplexNoise.Simplex2D(new Vector3(x, y), 0.01f) * 25
+        );
+
+        Vector3 modPos2 = new Vector3(
+            x + SimplexNoise.Simplex2D(new Vector3(28541 + x, y), 0.01f) * 25,
+            y + SimplexNoise.Simplex2D(new Vector3(x, y + 79146), 0.01f) * 25
+        );
+
+        float v1 = (SimplexNoise.Simplex2D(modPos, valueNoiseFrequency)) * 0.3f;
+        float v2 = (SimplexNoise.Simplex2D(modPos, 0.01f)) * 0.05f;
+        float v3 = (SimplexNoise.Simplex2D(modPos2, valueNoiseFrequency * 2)) * 0.3f;
+
+        float modifierValue = v1;// * 0.75f + (int)(v1 * 20) / 20f * 0.25f; // Add mod with effect
+        modifierValue += v3;// * 0.75f + (int)(v3 * 20) / 20f * 0.25f; // Add mod with effect
+        modifierValue += v2;
+        modifierValue *= 0.1f;
+
+        float value = baseValue - modifierValue;
+
+        return new float[] { hue, saturation, value, 1 };
+    }
 }

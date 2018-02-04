@@ -167,7 +167,7 @@ public class MeshDataGenerator {
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     private void addSliceData(BlockData blockData, FaceDirection faceDir) {
-        TextureManager.TextureType[] texTypes = new TextureManager.TextureType[2];
+        TextureData.TextureType[] texTypes = new TextureData.TextureType[2];
 
         // Get texture types for base and modifier
         for (int i = 0; i < 2; i++) {
@@ -183,7 +183,7 @@ public class MeshDataGenerator {
                 else
                     typeName += "_SIDE";
             }
-            texTypes[i] = (TextureManager.TextureType)Enum.Parse(typeof(TextureManager.TextureType), typeName);
+            texTypes[i] = (TextureData.TextureType)Enum.Parse(typeof(TextureData.TextureType), typeName);
 
         }
 
