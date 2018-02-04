@@ -9,7 +9,9 @@ using UnityEngine;
 /// </summary>
 class TreeTextureGenerator : MonoBehaviour {
 
-    // Temporarily using this to load the old textures until i get some actual generation up and going:
+    /// <summary>
+    /// Used to generate/load textures for trees
+    /// </summary>
     private void Start() {
         TextureManager textureManager = GameObject.Find("TreeTextureManager").GetComponent<TextureManager>();
         textureManager.Clear();
