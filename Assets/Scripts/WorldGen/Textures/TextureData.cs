@@ -13,12 +13,15 @@ public class TextureData {
     /// </summary>
     public enum TextureType {
         // All texture types must correspond to a block type, append "_SIDE", "_TOP", "_BOTTOM" where neccessary (these types must also be added in the check in MeshDataGenerator.addSliceData())
+        // NB!! When changing this, make sure the switch in textures.hlsl::getTexelValue() matches !!
         NONE,
         DIRT,
         STONE,
         SAND,
-        GRASS_TOP, GRASS_SIDE,
-        SNOW_TOP, SNOW_SIDE,
+        GRASS_TOP,
+        GRASS_SIDE,
+        SNOW_TOP,
+        SNOW_SIDE,
         WOOD,
         LEAF,
 

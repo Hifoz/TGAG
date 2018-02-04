@@ -1,3 +1,5 @@
+#ifndef __UTIL_HLSL__
+#define __UTIL_HLSL__
 
 //Function for calulating specular light
 float3 calcSpecular(float3 eyeLightDir, float3 eyeNormal, float3 eyePos, float exponent){
@@ -41,6 +43,10 @@ float noise (float3 x){
 	return lerp(y1, y2, f.z);
 }
 
+float noise(float3 x, float freq) {
+	return noise(x / freq);
+}
+
 /*
 	A HLSL port of ingio quilez's noise function written in GLSL i found in a unity forum
 	https://forum.unity.com/threads/perlin-noise-procedural-shader.33725/
@@ -66,3 +72,5 @@ float noise( float3 x )
                    lerp( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
 }
 */
+
+#endif // __UTILS_HLSL__

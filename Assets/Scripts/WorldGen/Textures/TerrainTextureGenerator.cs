@@ -19,14 +19,13 @@ class TerrainTextureGenerator : MonoBehaviour {
         textureManager.Clear();
 
 
-        for(int i = 0; i < 1; i++) {
-            textureManager.addTexture(createTexture(TextureData.TextureType.DIRT, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_TOP, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_SIDE, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_TOP, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.SAND, rnd.Next(9999)));
-        }
+        textureManager.addTexture(createTexture(TextureData.TextureType.DIRT, rnd.Next(9999)));
+        textureManager.addTexture(createTexture(TextureData.TextureType.STONE, rnd.Next(9999)));
+        textureManager.addTexture(createTexture(TextureData.TextureType.SAND, rnd.Next(9999)));
+        textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_TOP, rnd.Next(9999)));
+        textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE, rnd.Next(9999)));
+        textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_TOP, rnd.Next(9999)));
+        textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_SIDE, rnd.Next(9999)));
 
         string sharedPath = "Textures/temp/";
         // Old
@@ -55,6 +54,9 @@ class TerrainTextureGenerator : MonoBehaviour {
                     pixelHSV = createDirtPixelHSV(x + seed, y + seed, seed);
                     break;
                 case TextureData.TextureType.SAND:
+                    pixelHSV = createSandPixelHSV(x + seed, y + seed, seed);
+                    break;
+                case TextureData.TextureType.STONE:
                     pixelHSV = createSandPixelHSV(x + seed, y + seed, seed);
                     break;
                 case TextureData.TextureType.GRASS_SIDE:
