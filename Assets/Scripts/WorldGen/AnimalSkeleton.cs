@@ -19,6 +19,7 @@ public class AnimalSkeleton {
     List<LineSegment> leftLegs = new List<LineSegment>();//left legs
     List<LineSegment> tail = new List<LineSegment>();//tail
 
+    private Transform root;
     public List<Transform> AallBones = new List<Transform>();//all lines
     List<Transform> Ahead = new List<Transform>();//head
     List<Transform> Aneck = new List<Transform>();//neck
@@ -31,6 +32,8 @@ public class AnimalSkeleton {
     private static ThreadSafeRng rng = new ThreadSafeRng();
 
     public void generate(Transform root) {
+        this.root = root;
+
         float headSize = rng.randomFloat(1, 3);
         float neckLen = rng.randomFloat(1, 3);
         float spineLen = rng.randomFloat(2, 7);
@@ -97,8 +100,9 @@ public class AnimalSkeleton {
         int[] bestIndex = new int[2] { 0, 0 };
 
         for (int i = 0; i < bones.Count; i++) {
-            float dist = Vector3.Distance(bones[i].position, vert);
+            float dist = Vector3.Distance(bones[i].position, vert + root.position);
             if (dist < bestDist[0]) {
+                if (bones[i].gameObject.name == "neck") Debug.Log("Hey");
                 bestIndex[0] = i;
                 bestDist[0] = dist;
             } else if (dist < bestDist[1]) {
@@ -117,18 +121,24 @@ public class AnimalSkeleton {
     }
 
     private void makeAnimBones(Transform root) {
-        //AallBones.Add(root);
-        createAndBindBone(spine[0].a, root, "Upper Spine", Aspine);
-        createAndBindBone(spine[0].b, root, "Lower Spine", Aspine);
-        //createAndBindBone(neck[0].a, root, "neck", Aneck);
+        createAndBindBone(spine[0].a, root, root, "Upper Spine", Aspine);
+        createAndBindBone(spine[0].b, root, root, "Lower Spine", Aspine);
+        createAndBindBone(neck[0].a, root, Aspine[0], "Neck", Aneck);
+        createAndBindBone(tail[0].b, root, Aspine[1], "Tail", Atail);
+        for(int i = 0; i < 2; i++) {
+            createAndBindBone(rightLegs[i].b, root, Aspine[i], "Right Leg " + i, ArightLegs);
+            createAndBindBone(leftLegs[i].b, root, Aspine[i], "Left Leg " + i, AleftLegs);
+        }
     }
 
-    private void createAndBindBone(Vector3 pos, Transform root, string name, List<Transform> section) {
+    private void createAndBindBone(Vector3 pos, Transform root, Transform parent, string name, List<Transform> section) {
         Transform bone = new GameObject(name).transform;
-        bone.parent = root;
-        bone.localPosition = pos;
+        bone.parent = parent;
+        bone.position = root.position + pos;
         bone.localRotation = Quaternion.identity;
-        bindPoses.Add(bone.worldToLocalMatrix * root.localToWorldMatrix);
+        Matrix4x4 mat = bone.worldToLocalMatrix * root.localToWorldMatrix;
+
+        bindPoses.Add(mat);
         AallBones.Add(bone);
         section.Add(bone);
     }
