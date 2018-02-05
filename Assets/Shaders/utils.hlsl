@@ -44,7 +44,7 @@ float noise (float3 x){
 }
 
 float noise(float3 x, float freq) {
-	return noise(x / freq);
+	return noise(x * freq);
 }
 
 /*
@@ -72,5 +72,33 @@ float noise( float3 x )
                    lerp( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
 }
 */
+
+/*
+	The HSVtoRGB and RGBtoHSV methods are based on http://www.chilliant.com/rgb2hsv.html
+*/
+float3 HSVtoRGB(float3 HSV) {
+	float3 RGB;
+	RGB.r = abs(HSV.x * 6 - 3) - 1;
+	RGB.g = 2 - abs(HSV.x * 6 - 2);
+	RGB.b = 2 - abs(HSV.x * 6 - 4);
+	RGB = saturate(RGB);
+
+	return ((RGB - 1) * HSV.y + 1) * HSV.z;
+}
+
+float3 RGBtoHSV(float3 RGB) {
+	float Epsilon = 1e-10;
+
+	float4 P = (RGB.g < RGB.b) ? float4(RGB.bg, -1.0, 2.0 / 3.0) : float4(RGB.gb, 0.0, -1.0 / 3.0);
+	float4 Q = (RGB.r < P.x) ? float4(P.xyw, RGB.r) : float4(RGB.r, P.yzx);
+	float C = Q.x - min(Q.w, Q.y);
+	float H = abs((Q.w - Q.y) / (6 * C + Epsilon) + Q.z);
+
+	float3 HCV = float3(H, C, Q.x);
+	
+	float S = HCV.y / (HCV.z + Epsilon);
+	return float3(HCV.x, S, HCV.z);
+}
+
 
 #endif // __UTILS_HLSL__

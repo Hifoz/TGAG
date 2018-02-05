@@ -84,8 +84,16 @@
 				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
 				float a = modTex.a;
 				
-				// experimental. for testing gpu-generated textures:
-				modTex = getTexel(modSlice, i.worldPos);
+				//experimental. for testing gpu-generated textures:
+				/*float4 gpuGeneratedTexture = getTexel(slice, i.worldPos);
+				if (gpuGeneratedTexture.w != 2) {
+					baseTex = gpuGeneratedTexture;
+				}
+				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos);
+				if (gpuGeneratedModTexture.w != 2) {
+					modTex = gpuGeneratedModTexture;
+				}*/
+
 
 				half4 o;
 				if (i.color.g == 0) {

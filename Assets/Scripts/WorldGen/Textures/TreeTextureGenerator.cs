@@ -27,7 +27,7 @@ class TreeTextureGenerator : MonoBehaviour {
 
         // Old
         string sharedPath = "Textures/temp/";
-        textureManager.loadTextureFromFile(sharedPath + "temp_dirt", TextureData.TextureType.WOOD);
+        //textureManager.loadTextureFromFile(sharedPath + "temp_dirt", TextureData.TextureType.WOOD);
         textureManager.loadTextureFromFile(sharedPath + "temp_grass_top", TextureData.TextureType.LEAF);
     }
 
@@ -76,13 +76,16 @@ class TreeTextureGenerator : MonoBehaviour {
     /// <param name="seed">Seed for texture</param>
     /// <returns>HSV of a pixel in a wood texture texture</returns>
     private float[] createWoodPixelHSV(int x, int y, int seed) {
-        const float valueNoiseFrequency = 0.01f;
+        const float valueNoiseFrequency = 0.0004f;
 
         const float baseHue = 0.083f;
-        const float baseSaturation = 0.5f;
-        const float baseValue = 0.8f;
+        const float baseSaturation = 0.7f;
+        const float baseValue = 0.3f;
 
-        Vector2 pos = new Vector2(x, y);
+        Vector2 pos = new Vector2(x * 5, y);
+
+        Vector3 modPos = new Vector3(pos.x + SimplexNoise.Simplex2D(new Vector2(x, y), 0.005f) * 17, 0);
+
 
         // Calulate Hue:
         float hue = baseHue;
@@ -91,18 +94,27 @@ class TreeTextureGenerator : MonoBehaviour {
         float saturation = baseSaturation;
 
         // Calculate Value:
-        float value = baseValue;
+        float v1 = SimplexNoise.Simplex2D(pos, valueNoiseFrequency) * SimplexNoise.Simplex2D(pos - new Vector2(seed, seed), valueNoiseFrequency * 2f) * 0.3f +
+                   SimplexNoise.Simplex2D(pos, valueNoiseFrequency * 5) * 0.2f +
+                   SimplexNoise.Simplex2D(pos, valueNoiseFrequency * 10) * 0.2f;
 
-
-        float mV = SimplexNoise.Simplex2D(pos, 0.003f) * SimplexNoise.Simplex2D(pos + new Vector2(seed, seed), 0.003f);// +
-            //SimplexNoise.Simplex2D(pos, 0.01f) +
-            //SimplexNoise.Simplex2D(pos, 0.001f);
-
-
-        value = mV;
+        float value = Mathf.Clamp01(baseValue + (0.8f + v1) % 0.2f);
 
 
         return new float[] { hue, saturation, value, 1 };
+
+        /*
+        float mV = SimplexNoise.Simplex2D(pos, valueNoiseFrequency) *
+            SimplexNoise.Simplex2D(pos + new Vector2(seed, seed), valueNoiseFrequency) *
+            SimplexNoise.Simplex2D(pos - new Vector2(seed, seed), valueNoiseFrequency) *
+            SimplexNoise.Simplex2D(pos - new Vector2(seed, seed), valueNoiseFrequency * 0.4f);
+
+        if (mV < 0.05f)
+            mV = 1;
+        else
+            mV = 0;
+        */
+
     }
 
     /// <summary>
