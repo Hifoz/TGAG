@@ -20,7 +20,7 @@ class TreeTextureGenerator : MonoBehaviour {
         textureManager.Clear();
 
         // Generate 3 variations for each texture type
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < TextureManager.textureVariety; i++) {
             textureManager.addTexture(createTexture(TextureData.TextureType.WOOD, rnd.Next(9999)));
             textureManager.addTexture(createTexture(TextureData.TextureType.LEAF, rnd.Next(9999)));
         }

@@ -18,7 +18,7 @@ class TerrainTextureGenerator : MonoBehaviour {
         textureManager = GameObject.Find("TerrainTextureManager").GetComponent<TextureManager>();
         textureManager.Clear();
 
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < TextureManager.textureVariety; i++) {
             textureManager.addTexture(createTexture(TextureData.TextureType.DIRT, rnd.Next(9999)));
             textureManager.addTexture(createTexture(TextureData.TextureType.STONE, rnd.Next(9999)));
             textureManager.addTexture(createTexture(TextureData.TextureType.SAND, rnd.Next(9999)));
