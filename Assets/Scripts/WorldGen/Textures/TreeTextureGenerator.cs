@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 /// <summary>
-/// Used to generate textures
+/// Used to generate textures for the terrain
 /// </summary>
 class TreeTextureGenerator : MonoBehaviour {
     TextureManager textureManager;
@@ -24,11 +24,6 @@ class TreeTextureGenerator : MonoBehaviour {
             textureManager.addTexture(createTexture(TextureData.TextureType.WOOD, rnd.Next(9999)));
             textureManager.addTexture(createTexture(TextureData.TextureType.LEAF, rnd.Next(9999)));
         }
-
-        // Old
-        string sharedPath = "Textures/temp/";
-        //textureManager.loadTextureFromFile(sharedPath + "temp_dirt", TextureData.TextureType.WOOD);
-        textureManager.loadTextureFromFile(sharedPath + "temp_grass_top", TextureData.TextureType.LEAF);
     }
 
     /// <summary>
@@ -84,8 +79,6 @@ class TreeTextureGenerator : MonoBehaviour {
 
         Vector2 pos = new Vector2(x * 5, y);
 
-        Vector3 modPos = new Vector3(pos.x + SimplexNoise.Simplex2D(new Vector2(x, y), 0.005f) * 17, 0);
-
 
         // Calulate Hue:
         float hue = baseHue;
@@ -103,7 +96,7 @@ class TreeTextureGenerator : MonoBehaviour {
 
         return new float[] { hue, saturation, value, 1 };
 
-        /*
+        /* This could potentially be modified to make a birch tree texture if wanted:
         float mV = SimplexNoise.Simplex2D(pos, valueNoiseFrequency) *
             SimplexNoise.Simplex2D(pos + new Vector2(seed, seed), valueNoiseFrequency) *
             SimplexNoise.Simplex2D(pos - new Vector2(seed, seed), valueNoiseFrequency) *
@@ -125,11 +118,15 @@ class TreeTextureGenerator : MonoBehaviour {
     /// <param name="seed">Seed for texture</param>
     /// <returns>HSV of a pixel in a leaf texture texture</returns>
     private float[] createLeafPixelHSV(int x, int y, int seed) {
-        const float valueNoiseFrequency = 0.004f;
+        const float noiseFrequency = 0.004f;
 
         const float baseHue = 0.2f;
         const float baseSaturation = 0.85f;
         const float baseValue = 0.6f;
+
+        Vector2 pos = new Vector2(x, y);
+        Vector2 pos2 = new Vector2(x + seed, y + seed);
+
 
         // Calulate Hue:
         float hue = baseHue;
@@ -138,7 +135,17 @@ class TreeTextureGenerator : MonoBehaviour {
         float saturation = baseSaturation;
 
         // Calculate Value:
-        float value = baseValue;
+
+        float modifierValue = SimplexNoise.Simplex2D(pos2, noiseFrequency) * 0.10f +
+            SimplexNoise.Simplex2D(pos2, noiseFrequency * 3) * 0.10f +
+            SimplexNoise.Simplex2D(pos, noiseFrequency * 6) * 0.10f +
+            SimplexNoise.Simplex2D(pos2, noiseFrequency * 10) * 0.10f +
+            SimplexNoise.Simplex2D(pos, noiseFrequency * 30) * 0.13f +
+            SimplexNoise.Simplex2D(pos2, noiseFrequency * 70) * 0.1f +
+            SimplexNoise.Simplex2D(pos, noiseFrequency * 100) * 0.05f +
+            SimplexNoise.Simplex2D(pos, 0.006f) * SimplexNoise.Simplex2D(pos2, 0.008f) * 0.5f;
+
+        float value = Mathf.Clamp01(baseValue + modifierValue * 0.5f);
 
         return new float[] { hue, saturation, value, 1 };
     }

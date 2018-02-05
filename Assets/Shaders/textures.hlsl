@@ -4,16 +4,18 @@
 #include "utils.hlsl"
 
 /*
-	Experimental!
-	Porting TerrainTextureGenerator from C# to HLSL for more efficient resource distribution.
-	Doing texture generation on GPU is better for various reasons:
+	Experimental/WIP!
+	Porting TerrainTextureGenerator from C# to HLSL.
+	Reason wht doing texture generation on GPU is better:
 	1. More variety. No more choosing between pre-generated textures, textures are now generated per texel in the world.
-	2. Better distribution of resources. The CPU is already busy with terrain generataion, and the GPU is doing almost nothing.
+	2. Better distribution of resources. The CPU is already busy with terrain generation and many other things, and the GPU is doing a relatively small amount of work.
+		2.1 Performance hit on GPU seems pretty small from a quick and dirty test done with grass being done on the GPU.
 
+	NB!  Does not currently work with tree textures!
 */
 
 
-
+// Generate texture for grass
 float4 grassTex(float3 pos) {
 	float hue = 0.2f;
 	float saturation = 0.85f;
@@ -43,6 +45,7 @@ float4 grassTex(float3 pos) {
 	return o;
 }
 
+// Generate grass for the side of a block
 float4 grassSideTex(float3 pos) {
 	float blockPosY = (pos.y - 0.5) % 1;
 
@@ -57,22 +60,27 @@ float4 grassSideTex(float3 pos) {
 }
 
 float4 dirtTex(float3 pos) {
-	return float4(1, 1, 1, 2);
-}
-float4 sandTex(float3 pos) {
-	return float4(0, 0, 0, 2);
-}
-float4 snowTex(float3 pos) {
-	return float4(0, 0, 0, 2);
-}
-float4 snowSideTex(float3 pos) {
-	return float4(0, 0, 0, 2);
-}
-float4 stoneTex(float3 pos) {
-	return float4(0, 0, 0, 2);
+	return float4(0, 0, 1, 2);
 }
 
-//wip
+float4 sandTex(float3 pos) {
+	return float4(0, 1, 0, 2);
+}
+
+float4 snowTex(float3 pos) {
+	return float4(0, 1, 1, 2);
+}
+
+float4 snowSideTex(float3 pos) {
+	return float4(1, 0, 0, 2);
+}
+
+float4 stoneTex(float3 pos) {
+	return float4(1, 0, 1, 2);
+}
+
+// wip
+// Generate texture for wood
 float4 woodTex(float3 pos) {
 	float hue = 0.083;
 	float saturation = 0.5;
@@ -86,13 +94,14 @@ float4 woodTex(float3 pos) {
 
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
+
 float4 leafTex(float3 pos) {
-	return float4(0, 0, 0, 2);
+	return float4(1, 1, 0, 2);
 }
 
 
 
-
+// Gets the value for a texel on a face 
 float4 getTexel(int slice, float3 pos) {
 	switch (slice + 1) {
 	case 1: // Dirt
