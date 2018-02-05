@@ -1,32 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 /// <summary>
 /// Manages the textures for the terrain
 /// </summary>
 public class TextureManager : MonoBehaviour {
+    public static int textureVariety = 4;
 
-    /// <summary>
-    ///  Texture Type
-    /// </summary>
-    public enum TextureType {
-        // All texture types must correspond to a block type, append "_SIDE", "_TOP", "_BOTTOM" where neccessary (these types must also be added in the check in MeshDataGenerator.addSliceData())
-        NONE,
-        DIRT,
-        STONE,
-        SAND,
-        GRASS_TOP, GRASS_SIDE,
-        SNOW_TOP, SNOW_SIDE,
-        WOOD,
-        LEAF,
-
-        COUNT
-    }
-
-    private List<int>[] sliceTypeList = new List<int>[(int)TextureType.COUNT]; // Constains a list for each textureType containg the slices in the textureArray that contains a texture for it.
+    private List<int>[] sliceTypeList = new List<int>[(int)TextureData.TextureType.COUNT]; // Constains a list for each textureType containg the slices in the textureArray that contains a texture for it.
 
     public int textureSize = 512;
 
@@ -54,13 +37,12 @@ public class TextureManager : MonoBehaviour {
 
 
     /// <summary>
-    /// Generates a texture and stores it.
+    /// Creates a texture from input and stores it.
     /// </summary>
-    /// <param name="pixelData">Data to create texture from</param>
-    /// <returns>Whether the texture was successfully created and stored.</returns>
-    public void addTexture(Color[] pixelData, TextureType type) {
-        sliceTypeList[(int)type].Add(textureList.Count);
-        textureList.Add(pixelData);
+    /// <param name="textureData">Data to create and store texture from </param>
+    public void addTexture(TextureData textureData) {
+        sliceTypeList[(int)textureData.type].Add(textureList.Count);
+        textureList.Add(textureData.pixels);
         hasChanged = true;
     }
 
@@ -72,7 +54,7 @@ public class TextureManager : MonoBehaviour {
         for (int i = 0; i < e.Length; i++)
             e[i] = new Color(1, 1, 1, 0);
 
-        addTexture(e, TextureType.NONE);
+        addTexture(new TextureData(e, TextureData.TextureType.NONE));
     }
 
     /// <summary>
@@ -107,7 +89,9 @@ public class TextureManager : MonoBehaviour {
     /// <param name="path">Path for saving asset, relative to "Resources/"</param>
     public void saveArrayToFile(string path) {
         textureArray.Apply();
-        AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
+#if UNITY_EDITOR
+        UnityEditor.AssetDatabase.CreateAsset(textureArray, "Assets/Resources/Textures/" + path);
+#endif
     }
 
     /// <summary>
@@ -134,13 +118,13 @@ public class TextureManager : MonoBehaviour {
     /// </summary>
     /// <param name="path">Path to the file, relative to "Resources/"</param>
     /// <returns>Whether the texture was successfully loaded.</returns>
-    public bool loadTextureFromFile(string path, TextureType texType) {
+    public bool loadTextureFromFile(string path, TextureData.TextureType texType) {
         Texture2D loadedTexture = Resources.Load<Texture2D>(path);
         if (loadedTexture == null) {
             Debug.Log("Could not find file");
             return false;
         }
-        addTexture(loadedTexture.GetPixels(), texType);
+        addTexture(new TextureData(loadedTexture.GetPixels(), texType));
         return true;
     }
 

@@ -23,6 +23,7 @@
 			#include "Lighting.cginc"
 			#include "AutoLight.cginc"
 			#include "utils.hlsl"
+			#include "textures.hlsl"
 			#pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight
 
 			struct appdata {
@@ -74,14 +75,26 @@
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
-				fixed3 light = (i.diff + specular * 0.4) * shadow + i.ambient;
+				fixed3 light = (i.diff /*+ specular * 0.4*/) * shadow + i.ambient;
 
 				int slice = i.color.r + 0.5;
 				int modSlice = i.color.g + 0.5;
 
 				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
 				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
+				float a = modTex.a;
 				
+				//Experimental. for testing gpu-generated textures:
+				/*float4 gpuGeneratedTexture = getTexel(slice, i.worldPos);
+				if (gpuGeneratedTexture.w != 2) {
+					baseTex = gpuGeneratedTexture;
+				}
+				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos);
+				if (gpuGeneratedModTexture.w != 2) {
+					modTex = gpuGeneratedModTexture;
+				}*/
+
+
 				half4 o;
 				if (i.color.g == 0) {
 					o = baseTex;
