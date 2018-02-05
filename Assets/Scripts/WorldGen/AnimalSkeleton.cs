@@ -21,12 +21,12 @@ public class AnimalSkeleton {
 
     private Transform root;
     public List<Transform> AallBones = new List<Transform>();//all lines
-    List<Transform> Ahead = new List<Transform>();//head
-    List<Transform> Aneck = new List<Transform>();//neck
-    List<Transform> Aspine = new List<Transform>();//spine
-    List<Transform> ArightLegs = new List<Transform>();//right legs
-    List<Transform> AleftLegs = new List<Transform>();//left legs
-    List<Transform> Atail = new List<Transform>();//tail
+    public List<Transform> Ahead = new List<Transform>();//head
+    public List<Transform> Aneck = new List<Transform>();//neck
+    public List<Transform> Aspine = new List<Transform>();//spine
+    public List<Transform> ArightLegs = new List<Transform>();//right legs
+    public List<Transform> AleftLegs = new List<Transform>();//left legs
+    public List<Transform> Atail = new List<Transform>();//tail
     public List<Matrix4x4> bindPoses = new List<Matrix4x4>();
 
     private static ThreadSafeRng rng = new ThreadSafeRng();

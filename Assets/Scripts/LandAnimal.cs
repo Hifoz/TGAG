@@ -3,7 +3,7 @@ using System.Collections;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 public class LandAnimal : MonoBehaviour {
-
+    public Transform target;
     // Use this for initialization
     void Start() {
         AnimalSkeleton skeleton = new AnimalSkeleton();
