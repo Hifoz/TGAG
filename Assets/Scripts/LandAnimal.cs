@@ -1,15 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(MeshFilter))]
-[RequireComponent(typeof(MeshRenderer))]
+[RequireComponent(typeof(SkinnedMeshRenderer))]
 public class LandAnimal : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
         AnimalSkeleton skeleton = new AnimalSkeleton();
-        skeleton.generate();
-        GetComponent<MeshFilter>().mesh = AnimalSkeleton.createMesh(skeleton);
+        skeleton.generate(transform);
+        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.createMesh();
+        GetComponent<SkinnedMeshRenderer>().rootBone = transform;
+        GetComponent<SkinnedMeshRenderer>().bones = skeleton.AallBones.ToArray();
     }
 
     // Update is called once per frame
