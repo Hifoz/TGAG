@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class LandAnimal : MonoBehaviour {
     AnimalSkeleton skeleton;
     private float ikSpeed = 10;
-    private float ikTolerance = 0.2f;
+    private float ikTolerance = 0.1f;
 
     Vector3 heading = Vector3.forward;
     public float turnSpeed = 50f;
@@ -20,10 +20,6 @@ public class LandAnimal : MonoBehaviour {
         GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.createMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
         GetComponent<SkinnedMeshRenderer>().bones = skeleton.getBones(AnimalSkeleton.BodyPart.ALL).ToArray();
-
-        //RaycastHit hit;
-        //Physics.Raycast(new Ray(transform.position, Vector3.down), out hit);
-        //transform.position = hit.point + Vector3.up * skeleton.legLength;
     }
 
     // Update is called once per frame
@@ -43,7 +39,6 @@ public class LandAnimal : MonoBehaviour {
         Vector3 b = spine.forward * skeleton.spineLength;
 
         float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
-        Debug.Log(angle);
         Vector3 normal = Vector3.Cross(a, b);
         if (angle > 0.01f) {
             spine.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.rotation;
@@ -59,7 +54,7 @@ public class LandAnimal : MonoBehaviour {
 
         RaycastHit hit;
         Physics.Raycast(new Ray(transform.position, Vector3.down), out hit);
-        transform.position = hit.point + Vector3.up * (skeleton.legLength + skeleton.neckLength) * groundOffsetFactor;
+        transform.position = hit.point + Vector3.up * (skeleton.legLength) * groundOffsetFactor;
     }
 
     private void stayGrounded() {
@@ -90,25 +85,26 @@ public class LandAnimal : MonoBehaviour {
     /// <param name="target">Target to reach</param>
     /// <returns>Bool target reached</returns>
     private bool ccd(List<Transform> limb, Vector3 target) {
+        Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
         Transform[] arm = skeleton.getBones(AnimalSkeleton.BodyPart.RIGHT_LEGS).GetRange(0, 3).ToArray();
         Transform effector = limb[limb.Count - 1];
         float dist = Vector3.Distance(effector.position, target);
 
-            if (dist > ikTolerance) {
-                for (int i = 0; i < limb.Count - 1; i++) {
-                    Transform bone = limb[i];
+        if (dist > ikTolerance) {
+            for (int i = limb.Count - 1; i >= 0; i--) {
+                Transform bone = limb[i];
 
-                    Vector3 a = effector.position - bone.position;
-                    Vector3 b = target - bone.position;
+                Vector3 a = effector.position - bone.position;
+                Vector3 b = target - bone.position;
 
 
-                    float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
-                    Vector3 normal = Vector3.Cross(a, b);
-                    if (angle > 0.01f) {
-                        bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * ikSpeed * Time.deltaTime, normal) * bone.rotation;
-                    }
+                float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
+                Vector3 normal = Vector3.Cross(a, b);
+                if (angle > 0.01f) {
+                    bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * ikSpeed * Time.deltaTime, normal) * bone.rotation;
                 }
             }
+        } 
         
         return dist < ikTolerance;
     }

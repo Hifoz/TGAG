@@ -14,22 +14,37 @@ public class LineSegment {
     public Vector3 a;
     public Vector3 b;
     public bool endLine;
-
+    
     /// <summary>
-    /// Adds to lines together
+    /// Adds a vector to the line
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
-    /// <returns></returns>
-    public static LineSegment operator+ (LineSegment a, LineSegment b) {
-        return new LineSegment(a.a + b.a, a.b + b.b);
-    }
-
+    /// <returns>Resulting lineSegment</returns>
     public static LineSegment operator+ (LineSegment a, Vector3 b) {
         return new LineSegment(a.a + b, a.b + b);
     }
 
-    // <summary>
+    /// <summary>
+    /// Subtracts a vector from the line
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns>Resulting lineSegment</returns>
+    public static LineSegment operator- (LineSegment a, Vector3 b) {
+        return new LineSegment(a.a - b, a.b - b);
+    }
+
+    /// <summary>
+    /// Add function for when you don't want to change the reference
+    /// </summary>
+    /// <param name="point">point to add</param>
+    public void add(Vector3 point) {
+        a += point;
+        b += point;
+    }
+
+    /// <summary>
     /// Computes the distance between a point and a line segment.
     /// Based on: http://geomalgorithms.com/a02-_lines.html
     /// </summary>

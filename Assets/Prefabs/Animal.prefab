@@ -52,9 +52,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 308e34c6d32521643bf70fc091835dad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnSpeed: 10
-  speed: 10
-  groundOffsetFactor: 0.7
+  turnSpeed: 100
+  speed: 2
+  levelSpeed: 30
+  groundOffsetFactor: 0.5
 --- !u!137 &137209522713128248
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1

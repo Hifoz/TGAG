@@ -80,7 +80,9 @@ public class AnimalSkeleton {
         skeletonLines[BodyPart.TAIL].Add(tailLine);
         skeletonLines[BodyPart.TAIL].Add(tailLine);
 
-        makeAnimBones(root);
+        centerSkeletonLines();
+
+        makeAnimBones();
     }
 
     public Mesh createMesh() {
@@ -119,6 +121,15 @@ public class AnimalSkeleton {
             skeletonBones.Add(part, new List<Transform>());
         }
     }
+    
+    private void centerSkeletonLines() {
+        LineSegment spineLine = skeletonLines[BodyPart.SPINE][0];
+        Vector3 center = Vector3.Lerp(spineLine.a, spineLine.b, 0.5f);
+        List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
+        for (int i = 0; i < skeleton.Count; i++) {
+            skeleton[i].add(-center);
+        }
+    }
 
     private BoneWeight calcVertBoneWeight(Vector3 vert) {
         List<Transform> bones = skeletonBones[BodyPart.ALL];
@@ -145,18 +156,18 @@ public class AnimalSkeleton {
         return boneWeight;
     }
 
-    private void makeAnimBones(Transform root) {
-        createAndBindBone(Vector3.Lerp(skeletonLines[BodyPart.SPINE][0].a, skeletonLines[BodyPart.SPINE][0].b, 0.5f), root, root, "Mid Spine", BodyPart.SPINE);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].b, root, skeletonBones[BodyPart.SPINE][0], "Neck", BodyPart.NECK);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, root, skeletonBones[BodyPart.NECK][0], "Head", BodyPart.HEAD);
-        createAndBindBone(skeletonLines[BodyPart.TAIL][0].a, root, skeletonBones[BodyPart.SPINE][0], "Tail", BodyPart.TAIL);
+    private void makeAnimBones() {
+        createAndBindBone(Vector3.Lerp(skeletonLines[BodyPart.SPINE][0].a, skeletonLines[BodyPart.SPINE][0].b, 0.5f), rootBone, rootBone, "Mid Spine", BodyPart.SPINE);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].b, rootBone, skeletonBones[BodyPart.SPINE][0], "Neck", BodyPart.NECK);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, rootBone, skeletonBones[BodyPart.NECK][0], "Head", BodyPart.HEAD);
+        createAndBindBone(skeletonLines[BodyPart.TAIL][0].a, rootBone, skeletonBones[BodyPart.SPINE][0], "Tail", BodyPart.TAIL);
         for(int i = 0; i < 2; i++) {
-            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].a, root, skeletonBones[BodyPart.SPINE][0], "Right Leg " + i, BodyPart.RIGHT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].b, root, skeletonBones[BodyPart.RIGHT_LEGS][i * 3], "Right Leg " + i, BodyPart.RIGHT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2 + 1].b, root, skeletonBones[BodyPart.RIGHT_LEGS][i * 3 + 1], "Right Leg " + i, BodyPart.RIGHT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].a, root, skeletonBones[BodyPart.SPINE][0], "left Leg " + i, BodyPart.LEFT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].b, root, skeletonBones[BodyPart.LEFT_LEGS][i * 3], "left Leg " + i, BodyPart.LEFT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2 + 1].b, root, skeletonBones[BodyPart.LEFT_LEGS][i * 3 + 1], "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].a, rootBone, skeletonBones[BodyPart.SPINE][0], "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].b, rootBone, skeletonBones[BodyPart.RIGHT_LEGS][i * 3], "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2 + 1].b, rootBone, skeletonBones[BodyPart.RIGHT_LEGS][i * 3 + 1], "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].a, rootBone, skeletonBones[BodyPart.SPINE][0], "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].b, rootBone, skeletonBones[BodyPart.LEFT_LEGS][i * 3], "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2 + 1].b, rootBone, skeletonBones[BodyPart.LEFT_LEGS][i * 3 + 1], "left Leg " + i, BodyPart.LEFT_LEGS);
         }
     }
 
