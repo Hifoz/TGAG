@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -7,32 +8,22 @@ using System.Collections.Generic;
 /// This class is currently in a prototype stage.
 /// </summary>
 public class AnimalSkeleton {
-
-    //These various data structures are experimental and subject to change.
-    // I am not sure what data we will need to animate and create the animals yet,
-    // so this is just my guess.
-    List<LineSegment> allBones = new List<LineSegment>();//all lines
-    List<LineSegment> head = new List<LineSegment>();//head
-    List<LineSegment> neck = new List<LineSegment>();//neck
-    List<LineSegment> spine = new List<LineSegment>();//spine
-    List<LineSegment> rightLegs = new List<LineSegment>();//right legs
-    List<LineSegment> leftLegs = new List<LineSegment>();//left legs
-    List<LineSegment> tail = new List<LineSegment>();//tail
-
-    private Transform root;
-    public List<Transform> AallBones = new List<Transform>();//all lines
-    public List<Transform> Ahead = new List<Transform>();//head
-    public List<Transform> Aneck = new List<Transform>();//neck
-    public List<Transform> Aspine = new List<Transform>();//spine
-    public List<Transform> ArightLegs = new List<Transform>();//right legs
-    public List<Transform> AleftLegs = new List<Transform>();//left legs
-    public List<Transform> Atail = new List<Transform>();//tail
-    public List<Matrix4x4> bindPoses = new List<Matrix4x4>();
-
+    public enum BodyPart { ALL = 0, HEAD, NECK, SPINE, RIGHT_LEGS, LEFT_LEGS, TAIL}
+    
     private static ThreadSafeRng rng = new ThreadSafeRng();
+    private List<Matrix4x4> bindPoses = new List<Matrix4x4>();   
+    private Transform rootBone;
+    private Dictionary<BodyPart, List<Transform>> skeletonBones = new Dictionary<BodyPart, List<Transform>>();
+    private Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
+
+    public AnimalSkeleton(Transform root) {
+        generate(root);
+    }
 
     public void generate(Transform root) {
-        this.root = root;
+        initDicts();
+
+        rootBone = root;
 
         float headSize = rng.randomFloat(1, 2);
         float neckLen = rng.randomFloat(2, 4);
@@ -41,15 +32,19 @@ public class AnimalSkeleton {
         float legLen = rng.randomFloat(2, 6);
         float tailLen = rng.randomFloat(1, 5);
 
-        var headLines = createHead(headSize);
-        allBones.AddRange(headLines);
-        head.AddRange(headLines);
+        //HEAD
+        List<LineSegment> head = createHead(headSize);
+        skeletonLines[BodyPart.ALL].AddRange(head);
+        skeletonLines[BodyPart.HEAD].AddRange(head);
+        //NECK
         LineSegment neckLine = new LineSegment(head[head.Count - 1].b, head[head.Count - 1].b + new Vector3(0, -0.5f, 0.5f).normalized * neckLen);
-        allBones.Add(neckLine);
-        neck.Add(neckLine);
+        skeletonLines[BodyPart.ALL].Add(neckLine);
+        skeletonLines[BodyPart.NECK].Add(neckLine);
+        //SPINE
         LineSegment spineLine = new LineSegment(neckLine.b, neckLine.b + new Vector3(0, 0, 1) * spineLen);
-        allBones.Add(spineLine);
-        spine.Add(spineLine);
+        skeletonLines[BodyPart.ALL].Add(spineLine);
+        skeletonLines[BodyPart.SPINE].Add(spineLine);
+        //LEGS (This can prolly be done "tighter"
         for (int i = 0; i < legPairs; i++) {
             LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0) * legLen);
             LineSegment left2 = new LineSegment(new Vector3(0.5f, -0.5f, 0) * legLen, new Vector3(0.5f, -1f, 0) * legLen);
@@ -59,17 +54,17 @@ public class AnimalSkeleton {
             left2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a; 
             right += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
             right2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
-            leftLegs.Add(left);
-            leftLegs.Add(left2);
-            rightLegs.Add(right);
-            rightLegs.Add(right2);
+            skeletonLines[BodyPart.LEFT_LEGS].Add(left);
+            skeletonLines[BodyPart.LEFT_LEGS].Add(left2);
+            skeletonLines[BodyPart.RIGHT_LEGS].Add(right);
+            skeletonLines[BodyPart.RIGHT_LEGS].Add(right2);
         }
-        allBones.AddRange(leftLegs);
-        allBones.AddRange(rightLegs);
-
+        skeletonLines[BodyPart.ALL].AddRange(skeletonLines[BodyPart.LEFT_LEGS]);
+        skeletonLines[BodyPart.ALL].AddRange(skeletonLines[BodyPart.RIGHT_LEGS]);
+        //TAIL
         LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * tailLen);
-        tail.Add(tailLine);
-        allBones.Add(tailLine);
+        skeletonLines[BodyPart.TAIL].Add(tailLine);
+        skeletonLines[BodyPart.TAIL].Add(tailLine);
 
         makeAnimBones(root);
     }
@@ -81,7 +76,7 @@ public class AnimalSkeleton {
         List<int> indexes = new List<int>();
         List<BoneWeight> weights = new List<BoneWeight>();
         int i = 0;
-        foreach(var bone in allBones) {
+        foreach(var bone in skeletonLines[BodyPart.ALL]) {
             verticies.Add(bone.a);
             indexes.Add(i++);
             weights.Add(calcVertBoneWeight(bone.a));
@@ -100,15 +95,25 @@ public class AnimalSkeleton {
         return mesh;
     }
 
+    public List<Transform> getBones(BodyPart bodyPart) {
+        return skeletonBones[bodyPart];
+    }
+
+    private void initDicts() {
+        foreach(BodyPart part in Enum.GetValues(typeof(BodyPart))) {
+            skeletonLines.Add(part, new List<LineSegment>());
+            skeletonBones.Add(part, new List<Transform>());
+        }
+    }
+
     private BoneWeight calcVertBoneWeight(Vector3 vert) {
-        var bones = AallBones;
+        List<Transform> bones = skeletonBones[BodyPart.ALL];
         float[] bestDist = new float[2] { 99999, 999999 };
         int[] bestIndex = new int[2] { 0, 0 };
 
         for (int i = 0; i < bones.Count; i++) {
-            float dist = Vector3.Distance(bones[i].position, vert + root.position);
+            float dist = Vector3.Distance(bones[i].position, vert + rootBone.position);
             if (dist < bestDist[0]) {
-                if (bones[i].gameObject.name == "neck") Debug.Log("Hey");
                 bestIndex[0] = i;
                 bestDist[0] = dist;
             } else if (dist < bestDist[1]) {
@@ -127,21 +132,21 @@ public class AnimalSkeleton {
     }
 
     private void makeAnimBones(Transform root) {
-        createAndBindBone(Vector3.Lerp(spine[0].a, spine[0].b, 0.5f), root, root, "Mid Spine", Aspine);
-        createAndBindBone(neck[0].b, root, Aspine[0], "Neck", Aneck);
-        createAndBindBone(neck[0].a, root, Aneck[0], "Head", Ahead);
-        createAndBindBone(tail[0].a, root, Aspine[0], "Tail", Atail);
+        createAndBindBone(Vector3.Lerp(skeletonLines[BodyPart.SPINE][0].a, skeletonLines[BodyPart.SPINE][0].b, 0.5f), root, root, "Mid Spine", BodyPart.SPINE);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].b, root, skeletonBones[BodyPart.SPINE][0], "Neck", BodyPart.NECK);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, root, skeletonBones[BodyPart.NECK][0], "Head", BodyPart.HEAD);
+        createAndBindBone(skeletonLines[BodyPart.TAIL][0].a, root, skeletonBones[BodyPart.SPINE][0], "Tail", BodyPart.TAIL);
         for(int i = 0; i < 2; i++) {
-            createAndBindBone(rightLegs[i * 2].a, root, Aspine[0], "Right Leg " + i, ArightLegs);
-            createAndBindBone(rightLegs[i * 2].b, root, ArightLegs[i * 3], "Right Leg " + i, ArightLegs);
-            createAndBindBone(rightLegs[i * 2 + 1].b, root, ArightLegs[i * 3 + 1], "Right Leg " + i, ArightLegs);
-            createAndBindBone(leftLegs[i * 2].a, root, Aspine[0], "left Leg " + i, AleftLegs);
-            createAndBindBone(leftLegs[i * 2].b, root, AleftLegs[i * 3], "left Leg " + i, AleftLegs);
-            createAndBindBone(leftLegs[i * 2 + 1].b, root, AleftLegs[i * 3 + 1], "left Leg " + i, AleftLegs);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].a, root, skeletonBones[BodyPart.SPINE][0], "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].b, root, skeletonBones[BodyPart.RIGHT_LEGS][i * 3], "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2 + 1].b, root, skeletonBones[BodyPart.RIGHT_LEGS][i * 3 + 1], "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].a, root, skeletonBones[BodyPart.SPINE][0], "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].b, root, skeletonBones[BodyPart.LEFT_LEGS][i * 3], "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2 + 1].b, root, skeletonBones[BodyPart.LEFT_LEGS][i * 3 + 1], "left Leg " + i, BodyPart.LEFT_LEGS);
         }
     }
 
-    private void createAndBindBone(Vector3 pos, Transform root, Transform parent, string name, List<Transform> section) {
+    private void createAndBindBone(Vector3 pos, Transform root, Transform parent, string name, BodyPart bodyPart) {
         Transform bone = new GameObject(name).transform;
         bone.parent = parent;
         bone.position = root.position + pos;
@@ -149,8 +154,8 @@ public class AnimalSkeleton {
         Matrix4x4 mat = bone.worldToLocalMatrix * root.localToWorldMatrix;
 
         bindPoses.Add(mat);
-        AallBones.Add(bone);
-        section.Add(bone);
+        skeletonBones[BodyPart.ALL].Add(bone);
+        skeletonBones[bodyPart].Add(bone);
     }
 
     private List<LineSegment> createHead(float headSize) {

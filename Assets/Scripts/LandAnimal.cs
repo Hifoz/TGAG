@@ -10,11 +10,10 @@ public class LandAnimal : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        skeleton = new AnimalSkeleton();
-        skeleton.generate(transform);
+        skeleton = new AnimalSkeleton(transform);
         GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.createMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
-        GetComponent<SkinnedMeshRenderer>().bones = skeleton.AallBones.ToArray();
+        GetComponent<SkinnedMeshRenderer>().bones = skeleton.getBones(AnimalSkeleton.BodyPart.ALL).ToArray();
         StartCoroutine(ccd());
     }
 
@@ -25,7 +24,7 @@ public class LandAnimal : MonoBehaviour {
     }
 
     IEnumerator ccd() {
-        Transform[] arm = skeleton.ArightLegs.GetRange(0, 3).ToArray();
+        Transform[] arm = skeleton.getBones(AnimalSkeleton.BodyPart.LEFT_LEGS).GetRange(0, 3).ToArray();
         effector = arm[2];
         while (true) {
             Debug.Log(target.position);
