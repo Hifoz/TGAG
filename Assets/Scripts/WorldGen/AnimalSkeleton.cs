@@ -16,24 +16,38 @@ public class AnimalSkeleton {
     private Dictionary<BodyPart, List<Transform>> skeletonBones = new Dictionary<BodyPart, List<Transform>>();
     private Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
 
+    private float headsize;
+    private float neckLen;
+    private float spineLen;
+    private int legpairs;
+    private float legLen;
+    private float tailLen;
+
     public AnimalSkeleton(Transform root) {
         generate(root);
     }
+
+    public float headSize { get { return headsize; } }
+    public float neckLength { get { return neckLen; } }
+    public float spineLength { get { return spineLen; } }
+    public int legPairs { get { return legPairs; } }
+    public float legLength { get { return legLen; } }
+    public float tailLength { get { return tailLen; } }
 
     public void generate(Transform root) {
         initDicts();
 
         rootBone = root;
 
-        float headSize = rng.randomFloat(1, 2);
-        float neckLen = rng.randomFloat(2, 4);
-        float spineLen = rng.randomFloat(2, 7);
-        int legPairs = 2;// rng.randomInt(2, 6);
-        float legLen = rng.randomFloat(2, 6);
-        float tailLen = rng.randomFloat(1, 5);
+        headsize = rng.randomFloat(1, 2);
+        neckLen = rng.randomFloat(2, 4);
+        spineLen = rng.randomFloat(2, 7);
+        legpairs = 2;// rng.randomInt(2, 6);
+        legLen = rng.randomFloat(2, 6);
+        tailLen = rng.randomFloat(1, 5);
 
         //HEAD
-        List<LineSegment> head = createHead(headSize);
+        List<LineSegment> head = createHead(headsize);
         skeletonLines[BodyPart.ALL].AddRange(head);
         skeletonLines[BodyPart.HEAD].AddRange(head);
         //NECK
@@ -45,15 +59,15 @@ public class AnimalSkeleton {
         skeletonLines[BodyPart.ALL].Add(spineLine);
         skeletonLines[BodyPart.SPINE].Add(spineLine);
         //LEGS (This can prolly be done "tighter"
-        for (int i = 0; i < legPairs; i++) {
+        for (int i = 0; i < legpairs; i++) {
             LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0) * legLen);
             LineSegment left2 = new LineSegment(new Vector3(0.5f, -0.5f, 0) * legLen, new Vector3(0.5f, -1f, 0) * legLen);
             LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0) * legLen);
             LineSegment right2 = new LineSegment(new Vector3(-0.5f, -0.5f, 0) * legLen, new Vector3(-0.5f, -1f, 0) * legLen);
-            left += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
-            left2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a; 
-            right += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
-            right2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
+            left += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
+            left2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a; 
+            right += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
+            right2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
             skeletonLines[BodyPart.LEFT_LEGS].Add(left);
             skeletonLines[BodyPart.LEFT_LEGS].Add(left2);
             skeletonLines[BodyPart.RIGHT_LEGS].Add(right);
