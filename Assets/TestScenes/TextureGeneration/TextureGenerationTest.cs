@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -18,9 +19,7 @@ public class TextureGenerationTest : MonoBehaviour {
         GameObject ttm = GameObject.Find("TerrainTextureManager");
 
         TextureManager textureManager = ttm.GetComponent<TextureManager>();
-        TerrainTextureGenerator ttg = ttm.GetComponent<TerrainTextureGenerator>();
-
-        //ttg.
+        MeshDataGenerator.terrainTextureTypes = textureManager.getSliceTypeList();
 
         // Create the mesh
         mesh = GetComponent<MeshFilter>().sharedMesh = new Mesh();
@@ -58,7 +57,7 @@ public class TextureGenerationTest : MonoBehaviour {
 
             { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT),new BlockData(BlockData.BlockType.NONE) },
             { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
-            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT, BlockData.BlockType.GRASS),new BlockData(BlockData.BlockType.NONE) } },
+            { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.DIRT, BlockData.BlockType.GRASS),new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.GRASS) } },
 
             { { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
             { new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE),new BlockData(BlockData.BlockType.NONE) },
@@ -75,3 +74,4 @@ public class TextureGenerationTest : MonoBehaviour {
         mesh.RecalculateNormals();
     }
 }
+#endif
