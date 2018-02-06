@@ -7,6 +7,9 @@ public class CameraController : MonoBehaviour {
     public float targetDistance = 5;
     public float cameraHeight = 0.75f;
 
+    public GameObject underwaterOverlay;
+    private int inWater;
+
 
     private float yaw;
     private float pitch;
@@ -30,6 +33,12 @@ public class CameraController : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.L)) {
             toggleMouse();
         }
+
+        if(inWater > 0 && underwaterOverlay.activeInHierarchy == false)
+            underwaterOverlay.SetActive(true);
+        else if(inWater == 0 && underwaterOverlay.activeInHierarchy == true)
+            underwaterOverlay.SetActive(false);
+
     }
 
     /// <summary>
@@ -42,5 +51,15 @@ public class CameraController : MonoBehaviour {
             Cursor.lockState = CursorLockMode.None;
         }
 
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.name == "waterChunk")
+            inWater += 1;
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if (other.name == "waterChunk")
+            inWater -= 1;
     }
 }

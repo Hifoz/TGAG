@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class ChunkVoxelData {
     public MeshData meshData;
+    public MeshData waterMeshData;
     public Vector3 chunkPos;
 
     public MeshData[] trees;
@@ -81,6 +82,7 @@ public class ChunkVoxelDataThread {
         //Generate the chunk terrain
         result.chunkPos = order;
         result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order));
         int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);

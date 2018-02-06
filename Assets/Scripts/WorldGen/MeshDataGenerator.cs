@@ -21,12 +21,12 @@ public class MeshDataGenerator {
     public static List<int>[] terrainTextureTypes;
     public static List<int>[] treeTextureTypes;
 
-    private List<Vector3> vertices = new List<Vector3>();
-    private List<int> triangles = new List<int>();
-    private List<Color> colors = new List<Color>();
-    private List<Vector2> uvs = new List<Vector2>();
-    private List<Vector2> uvs2 = new List<Vector2>();
-    private BlockData[,,] pointmap;
+    protected List<Vector3> vertices = new List<Vector3>();
+    protected List<int> triangles = new List<int>();
+    protected List<Color> colors = new List<Color>();
+    protected List<Vector2> uvs = new List<Vector2>();
+    protected List<Vector2> uvs2 = new List<Vector2>();
+    protected BlockData[,,] pointmap;
 
     System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
 
@@ -35,9 +35,9 @@ public class MeshDataGenerator {
         xp, xm, yp, ym, zp, zm
     }
     public enum MeshDataType {
-        TERRAIN, TREE
+        TERRAIN, TREE, WATER
     }
-    MeshDataType meshDataType;
+    protected MeshDataType meshDataType;
 
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
@@ -71,8 +71,8 @@ public class MeshDataGenerator {
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
-                    if (pointmap[x, y, z].blockType != 0)                        
-                        MDG.GenerateCube(new Vector3(x, y, z), offset, pointmap[x, y, z], voxelSize);                        
+                    if (pointmap[x, y, z].blockType != BlockData.BlockType.NONE && pointmap[x, y, z].blockType != BlockData.BlockType.WATER)
+                        MDG.GenerateCube(new Vector3Int(x, y, z), offset, pointmap[x, y, z], voxelSize);
                 }
             }
         }
@@ -92,13 +92,28 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="cubePos">point position of the cube</param>
     /// <param name="blockData">data on the block</param>
-    private void GenerateCube(Vector3 cubePos, Vector3 offset, BlockData blockData, float voxelSize) {
-        if (cubePos.x != pointmap.GetLength(0) - 1 && pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
-        if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
-        if (cubePos.z != pointmap.GetLength(2) - 1 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1].blockType == 0) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
-        if (cubePos.x != 0 && pointmap[(int)cubePos.x - 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
-        if (cubePos.y != 0 && pointmap[(int)cubePos.x, (int)cubePos.y - 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
-        if (cubePos.z != 0 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z - 1].blockType == 0) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
+    private void GenerateCube(Vector3Int cubePos, Vector3 offset, BlockData blockData, float voxelSize) {
+        if (cubePos.x != pointmap.GetLength(0) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
+        if (cubePos.y == pointmap.GetLength(1) - 1 || checkIfSolidVoxel(cubePos + new Vector3Int(0, 1, 0)) == false) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
+        if (cubePos.z != pointmap.GetLength(2) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, 1)) == false) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
+        if (cubePos.x != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
+        if (cubePos.y != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
+        if (cubePos.z != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
+
+
+        //if (cubePos.x != pointmap.GetLength(0) - 1 && pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
+        //if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
+        //if (cubePos.z != pointmap.GetLength(2) - 1 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1].blockType == 0) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
+        //if (cubePos.x != 0 && pointmap[(int)cubePos.x - 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
+        //if (cubePos.y != 0 && pointmap[(int)cubePos.x, (int)cubePos.y - 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
+        //if (cubePos.z != 0 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z - 1].blockType == 0) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
+    }
+
+    protected bool checkIfSolidVoxel(Vector3Int voxelPos) {
+        if (pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.NONE ||
+            pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.WATER)
+            return false;
+        return true;
     }
 
 
@@ -108,7 +123,7 @@ public class MeshDataGenerator {
     /// <param name="dir">direction of face</param>
     /// <param name="pointPos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
-    private void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData, float voxelSize) {
+    protected void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData, float voxelSize) {
         int vertIndex = vertices.Count;
 
         float delta = voxelSize / 2f;
@@ -166,7 +181,7 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
-    private void addSliceData(BlockData blockData, FaceDirection faceDir) {
+    protected void addSliceData(BlockData blockData, FaceDirection faceDir) {
         TextureData.TextureType[] texTypes = new TextureData.TextureType[2];
 
         // Get texture types for base and modifier
@@ -219,7 +234,7 @@ public class MeshDataGenerator {
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
-    private void addTextureCoordinates(BlockData blockData, FaceDirection faceDir) {
+    protected void addTextureCoordinates(BlockData blockData, FaceDirection faceDir) {
 
         Vector2[] coords = new Vector2[]{
             new Vector2(0, 0), new Vector2(0, 1),

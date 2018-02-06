@@ -19,17 +19,19 @@ class TerrainTextureGenerator : MonoBehaviour {
         textureManager.Clear();
 
         for(int i = 0; i < TextureManager.textureVariety; i++) {
-            textureManager.addTexture(createTexture(TextureData.TextureType.DIRT, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.STONE, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.SAND, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_TOP, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_TOP, rnd.Next(9999)));
-            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_SIDE, rnd.Next(9999)));
+            textureManager.addTexture(createTexture(TextureData.TextureType.DIRT));
+            textureManager.addTexture(createTexture(TextureData.TextureType.STONE));
+            textureManager.addTexture(createTexture(TextureData.TextureType.SAND));
+            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_TOP));
+            textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE));
+            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_TOP));
+            textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_SIDE));
         }
 
+        textureManager.addTexture(createTexture(TextureData.TextureType.WATER));
+
         string sharedPath = "Textures/temp/";
-        // Old
+        // Load from file
         textureManager.loadTextureFromFile(sharedPath + "temp_stone", TextureData.TextureType.STONE);
     }
 
@@ -40,9 +42,10 @@ class TerrainTextureGenerator : MonoBehaviour {
     /// <param name="texType">What textureType</param>
     /// <param name="seed">seed to use</param>
     /// <returns>A Color[] containing the pixels for a texture</returns>
-    public TextureData createTexture(TextureData.TextureType texType, int seed = 42) {
+    public TextureData createTexture(TextureData.TextureType texType) {
         int size = textureManager.getTextureSize();
         Color[] pixels = new Color[size * size];
+        int seed = rnd.Next(9999);
 
         for (int i = 0; i < size * size; i++) {
             int x = i % size;
@@ -74,8 +77,11 @@ class TerrainTextureGenerator : MonoBehaviour {
                 case TextureData.TextureType.SNOW_TOP:
                     pixelHSV = createSnowPixelHSV(x + seed, y + seed, seed);
                     break;
+                case TextureData.TextureType.WATER:
+                    pixelHSV = new float[4] { 0.6f, 0.7f, 0.7f, 0.95f };
+                    break;
                 default:
-                    pixelHSV = new float[3];
+                    pixelHSV = new float[4] {0,0,0,0};
                     break;
             }
 
