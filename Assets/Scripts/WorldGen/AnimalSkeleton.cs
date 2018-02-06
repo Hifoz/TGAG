@@ -34,8 +34,8 @@ public class AnimalSkeleton {
     public void generate(Transform root) {
         this.root = root;
 
-        float headSize = rng.randomFloat(1, 3);
-        float neckLen = rng.randomFloat(1, 3);
+        float headSize = rng.randomFloat(1, 2);
+        float neckLen = rng.randomFloat(2, 4);
         float spineLen = rng.randomFloat(2, 7);
         int legPairs = 2;// rng.randomInt(2, 6);
         float legLen = rng.randomFloat(2, 6);
@@ -52,11 +52,17 @@ public class AnimalSkeleton {
         spine.Add(spineLine);
         for (int i = 0; i < legPairs; i++) {
             LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0) * legLen);
+            LineSegment left2 = new LineSegment(new Vector3(0.5f, -0.5f, 0) * legLen, new Vector3(0.5f, -1f, 0) * legLen);
             LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0) * legLen);
+            LineSegment right2 = new LineSegment(new Vector3(-0.5f, -0.5f, 0) * legLen, new Vector3(-0.5f, -1f, 0) * legLen);
             left += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
+            left2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a; 
             right += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
+            right2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legPairs - 1)) + spineLine.a;
             leftLegs.Add(left);
+            leftLegs.Add(left2);
             rightLegs.Add(right);
+            rightLegs.Add(right2);
         }
         allBones.AddRange(leftLegs);
         allBones.AddRange(rightLegs);
@@ -121,13 +127,17 @@ public class AnimalSkeleton {
     }
 
     private void makeAnimBones(Transform root) {
-        createAndBindBone(spine[0].a, root, root, "Upper Spine", Aspine);
-        createAndBindBone(spine[0].b, root, root, "Lower Spine", Aspine);
-        createAndBindBone(neck[0].a, root, Aspine[0], "Neck", Aneck);
-        createAndBindBone(tail[0].b, root, Aspine[1], "Tail", Atail);
+        createAndBindBone(Vector3.Lerp(spine[0].a, spine[0].b, 0.5f), root, root, "Mid Spine", Aspine);
+        createAndBindBone(neck[0].b, root, Aspine[0], "Neck", Aneck);
+        createAndBindBone(neck[0].a, root, Aneck[0], "Head", Ahead);
+        createAndBindBone(tail[0].a, root, Aspine[0], "Tail", Atail);
         for(int i = 0; i < 2; i++) {
-            createAndBindBone(rightLegs[i].b, root, Aspine[i], "Right Leg " + i, ArightLegs);
-            createAndBindBone(leftLegs[i].b, root, Aspine[i], "Left Leg " + i, AleftLegs);
+            createAndBindBone(rightLegs[i * 2].a, root, Aspine[0], "Right Leg " + i, ArightLegs);
+            createAndBindBone(rightLegs[i * 2].b, root, ArightLegs[i * 3], "Right Leg " + i, ArightLegs);
+            createAndBindBone(rightLegs[i * 2 + 1].b, root, ArightLegs[i * 3 + 1], "Right Leg " + i, ArightLegs);
+            createAndBindBone(leftLegs[i * 2].a, root, Aspine[0], "left Leg " + i, AleftLegs);
+            createAndBindBone(leftLegs[i * 2].b, root, AleftLegs[i * 3], "left Leg " + i, AleftLegs);
+            createAndBindBone(leftLegs[i * 2 + 1].b, root, AleftLegs[i * 3 + 1], "left Leg " + i, AleftLegs);
         }
     }
 
