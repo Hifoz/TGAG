@@ -30,12 +30,16 @@ public class LandAnimal : MonoBehaviour {
         transform.position = pos;
         roamCenter = pos;
         roamCenter.y = 0;
+
+        heading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+        transform.LookAt(transform.position - heading);
     }
 
     private void generate() {
         foreach(Transform child in transform) {
             Destroy(child.gameObject);
         }
+        transform.rotation = Quaternion.identity;
         skeleton = new AnimalSkeleton(transform);
         GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.createMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
