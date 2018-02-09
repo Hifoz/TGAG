@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
@@ -8,25 +7,39 @@ public class LandAnimal : MonoBehaviour {
     private float ikSpeed = 10;
     private float ikTolerance = 0.1f;
 
+    public const float roamDistance = 20;
+    private Vector3 roamCenter;
+
     Vector3 heading = Vector3.forward;
     public float turnSpeed = 50f;
     public float speed = 5f;
     public float levelSpeed = 30f;
     public float groundOffsetFactor = 0.7f;
 
-    // Use this for initialization
-    void Start() {
+    // Update is called once per frame
+    void Update() {
+        if (skeleton != null) {
+            move();
+            levelSpine();
+            stayGrounded();
+        }
+    }
+
+    public void Spawn(Vector3 pos) {
+        generate();
+        transform.position = pos;
+        roamCenter = pos;
+        roamCenter.y = 0;
+    }
+
+    private void generate() {
+        foreach(Transform child in transform) {
+            Destroy(child.gameObject);
+        }
         skeleton = new AnimalSkeleton(transform);
         GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.createMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
         GetComponent<SkinnedMeshRenderer>().bones = skeleton.getBones(AnimalSkeleton.BodyPart.ALL).ToArray();
-    }
-
-    // Update is called once per frame
-    void Update() {
-        move();
-        levelSpine();
-        stayGrounded();
     }
 
     private void levelSpine() {
@@ -46,15 +59,22 @@ public class LandAnimal : MonoBehaviour {
     }
 
     private void move() {
-        if (Random.Range(0f, 1f) < 0.5f) {
-            heading = Quaternion.AngleAxis(turnSpeed * Random.Range(-1f, 1f) * Time.deltaTime, Vector3.up) * heading;
+        float dist = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), roamCenter);
+        Vector3 toCenter = roamCenter - transform.position;
+        toCenter.y = 0;
+        if (dist > roamDistance && Vector3.Angle(toCenter, heading) > 90) {
+            heading = -heading;
+            heading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * heading;
             transform.LookAt(transform.position - heading);
         }
         transform.position += heading * speed * Time.deltaTime;
 
         RaycastHit hit;
-        Physics.Raycast(new Ray(transform.position, Vector3.down), out hit);
-        transform.position = hit.point + Vector3.up * (skeleton.legLength) * groundOffsetFactor;
+        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
+            transform.position = hit.point + Vector3.up * (skeleton.legLength) * groundOffsetFactor;
+        } else {
+            transform.position = new Vector3(0, -1000, 0);
+        }        
     }
 
     private void stayGrounded() {

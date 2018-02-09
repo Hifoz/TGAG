@@ -13,6 +13,7 @@ public class ChunkManager : MonoBehaviour {
     public TextureManager terrainTextureManager;
     public TextureManager treeTextureManager;
     public GameObject treePrefab;
+    public GameObject animalPrefab;
     private Vector3 offset;
     private List<ChunkData> activeChunks = new List<ChunkData>();
     private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
@@ -23,6 +24,8 @@ public class ChunkManager : MonoBehaviour {
     private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
+
+    private GameObject[] animals = new GameObject[20];
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -42,6 +45,7 @@ public class ChunkManager : MonoBehaviour {
         updateChunkGrid();
         orderNewChunks();
         launchOrderedChunks();
+        handleAnimals();
     }
 
     /// <summary>
@@ -75,6 +79,30 @@ public class ChunkManager : MonoBehaviour {
 
         MeshDataGenerator.terrainTextureTypes = terrainTextureManager.getSliceTypeList();
         MeshDataGenerator.treeTextureTypes = treeTextureManager.getSliceTypeList();
+
+        if (animalPrefab) {
+            for (int i = 0; i < animals.Length; i++) {
+                animals[i] = Instantiate(animalPrefab);                
+            }
+            handleAnimals();
+        }
+    }
+
+    private void handleAnimals() {
+        if (animalPrefab) {
+            float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
+            float lower = -maxDistance + LandAnimal.roamDistance;
+            float upper = -lower;
+            foreach (GameObject animal in animals) {
+                if (Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
+                    LandAnimal landAnimal = animal.GetComponent<LandAnimal>();
+                    float x = UnityEngine.Random.Range(lower, upper);
+                    float z = UnityEngine.Random.Range(lower, upper);
+                    float y = ChunkConfig.chunkHeight + 10;
+                    landAnimal.Spawn(player.position + new Vector3(x, y, z));
+                }
+            }
+        }
     }
 
     /// <summary>
