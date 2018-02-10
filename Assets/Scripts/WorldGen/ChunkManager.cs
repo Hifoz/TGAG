@@ -150,7 +150,7 @@ public class ChunkManager : MonoBehaviour {
             chunk.GetComponent<MeshCollider>().convex = false;
             chunk.name = "chunk";
             chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
-            chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+            chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
 
             cd.chunk = chunk;
 
@@ -162,7 +162,7 @@ public class ChunkManager : MonoBehaviour {
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
             waterChunk.name = "waterChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
-            chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+            waterChunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk = waterChunk;
 
 
