@@ -77,4 +77,14 @@ public class PlayerMovement : MonoBehaviour {
 
     }
 
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.name == "waterChunk")
+            Debug.Log("Entering water");
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if (other.name == "waterChunk")
+            Debug.Log("Leaving water");
+    }
 }

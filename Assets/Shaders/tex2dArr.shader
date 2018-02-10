@@ -99,10 +99,10 @@
 				if (i.color.g == 0) {
 					o = baseTex;
 				} else {
-				o = lerp(modTex, baseTex, 1 - modTex.a);
+					o = lerp(modTex, baseTex, 1 - modTex.a);
+					o.a = min(modTex.a + baseTex.a, 1);
 				}
 
-				o.a = min(modTex.a + baseTex.a, 1);
 
 				o.rbg *= light;
 				return o;

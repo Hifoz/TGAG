@@ -24,6 +24,7 @@ public class TextureData {
         SNOW_SIDE,
         WOOD,
         LEAF,
+        WATER,
 
         COUNT
     }
