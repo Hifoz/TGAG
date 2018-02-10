@@ -7,11 +7,10 @@ public class LandAnimal : MonoBehaviour {
     private float ikSpeed = 10;
     private float ikTolerance = 0.1f;
 
-    public const float roamDistance = 20;
+    public const float roamDistance = 40;
     private Vector3 roamCenter;
 
     Vector3 heading = Vector3.zero;
-    public float turnSpeed = 50f;
     public float speed = 5f;
     public float levelSpeed = 30f;
     public float groundOffsetFactor = 0.7f;
@@ -19,25 +18,21 @@ public class LandAnimal : MonoBehaviour {
     float timer = 0;
     private const float walkSpeed = 0.2f;
 
-    //private void Start() {
-    //    Spawn(Vector3.up * 100);
-    //    RaycastHit hit;
-    //    if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-    //        transform.position = hit.point + Vector3.up * (skeleton.legLength) * groundOffsetFactor;
-    //    } 
-    //}
-
     // Update is called once per frame
     void Update() {
         if (skeleton != null) {
             move();
-            levelSpine();
+            //levelSpine();
             //stayGrounded();
             walk();
             timer += Time.deltaTime;
         }
     }
 
+    /// <summary>
+    /// Spawns the animal at position
+    /// </summary>
+    /// <param name="pos">Vector3 pos</param>
     public void Spawn(Vector3 pos) {
         generate();
         transform.position = pos;
@@ -48,6 +43,9 @@ public class LandAnimal : MonoBehaviour {
         transform.LookAt(transform.position - heading);
     }
 
+    /// <summary>
+    /// Generates the animal
+    /// </summary>
     private void generate() {
         foreach(Transform child in transform) {
             Destroy(child.gameObject);
@@ -65,6 +63,9 @@ public class LandAnimal : MonoBehaviour {
         GetComponent<SkinnedMeshRenderer>().bones = bones;
     }
 
+    /// <summary>
+    /// Tries to level the spine with the ground
+    /// </summary>
     private void levelSpine() {
         Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
         RaycastHit hit1;
@@ -81,6 +82,9 @@ public class LandAnimal : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Moves the animal in world space
+    /// </summary>
     private void move() {
         float dist = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), roamCenter);
         Vector3 toCenter = roamCenter - transform.position;
@@ -101,6 +105,9 @@ public class LandAnimal : MonoBehaviour {
         }        
     }
 
+    /// <summary>
+    /// Keeps the legs of the animal grounded.
+    /// </summary>
     private void stayGrounded() {
         List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
         List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
@@ -116,6 +123,9 @@ public class LandAnimal : MonoBehaviour {
         groundLeg(left2, 1);
     }
 
+    /// <summary>
+    /// Makes the animal do a walking animation
+    /// </summary>
     private void walk() {
         List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
         List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
@@ -131,6 +141,11 @@ public class LandAnimal : MonoBehaviour {
         walkLeg(left2, 1, 0);
     }
 
+    /// <summary>
+    /// Grounds one leg
+    /// </summary>
+    /// <param name="leg">List<Bone> leg</param>
+    /// <param name="sign">int sign, used to get a correct offset for IK target</param>
     private void groundLeg(List<Bone> leg, int sign) {
         Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.legLength / 2f;
 
@@ -140,6 +155,12 @@ public class LandAnimal : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Uses IK to make the leg walk.
+    /// </summary>
+    /// <param name="leg">List<Bone> leg</param>
+    /// <param name="sign">int sign, used to get a correct offset for IK target</param>
+    /// <param name="radOffset">Walk animation offset in radians</param>
     private void walkLeg(List<Bone> leg, int sign, float radOffset) {
         Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.legLength / 2f;
         target += heading * Mathf.Cos(timer + radOffset) * skeleton.legLength / 2f; 
@@ -191,6 +212,11 @@ public class LandAnimal : MonoBehaviour {
         return dist < ikTolerance;
     }
 
+    /// <summary>
+    /// Checks the joint constraints for the bone
+    /// </summary>
+    /// <param name="bone">Bone bone, the bone to check</param>
+    /// <returns>True if bone satisfies bone constraints, false otherwise</returns>
     private bool checkConstraints(Bone bone) {
         Vector3 rotation = bone.bone.localEulerAngles;
         rotation.x = (rotation.x > 180) ? rotation.x - 360 : rotation.x;

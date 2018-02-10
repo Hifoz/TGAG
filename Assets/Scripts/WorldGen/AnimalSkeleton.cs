@@ -2,8 +2,14 @@
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// Enum used to specify a bodypart
+/// </summary>
 public enum BodyPart { ALL = 0, HEAD, NECK, SPINE, RIGHT_LEGS, LEFT_LEGS, TAIL }
 
+/// <summary>
+/// Class used to represent a Bone with constraints
+/// </summary>
 public class Bone {
     public Transform bone;
     public Vector3 minAngles = new Vector3(-180, -180, -180);
@@ -11,9 +17,7 @@ public class Bone {
 }
 
 /// <summary>
-/// This class is currently in a prototype stage.
-/// This class is currently in a prototype stage.
-/// This class is currently in a prototype stage.
+/// AnimalSkeleton, represents an animal skeleton through animation bones, and LineSegments.
 /// </summary>
 public class AnimalSkeleton {   
     
@@ -30,6 +34,10 @@ public class AnimalSkeleton {
     private float legLen;
     private float tailLen;
 
+    /// <summary>
+    /// Constructor that generates an AnimalSkeleton
+    /// </summary>
+    /// <param name="root"></param>
     public AnimalSkeleton(Transform root) {
         generate(root);
     }
@@ -41,6 +49,10 @@ public class AnimalSkeleton {
     public float legLength { get { return legLen; } }
     public float tailLength { get { return tailLen; } }
 
+    /// <summary>
+    /// Generates the skeletonLines and skeletonBones for this AnimalSkeleton
+    /// </summary>
+    /// <param name="root"></param>
     public void generate(Transform root) {
         initDicts();
 
@@ -92,6 +104,10 @@ public class AnimalSkeleton {
         makeAnimBones();
     }
 
+    /// <summary>
+    /// Creates a line mesh for the skeleton
+    /// </summary>
+    /// <returns>Mesh</returns>
     public Mesh createMesh() {
         Mesh mesh = new Mesh();
 
@@ -118,10 +134,18 @@ public class AnimalSkeleton {
         return mesh;
     }
 
+    /// <summary>
+    /// Gets the specified bones.
+    /// </summary>
+    /// <param name="bodyPart">BodyPart bodyPart</param>
+    /// <returns>List<Bone> bones</returns>
     public List<Bone> getBones(BodyPart bodyPart) {
         return skeletonBones[bodyPart];
     }
 
+    /// <summary>
+    /// Initializes the dictionaries (skeletonLines and skeletonBones)
+    /// </summary>
     private void initDicts() {
         foreach(BodyPart part in Enum.GetValues(typeof(BodyPart))) {
             skeletonLines.Add(part, new List<LineSegment>());
@@ -129,6 +153,9 @@ public class AnimalSkeleton {
         }
     }
     
+    /// <summary>
+    /// Centers the skeleton around the spine
+    /// </summary>
     private void centerSkeletonLines() {
         LineSegment spineLine = skeletonLines[BodyPart.SPINE][0];
         Vector3 center = Vector3.Lerp(spineLine.a, spineLine.b, 0.5f);
@@ -138,6 +165,11 @@ public class AnimalSkeleton {
         }
     }
 
+    /// <summary>
+    /// Calculates the bone weights for a vertex
+    /// </summary>
+    /// <param name="vert"></param>
+    /// <returns></returns>
     private BoneWeight calcVertBoneWeight(Vector3 vert) {
         List<Bone> bones = skeletonBones[BodyPart.ALL];
         float[] bestDist = new float[2] { 99999, 999999 };
@@ -163,18 +195,21 @@ public class AnimalSkeleton {
         return boneWeight;
     }
 
+    /// <summary>
+    /// Populates the skeletonBones dicitonary with bones
+    /// </summary>
     private void makeAnimBones() {
-        createAndBindBone(Vector3.Lerp(skeletonLines[BodyPart.SPINE][0].a, skeletonLines[BodyPart.SPINE][0].b, 0.5f), rootBone, rootBone, "Mid Spine", BodyPart.SPINE);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].b, rootBone, skeletonBones[BodyPart.SPINE][0].bone, "Neck", BodyPart.NECK);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, rootBone, skeletonBones[BodyPart.NECK][0].bone, "Head", BodyPart.HEAD);
-        createAndBindBone(skeletonLines[BodyPart.TAIL][0].a, rootBone, skeletonBones[BodyPart.SPINE][0].bone, "Tail", BodyPart.TAIL);
+        createAndBindBone(Vector3.Lerp(skeletonLines[BodyPart.SPINE][0].a, skeletonLines[BodyPart.SPINE][0].b, 0.5f), rootBone, "Mid Spine", BodyPart.SPINE);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].b, skeletonBones[BodyPart.SPINE][0].bone, "Neck", BodyPart.NECK);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, skeletonBones[BodyPart.NECK][0].bone, "Head", BodyPart.HEAD);
+        createAndBindBone(skeletonLines[BodyPart.TAIL][0].a, skeletonBones[BodyPart.SPINE][0].bone, "Tail", BodyPart.TAIL);
         for(int i = 0; i < 2; i++) {
-            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].a, rootBone, skeletonBones[BodyPart.SPINE][0].bone, "Right Leg " + i, BodyPart.RIGHT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].b, rootBone, skeletonBones[BodyPart.RIGHT_LEGS][i * 3].bone, "Right Leg " + i, BodyPart.RIGHT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2 + 1].b, rootBone, skeletonBones[BodyPart.RIGHT_LEGS][i * 3 + 1].bone, "Right Leg " + i, BodyPart.RIGHT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].a, rootBone, skeletonBones[BodyPart.SPINE][0].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].b, rootBone, skeletonBones[BodyPart.LEFT_LEGS][i * 3].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
-            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2 + 1].b, rootBone, skeletonBones[BodyPart.LEFT_LEGS][i * 3 + 1].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].a, skeletonBones[BodyPart.SPINE][0].bone, "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2].b, skeletonBones[BodyPart.RIGHT_LEGS][i * 3].bone, "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.RIGHT_LEGS][i * 2 + 1].b, skeletonBones[BodyPart.RIGHT_LEGS][i * 3 + 1].bone, "Right Leg " + i, BodyPart.RIGHT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].a, skeletonBones[BodyPart.SPINE][0].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2].b, skeletonBones[BodyPart.LEFT_LEGS][i * 3].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
+            createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2 + 1].b, skeletonBones[BodyPart.LEFT_LEGS][i * 3 + 1].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
         }
 
         addConstraintsLeg(skeletonBones[BodyPart.RIGHT_LEGS].GetRange(0, 3));
@@ -183,12 +218,20 @@ public class AnimalSkeleton {
         addConstraintsLeg(skeletonBones[BodyPart.LEFT_LEGS].GetRange(3, 3));
     }
 
-    private void createAndBindBone(Vector3 pos, Transform root, Transform parent, string name, BodyPart bodyPart) {
+    /// <summary>
+    /// Makes and binds a bone for animation
+    /// </summary>
+    /// <param name="pos">Vector3 pos</param>
+    /// <param name="root">Transform root</param>
+    /// <param name="parent">Transform parent</param>
+    /// <param name="name">string name</param>
+    /// <param name="bodyPart">BodyPart bodyPart</param>
+    private void createAndBindBone(Vector3 pos, Transform parent, string name, BodyPart bodyPart) {
         Transform bone = new GameObject(name).transform;
         bone.parent = parent;
-        bone.position = root.position + pos;
+        bone.position = rootBone.position + pos;
         bone.localRotation = Quaternion.identity;
-        bindPoses.Add(bone.worldToLocalMatrix * root.localToWorldMatrix);
+        bindPoses.Add(bone.worldToLocalMatrix * rootBone.localToWorldMatrix);
 
         Bone b = new Bone();
         b.bone = bone;
@@ -196,13 +239,22 @@ public class AnimalSkeleton {
         skeletonBones[bodyPart].Add(b);
     }
 
+    /// <summary>
+    /// Adds joint constraints to a leg
+    /// </summary>
+    /// <param name="leg">List<Bone> leg</param>
     private void addConstraintsLeg(List<Bone> leg) {
-        leg[0].minAngles = new Vector3(-45, -90, -45);
-        leg[0].maxAngles = new Vector3(45, 90, 45);
+        leg[0].minAngles = new Vector3(-90, -90, -45);
+        leg[0].maxAngles = new Vector3(90, 90, 45);
         leg[1].minAngles = new Vector3(-45, -45, -45);
         leg[1].maxAngles = new Vector3(45, 45, 45);
     }
 
+    /// <summary>
+    /// Creates the head of the animal
+    /// </summary>
+    /// <param name="headSize">float headSize</param>
+    /// <returns>List<LineSegment> head</returns>
     private List<LineSegment> createHead(float headSize) {
         List<LineSegment> head = new List<LineSegment>();
         for (int i = -1; i <= 1; i += 2) {
