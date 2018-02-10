@@ -10,18 +10,27 @@ public class LandAnimal : MonoBehaviour {
     public const float roamDistance = 20;
     private Vector3 roamCenter;
 
-    Vector3 heading = Vector3.forward;
+    Vector3 heading = Vector3.zero;
     public float turnSpeed = 50f;
     public float speed = 5f;
     public float levelSpeed = 30f;
     public float groundOffsetFactor = 0.7f;
+
+    float timer = 0;
+    private const float walkSpeed = 0.2f;
+
+    private void Start() {
+        Spawn(Vector3.up * 100);
+    }
 
     // Update is called once per frame
     void Update() {
         if (skeleton != null) {
             move();
             levelSpine();
-            stayGrounded();
+            //stayGrounded();
+            walk();
+            timer += Time.deltaTime;
         }
     }
 
@@ -96,10 +105,45 @@ public class LandAnimal : MonoBehaviour {
         groundLeg(left2, 1);
     }
 
+    private void walk() {
+        List<Transform> rightLegs = skeleton.getBones(AnimalSkeleton.BodyPart.RIGHT_LEGS);
+        List<Transform> leftLegs = skeleton.getBones(AnimalSkeleton.BodyPart.LEFT_LEGS);
+
+        var right1 = rightLegs.GetRange(0, 3);
+        var right2 = rightLegs.GetRange(3, 3);
+        var left1 = leftLegs.GetRange(0, 3);
+        var left2 = leftLegs.GetRange(3, 3);
+
+        walkLeg(right1, -1, 0);
+        walkLeg(right2, -1, Mathf.PI);
+        walkLeg(left1, 1, Mathf.PI);
+        walkLeg(left2, 1, 0);
+    }
+
     private void groundLeg(List<Transform> leg, int sign) {
+        Vector3 target = leg[0].position + sign * leg[0].right * skeleton.legLength / 2f;
+
         RaycastHit hit;
-        Physics.Raycast(new Ray(leg[0].position + sign * leg[0].right * skeleton.legLength / 2f, Vector3.down), out hit);
-        ccd(leg, hit.point);
+        if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
+            ccd(leg, hit.point);
+        }
+    }
+
+    private void walkLeg(List<Transform> leg, int sign, float radOffset) {
+        Vector3 target = leg[0].position + sign * leg[0].right * skeleton.legLength / 2f;
+        target += heading * Mathf.Cos(timer + radOffset) * skeleton.legLength / 2f; 
+        
+
+        RaycastHit hit;
+        if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
+            float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * skeleton.legLength / 2f;
+            heightOffset = (heightOffset > 0) ? heightOffset : 0;
+
+            target = hit.point;
+            target.y += heightOffset;
+            ccd(leg, target);
+        }
+
     }
 
     /// <summary>
