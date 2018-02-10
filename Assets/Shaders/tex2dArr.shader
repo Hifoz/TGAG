@@ -1,6 +1,7 @@
 ﻿Shader "Custom/2DArrayTexture" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
+		_Type("Type (0=terrain, 1=trees)", int)=0
 	}
 	SubShader {
 		Pass {
@@ -85,14 +86,14 @@
 				float a = modTex.a;
 				
 				//Experimental. for testing gpu-generated textures:
-				/*float4 gpuGeneratedTexture = getTexel(slice, i.worldPos);
+				float4 gpuGeneratedTexture = getTexel(slice, i.worldPos);
 				if (gpuGeneratedTexture.w != 2) {
 					baseTex = gpuGeneratedTexture;
 				}
 				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos);
 				if (gpuGeneratedModTexture.w != 2) {
 					modTex = gpuGeneratedModTexture;
-				}*/
+				}
 
 
 				half4 o;

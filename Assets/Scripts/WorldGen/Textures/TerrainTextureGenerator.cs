@@ -26,6 +26,8 @@ class TerrainTextureGenerator : MonoBehaviour {
             textureManager.addTexture(createTexture(TextureData.TextureType.GRASS_SIDE));
             textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_TOP));
             textureManager.addTexture(createTexture(TextureData.TextureType.SNOW_SIDE));
+            textureManager.addTexture(createTexture(TextureData.TextureType.WOOD));
+            textureManager.addTexture(createTexture(TextureData.TextureType.LEAF));
         }
 
         textureManager.addTexture(createTexture(TextureData.TextureType.WATER));
