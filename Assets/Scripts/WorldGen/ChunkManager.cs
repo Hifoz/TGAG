@@ -151,8 +151,8 @@ public class ChunkManager : MonoBehaviour {
             chunk.name = "chunk";
             chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
             chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-
             cd.chunk = chunk;
+
 
             GameObject waterChunk = getChunk();
             waterChunk.transform.position = chunkMeshData.chunkPos;

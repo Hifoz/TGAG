@@ -78,7 +78,7 @@ class TerrainTextureGenerator : MonoBehaviour {
                     pixelHSV = createSnowPixelHSV(x + seed, y + seed, seed);
                     break;
                 case TextureData.TextureType.WATER:
-                    pixelHSV = new float[4] { 0.6f, 0.7f, 0.7f, 0.795f };
+                    pixelHSV = new float[4] { 0.6f, 0.7f, 0.7f, 0.92f };
                     break;
                 default:
                     pixelHSV = new float[4] {0,0,0,0};
