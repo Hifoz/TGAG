@@ -77,7 +77,7 @@ float4 dirtTex(float3 pos) {
 		);
 
 
-	float f = 3;
+	float f = 4;
 	float v = noise(modPos, f * 0.1) * 0.15 +
 		noise(modPos, f * 0.7) * 0.15 +
 		noise(modPos + modPos2, f * 0.3) * 0.1 +
@@ -136,7 +136,23 @@ float4 woodTex(float3 pos) {
 }
 
 float4 leafTex(float3 pos) {
-	return float4(1, 1, 0, 1);
+	float hue = 0.2;
+	float saturation = 0.85;
+	float value = 0.2;
+
+	float f = 4;
+	float v = noise(pos, f) * 0.1 +
+		noise(pos, f * 3) * 0.1 +
+		noise(pos, f * 6) * 0.1 +
+		noise(pos, f * 10) * 0.1 +
+		noise(pos, f * 30) * 0.13 +
+		noise(pos, f * 70) * 0.1 +
+		noise(pos, f * 100) * 0.05 +
+		noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
+
+	value = clamp(value + v, 0, 1);
+
+	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
 float4  waterTex(float3 pos) {
