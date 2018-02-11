@@ -58,49 +58,8 @@ public class AnimalSkeleton {
 
         rootBone = root;
 
-        headsize = rng.randomFloat(1, 2);
-        neckLen = rng.randomFloat(2, 4);
-        spineLen = rng.randomFloat(2, 7);
-        legpairs = 2;// will add support fo X legpairs in future
-        legLen = rng.randomFloat(2, 6);
-        tailLen = rng.randomFloat(1, 5);
-
-        //HEAD
-        List<LineSegment> head = createHead(headsize);
-        skeletonLines[BodyPart.ALL].AddRange(head);
-        skeletonLines[BodyPart.HEAD].AddRange(head);
-        //NECK
-        LineSegment neckLine = new LineSegment(head[head.Count - 1].b, head[head.Count - 1].b + new Vector3(0, -0.5f, 0.5f).normalized * neckLen);
-        skeletonLines[BodyPart.ALL].Add(neckLine);
-        skeletonLines[BodyPart.NECK].Add(neckLine);
-        //SPINE
-        LineSegment spineLine = new LineSegment(neckLine.b, neckLine.b + new Vector3(0, 0, 1) * spineLen);
-        skeletonLines[BodyPart.ALL].Add(spineLine);
-        skeletonLines[BodyPart.SPINE].Add(spineLine);
-        //LEGS (This can prolly be done "tighter"
-        for (int i = 0; i < legpairs; i++) {
-            LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0) * legLen);
-            LineSegment left2 = new LineSegment(new Vector3(0.5f, -0.5f, 0) * legLen, new Vector3(0.5f, -1f, 0) * legLen);
-            LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0) * legLen);
-            LineSegment right2 = new LineSegment(new Vector3(-0.5f, -0.5f, 0) * legLen, new Vector3(-0.5f, -1f, 0) * legLen);
-            left += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
-            left2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a; 
-            right += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
-            right2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
-            skeletonLines[BodyPart.LEFT_LEGS].Add(left);
-            skeletonLines[BodyPart.LEFT_LEGS].Add(left2);
-            skeletonLines[BodyPart.RIGHT_LEGS].Add(right);
-            skeletonLines[BodyPart.RIGHT_LEGS].Add(right2);
-        }
-        skeletonLines[BodyPart.ALL].AddRange(skeletonLines[BodyPart.LEFT_LEGS]);
-        skeletonLines[BodyPart.ALL].AddRange(skeletonLines[BodyPart.RIGHT_LEGS]);
-        //TAIL
-        LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * tailLen);
-        skeletonLines[BodyPart.ALL].Add(tailLine);
-        skeletonLines[BodyPart.TAIL].Add(tailLine);
-
+        makeSkeletonLines();
         centerSkeletonLines();
-
         makeAnimBones();
     }
 
@@ -152,7 +111,67 @@ public class AnimalSkeleton {
             skeletonBones.Add(part, new List<Bone>());
         }
     }
-    
+
+    /// <summary>
+    /// Makes the skeletonLines for the AnimalSkeleton
+    /// </summary>
+    private void makeSkeletonLines() {
+        headsize = rng.randomFloat(1, 2);
+        neckLen = rng.randomFloat(2, 4);
+        spineLen = rng.randomFloat(2, 7);
+        legpairs = 2;// will add support fo X legpairs in future
+        legLen = rng.randomFloat(2, 6);
+        tailLen = rng.randomFloat(1, 5);
+
+        //HEAD
+        List<LineSegment> head = createHead(headsize);
+        addSkeletonLines(head, BodyPart.HEAD);
+        //NECK
+        LineSegment neckLine = new LineSegment(head[head.Count - 1].b, head[head.Count - 1].b + new Vector3(0, -0.5f, 0.5f).normalized * neckLen);
+        addSkeletonLine(neckLine, BodyPart.NECK);
+        //SPINE
+        LineSegment spineLine = new LineSegment(neckLine.b, neckLine.b + new Vector3(0, 0, 1) * spineLen);
+        addSkeletonLine(spineLine, BodyPart.SPINE);
+        //LEGS (This can prolly be done "tighter"
+        for (int i = 0; i < legpairs; i++) {
+            LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0) * legLen);
+            LineSegment left2 = new LineSegment(new Vector3(0.5f, -0.5f, 0) * legLen, new Vector3(0.5f, -1f, 0) * legLen);
+            LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0) * legLen);
+            LineSegment right2 = new LineSegment(new Vector3(-0.5f, -0.5f, 0) * legLen, new Vector3(-0.5f, -1f, 0) * legLen);
+            left += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
+            left2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
+            right += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
+            right2 += new Vector3(0, 0, 1) * spineLen * ((float)i / (float)(legpairs - 1)) + spineLine.a;
+            addSkeletonLine(left, BodyPart.LEFT_LEGS);
+            addSkeletonLine(left2, BodyPart.LEFT_LEGS);
+            addSkeletonLine(right, BodyPart.RIGHT_LEGS);
+            addSkeletonLine(right2, BodyPart.RIGHT_LEGS);
+        }
+        //TAIL
+        LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * tailLen);
+        addSkeletonLine(tailLine, BodyPart.TAIL);
+    }
+
+    /// <summary>
+    /// Adds a list of lines to the skeleton
+    /// </summary>
+    /// <param name="lines">List<LineSegment> lines</param>
+    /// <param name="bodyPart">BodyPart bodyPart</param>
+    private void addSkeletonLines(List<LineSegment> lines, BodyPart bodyPart) {
+        skeletonLines[bodyPart].AddRange(lines);
+        skeletonLines[BodyPart.ALL].AddRange(lines);
+    }
+
+    /// <summary>
+    /// Adds a skeleton line to the skeleton
+    /// </summary>
+    /// <param name="line">LineSegment line</param>
+    /// <param name="bodyPart">BodyPart bodyPart</param>
+    private void addSkeletonLine(LineSegment line, BodyPart bodyPart) {
+        skeletonLines[bodyPart].Add(line);
+        skeletonLines[BodyPart.ALL].Add(line);
+    }
+
     /// <summary>
     /// Centers the skeleton around the spine
     /// </summary>
@@ -244,10 +263,10 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="leg">List<Bone> leg</param>
     private void addConstraintsLeg(List<Bone> leg) {
-        leg[0].minAngles = new Vector3(-90, -90, -45);
-        leg[0].maxAngles = new Vector3(90, 90, 45);
-        leg[1].minAngles = new Vector3(-45, -45, -45);
-        leg[1].maxAngles = new Vector3(45, 45, 45);
+        leg[0].minAngles = new Vector3(-90, -90, -90);
+        leg[0].maxAngles = new Vector3(90, 90, 90);
+        leg[1].minAngles = new Vector3(-120, -120, -120);
+        leg[1].maxAngles = new Vector3(120, 120, 120);
     }
 
     /// <summary>

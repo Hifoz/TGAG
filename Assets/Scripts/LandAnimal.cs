@@ -10,19 +10,19 @@ public class LandAnimal : MonoBehaviour {
     public const float roamDistance = 40;
     private Vector3 roamCenter;
 
-    Vector3 heading = Vector3.zero;
-    public float speed = 5f;
-    public float levelSpeed = 30f;
-    public float groundOffsetFactor = 0.7f;
+    private Vector3 heading = Vector3.zero;
+    private float speed = 2f;
+    private float levelSpeed = 3f;
+    private float groundOffsetFactor = 1f;
 
-    float timer = 0;
+    private float timer = 0;
     private const float walkSpeed = 0.2f;
 
     // Update is called once per frame
     void Update() {
         if (skeleton != null) {
             move();
-            //levelSpine();
+            levelSpine();
             //stayGrounded();
             walk();
             timer += Time.deltaTime;
@@ -168,12 +168,12 @@ public class LandAnimal : MonoBehaviour {
 
         RaycastHit hit;
         if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
-            float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * skeleton.legLength / 2f;
+            float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * skeleton.legLength / 4f;
             heightOffset = (heightOffset > 0) ? heightOffset : 0;
 
             target = hit.point;
             target.y += heightOffset;
-            ccd(leg, target);
+            ccd(leg, target, 10);
         }
 
     }
@@ -184,13 +184,14 @@ public class LandAnimal : MonoBehaviour {
     /// <param name="limb">Limb to bend</param>
     /// <param name="target">Target to reach</param>
     /// <returns>Bool target reached</returns>
-    private bool ccd(List<Bone> limb, Vector3 target) {
+    private bool ccd(List<Bone> limb, Vector3 target, int maxIter = 1 ) {
         Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
         Bone[] arm = skeleton.getBones(BodyPart.RIGHT_LEGS).GetRange(0, 3).ToArray();
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);
 
-        if (dist > ikTolerance) {
+        int iter = 0;
+        while (dist > ikTolerance && maxIter > iter) {
             for (int i = limb.Count - 1; i >= 0; i--) {
                 Transform bone = limb[i].bone;
 
@@ -203,10 +204,12 @@ public class LandAnimal : MonoBehaviour {
                 if (angle > 0.01f) {
                     bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * ikSpeed * Time.deltaTime, normal) * bone.rotation;
                     if (!checkConstraints(limb[i])) {
-                        bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * ikSpeed * Time.deltaTime, normal) * bone.rotation;
+                        bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg /** ikSpeed * Time.deltaTime*/, normal) * bone.rotation;
                     }
                 }
             }
+            dist = Vector3.Distance(effector.position, target);
+            iter++;
         } 
         
         return dist < ikTolerance;
