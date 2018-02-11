@@ -13,7 +13,7 @@ public class LandAnimal : MonoBehaviour {
     private Vector3 heading = Vector3.zero;
     private float speed = 2f;
     private float levelSpeed = 3f;
-    private float groundOffsetFactor = 0.8f;
+    private float groundOffsetFactor = 0.9f;
 
     private float timer = 0;
     private const float walkSpeed = 0.2f;
@@ -21,11 +21,14 @@ public class LandAnimal : MonoBehaviour {
     // Update is called once per frame
     void Update() {        
         if (skeleton != null) {
-            //move();
-            //levelSpine();
-            ////stayGrounded();
-            //walk();
-            //timer += Time.deltaTime;
+            //foreach(var line in skeleton.skeletonLines[BodyPart.ALL]) {
+            //    Debug.DrawLine(line.a + transform.position, line.b + transform.position, Color.red);
+            //}
+            move();
+            levelSpine();
+            //stayGrounded();
+            walk();
+            timer += Time.deltaTime;
         }
     }
 
@@ -34,6 +37,7 @@ public class LandAnimal : MonoBehaviour {
     /// </summary>
     /// <param name="pos">Vector3 pos</param>
     public void Spawn(Vector3 pos) {
+        transform.rotation = Quaternion.identity;
         if (skeleton != null) {
             foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
                 bone.bone.rotation = Quaternion.identity;
@@ -52,7 +56,6 @@ public class LandAnimal : MonoBehaviour {
     /// sets the skeleton, and applies the new mesh.
     /// </summary>
     public void setSkeleton(AnimalSkeleton skeleton) {
-        transform.rotation = Quaternion.identity;
         this.skeleton = skeleton;
         GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.getMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
