@@ -557,6 +557,8 @@ MonoBehaviour:
   terrainTextureManager: {fileID: 364536427}
   treeTextureManager: {fileID: 1477805440}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
+  animalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
+    type: 2}
 --- !u!4 &988479787
 Transform:
   m_ObjectHideFlags: 0
@@ -848,8 +850,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 584, y: 331, z: 0}
-  m_LocalScale: {x: 0.60833335, y: 0.60833335, z: 0.60833335}
+  m_LocalPosition: {x: 635, y: 286, z: 0}
+  m_LocalScale: {x: 0.52962965, y: 0.52962965, z: 0.52962965}
   m_Children:
   - {fileID: 1043064330}
   - {fileID: 143669589}

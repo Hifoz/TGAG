@@ -14,14 +14,44 @@ public class ChunkVoxelData {
     public Vector3[] treePositions;
 }
 
+public enum Task { CHUNK = 0, ANIMAL}
+
+/// <summary>
+/// A class representing an order to be done by the thread
+/// </summary>
+public class Order {
+    public Order(Vector3 position, Task task) {
+        this.position = position;
+        this.task = task;
+    }
+
+    public Order(AnimalSkeleton animalSkeleton, Task task) {
+        this.animalSkeleton = animalSkeleton;
+        this.task = task;
+    }
+
+    public Vector3 position; // Used for chunks
+    public AnimalSkeleton animalSkeleton; // Used for animals
+    public Task task;
+}
+
+/// <summary>
+/// A class representing the result of a job done by the thread
+/// </summary>
+public class Result {
+    public Task task;
+    public ChunkVoxelData chunkVoxelData; //May not be set
+    public AnimalSkeleton animalSkeleton; //May not be set
+}
+
 /// <summary>
 /// A thread that generates chunkdata based on positions.
 /// </summary>
 public class ChunkVoxelDataThread {
 
     private Thread thread;
-    private BlockingQueue<Vector3> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
-    private LockingQueue<ChunkVoxelData> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
+    private BlockingQueue<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
+    private LockingQueue<Result> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
     private bool run;
 
     private ChunkVoxelDataGenerator CVDG = new ChunkVoxelDataGenerator();
@@ -30,7 +60,7 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunkVoxelDataThread(BlockingQueue<Vector3> orders, LockingQueue<ChunkVoxelData> results) {        
+    public ChunkVoxelDataThread(BlockingQueue<Order> orders, LockingQueue<Result> results) {        
         this.orders = orders;
         this.results = results;
         run = true;
@@ -60,8 +90,8 @@ public class ChunkVoxelDataThread {
         Debug.Log("Thread alive!");
         while (run) {
             try {
-                Vector3 order = orders.Dequeue();
-                if (order == Vector3.down) {
+                Order order = orders.Dequeue();
+                if (order.position == Vector3.down) {
                     break;
                 }
                 results.Enqueue(handleOrder(order));
@@ -77,14 +107,36 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="order">Vector3 order, location of the chunk</param>
     /// <returns>ChunkVoxelData result, data needed by main thread to create chunk</returns>
-    private ChunkVoxelData handleOrder(Vector3 order) {
+    private Result handleOrder(Order order) {
+        Result result = new Result();
+        result.task = order.task;
+
+        switch (order.task) {
+            case Task.CHUNK:
+                result.chunkVoxelData = handleChunkOrder(order);
+                break;
+            case Task.ANIMAL:
+                order.animalSkeleton.generateInThread();
+                result.animalSkeleton = order.animalSkeleton;
+                break;
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Generates a chunk with trees
+    /// </summary>
+    /// <param name="order">Order order</param>
+    /// <returns>ChunkVoxelData</returns>
+    private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData();
         //Generate the chunk terrain
-        result.chunkPos = order;
-        result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order));
-        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order));
+        result.chunkPos = order.position;
+        result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order.position));
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order.position));
         //Generate the trees in the chunk
-        System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order));
+        System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
         int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
         result.trees = new MeshData[trees];
         result.treeTrunks = new MeshData[trees];
@@ -92,7 +144,7 @@ public class ChunkVoxelDataThread {
 
         for (int i = 0; i < trees; i++) {
             Vector3 pos = new Vector3((float)rng.NextDouble() * ChunkConfig.chunkSize, 0, (float)rng.NextDouble() * ChunkConfig.chunkSize);
-            pos += order;
+            pos += order.position;
             pos = WorldUtils.floor(pos);
             pos = findGroundLevel(pos);
             pos = WorldUtils.floor(pos);
