@@ -3,21 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Class representing a line, this is used to represent trees
-/// </summary>
-public class LineSegment {
-    public LineSegment(Vector3 a, Vector3 b, bool leaf = false) {
-        this.a = a;
-        this.b = b;
-        this.leaf = leaf;
-    }
-
-    public Vector3 a;
-    public Vector3 b;
-    public bool leaf;
-}
-
-/// <summary>
 /// This class generates MeshData for meshes of trees using L-System algorithms.
 /// </summary>
 public static class LSystemTreeGenerator {
@@ -139,10 +124,10 @@ public static class LSystemTreeGenerator {
     /// <returns>Blocktype for position</returns>
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
         foreach (var line in tree) {
-            float dist = distance(pos, line);
+            float dist = line.distance(pos);
             if (dist < ChunkConfig.treeThickness) {
                 return BlockData.BlockType.WOOD;
-            } else if (line.leaf == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+            } else if (line.endLine == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.LEAF;
             }
         }
@@ -224,12 +209,12 @@ public static class LSystemTreeGenerator {
                     states.Push(turtle);
                     break;
                 case ']':
-                    tree.tree[tree.tree.Count - 1].leaf = true; //When the turtle pops, the branch is complete.
+                    tree.tree[tree.tree.Count - 1].endLine = true; //When the turtle pops, the branch is complete.
                     turtle = states.Pop();
                     break;
             }
         }
-        tree.tree[tree.tree.Count - 1].leaf = true; //Last line is a leaf branch.
+        tree.tree[tree.tree.Count - 1].endLine = true; //Last line is a leaf branch.
         //Ready the result and return.
         float modifier = ((ChunkConfig.treeThickness < ChunkConfig.treeLeafThickness) ? ChunkConfig.treeLeafThickness : ChunkConfig.treeThickness) * boundingBoxModifier;
         tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
@@ -296,29 +281,5 @@ public static class LSystemTreeGenerator {
             }
         }
         return recurseString(output, depth - 1, rng);
-    }
-
-    /// <summary>
-    /// Computes the distance between a point and a line segment.
-    /// Based on: http://geomalgorithms.com/a02-_lines.html
-    /// </summary>
-    /// <param name="P">Point</param>
-    /// <param name="S">Line Segment</param>
-    /// <returns>float distance</returns>
-    private static float distance(Vector3 P, LineSegment S) {
-        Vector3 v = S.b - S.a;
-        Vector3 w = P - S.a;
-
-        float c1 = Vector3.Dot(w, v);
-        if (c1 <= 0)
-            return Vector3.Distance(P, S.a);
-
-        float c2 = Vector3.Dot(v, v);
-        if (c2 <= c1)
-            return Vector3.Distance(P, S.b);
-
-        float b = c1 / c2;
-        Vector3 Pb = S.a + b * v;
-        return Vector3.Distance(P, Pb);
     }
 }
