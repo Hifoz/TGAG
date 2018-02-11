@@ -124,6 +124,7 @@ public class ChunkVoxelDataThread {
         //Generate the chunk terrain
         result.chunkPos = order.position;
         result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order.position));
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order.position));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
         int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);

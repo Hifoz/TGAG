@@ -185,8 +185,23 @@ public class ChunkManager : MonoBehaviour {
         chunk.transform.position = chunkMeshData.chunkPos;
         chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
         chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
+        chunk.GetComponent<MeshCollider>().isTrigger = false;
+        chunk.GetComponent<MeshCollider>().convex = false;
+        chunk.name = "chunk";
         chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
         cd.chunk = chunk;
+
+        GameObject waterChunk = getChunk();
+        waterChunk.transform.position = chunkMeshData.chunkPos;
+        waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData);
+        waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
+        waterChunk.GetComponent<MeshCollider>().convex = true;
+        waterChunk.GetComponent<MeshCollider>().isTrigger = true;
+        waterChunk.name = "waterChunk";
+        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        waterChunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+        cd.waterChunk = waterChunk;
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {
