@@ -27,6 +27,9 @@ public class AnimalSkeleton {
     private Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
     private Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
 
+    private Vector3 lowerBounds;
+    private Vector3 upperBounds;
+
     private float headsize;
     private float neckLen;
     private float spineLen;
@@ -67,7 +70,7 @@ public class AnimalSkeleton {
     /// Creates a line mesh for the skeleton
     /// </summary>
     /// <returns>Mesh</returns>
-    public Mesh createMesh() {
+    public Mesh generateLineMesh() {
         Mesh mesh = new Mesh();
 
         List<Vector3> verticies = new List<Vector3>();
@@ -94,12 +97,52 @@ public class AnimalSkeleton {
     }
 
     /// <summary>
+    /// Generates the MeshData for a tree
+    /// </summary>
+    /// <param name="pos">Position of the tree</param>
+    /// <returns>Meshdata</returns>
+    public MeshData generateVoxelMeshData(Vector3 pos) {
+        Vector3 size = upperBounds - lowerBounds;
+
+        BlockData[,,] pointMap = new BlockData[Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z)];
+        BlockData[,,] pointMapTrunk = new BlockData[Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z)];
+        //Debug.Log("(" + pointMap.GetLength(0) + "," + pointMap.GetLength(1) + "," + pointMap.GetLength(2) + ")");
+        for (int x = 0; x < pointMap.GetLength(0); x++) {
+            for (int y = 0; y < pointMap.GetLength(1); y++) {
+                for (int z = 0; z < pointMap.GetLength(2); z++) {
+                    Vector3 samplePos = new Vector3(x, y, z) + lowerBounds;
+                    samplePos = WorldUtils.floor(samplePos);
+                    pointMap[x, y, z] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
+                    pointMapTrunk[x, y, z] = pointMap[x, y, z];
+                    if (pointMap[x, y, z].blockType == BlockData.BlockType.LEAF) {
+                        pointMapTrunk[x, y, z] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+                    }
+                }
+            }
+        }
+        MeshData meshData = new MeshData();
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -WorldUtils.floor(lowerBounds), MeshDataGenerator.MeshDataType.TREE);
+        return meshData;
+    }
+
+    /// <summary>
     /// Gets the specified bones.
     /// </summary>
     /// <param name="bodyPart">BodyPart bodyPart</param>
     /// <returns>List<Bone> bones</returns>
     public List<Bone> getBones(BodyPart bodyPart) {
         return skeletonBones[bodyPart];
+    }
+
+    private BlockData.BlockType calcBlockType(Vector3 pos) {
+        List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
+        foreach (var line in skeleton) {
+            float dist = line.distance(pos);
+            if (dist < 2) {
+                return BlockData.BlockType.WOOD;
+            } 
+        }
+        return BlockData.BlockType.NONE;
     }
 
     /// <summary>
@@ -116,6 +159,9 @@ public class AnimalSkeleton {
     /// Makes the skeletonLines for the AnimalSkeleton
     /// </summary>
     private void makeSkeletonLines() {
+        lowerBounds = new Vector3(-99999, -99999, -99999);
+        upperBounds = new Vector3(99999, 99999, 99999);
+
         headsize = rng.randomFloat(1, 2);
         neckLen = rng.randomFloat(2, 4);
         spineLen = rng.randomFloat(2, 7);
@@ -160,6 +206,9 @@ public class AnimalSkeleton {
     private void addSkeletonLines(List<LineSegment> lines, BodyPart bodyPart) {
         skeletonLines[bodyPart].AddRange(lines);
         skeletonLines[BodyPart.ALL].AddRange(lines);
+        foreach(LineSegment line in lines) {
+            updateBounds(line);
+        }
     }
 
     /// <summary>
@@ -170,6 +219,29 @@ public class AnimalSkeleton {
     private void addSkeletonLine(LineSegment line, BodyPart bodyPart) {
         skeletonLines[bodyPart].Add(line);
         skeletonLines[BodyPart.ALL].Add(line);
+        updateBounds(line);
+    }
+
+    /// <summary>
+    /// Updates the bounds of the skeleton
+    /// </summary>
+    /// <param name="line">LineSegment line</param>
+    private void updateBounds(LineSegment line) {
+        updateBounds(line.a);
+        updateBounds(line.b);
+    }
+
+    /// <summary>
+    /// Updates the bounds of the skeleton
+    /// </summary>
+    /// <param name="line">Vector3 line</param>
+    private void updateBounds(Vector3 point) {
+        lowerBounds.x = (lowerBounds.x < point.x) ? lowerBounds.x : point.x;
+        lowerBounds.y = (lowerBounds.y < point.y) ? lowerBounds.y : point.y;
+        lowerBounds.z = (lowerBounds.z < point.z) ? lowerBounds.z : point.z;
+        upperBounds.x = (upperBounds.x > point.x) ? upperBounds.x : point.x;
+        upperBounds.y = (upperBounds.y > point.y) ? upperBounds.y : point.y;
+        upperBounds.z = (upperBounds.z > point.z) ? upperBounds.z : point.z;
     }
 
     /// <summary>
@@ -263,10 +335,10 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="leg">List<Bone> leg</param>
     private void addConstraintsLeg(List<Bone> leg) {
-        leg[0].minAngles = new Vector3(-90, -90, -90);
-        leg[0].maxAngles = new Vector3(90, 90, 90);
-        leg[1].minAngles = new Vector3(-120, -120, -120);
-        leg[1].maxAngles = new Vector3(120, 120, 120);
+        leg[0].minAngles = new Vector3(-120, -120, -90);
+        leg[0].maxAngles = new Vector3(120, 120, 90);
+        leg[1].minAngles = new Vector3(-90, -90, -90);
+        leg[1].maxAngles = new Vector3(90, 90, 90);
     }
 
     /// <summary>

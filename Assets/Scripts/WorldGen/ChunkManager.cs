@@ -21,8 +21,8 @@ public class ChunkManager : MonoBehaviour {
     private ChunkData[,] chunkGrid;
 
     private ChunkVoxelDataThread[] CVDT;
-    private BlockingQueue<Vector3> orders = new BlockingQueue<Vector3>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
-    private LockingQueue<ChunkVoxelData> results = new LockingQueue<ChunkVoxelData>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+    private BlockingQueue<Order> orders = new BlockingQueue<Order>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
+    private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     private GameObject[] animals = new GameObject[20];
@@ -44,7 +44,7 @@ public class ChunkManager : MonoBehaviour {
         clearChunkGrid();
         updateChunkGrid();
         orderNewChunks();
-        launchOrderedChunks();
+        consumeThreadResults();
         handleAnimals();
     }
 
@@ -54,8 +54,10 @@ public class ChunkManager : MonoBehaviour {
     public void clear() {        
         while (pendingChunks.Count > 0) {
             while (results.getCount() > 0) {
-                var chunk = results.Dequeue();
-                pendingChunks.Remove(chunk.chunkPos);
+                Result result = results.Dequeue();
+                if (result.task == Task.CHUNK) {
+                    pendingChunks.Remove(result.chunkVoxelData.chunkPos);
+                }
             }
         }
         while (activeChunks.Count > 0) {
@@ -150,7 +152,7 @@ public class ChunkManager : MonoBehaviour {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
-                    orders.Enqueue(chunkPos);
+                    orders.Enqueue(new Order(chunkPos, Task.CHUNK));
                     pendingChunks.Add(chunkPos);
                 }
             }
@@ -158,40 +160,46 @@ public class ChunkManager : MonoBehaviour {
     }
 
     /// <summary>
+    /// Consumes results from Worker threads.
+    /// </summary>
+    private void consumeThreadResults() {
+        while(results.getCount() > 0) {
+            Result result = results.Dequeue();
+            switch (result.task) {
+                case Task.CHUNK:
+                    launchOrderedChunk(result.chunkVoxelData);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
     /// Deploys ordered chunks from the ChunkVoxelDataThreads.
     /// </summary>
-    private void launchOrderedChunks() {
-        int maxLaunchPerUpdate = Settings.MaxChunkLaunchesPerUpdate;
-        
-        int launchCount = 0;
-        while (results.getCount() > 0 && launchCount < maxLaunchPerUpdate) {
-            var chunkMeshData = results.Dequeue();
-            pendingChunks.Remove(chunkMeshData.chunkPos);
-            ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
+    private void launchOrderedChunk(ChunkVoxelData chunkMeshData) {
+        pendingChunks.Remove(chunkMeshData.chunkPos);
+        ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
-            GameObject chunk = getChunk();
-            chunk.transform.position = chunkMeshData.chunkPos;
-            chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
-            chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
-            chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
-            cd.chunk = chunk;
+        GameObject chunk = getChunk();
+        chunk.transform.position = chunkMeshData.chunkPos;
+        chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
+        chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
+        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        cd.chunk = chunk;
 
-            GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
-            for (int i = 0; i < trees.Length; i++) {
-                GameObject tree = getTree();
-                tree.transform.position = chunkMeshData.treePositions[i];
-                tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
-                tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-                tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
+        GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
+        for (int i = 0; i < trees.Length; i++) {
+            GameObject tree = getTree();
+            tree.transform.position = chunkMeshData.treePositions[i];
+            tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
+            tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
+            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
 
-                trees[i] = tree;
-            }
-            cd.trees = trees;
-
-            activeChunks.Add(cd);
-
-            launchCount++;
+            trees[i] = tree;
         }
+        cd.trees = trees;
+
+        activeChunks.Add(cd);
     }
     
 
@@ -273,7 +281,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void stopThreads() {
         foreach (var thread in CVDT) {
-            orders.Enqueue(Vector3.down);
+            orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
             thread.stop();
         }
     }

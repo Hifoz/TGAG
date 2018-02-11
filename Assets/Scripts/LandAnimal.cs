@@ -13,7 +13,7 @@ public class LandAnimal : MonoBehaviour {
     private Vector3 heading = Vector3.zero;
     private float speed = 2f;
     private float levelSpeed = 3f;
-    private float groundOffsetFactor = 1f;
+    private float groundOffsetFactor = 0.8f;
 
     private float timer = 0;
     private const float walkSpeed = 0.2f;
@@ -52,7 +52,7 @@ public class LandAnimal : MonoBehaviour {
         }
         transform.rotation = Quaternion.identity;
         skeleton = new AnimalSkeleton(transform);
-        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.createMesh();
+        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.generateLineMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
 
         List<Bone> skeletonBones = skeleton.getBones(BodyPart.ALL);
@@ -162,13 +162,15 @@ public class LandAnimal : MonoBehaviour {
     /// <param name="sign">int sign, used to get a correct offset for IK target</param>
     /// <param name="radOffset">Walk animation offset in radians</param>
     private void walkLeg(List<Bone> leg, int sign, float radOffset) {
-        Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.legLength / 2f;
-        target += heading * Mathf.Cos(timer + radOffset) * skeleton.legLength / 2f; 
-        
+        Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.legLength / 2f; //Offset to the right
+        target += heading * Mathf.Cos(timer + radOffset) * skeleton.legLength / 2f;  //Forward/Backward motion
+        float rightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * skeleton.legLength / 4f; //Right/Left motion
+        rightOffset = (rightOffset > 0) ? rightOffset : 0;
+        target += sign * transform.right * rightOffset;
 
         RaycastHit hit;
         if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
-            float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * skeleton.legLength / 4f;
+            float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * skeleton.legLength / 4f; //Up/Down motion
             heightOffset = (heightOffset > 0) ? heightOffset : 0;
 
             target = hit.point;
