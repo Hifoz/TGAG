@@ -17,9 +17,9 @@ public class LandAnimal : MonoBehaviour {
 
     private float timer = 0;
     private const float walkSpeed = 0.2f;
-
+    
     // Update is called once per frame
-    void Update() {
+    void Update() {        
         if (skeleton != null) {
             move();
             levelSpine();
@@ -34,7 +34,12 @@ public class LandAnimal : MonoBehaviour {
     /// </summary>
     /// <param name="pos">Vector3 pos</param>
     public void Spawn(Vector3 pos) {
-        generate();
+        if (skeleton != null) {
+            foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
+                bone.bone.rotation = Quaternion.identity;
+            }
+        }
+
         transform.position = pos;
         roamCenter = pos;
         roamCenter.y = 0;
@@ -44,15 +49,12 @@ public class LandAnimal : MonoBehaviour {
     }
 
     /// <summary>
-    /// Generates the animal
+    /// sets the skeleton, and applies the new mesh.
     /// </summary>
-    private void generate() {
-        foreach(Transform child in transform) {
-            Destroy(child.gameObject);
-        }
+    public void setSkeleton(AnimalSkeleton skeleton) {
         transform.rotation = Quaternion.identity;
-        skeleton = new AnimalSkeleton(transform);
-        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.generateLineMesh();
+        this.skeleton = skeleton;
+        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.getMesh();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
 
         List<Bone> skeletonBones = skeleton.getBones(BodyPart.ALL);

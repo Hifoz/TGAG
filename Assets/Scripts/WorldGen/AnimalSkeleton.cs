@@ -24,8 +24,16 @@ public class AnimalSkeleton {
     private static ThreadSafeRng rng = new ThreadSafeRng();
     private List<Matrix4x4> bindPoses = new List<Matrix4x4>();   
     private Transform rootBone;
-    private Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
-    private Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
+    List<BoneWeight> weights;
+    public Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
+    public Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
+    private MeshData meshData;
+
+    private List<Vector3> threadSafeBones; // CUZ THREADING LOOL
+    private Vector3 threadSafeRoot; // CUZ THREADING LOOL
+
+    private const float skeletonThiccness = 0.5f;
+    private const float voxelSize = 1f;
 
     private Vector3 lowerBounds;
     private Vector3 upperBounds;
@@ -42,7 +50,7 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="root"></param>
     public AnimalSkeleton(Transform root) {
-        generate(root);
+        generateInMainThread(root);
     }
 
     public float headSize { get { return headsize; } }
@@ -53,21 +61,54 @@ public class AnimalSkeleton {
     public float tailLength { get { return tailLen; } }
 
     /// <summary>
-    /// Generates the skeletonLines and skeletonBones for this AnimalSkeleton
+    /// Generates the parts of the animal that should be generated in a thread.
+    /// use "generateInMainThread" first in the main thread.
     /// </summary>
-    /// <param name="root"></param>
-    public void generate(Transform root) {
-        initDicts();
-
-        rootBone = root;
-
-        makeSkeletonLines();
-        centerSkeletonLines();
-        makeAnimBones();
+    public void generateInThread() {
+        generateVoxelMeshData();
+        weights = new List<BoneWeight>();
+        foreach (Vector3 vert in meshData.vertices) {
+            weights.Add(calcVertBoneWeight(vert));
+        }
     }
 
     /// <summary>
-    /// Creates a line mesh for the skeleton
+    /// Generates the parts of the animal that can't be threaded/is fast.
+    /// </summary>
+    /// <param name="root"></param>
+    private void generateInMainThread(Transform root) {
+        foreach (Transform child in root) {
+            MonoBehaviour.Destroy(child.gameObject);
+        }
+
+        rootBone = root;
+        initDicts();
+        makeSkeletonLines();
+        centerSkeletonLines();
+        makeAnimBones();
+
+        threadSafeRoot = root.position;
+        List<Bone> bones = skeletonBones[BodyPart.ALL];
+        threadSafeBones = new List<Vector3>();
+        foreach(Bone bone in bones) {
+            threadSafeBones.Add(bone.bone.position);
+        }
+    }
+
+    /// <summary>
+    /// Creates a skinned mesh of the animal skeleton data
+    /// Call after "generateInMainThread" and "generateInThread".
+    /// </summary>
+    /// <returns>Mesh mesh</returns>
+    public Mesh getMesh() {
+        Mesh mesh = MeshDataGenerator.applyMeshData(meshData);
+        mesh.boneWeights = weights.ToArray();
+        mesh.bindposes = bindPoses.ToArray();
+        return mesh;
+    }
+
+    /// <summary>
+    /// FOR DEBUGGING: Creates a line mesh for the skeleton
     /// </summary>
     /// <returns>Mesh</returns>
     public Mesh generateLineMesh() {
@@ -77,7 +118,7 @@ public class AnimalSkeleton {
         List<int> indexes = new List<int>();
         List<BoneWeight> weights = new List<BoneWeight>();
         int i = 0;
-        foreach(var bone in skeletonLines[BodyPart.ALL]) {
+        foreach(LineSegment bone in skeletonLines[BodyPart.ALL]) {
             verticies.Add(bone.a);
             indexes.Add(i++);
             weights.Add(calcVertBoneWeight(bone.a));
@@ -97,32 +138,34 @@ public class AnimalSkeleton {
     }
 
     /// <summary>
-    /// Generates the MeshData for a tree
+    /// Generates the MeshData for the animal
     /// </summary>
-    /// <param name="pos">Position of the tree</param>
-    /// <returns>Meshdata</returns>
-    public MeshData generateVoxelMeshData(Vector3 pos) {
+    private void generateVoxelMeshData() {
+        foreach(LineSegment line in skeletonLines[BodyPart.ALL]) {
+            updateBounds(line);
+        }
+
+        upperBounds += Vector3.one * (skeletonThiccness + 2.5f);
+        lowerBounds -= Vector3.one * (skeletonThiccness + 2.5f);
         Vector3 size = upperBounds - lowerBounds;
+        size /= voxelSize;
 
         BlockData[,,] pointMap = new BlockData[Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z)];
-        BlockData[,,] pointMapTrunk = new BlockData[Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z)];
         //Debug.Log("(" + pointMap.GetLength(0) + "," + pointMap.GetLength(1) + "," + pointMap.GetLength(2) + ")");
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
                     Vector3 samplePos = new Vector3(x, y, z) + lowerBounds;
                     samplePos = WorldUtils.floor(samplePos);
-                    pointMap[x, y, z] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
-                    pointMapTrunk[x, y, z] = pointMap[x, y, z];
-                    if (pointMap[x, y, z].blockType == BlockData.BlockType.LEAF) {
-                        pointMapTrunk[x, y, z] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+                    pointMap[x, y, z] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);  
+                    if (pointMap[x, y, z].blockType == BlockData.BlockType.DIRT) {
+                        pointMap[x, y, z].modifier = BlockData.BlockType.SNOW;
                     }
                 }
             }
         }
-        MeshData meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -WorldUtils.floor(lowerBounds), MeshDataGenerator.MeshDataType.TREE);
-        return meshData;
+        meshData = new MeshData();
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -WorldUtils.floor(lowerBounds), MeshDataGenerator.MeshDataType.TERRAIN);
     }
 
     /// <summary>
@@ -138,12 +181,13 @@ public class AnimalSkeleton {
         List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
         foreach (var line in skeleton) {
             float dist = line.distance(pos);
-            if (dist < 2) {
-                return BlockData.BlockType.WOOD;
+            if (dist < skeletonThiccness) {
+                return BlockData.BlockType.DIRT;
             } 
         }
         return BlockData.BlockType.NONE;
     }
+
 
     /// <summary>
     /// Initializes the dictionaries (skeletonLines and skeletonBones)
@@ -159,15 +203,15 @@ public class AnimalSkeleton {
     /// Makes the skeletonLines for the AnimalSkeleton
     /// </summary>
     private void makeSkeletonLines() {
-        lowerBounds = new Vector3(-99999, -99999, -99999);
-        upperBounds = new Vector3(99999, 99999, 99999);
+        upperBounds = new Vector3(-99999, -99999, -99999);
+        lowerBounds = new Vector3(99999, 99999, 99999);
 
-        headsize = rng.randomFloat(1, 2);
-        neckLen = rng.randomFloat(2, 4);
-        spineLen = rng.randomFloat(2, 7);
+        headsize = rng.randomFloat(1, 2) / voxelSize;
+        neckLen = rng.randomFloat(2, 4) / voxelSize;
+        spineLen = rng.randomFloat(2, 7) / voxelSize;
         legpairs = 2;// will add support fo X legpairs in future
-        legLen = rng.randomFloat(2, 6);
-        tailLen = rng.randomFloat(1, 5);
+        legLen = rng.randomFloat(2, 6) / voxelSize;
+        tailLen = rng.randomFloat(1, 5) / voxelSize;
 
         //HEAD
         List<LineSegment> head = createHead(headsize);
@@ -206,9 +250,6 @@ public class AnimalSkeleton {
     private void addSkeletonLines(List<LineSegment> lines, BodyPart bodyPart) {
         skeletonLines[bodyPart].AddRange(lines);
         skeletonLines[BodyPart.ALL].AddRange(lines);
-        foreach(LineSegment line in lines) {
-            updateBounds(line);
-        }
     }
 
     /// <summary>
@@ -219,7 +260,6 @@ public class AnimalSkeleton {
     private void addSkeletonLine(LineSegment line, BodyPart bodyPart) {
         skeletonLines[bodyPart].Add(line);
         skeletonLines[BodyPart.ALL].Add(line);
-        updateBounds(line);
     }
 
     /// <summary>
@@ -262,12 +302,11 @@ public class AnimalSkeleton {
     /// <param name="vert"></param>
     /// <returns></returns>
     private BoneWeight calcVertBoneWeight(Vector3 vert) {
-        List<Bone> bones = skeletonBones[BodyPart.ALL];
         float[] bestDist = new float[2] { 99999, 999999 };
         int[] bestIndex = new int[2] { 0, 0 };
 
-        for (int i = 0; i < bones.Count; i++) {
-            float dist = Vector3.Distance(bones[i].bone.position, vert + rootBone.position);
+        for (int i = 0; i < threadSafeBones.Count; i++) {
+            float dist = Vector3.Distance(threadSafeBones[i], vert + threadSafeRoot);
             if (dist < bestDist[0]) {
                 bestIndex[0] = i;
                 bestDist[0] = dist;

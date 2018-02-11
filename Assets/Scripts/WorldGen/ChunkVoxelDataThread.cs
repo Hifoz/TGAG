@@ -14,11 +14,6 @@ public class ChunkVoxelData {
     public Vector3[] treePositions;
 }
 
-public class AnimalVoxelData {
-    public MeshData mesData;
-    public AnimalSkeleton animalSkeleton;
-}
-
 public enum Task { CHUNK = 0, ANIMAL}
 
 /// <summary>
@@ -30,7 +25,13 @@ public class Order {
         this.task = task;
     }
 
-    public Vector3 position;
+    public Order(AnimalSkeleton animalSkeleton, Task task) {
+        this.animalSkeleton = animalSkeleton;
+        this.task = task;
+    }
+
+    public Vector3 position; // Used for chunks
+    public AnimalSkeleton animalSkeleton; // Used for animals
     public Task task;
 }
 
@@ -40,7 +41,7 @@ public class Order {
 public class Result {
     public Task task;
     public ChunkVoxelData chunkVoxelData; //May not be set
-    public AnimalVoxelData animalVoxelData; //May not be set
+    public AnimalSkeleton animalSkeleton; //May not be set
 }
 
 /// <summary>
@@ -114,11 +115,20 @@ public class ChunkVoxelDataThread {
             case Task.CHUNK:
                 result.chunkVoxelData = handleChunkOrder(order);
                 break;
+            case Task.ANIMAL:
+                order.animalSkeleton.generateInThread();
+                result.animalSkeleton = order.animalSkeleton;
+                break;
         }
 
         return result;
     }
 
+    /// <summary>
+    /// Generates a chunk with trees
+    /// </summary>
+    /// <param name="order">Order order</param>
+    /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData();
         //Generate the chunk terrain

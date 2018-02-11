@@ -272,10 +272,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 308e34c6d32521643bf70fc091835dad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnSpeed: 10
-  speed: 10
-  levelSpeed: 30
-  groundOffsetFactor: 0.7
 --- !u!4 &251570513
 Transform:
   m_ObjectHideFlags: 0
@@ -328,6 +324,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 137209522713128248, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
+        type: 2}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: fa0fa3f75a26c024e88738f410c0f66a, type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3bb2ffea5f9e1f2408edb5992e08eacb, type: 2}
   m_IsPrefabParent: 0
@@ -476,10 +477,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 308e34c6d32521643bf70fc091835dad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnSpeed: 10
-  speed: 10
-  levelSpeed: 30
-  groundOffsetFactor: 0.7
 --- !u!4 &1221268769
 Transform:
   m_ObjectHideFlags: 0

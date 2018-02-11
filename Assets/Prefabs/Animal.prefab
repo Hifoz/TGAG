@@ -52,10 +52,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 308e34c6d32521643bf70fc091835dad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnSpeed: 100
-  speed: 2
-  levelSpeed: 30
-  groundOffsetFactor: 0.6
 --- !u!137 &137209522713128248
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1
@@ -70,7 +66,7 @@ SkinnedMeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: fa0fa3f75a26c024e88738f410c0f66a, type: 2}
+  - {fileID: 2100000, guid: 25605bf9ee4f35849a8775317a3442e1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
