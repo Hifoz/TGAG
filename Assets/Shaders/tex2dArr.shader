@@ -86,11 +86,11 @@
 				float a = modTex.a;
 				
 				//Experimental. for testing gpu-generated textures:
-				float4 gpuGeneratedTexture = getTexel(slice, i.worldPos);
+				float4 gpuGeneratedTexture = getTexel(slice, i.worldPos, i.posEye);
 				if (gpuGeneratedTexture.w != 2) {
 					baseTex = gpuGeneratedTexture;
 				}
-				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos);
+				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos, i.posEye);
 				if (gpuGeneratedModTexture.w != 2) {
 					modTex = gpuGeneratedModTexture;
 				}

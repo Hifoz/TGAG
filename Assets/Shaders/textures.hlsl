@@ -16,7 +16,9 @@
 
 
 // Generate texture for grass
-float4 grassTex(float3 pos) {
+// pos: worldpos of fragment
+// maxFreq: highest noise frequency we want to use
+float4 grassTex(float3 pos, float maxFreq) {
 	float hue = 0.2;
 	float saturation = 0.85;
 	float value = 0.6;
@@ -31,7 +33,35 @@ float4 grassTex(float3 pos) {
 		noise(pos, f * 100) * 0.15;
 
 
-	value = clamp(value *0.5 + v * 0.5, 0, 1);
+	float noiseFreq[7] = {
+		f,
+		f * 3,
+		f * 6,
+		f * 10,
+		f * 30,
+		f * 70,
+		f * 100
+	};
+
+	float noiseMag[7] = {
+		0.1,
+		0.1,
+		0.1,
+		0.1,
+		0.15,
+		0.15,
+		0.15
+	};
+
+	for (int i = 0; i < 7; i++) {
+		if (noiseFreq[i] <= maxFreq)
+			value += noise(pos, noiseFreq[i]) * noiseMag[i];
+		else
+			value += noiseMag[i] * 0.5;
+	}
+
+
+	value = clamp(value * 0.5, 0, 1);
 
 	float4 o = float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 
@@ -39,7 +69,7 @@ float4 grassTex(float3 pos) {
 }
 
 // Generate grass for the side of a block
-float4 grassSideTex(float3 pos) {
+float4 grassSideTex(float3 pos, float maxFreq) {
 	float blockPosY = (pos.y - 0.5) % 1;
 
 	float bGh = 0.85;
@@ -48,7 +78,7 @@ float4 grassSideTex(float3 pos) {
 
 
 	if(blockPosY > gH)
-		return grassTex(pos);
+		return grassTex(pos, maxFreq);
 	return float4(0, 0, 0, 0);
 }
 
@@ -154,7 +184,25 @@ float4  waterTex(float3 pos) {
 
 
 // Gets the value for a texel on a face 
-float4 getTexel(int slice, float3 pos) {
+float4 getTexel(int slice, float3 pos, float3 posEye) {
+	float distFromEye = length(posEye);
+
+	float maxFreq = 100;
+	
+	if (distFromEye > 110)
+		maxFreq = 5;	
+	else if (distFromEye > 60)
+		maxFreq = 10;
+	else if (distFromEye > 40)
+		maxFreq = 30;
+	else if (distFromEye > 15)
+		maxFreq = 50;
+	else if (distFromEye > 5)
+		maxFreq = 80;	
+
+
+	//return float4(maxFreq / 100.0, maxFreq / 100.0, maxFreq / 100.0, 1);
+
 	switch (slice + 1) {
 	case 1: // Dirt
 		return dirtTex(pos);
@@ -163,9 +211,9 @@ float4 getTexel(int slice, float3 pos) {
 	case 3: // Sand
 		return sandTex(pos);
 	case 4: // Grass top
-		return grassTex(pos);
+		return grassTex(pos, maxFreq);
 	case 5: // Grass side
-		return grassSideTex(pos);
+		return grassSideTex(pos, maxFreq);
 	case 6: // Snow top
 		return snowTex(pos);
 	case 7: // Snow side
