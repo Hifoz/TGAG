@@ -101,17 +101,17 @@ public class ChunkManager : MonoBehaviour {
                         orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
                         orderedAnimalIndex = i;
                     }
-                } else if (Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
+                } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
                     LandAnimal landAnimal = animal.GetComponent<LandAnimal>();
                     float x = UnityEngine.Random.Range(lower, upper);
                     float z = UnityEngine.Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
                     landAnimal.Spawn(player.position + new Vector3(x, y, z));
-                    if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 20% chance of regenerating animal on respawn
-                        AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
-                        orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
-                        orderedAnimalIndex = i;
-                    }
+                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 10% chance of regenerating animal on respawn
+                    //    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
+                    //    orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
+                    //    orderedAnimalIndex = i;
+                    //}
                 }
             }
             if (orderedAnimalIndex != -1) {

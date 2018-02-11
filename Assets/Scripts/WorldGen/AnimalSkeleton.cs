@@ -352,10 +352,14 @@ public class AnimalSkeleton {
             createAndBindBone(skeletonLines[BodyPart.LEFT_LEGS][i * 2 + 1].b, skeletonBones[BodyPart.LEFT_LEGS][i * 3 + 1].bone, "left Leg " + i, BodyPart.LEFT_LEGS);
         }
 
-        addConstraintsLeg(skeletonBones[BodyPart.RIGHT_LEGS].GetRange(0, 3));
-        addConstraintsLeg(skeletonBones[BodyPart.RIGHT_LEGS].GetRange(3, 3));
-        addConstraintsLeg(skeletonBones[BodyPart.LEFT_LEGS].GetRange(0, 3));
-        addConstraintsLeg(skeletonBones[BodyPart.LEFT_LEGS].GetRange(3, 3));
+        Bone spine = skeletonBones[BodyPart.SPINE][0];
+        spine.minAngles = new Vector3(-90, -1, -1);
+        spine.maxAngles = new Vector3(90, 1, 1);
+
+        //addConstraintsLeg(skeletonBones[BodyPart.RIGHT_LEGS].GetRange(0, 3));
+        //addConstraintsLeg(skeletonBones[BodyPart.RIGHT_LEGS].GetRange(3, 3));
+        //addConstraintsLeg(skeletonBones[BodyPart.LEFT_LEGS].GetRange(0, 3), false);
+        //addConstraintsLeg(skeletonBones[BodyPart.LEFT_LEGS].GetRange(3, 3), false);
     }
 
     /// <summary>
@@ -383,11 +387,16 @@ public class AnimalSkeleton {
     /// Adds joint constraints to a leg
     /// </summary>
     /// <param name="leg">List<Bone> leg</param>
-    private void addConstraintsLeg(List<Bone> leg) {
-        leg[0].minAngles = new Vector3(-90, -90, -90);
-        leg[0].maxAngles = new Vector3(90, 90, 90);
-        leg[1].minAngles = new Vector3(-45, -45, -45);
-        leg[1].maxAngles = new Vector3(45, 45, 45);
+    private void addConstraintsLeg(List<Bone> leg, bool rightLeg = true) {        
+        if (rightLeg) {
+            leg[0].minAngles = new Vector3(-90, -90, -90);
+            leg[0].maxAngles = new Vector3(90, 90, 0);
+        } else {
+            leg[0].minAngles = new Vector3(-90, -90, 0);
+            leg[0].maxAngles = new Vector3(90, 90, 90);
+        }
+        leg[1].minAngles = new Vector3(-90, -90, -90);
+        leg[1].maxAngles = new Vector3(90, 90, 90);
     }
 
     /// <summary>
