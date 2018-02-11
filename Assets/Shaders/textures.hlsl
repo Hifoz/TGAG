@@ -158,22 +158,59 @@ float4 woodTex(float3 pos) {
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
-float4 leafTex(float3 pos) {
+float4 leafTex(float3 pos,float maxFreq) {
 	float hue = 0.2;
 	float saturation = 0.85;
 	float value = 0.2;
 
 	float f = 4;
-	float v = noise(pos, f) * 0.1 +
-		noise(pos, f * 3) * 0.1 +
-		noise(pos, f * 6) * 0.1 +
-		noise(pos, f * 10) * 0.1 +
-		noise(pos, f * 30) * 0.13 +
-		noise(pos, f * 70) * 0.1 +
-		noise(pos, f * 100) * 0.05 +
-		noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
+	//float v = noise(pos, f) * 0.1 +
+	//	noise(pos, f * 3) * 0.1 +
+	//	noise(pos, f * 6) * 0.1 +
+	//	noise(pos, f * 10) * 0.1 +
+	//	noise(pos, f * 30) * 0.13 +
+	//	noise(pos, f * 70) * 0.1 +
+	//	noise(pos, f * 100) * 0.05 +
+	//	noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
 
-	value = clamp(value + v, 0, 1);
+
+	float noiseFreq[7] = {
+		f,
+		f * 3,
+		f * 6,
+		f * 10,
+		f * 30,
+		f * 70,
+		f * 100
+	};
+
+	float noiseMag[7] = {
+		0.1,
+		0.1,
+		0.1,
+		0.1,
+		0.13,
+		0.1,
+		0.05
+	};
+
+	if (f * 2 > maxFreq)
+		value += noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
+	else
+		value += 0.1;
+
+	for (int i = 0; i < 7; i++) {
+		if (noiseFreq[i] <= maxFreq)
+			value += noise(pos, noiseFreq[i]) * noiseMag[i];
+		else
+			value += noiseMag[i] * 0.5;
+	}
+
+
+
+
+
+	value = clamp(value, 0, 1);
 
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
@@ -221,7 +258,7 @@ float4 getTexel(int slice, float3 pos, float3 posEye) {
 	case 8: // Wood
 		return woodTex(pos);
 	case 9: // Leaf
-		return leafTex(pos);
+		return leafTex(pos, maxFreq);
 	case 10: // Water
 		return waterTex(pos);
 	default:
