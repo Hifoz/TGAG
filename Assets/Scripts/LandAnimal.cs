@@ -21,11 +21,11 @@ public class LandAnimal : MonoBehaviour {
     // Update is called once per frame
     void Update() {        
         if (skeleton != null) {
-            move();
-            levelSpine();
-            //stayGrounded();
-            walk();
-            timer += Time.deltaTime;
+            //move();
+            //levelSpine();
+            ////stayGrounded();
+            //walk();
+            //timer += Time.deltaTime;
         }
     }
 

@@ -32,8 +32,8 @@ public class AnimalSkeleton {
     private List<Vector3> threadSafeBones; // CUZ THREADING LOOL
     private Vector3 threadSafeRoot; // CUZ THREADING LOOL
 
-    private const float skeletonThiccness = 0.5f;
-    private const float voxelSize = 1f;
+    private const float skeletonThiccness = 0.25f;
+    private const float voxelSize = 0.25f;
 
     private Vector3 lowerBounds;
     private Vector3 upperBounds;
@@ -149,14 +149,15 @@ public class AnimalSkeleton {
         lowerBounds -= Vector3.one * (skeletonThiccness + 2.5f);
         Vector3 size = upperBounds - lowerBounds;
         size /= voxelSize;
+        
 
         BlockData[,,] pointMap = new BlockData[Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z)];
         //Debug.Log("(" + pointMap.GetLength(0) + "," + pointMap.GetLength(1) + "," + pointMap.GetLength(2) + ")");
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
-                    Vector3 samplePos = new Vector3(x, y, z) + lowerBounds;
-                    samplePos = WorldUtils.floor(samplePos);
+                    Vector3 samplePos = new Vector3(x, y, z) * voxelSize + WorldUtils.floor(lowerBounds);
+                    //samplePos = WorldUtils.floor(samplePos);
                     pointMap[x, y, z] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);  
                     if (pointMap[x, y, z].blockType == BlockData.BlockType.DIRT) {
                         pointMap[x, y, z].modifier = BlockData.BlockType.SNOW;
@@ -165,7 +166,7 @@ public class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -WorldUtils.floor(lowerBounds), MeshDataGenerator.MeshDataType.TERRAIN);
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -WorldUtils.floor(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.TERRAIN);
     }
 
     /// <summary>
@@ -206,12 +207,12 @@ public class AnimalSkeleton {
         upperBounds = new Vector3(-99999, -99999, -99999);
         lowerBounds = new Vector3(99999, 99999, 99999);
 
-        headsize = rng.randomFloat(1, 2) / voxelSize;
-        neckLen = rng.randomFloat(2, 4) / voxelSize;
-        spineLen = rng.randomFloat(2, 7) / voxelSize;
+        headsize = rng.randomFloat(1, 2);
+        neckLen = rng.randomFloat(2, 4);
+        spineLen = rng.randomFloat(2, 7);
         legpairs = 2;// will add support fo X legpairs in future
-        legLen = rng.randomFloat(2, 6) / voxelSize;
-        tailLen = rng.randomFloat(1, 5) / voxelSize;
+        legLen = rng.randomFloat(2, 6);
+        tailLen = rng.randomFloat(1, 5);
 
         //HEAD
         List<LineSegment> head = createHead(headsize);
