@@ -36,8 +36,11 @@ public class ChunkVoxelDataGenerator {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (posContainsVoxel(new Vector3(x, y, z) + pos))
                         data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
+                    else if (y < 15) // temp
+                        data[x, y, z] = new BlockData(BlockData.BlockType.WATER);
                     else
                         data[x, y, z] = new BlockData(BlockData.BlockType.NONE);
+                    
                 }
             }
         }
@@ -45,7 +48,7 @@ public class ChunkVoxelDataGenerator {
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
-                    if (data[x, y, z].blockType != BlockData.BlockType.NONE)
+                    if (data[x, y, z].blockType != BlockData.BlockType.NONE && data[x, y, z].blockType != BlockData.BlockType.WATER)
                         decideBlockType(data, new Vector3Int(x, y, z));
                 }
             }
@@ -69,7 +72,7 @@ public class ChunkVoxelDataGenerator {
             blockData.blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:
-        if ((pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.NONE) && blockData.blockType != BlockData.BlockType.NONE) {
+        if (pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.NONE) {
             if (pos.y > 40) {
                 blockData.modifier = BlockData.BlockType.SNOW;
             } else if (blockData.blockType == BlockData.BlockType.DIRT) {

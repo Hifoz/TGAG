@@ -52,7 +52,7 @@ public class TextureManager : MonoBehaviour {
     public void addEmpty() {
         Color[] e = new Color[textureSize * textureSize];
         for (int i = 0; i < e.Length; i++)
-            e[i] = new Color(1, 1, 1, 0);
+            e[i] = new Color(0, 0, 0, 0);
 
         addTexture(new TextureData(e, TextureData.TextureType.NONE));
     }

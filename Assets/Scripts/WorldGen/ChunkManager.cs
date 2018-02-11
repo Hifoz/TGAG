@@ -131,6 +131,7 @@ public class ChunkManager : MonoBehaviour {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
                 inactiveChunks.Push(activeChunks[i].chunk);
+                inactiveChunks.Push(activeChunks[i].waterChunk);
                 inactiveChunks.Peek().SetActive(false);
 
                 foreach(var tree in activeChunks[i].trees) {
@@ -260,7 +261,6 @@ public class ChunkManager : MonoBehaviour {
     private GameObject createChunk() {
         GameObject chunk = Instantiate(chunkPrefab);
         chunk.transform.parent = transform;
-        chunk.name = "chunk";
         return chunk;
     }
 

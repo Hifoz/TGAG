@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class ChunkVoxelData {
     public MeshData meshData;
+    public MeshData waterMeshData;
     public Vector3 chunkPos;
 
     public MeshData[] trees;
