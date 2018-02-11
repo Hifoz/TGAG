@@ -21,15 +21,8 @@ float4 grassTex(float3 pos) {
 	float saturation = 0.85;
 	float value = 0.6;
 
-
-	float v = noise(pos * 80);
-	v += noise(pos * 40);
-	v += noise(pos * 10);
-	v += noise(pos * 120);
-	v += noise(pos * 200);
-
-	float f = 2;// 2 / 0.004;
-	v = noise(pos, f) * 0.1 +
+	float f = 2;
+	float v = noise(pos, f) * 0.1 +
 		noise(pos, f * 3) * 0.1 +
 		noise(pos, f * 6) * 0.1 +
 		noise(pos, f * 10) * 0.1 +
