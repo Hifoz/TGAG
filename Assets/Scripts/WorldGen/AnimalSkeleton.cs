@@ -33,9 +33,9 @@ public class AnimalSkeleton {
         new Dictionary<BodyParameter, object>() {
             { BodyParameter.HEAD_SIZE, new Pair<float>(1, 3) },
             { BodyParameter.NECK_LENGTH, new Pair<float>(2, 4) },
-            { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
-            { BodyParameter.LEG_PAIRS, new Pair<int>(2, 2) },
-            { BodyParameter.LEG_JOINTS, new Pair<int>(2, 2) },
+            { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 15) },
+            { BodyParameter.LEG_PAIRS, new Pair<int>(2, 4) },
+            { BodyParameter.LEG_JOINTS, new Pair<int>(2, 4) },
             { BodyParameter.LEG_LENGTH, new Pair<float>(5, 10) },
             //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
             { BodyParameter.TAIL_LENGTH, new Pair<float>(4, 5) }
