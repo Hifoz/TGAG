@@ -7,11 +7,7 @@ using UnityEngine;
 /// Manages the textures for the terrain
 /// </summary>
 public class TextureManager : MonoBehaviour {
-    public static int textureVariety = 1;
-
-    private List<int>[] sliceTypeList = new List<int>[(int)TextureData.TextureType.COUNT]; // Constains a list for each textureType containg the slices in the textureArray that contains a texture for it.
-
-    public int textureSize = 512;
+    public const int textureSize = 512;
 
     private List<Color[]> textureList = new List<Color[]>();
     private Texture2DArray textureArray;
@@ -24,10 +20,9 @@ public class TextureManager : MonoBehaviour {
 
 
     private void Awake() {
-        for (int i = 0; i < sliceTypeList.Length; i++)
-            sliceTypeList[i] = new List<int>();
-
-        addEmpty(); // We want the first entry to be clear, so that whenever a block has no modifier, the modifier can pick slice 0
+        // Textures loaded onto the gpu from here must be at the top of the TextureType enum in correct order.
+        // Also, make sure the switch in  textures.hlsl::getTexel(...) matches
+        addHalfWhite();
     }
 
     /// <returns>size required for textures</returns>
@@ -35,13 +30,11 @@ public class TextureManager : MonoBehaviour {
         return textureSize;
     }
 
-
     /// <summary>
     /// Creates a texture from input and stores it.
     /// </summary>
     /// <param name="textureData">Data to create and store texture from </param>
     public void addTexture(TextureData textureData) {
-        sliceTypeList[(int)textureData.type].Add(textureList.Count);
         textureList.Add(textureData.pixels);
         hasChanged = true;
     }
@@ -55,6 +48,20 @@ public class TextureManager : MonoBehaviour {
             e[i] = new Color(0, 0, 0, 0);
 
         addTexture(new TextureData(e, TextureData.TextureType.NONE));
+    }
+
+    /// <summary>
+    /// Used to generate one half transparent/half filled white texture to be used if modifier == BlockType.NONE
+    /// </summary>
+    public void addHalfWhite() {
+        Color[] e = new Color[textureSize * textureSize];
+        for (int i = 0; i < e.Length / 2; i++)
+            e[i] = new Color(0, 0, 0, 0);
+
+        for (int i = e.Length / 2; i < e.Length; i++)
+            e[i] = new Color(1, 1, 1, 1);
+
+        addTexture(new TextureData(e, TextureData.TextureType.HALF));
     }
 
     /// <summary>
@@ -78,10 +85,6 @@ public class TextureManager : MonoBehaviour {
         return textureArray;
     }
 
-
-    public List<int>[] getSliceTypeList() {
-        return sliceTypeList;
-    }
 
     /// <summary>
     /// Saves the texture array as an asset.
