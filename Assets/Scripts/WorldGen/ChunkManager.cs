@@ -9,9 +9,8 @@ using UnityEngine;
 public class ChunkManager : MonoBehaviour {
 
     public Transform player;
+    public TextureManager textureManager;
     public GameObject chunkPrefab;
-    public TextureManager terrainTextureManager;
-    public TextureManager treeTextureManager;
     public GameObject treePrefab;
     public GameObject animalPrefab;
     private Vector3 offset;
@@ -38,6 +37,8 @@ public class ChunkManager : MonoBehaviour {
             CVDT[i] = new ChunkVoxelDataThread(orders, results);
         }
         init();
+
+        textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
     }
 	
 	// Update is called once per frame
@@ -79,9 +80,6 @@ public class ChunkManager : MonoBehaviour {
     public void init() {
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
         chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
-
-        MeshDataGenerator.terrainTextureTypes = terrainTextureManager.getSliceTypeList();
-        MeshDataGenerator.treeTextureTypes = treeTextureManager.getSliceTypeList();
     }
 
     /// <summary>
@@ -204,7 +202,7 @@ public class ChunkManager : MonoBehaviour {
         chunk.GetComponent<MeshCollider>().isTrigger = false;
         chunk.GetComponent<MeshCollider>().convex = false;
         chunk.name = "chunk";
-        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
         chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
         cd.chunk = chunk;
 
@@ -215,7 +213,7 @@ public class ChunkManager : MonoBehaviour {
         waterChunk.GetComponent<MeshCollider>().convex = true;
         waterChunk.GetComponent<MeshCollider>().isTrigger = true;
         waterChunk.name = "waterChunk";
-        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
         waterChunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
         cd.waterChunk = waterChunk;
 
@@ -225,7 +223,7 @@ public class ChunkManager : MonoBehaviour {
             tree.transform.position = chunkMeshData.treePositions[i];
             tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
             tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
 
             trees[i] = tree;

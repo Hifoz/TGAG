@@ -9,9 +9,11 @@ using UnityEngine;
 public class TextureManager : MonoBehaviour {
     public static int textureVariety = 1;
 
-    private List<int>[] sliceTypeList = new List<int>[(int)TextureData.TextureType.COUNT]; // Constains a list for each textureType containg the slices in the textureArray that contains a texture for it.
+    //private List<int>[] sliceTypeList = new List<int>[(int)TextureData.TextureType.COUNT]; // Constains a list for each textureType containg the slices in the textureArray that contains a texture for it.
+    //private int[] textureTypeList = new int[(int)TextureData.TextureType.COUNT];
 
-    public int textureSize = 512;
+
+    public const int textureSize = 512;
 
     private List<Color[]> textureList = new List<Color[]>();
     private Texture2DArray textureArray;
@@ -24,10 +26,6 @@ public class TextureManager : MonoBehaviour {
 
 
     private void Awake() {
-        for (int i = 0; i < sliceTypeList.Length; i++)
-            sliceTypeList[i] = new List<int>();
-
-        addEmpty(); // We want the first entry to be clear, so that whenever a block has no modifier, the modifier can pick slice 0
         addHalfWhite();
     }
 
@@ -36,13 +34,11 @@ public class TextureManager : MonoBehaviour {
         return textureSize;
     }
 
-
     /// <summary>
     /// Creates a texture from input and stores it.
     /// </summary>
     /// <param name="textureData">Data to create and store texture from </param>
     public void addTexture(TextureData textureData) {
-        sliceTypeList[(int)textureData.type].Add(textureList.Count);
         textureList.Add(textureData.pixels);
         hasChanged = true;
     }
@@ -93,10 +89,6 @@ public class TextureManager : MonoBehaviour {
         return textureArray;
     }
 
-
-    public List<int>[] getSliceTypeList() {
-        return sliceTypeList;
-    }
 
     /// <summary>
     /// Saves the texture array as an asset.

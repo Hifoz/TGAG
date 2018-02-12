@@ -371,61 +371,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 241119714}
---- !u!1 &364536425
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 364536428}
-  - component: {fileID: 364536427}
-  - component: {fileID: 364536426}
-  m_Layer: 0
-  m_Name: TerrainTextureManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &364536426
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 364536425}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8ad3c5e75ce5134b9c1b65bce7677f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &364536427
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 364536425}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 50f95ebbc2bb8f7489b6831da56a3acd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  textureSize: 512
-  mipmap: 1
-  textureFormat: 4
---- !u!4 &364536428
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 364536425}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!108 &426066747 stripped
 Light:
   m_PrefabParentObject: {fileID: 108156232096751162, guid: b63375e0277066a498f612ac139e7087,
@@ -554,8 +499,8 @@ MonoBehaviour:
   player: {fileID: 2079808781}
   chunkPrefab: {fileID: 1818736290914746, guid: 418521e80a6a4c64e8a2f9d1d24db817,
     type: 2}
-  terrainTextureManager: {fileID: 364536427}
-  treeTextureManager: {fileID: 1477805440}
+  terrainTextureManager: {fileID: 0}
+  treeTextureManager: {fileID: 0}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
   animalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
     type: 2}
@@ -850,8 +795,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 635, y: 286, z: 0}
-  m_LocalScale: {x: 0.52962965, y: 0.52962965, z: 0.52962965}
+  m_LocalPosition: {x: 590.5, y: 331, z: 0}
+  m_LocalScale: {x: 0.61296296, y: 0.61296296, z: 0.61296296}
   m_Children:
   - {fileID: 1043064330}
   - {fileID: 143669589}
@@ -1012,7 +957,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4865587033099564, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
       propertyPath: m_RootOrder
-      value: 9
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
@@ -1101,61 +1046,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1243763154}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1477805438
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1477805441}
-  - component: {fileID: 1477805440}
-  - component: {fileID: 1477805439}
-  m_Layer: 0
-  m_Name: TreeTextureManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1477805439
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1477805438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97cd3498160622942afaec35867054f8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1477805440
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1477805438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 50f95ebbc2bb8f7489b6831da56a3acd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  textureSize: 512
-  mipmap: 1
-  textureFormat: 4
---- !u!4 &1477805441
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1477805438}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1520587347
 GameObject:
   m_ObjectHideFlags: 0
