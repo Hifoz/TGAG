@@ -20,11 +20,15 @@
 
 			#pragma target 3.5
 
+#define GPU_TEX
+
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"
 			#include "AutoLight.cginc"
 			#include "utils.hlsl"
+#ifdef GPU_TEX
 			#include "textures.hlsl"
+#endif
 			#pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight
 
 			struct appdata {
@@ -84,19 +88,21 @@
 				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
 				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
 				float a = modTex.a;
-				
+
+				half4 o;
+#ifdef GPU_TEX
 				//Experimental. for testing gpu-generated textures:
-				float4 gpuGeneratedTexture = getTexel(slice, i.worldPos, i.posEye);
+				/*float4 gpuGeneratedTexture = getTexel(slice, i.worldPos, i.posEye);
 				if (gpuGeneratedTexture.w != 2) {
 					baseTex = gpuGeneratedTexture;
 				}
 				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos, i.posEye);
 				if (gpuGeneratedModTexture.w != 2) {
 					modTex = gpuGeneratedModTexture;
-				}
+				}*/
+				o = getTexel(slice, modSlice, i.worldPos, i.posEye);
+#else
 
-
-				half4 o;
 				if (i.color.g == 0) {
 					o = baseTex;
 				} else {
@@ -104,7 +110,7 @@
 					o = lerp(modTex, baseTex, 1 - modTex.a);
 					o.a = min(modTex.a + baseTex.a, 1);
 				}
-
+#endif
 
 				o.rbg *= light;
 				return o;

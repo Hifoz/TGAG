@@ -229,23 +229,30 @@ float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, int sampleDista
 
 // Gets the value for a texel on a face 
 // slice: type of the block
+// modSlice: type of the block modifier
 // pos: worldposition of fragment
 // posEye: position of fragment in relation to camera
-float4 getTexel(int slice, float3 pos, float3 posEye) {
+float4 getTexel(int slice, int modSlice, float3 pos, float3 posEye) {
 	float distFromEye = length(posEye);
+	
+	float textureSize = 512;
 	pos = ((int3)(pos * textureSize)) / textureSize;
 
-	float textureSize = 512;
 	float sampleDistance = 1;
-	switch (distFromEye) {
-		case 110: sampleDistance = 128; break;
-		case 60: sampleDistance = 48; break;
-		case 40: sampleDistance = 16; break;
-		case 20: sampleDistance = 8; break;
-		case 10: sampleDistance = 4; break;
-		case 5: sampleDistance = 2; break;
+
+	if (distFromEye > 110) {
+		sampleDistance = 128;
+	} else if(distFromEye > 60) {
+		sampleDistance = 48;
+	} else if(distFromEye > 40) {
+		sampleDistance = 16;
+	} else if(distFromEye > 20) {
+		sampleDistance = 8;
+	} else if(distFromEye > 10) {
+		sampleDistance = 4;
+	} else if (distFromEye > 5) {
+		sampleDistance = 2;
 	}
-	
 	sampleDistance /= textureSize;
 
 	float4 texelTotal = float4(0, 0, 0, 0);
@@ -253,11 +260,22 @@ float4 getTexel(int slice, float3 pos, float3 posEye) {
 	for (int x = 0; x < 2; x++) {
 		for (int y = 0; y < 2; y++) {
 			for (int z = 0; z < 2; z++) {
-				texelTotal += sampleTexelValue(slice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance);
+				float4 baseVal = sampleTexelValue(slice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance);
+				if (modSlice == 0) {
+					texelTotal += baseVal;
+				}
+				else {
+					float4 modVal = sampleTexelValue(modSlice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance);
+					float4 val;
+					texelTotal.rgb += float4(HSVtoRGB(lerp(RGBtoHSV(modVal.rgb), RGBtoHSV(baseVal.rgb), 1 - modVal.a)), 1);
+					//texelTotal.rgb += lerp(modVal, baseVal, 1 - modVal.a).rgb;
+					texelTotal.a += min(modVal.a + baseVal.a, 1);
+				}
 				samples++;
 			}
 		}
 	}
+	
 
 	return texelTotal / samples;
 }
