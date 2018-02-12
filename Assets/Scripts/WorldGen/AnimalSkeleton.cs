@@ -33,7 +33,7 @@ public class AnimalSkeleton {
         new Dictionary<BodyParameter, object>() {
             { BodyParameter.HEAD_SIZE, new Pair<float>(1, 3) },
             { BodyParameter.NECK_LENGTH, new Pair<float>(2, 4) },
-            { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 15) },
+            { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
             { BodyParameter.LEG_PAIRS, new Pair<int>(2, 4) },
             { BodyParameter.LEG_JOINTS, new Pair<int>(2, 4) },
             { BodyParameter.LEG_LENGTH, new Pair<float>(5, 10) },
@@ -238,11 +238,11 @@ public class AnimalSkeleton {
         addSkeletonLine(neckLine, BodyPart.NECK);
         //SPINE
         LineSegment spineLine = new LineSegment(neckLine.b, neckLine.b + new Vector3(0, 0, 1) * bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH));
-        addSkeletonLine(spineLine, BodyPart.SPINE, 1);
+        addSkeletonLine(spineLine, BodyPart.SPINE);
         //TAIL
         LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH));
-        addSkeletonLine(tailLine, BodyPart.TAIL, 1);
-        //LEGS (This can prolly be done "tighter"
+        addSkeletonLine(tailLine, BodyPart.TAIL);
+        //LEGS
         int legPairs = bodyParameters.Get<int>(BodyParameter.LEG_PAIRS);
         int legJoints = bodyParameters.Get<int>(BodyParameter.LEG_JOINTS);
         float jointLength = bodyParameters.Get<float>(BodyParameter.LEG_JOINT_LENGTH);
@@ -296,17 +296,7 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="line">LineSegment line</param>
     /// <param name="bodyPart">BodyPart bodyPart</param>
-    /// <param name="offsetFlag">bool offsetFlag</param>
-    private void addSkeletonLine(LineSegment line, BodyPart bodyPart, int offsetFlag = 0) {
-        switch (offsetFlag) {
-            case 1:
-                line.a = Vector3.Lerp(line.a, line.b, 0.02f);
-                break;
-            case 2:
-                line.b = Vector3.Lerp(line.b, line.a, 0.02f);
-                break;
-        }
-
+    private void addSkeletonLine(LineSegment line, BodyPart bodyPart) {
         skeletonLines[bodyPart].Add(line);
         skeletonLines[BodyPart.ALL].Add(line);
     }
