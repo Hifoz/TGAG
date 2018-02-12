@@ -100,6 +100,7 @@
 				if (i.color.g == 0) {
 					o = baseTex;
 				} else {
+					//o = float4(HSVtoRGB(lerp(RGBtoHSV(modTex.rgb), RGBtoHSV(baseTex.rgb), 1 - modTex.a)), 1);
 					o = lerp(modTex, baseTex, 1 - modTex.a);
 					o.a = min(modTex.a + baseTex.a, 1);
 				}

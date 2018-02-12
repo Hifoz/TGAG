@@ -4,27 +4,22 @@
 #include "utils.hlsl"
 
 /*
-	Experimental/WIP!
+	WIP!
 	Porting TerrainTextureGenerator from C# to HLSL.
 	Reason wht doing texture generation on GPU is better:
 	1. More variety. No more choosing between pre-generated textures, textures are now generated per texel in the world.
 	2. Better distribution of resources. The CPU is already busy with terrain generation and many other things, and the GPU is doing a relatively small amount of work.
 		2.1 Performance hit on GPU seems pretty small from a fairly quick test done with grass being done on the GPU.
-
-	NB!  Does not currently work with tree textures!
 */
 
 
 // Generate texture for grass
-// pos: worldpos of fragment
-// maxFreq: highest noise frequency we want to use
-float4 grassTex(float3 pos, float maxFreq) {
+// pos: worldposition to sample
+float4 grassTex(float3 pos) {
 	float hue = 0.2;
 	float saturation = 0.85;
 	float value = 0.6;
 
-	if(maxFreq > 200)
-		return float4(HSVtoRGB(float3(0.8, saturation, value)), 1);
 
 	float f = 2;
 	float v = noise(pos, f) * 0.1 +
@@ -35,35 +30,7 @@ float4 grassTex(float3 pos, float maxFreq) {
 		noise(pos, f * 70) * 0.15 +
 		noise(pos, f * 100) * 0.15;
 
-
-	float noiseFreq[7] = {
-		f,
-		f * 3,
-		f * 6,
-		f * 10,
-		f * 30,
-		f * 70,
-		f * 100
-	};
-
-	float noiseMag[7] = {
-		0.1,
-		0.1,
-		0.1,
-		0.1,
-		0.15,
-		0.15,
-		0.15
-	};
-
-	for (int i = 0; i < 7; i++) {
-		if (noiseFreq[i] <= maxFreq)
-			value += noise(pos, noiseFreq[i]) * noiseMag[i];
-		else
-			value += noiseMag[i] * 0.5;
-	}
-
-
+	value += v;
 	value = clamp(value * 0.5, 0, 1);
 
 	float4 o = float4(HSVtoRGB(float3(hue, saturation, value)), 1);
@@ -72,19 +39,28 @@ float4 grassTex(float3 pos, float maxFreq) {
 }
 
 // Generate grass for the side of a block
-float4 grassSideTex(float3 pos, float maxFreq) {
+// samplePos: worldposition to sample
+// pos: worldposition of fragment
+// sampleDistance: distance between fragment position and sample positions
+float4 grassSideTex(float3 samplePos, float3 pos, float sampleDistance) {
+	float blockSamplePosY = (samplePos.y - 0.5) % 1;
 	float blockPosY = (pos.y - 0.5) % 1;
 
-	float bGh = 0.85;
+	if (blockSamplePosY < blockPosY)
+		blockSamplePosY -= (samplePos.y - pos.y * 2);
 
-	float gH = bGh - noise(pos, 80) * 0.1;
+	float grassHeight = 0.85 - 
+		sampleDistance - 
+		noise(samplePos, 10) * 0.1;
 
 
-	if(blockPosY > gH)
-		return grassTex(pos, maxFreq);
+	if(blockPosY > grassHeight)
+		return grassTex(samplePos);
 	return float4(0, 0, 0, 0);
 }
 
+// Generate texture for dirt
+// pos: worldposition to sample
 float4 dirtTex(float3 pos) {
 	float hue = 0.083;
 	float saturation = 0.6;
@@ -115,6 +91,8 @@ float4 dirtTex(float3 pos) {
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
+// Generate texture for sand
+// pos: worldposition to sample
 float4 sandTex(float3 pos) {
 	float hue = 0.13;
 	float saturation = 0.5;
@@ -122,6 +100,8 @@ float4 sandTex(float3 pos) {
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
+// Generate texture for snow
+// pos: worldposition to sample
 float4 snowTex(float3 pos) {
 	float hue = 0.55;
 	float saturation = 0.05;
@@ -129,113 +109,118 @@ float4 snowTex(float3 pos) {
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
-float4 snowSideTex(float3 pos) {
+// Generate grass for the side of a block
+// samplePos: worldposition to sample
+// pos: worldposition of fragment
+// sampleDistance: distance between fragment position and sample positions
+float4 snowSideTex(float3 samplePos, float3 pos, float sampleDistance) {
+	float blockSamplePosY = (samplePos.y - 0.5) % 1;
 	float blockPosY = (pos.y - 0.5) % 1;
 
-	float bGh = 0.85;
-	float gH = bGh - noise(pos, 10) * 0.1;
-	
-	
-	if (blockPosY > gH)
-		return snowTex(pos);
+	if (blockSamplePosY < blockPosY)
+		blockSamplePosY -= (samplePos.y - pos.y * 2);
+
+	float snowHeight = 0.85 - 
+		sampleDistance - 
+		noise(samplePos, 10) * 0.1;
+
+	if (blockPosY > snowHeight)
+		return snowTex(samplePos);
 	return float4(0, 0, 0, 0);
 }
 
+// Generate texture for stone
+// pos: worldposition to sample
 float4 stoneTex(float3 pos) {
-	return float4(1, 0, 1, 1);
+	// TODO create this
+
+	return float4(0.5, 0.5, 0.5, 1);
 }
 
-// wip
 // Generate texture for wood
+// pos: worldposition to sample
 float4 woodTex(float3 pos) {
+	// WIP
+
 	float hue = 0.083;
 	float saturation = 0.5;
 	float value = 0.8;
 
 	float freq = 4;
 	pos.xz *= 7;
-	float v = noise(pos, freq) * noise(pos + 5124, freq - 2) * noise(pos + 661, freq + 1) * 0.3 + 0.1;
-	value = clamp(v, 0, 1);
+	pos.y *= 0.7;
+	float v = noise(pos, freq) *
+		noise(pos + 5124, freq - 2) *
+		noise(pos + 661, freq + 1) *
+		0.3 + 0.1;
+
+	float v2 = noise(pos + 4115, freq) *
+		noise(pos + 2125, freq - 2) *
+		noise(pos + 6615, freq + 1) *
+		0.3 + 0.1;
+	value = clamp(0.4 - v * v2 * 4, 0, 1);
 
 
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
-float4 leafTex(float3 pos,float maxFreq) {
+// Generate texture for leaves
+// pos: worldposition to sample
+float4 leafTex(float3 pos) {
 	float hue = 0.2;
 	float saturation = 0.85;
 	float value = 0.2;
 
-	const float noiseSampleCount = 7;
 	float f = 4;
-	float noiseFreq[noiseSampleCount] = {
-		f,
-		f * 3,
-		f * 6,
-		f * 10,
-		f * 30,
-		f * 70,
-		f * 100
-	};
+	float v = noise(pos, f) * 0.1 +
+		noise(pos, f * 3) * 0.1 +
+		noise(pos, f * 6) * 0.1 +
+		noise(pos, f * 10) * 0.1 +
+		noise(pos, f * 30) * 0.13 +
+		noise(pos, f * 70) * 0.1 +
+		noise(pos, f * 100) * 0.05 +
+		noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
 
-	float noiseMag[noiseSampleCount] = {
-		0.1,
-		0.1,
-		0.1,
-		0.1,
-		0.13,
-		0.1,
-		0.05
-	};
-
-	if (f * 2 <= maxFreq)
-		value += noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
-	else
-		value += 0.1;
-
-	for (int i = 0; i < noiseSampleCount; i++) {
-		if (noiseFreq[i] <= maxFreq)
-			value += noise(pos, noiseFreq[i]) * noiseMag[i];
-		else
-			value += noiseMag[i] * 0.5;
-	}
-
-
-
-
-
+	value += v;
 	value = clamp(value, 0, 1);
 
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
+// Generate texture for water
+// pos: worldposition to sample
 float4  waterTex(float3 pos) {
+	// TODO more than simple color
 	return float4(0.4, 0.4, 1, 0.95);
 }
 
-
-float4 getTexelValue(int slice, float3 pos) {
+// Sample the texel value for a slice at samplePos
+// slice: type of the block
+// pos: worldposition of fragment
+// samplePos: worldposition to sample
+// sampleDistance: distance between fragment position and sample positions
+float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, int sampleDistance) {
 	switch (slice + 1) {
 	case 1: // Dirt
-		return dirtTex(pos);
+		return dirtTex(samplePos);
 	case 2: // Stone
-		return stoneTex(pos);
+		return stoneTex(samplePos);
 	case 3: // Sand
-		return sandTex(pos);
+		return sandTex(samplePos);
 	case 4: // Grass top
-		return grassTex(pos, 200);
+		return grassTex(samplePos);
 	case 5: // Grass side
-		return grassSideTex(pos, 200);
+		return grassSideTex(samplePos, pos, sampleDistance);
 	case 6: // Snow top
-		return snowTex(pos);
+		return snowTex(samplePos);
 	case 7: // Snow side
-		return snowSideTex(pos);
+		return snowSideTex(samplePos, pos, sampleDistance);
 	case 8: // Wood
-		return woodTex(pos);
+		return woodTex(samplePos);
 	case 9: // Leaf
-		return leafTex(pos, 200);
+		return leafTex(samplePos);
 	case 10: // Water
-		return waterTex(pos);
+		return waterTex(samplePos);
 	default:
 		return float4(1, 1, 1, 0);
 	}
@@ -243,93 +228,38 @@ float4 getTexelValue(int slice, float3 pos) {
 
 
 // Gets the value for a texel on a face 
+// slice: type of the block
+// pos: worldposition of fragment
+// posEye: position of fragment in relation to camera
 float4 getTexel(int slice, float3 pos, float3 posEye) {
 	float distFromEye = length(posEye);
-
-	float maxFreq = 200;
-	/*
-	if (distFromEye > 110)
-		maxFreq = 5;	
-	else if (distFromEye > 60)
-		maxFreq = 10;
-	else if (distFromEye > 40)
-		maxFreq = 30;
-	else if (distFromEye > 20)
-		maxFreq = 50;
-	else if (distFromEye > 10)
-		maxFreq = 70;
-	else if (distFromEye > 5)
-		maxFreq = 100;
-	*/
+	pos = ((int3)(pos * textureSize)) / textureSize;
 
 	float textureSize = 512;
-	float sampleSize = 1;
-	if (distFromEye > 110)
-		sampleSize = 64;
-	else if (distFromEye > 60)
-		sampleSize = 32;
-	else if (distFromEye > 40)
-		sampleSize = 16;
-	else if (distFromEye > 20)
-		sampleSize = 8;
-	else if (distFromEye > 10)
-		sampleSize = 4;
-	else if (distFromEye > 5)
-		sampleSize = 2;
+	float sampleDistance = 1;
+	switch (distFromEye) {
+		case 110: sampleDistance = 128; break;
+		case 60: sampleDistance = 48; break;
+		case 40: sampleDistance = 16; break;
+		case 20: sampleDistance = 8; break;
+		case 10: sampleDistance = 4; break;
+		case 5: sampleDistance = 2; break;
+	}
 	
+	sampleDistance /= textureSize;
 
-	//sampleSize = 4;
-
-
-	pos.x = ((int)(pos.x * textureSize)) / textureSize;
-	pos.y = ((int)(pos.y * textureSize)) / textureSize;
-	pos.z = ((int)(pos.z * textureSize)) / textureSize;
-
-
-	
 	float4 texelTotal = float4(0, 0, 0, 0);
 	float samples = 0;
 	for (int x = 0; x < 2; x++) {
 		for (int y = 0; y < 2; y++) {
 			for (int z = 0; z < 2; z++) {
-				texelTotal += getTexelValue(slice, pos + float3(x * sampleSize / textureSize, y * sampleSize / textureSize, z * sampleSize / textureSize));
+				texelTotal += sampleTexelValue(slice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance);
 				samples++;
 			}
 		}
 	}
 
-
-
-
-
 	return texelTotal / samples;
-
-	//return float4(maxFreq / 100.0, maxFreq / 100.0, maxFreq / 100.0, 1);
-
-	//switch (slice + 1) {
-	//case 1: // Dirt
-	//	return dirtTex(pos);
-	//case 2: // Stone
-	//	return stoneTex(pos);
-	//case 3: // Sand
-	//	return sandTex(pos);
-	//case 4: // Grass top
-	//	return grassTex(pos, maxFreq);
-	//case 5: // Grass side
-	//	return grassSideTex(pos, maxFreq);
-	//case 6: // Snow top
-	//	return snowTex(pos);
-	//case 7: // Snow side
-	//	return snowSideTex(pos);
-	//case 8: // Wood
-	//	return woodTex(pos);
-	//case 9: // Leaf
-	//	return leafTex(pos, maxFreq);
-	//case 10: // Water
-	//	return waterTex(pos);
-	//default:
-	//	return float4(1, 1, 1, 0);
-	//}
 }
 
 

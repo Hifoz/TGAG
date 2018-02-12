@@ -206,19 +206,8 @@ public class MeshDataGenerator {
 
 
         // Get a slice from the textureType list of choice:
-        int slice;
-        int modSlice;
-        //if (meshDataType == MeshDataType.TERRAIN) {
-            slice = terrainTextureTypes[(int)texTypes[0]][rnd.Next(0, terrainTextureTypes[(int)texTypes[0]].Count)];
-            modSlice = terrainTextureTypes[(int)texTypes[1]][rnd.Next(0, terrainTextureTypes[(int)texTypes[1]].Count)];
-        /*} else if (meshDataType == MeshDataType.TREE) {
-            slice = treeTextureTypes[(int)texTypes[0]][rnd.Next(0, treeTextureTypes[(int)texTypes[0]].Count)];
-            modSlice = treeTextureTypes[(int)texTypes[1]][rnd.Next(0, treeTextureTypes[(int)texTypes[1]].Count)];
-        } else {
-            Debug.Log("MeshDataGenerator.meshDataType not set.");
-            slice = 0;
-            modSlice = 0;
-        }*/
+        int slice = terrainTextureTypes[(int)texTypes[0]][rnd.Next(0, terrainTextureTypes[(int)texTypes[0]].Count)];
+        int modSlice = terrainTextureTypes[(int)texTypes[1]][rnd.Next(0, terrainTextureTypes[(int)texTypes[1]].Count)];
 
         for (int i = 0; i < 4; i++)
             colors.Add(new Color(slice, modSlice, 0));                  // Because Unity does not have an official way of sending 
