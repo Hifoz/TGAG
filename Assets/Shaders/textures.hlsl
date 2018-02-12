@@ -238,32 +238,32 @@ float4  waterTex(float3 pos) {
 	return float4(0.4, 0.4, 1, 0.95);
 }
 
-// Sample the texel value for a slice at samplePos
-// slice: type of the block
+// Sample the texel value for a type at samplePos
+// type: type of the block
 // pos: worldposition of fragment
 // samplePos: worldposition to sample
 // sampleDistance: distance between fragment position and sample positions
-float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, float sampleDistance, half4 halfWhite) {
-	switch (slice - 1) {
-	case 1: // Dirt
+float4 sampleTexelValue(int type, float3 pos, float3 samplePos, float sampleDistance, half4 halfWhite) {
+	switch (type) { // Make sure the cases matches up with TextureData.TextureType
+	case 2: // Dirt
 		return dirtTex(samplePos);
-	case 2: // Stone
+	case 3: // Stone
 		return stoneTex(samplePos);
-	case 3: // Sand
+	case 4: // Sand
 		return sandTex(samplePos);
-	case 4: // Grass top
+	case 5: // Grass top
 		return grassTex(samplePos);
-	case 5: // Grass side
+	case 6: // Grass side
 		return grassSideTex(samplePos, pos, sampleDistance, halfWhite);
-	case 6: // Snow top
+	case 7: // Snow top
 		return snowTex(samplePos);
-	case 7: // Snow side
+	case 8: // Snow side
 		return snowSideTex(samplePos, pos, sampleDistance, halfWhite);
-	case 8: // Wood
+	case 9: // Wood
 		return woodTex(samplePos);
-	case 9: // Leaf
+	case 10: // Leaf
 		return leafTex(samplePos);
-	case 10: // Water
+	case 11: // Water
 		return waterTex(samplePos);
 	default:
 		return float4(1, 1, 1, 0);
@@ -271,18 +271,18 @@ float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, float sampleDis
 }
 
 // Gets the value for a texel on a face 
-// slice: type of the block
-// modSlice: type of the block modifier
+// type: type of the block
+// modType: type of the block modifier
 // pos: worldposition of fragment
 // posEye: position of fragment in relation to camera
-float4 getTexel(int slice, int modSlice, float3 pos, float3 posEye, half4 halfWhite) {
+float4 getTexel(int type, int modType, float3 pos, float3 posEye, half4 halfWhite) {
 	float distFromEye = length(posEye);
 	
 	float textureSize = 512;
 	pos = ((int3)(pos * textureSize)) / textureSize;
 
+	// Sets the distance between sample points for multisampling:
 	float sampleDistance = 1;
-
 	if (distFromEye > 110) {
 		sampleDistance = 128;
 	} else if(distFromEye > 60) {
@@ -298,17 +298,18 @@ float4 getTexel(int slice, int modSlice, float3 pos, float3 posEye, half4 halfWh
 	}
 	sampleDistance /= textureSize;
 
+
 	float4 texelTotal = float4(0, 0, 0, 0);
 	float samples = 0;
 	for (int x = 0; x < 2; x++) {
 		for (int y = 0; y < 2; y++) {
 			for (int z = 0; z < 2; z++) {
-				float4 baseVal = sampleTexelValue(slice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
-				if (modSlice == 0) {
+				float4 baseVal = sampleTexelValue(type, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
+				if (modType == 0) {
 					texelTotal += baseVal;
 				}
 				else {
-					float4 modVal = sampleTexelValue(modSlice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
+					float4 modVal = sampleTexelValue(modType, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
 					float4 val;
 					//texelTotal.rgb += float4(HSVtoRGB(lerp(RGBtoHSV(modVal.rgb), RGBtoHSV(baseVal.rgb), 1 - modVal.a)), 1);
 					texelTotal.rgb += lerp(modVal, baseVal, 1 - modVal.a).rgb;

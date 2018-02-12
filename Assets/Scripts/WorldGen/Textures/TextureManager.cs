@@ -7,12 +7,6 @@ using UnityEngine;
 /// Manages the textures for the terrain
 /// </summary>
 public class TextureManager : MonoBehaviour {
-    public static int textureVariety = 1;
-
-    //private List<int>[] sliceTypeList = new List<int>[(int)TextureData.TextureType.COUNT]; // Constains a list for each textureType containg the slices in the textureArray that contains a texture for it.
-    //private int[] textureTypeList = new int[(int)TextureData.TextureType.COUNT];
-
-
     public const int textureSize = 512;
 
     private List<Color[]> textureList = new List<Color[]>();
@@ -26,6 +20,8 @@ public class TextureManager : MonoBehaviour {
 
 
     private void Awake() {
+        // Textures loaded onto the gpu from here must be at the top of the TextureType enum in correct order.
+        // Also, make sure the switch in  textures.hlsl::getTexel(...) matches
         addHalfWhite();
     }
 
