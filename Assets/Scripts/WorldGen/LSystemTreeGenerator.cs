@@ -101,7 +101,7 @@ public static class LSystemTreeGenerator {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
                     Vector3 samplePos = new Vector3(x, y, z) + tree.lowerBounds;
-                    samplePos = WorldUtils.floor(samplePos);
+                    samplePos = Utils.floorVector(samplePos);
                     pointMap[x, y, z] = new BlockData(calcBlockType(samplePos, tree.tree), BlockData.BlockType.NONE);
                     pointMapTrunk[x, y, z] = pointMap[x, y, z];
                     if (pointMap[x, y, z].blockType == BlockData.BlockType.LEAF) {
@@ -111,8 +111,8 @@ public static class LSystemTreeGenerator {
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -WorldUtils.floor(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
         return meshData;
     }
     
