@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 614196051}
   m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
 --- !u!157 &3
 LightmapSettings:
@@ -514,7 +514,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 347131609}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.000061035156, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.99999493, y: 0.99999493, z: 0.99999493}
   m_Children:
   - {fileID: 1911102981}
@@ -1175,6 +1175,11 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 605273439}
+--- !u!108 &614196051 stripped
+Light:
+  m_PrefabParentObject: {fileID: 108156232096751162, guid: b63375e0277066a498f612ac139e7087,
+    type: 2}
+  m_PrefabInternal: {fileID: 320148528}
 --- !u!1 &847882375
 GameObject:
   m_ObjectHideFlags: 0
@@ -1629,8 +1634,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1145298015}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 850, y: 478.5, z: 0}
-  m_LocalScale: {x: 0.8854167, y: 0.8854167, z: 0.8854167}
+  m_LocalPosition: {x: 847.5, y: 519, z: 0}
+  m_LocalScale: {x: 0.8828125, y: 0.8828125, z: 0.8828125}
   m_Children:
   - {fileID: 1341052008}
   - {fileID: 347131610}
@@ -1970,7 +1975,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1341052007}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 481.42352, z: 0}
+  m_LocalPosition: {x: 0, y: 528.8938, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1145298019}
@@ -2013,7 +2018,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: TGAG ThreadCount Benchmark
+  m_Text: The Grass is Always Greener
 --- !u!222 &1341052010
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2436,6 +2441,7 @@ MonoBehaviour:
   terrainTextureManager: {fileID: 1119419004}
   treeTextureManager: {fileID: 1164979881}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
+  animalPrefab: {fileID: 0}
 --- !u!4 &1732240071
 Transform:
   m_ObjectHideFlags: 0

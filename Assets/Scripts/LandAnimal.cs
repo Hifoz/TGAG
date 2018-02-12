@@ -201,7 +201,6 @@ public class LandAnimal : MonoBehaviour {
     /// <returns>Bool target reached</returns>
     private bool ccd(List<Bone> limb, Vector3 target, float speed) {
         Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
-        Bone[] arm = skeleton.getBones(BodyPart.RIGHT_LEGS).GetRange(0, 3).ToArray();
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);
 
