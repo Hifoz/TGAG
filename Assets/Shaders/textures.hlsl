@@ -62,11 +62,22 @@ float4 grassSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 ha
 	float grassHeight = 0.75 - 
 		sampleDistance - 
 		noise(samplePos, freq * 50) * 0.15;
+	
+	float grassHeight2 = 0.35 -
+		sampleDistance -
+		noise(samplePos + pos, freq * 10) * 0.1;
 
 
-	if(blockPosY > grassHeight)
-		return grassTex(samplePos) * halfWhite.a;
-	return float4(0, 0, 0, 0);
+	float sampleAlpha = 0;
+	if (blockPosY > grassHeight)
+		sampleAlpha = 1;
+	else if (blockPosY > grassHeight2 && freq != 1)
+		sampleAlpha = 0.85;
+
+
+	if (sampleAlpha != 0)
+		return grassTex(samplePos) * halfWhite.a * sampleAlpha;
+	return float4(0.2, 0.7, 0.2, 0);
 }
 
 // Generate texture for dirt
@@ -144,12 +155,22 @@ float4 snowSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 hal
 
 	float snowHeight = 0.45 -
 		sampleDistance -
-		noise(samplePos, freq * 10) * 0.1;
+		noise(samplePos, freq * 10) * 0.1;	
+	
+	float snowHeight2 = 0.2 -
+		sampleDistance -
+		noise(samplePos + pos, freq * 10) * 0.1;
 
-
+	float sampleAlpha = 0;
 	if (blockPosY > snowHeight)
-		return snowTex(samplePos) * halfWhite.a;
-	return float4(0, 0, 0, 0);
+		sampleAlpha = 1;
+	else if (blockPosY > snowHeight2 && freq != 1)
+		sampleAlpha = 0.95;
+
+
+	if (sampleAlpha != 0)
+		return snowTex(samplePos) * halfWhite.a * sampleAlpha;
+	return float4(1, 1, 1, 0);
 }
 
 // Generate texture for stone
