@@ -91,25 +91,12 @@
 
 				half4 o;
 #ifdef GPU_TEX
-				//Experimental. for testing gpu-generated textures:
-				/*float4 gpuGeneratedTexture = getTexel(slice, i.worldPos, i.posEye);
-				if (gpuGeneratedTexture.w != 2) {
-					baseTex = gpuGeneratedTexture;
-				}
-				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos, i.posEye);
-				if (gpuGeneratedModTexture.w != 2) {
-					modTex = gpuGeneratedModTexture;
-				}*/
-				o = getTexel(slice, modSlice, i.worldPos, i.posEye);
+				half4 halfWhite = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1));
+				o = getTexel(slice, modSlice, i.worldPos, i.posEye, halfWhite);
 #else
-
-				if (i.color.g == 0) {
-					o = baseTex;
-				} else {
-					//o = float4(HSVtoRGB(lerp(RGBtoHSV(modTex.rgb), RGBtoHSV(baseTex.rgb), 1 - modTex.a)), 1);
-					o = lerp(modTex, baseTex, 1 - modTex.a);
-					o.a = min(modTex.a + baseTex.a, 1);
-				}
+				//o = float4(HSVtoRGB(lerp(RGBtoHSV(modTex.rgb), RGBtoHSV(baseTex.rgb), 1 - modTex.a)), 1);
+				o = lerp(modTex, baseTex, 1 - modTex.a);
+				o.a = min(modTex.a + baseTex.a, 1);
 #endif
 
 				o.rbg *= light;

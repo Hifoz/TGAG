@@ -28,6 +28,7 @@ public class TextureManager : MonoBehaviour {
             sliceTypeList[i] = new List<int>();
 
         addEmpty(); // We want the first entry to be clear, so that whenever a block has no modifier, the modifier can pick slice 0
+        addHalfWhite();
     }
 
     /// <returns>size required for textures</returns>
@@ -55,6 +56,20 @@ public class TextureManager : MonoBehaviour {
             e[i] = new Color(0, 0, 0, 0);
 
         addTexture(new TextureData(e, TextureData.TextureType.NONE));
+    }
+
+    /// <summary>
+    /// Used to generate one half transparent/half filled white texture to be used if modifier == BlockType.NONE
+    /// </summary>
+    public void addHalfWhite() {
+        Color[] e = new Color[textureSize * textureSize];
+        for (int i = 0; i < e.Length / 2; i++)
+            e[i] = new Color(0, 0, 0, 0);
+
+        for (int i = e.Length / 2; i < e.Length; i++)
+            e[i] = new Color(1, 1, 1, 1);
+
+        addTexture(new TextureData(e, TextureData.TextureType.HALF));
     }
 
     /// <summary>

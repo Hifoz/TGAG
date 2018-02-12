@@ -42,20 +42,30 @@ float4 grassTex(float3 pos) {
 // samplePos: worldposition to sample
 // pos: worldposition of fragment
 // sampleDistance: distance between fragment position and sample positions
-float4 grassSideTex(float3 samplePos, float3 pos, float sampleDistance) {
-	float blockSamplePosY = (samplePos.y - 0.5) % 1;
-	float blockPosY = (pos.y - 0.5) % 1;
+float4 grassSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 halfWhite) {
+	float blockSamplePosY = (samplePos.y - 0.6) % 1;
+	float blockPosY = (pos.y - 0.6) % 1;
 
 	if (blockSamplePosY < blockPosY)
 		blockSamplePosY -= (samplePos.y - pos.y * 2);
 
-	float grassHeight = 0.85 - 
+
+
+	float freq = 1;
+	if (sampleDistance * 512 > 100) {
+		freq = 0;
+	}
+	else if (sampleDistance * 512 > 40) {
+		freq = 0.01;
+	}
+
+	float grassHeight = 0.75 - 
 		sampleDistance - 
-		noise(samplePos, 10) * 0.1;
+		noise(samplePos, freq * 50) * 0.15;
 
 
 	if(blockPosY > grassHeight)
-		return grassTex(samplePos);
+		return grassTex(samplePos) * halfWhite.a;
 	return float4(0, 0, 0, 0);
 }
 
@@ -113,19 +123,32 @@ float4 snowTex(float3 pos) {
 // samplePos: worldposition to sample
 // pos: worldposition of fragment
 // sampleDistance: distance between fragment position and sample positions
-float4 snowSideTex(float3 samplePos, float3 pos, float sampleDistance) {
-	float blockSamplePosY = (samplePos.y - 0.5) % 1;
-	float blockPosY = (pos.y - 0.5) % 1;
+float4 snowSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 halfWhite) {
+	pos.y -= 0.6;
+	samplePos.y -= 0.6;
+
+	float blockSamplePosY = samplePos.y % 1 - 0.3;
+	float blockPosY = pos.y % 1 - 0.3;
 
 	if (blockSamplePosY < blockPosY)
 		blockSamplePosY -= (samplePos.y - pos.y * 2);
 
-	float snowHeight = 0.85 - 
-		sampleDistance - 
-		noise(samplePos, 10) * 0.1;
+
+	float freq = 1;
+	if (sampleDistance * 512 > 100) {
+		freq = 0;
+	}
+	else if (sampleDistance * 512 > 40) {
+		freq = 0.01;
+	}
+
+	float snowHeight = 0.45 -
+		sampleDistance -
+		noise(samplePos, freq * 10) * 0.1;
+
 
 	if (blockPosY > snowHeight)
-		return snowTex(samplePos);
+		return snowTex(samplePos) * halfWhite.a;
 	return float4(0, 0, 0, 0);
 }
 
@@ -199,8 +222,8 @@ float4  waterTex(float3 pos) {
 // pos: worldposition of fragment
 // samplePos: worldposition to sample
 // sampleDistance: distance between fragment position and sample positions
-float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, int sampleDistance) {
-	switch (slice + 1) {
+float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, float sampleDistance, half4 halfWhite) {
+	switch (slice - 1) {
 	case 1: // Dirt
 		return dirtTex(samplePos);
 	case 2: // Stone
@@ -210,11 +233,11 @@ float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, int sampleDista
 	case 4: // Grass top
 		return grassTex(samplePos);
 	case 5: // Grass side
-		return grassSideTex(samplePos, pos, sampleDistance);
+		return grassSideTex(samplePos, pos, sampleDistance, halfWhite);
 	case 6: // Snow top
 		return snowTex(samplePos);
 	case 7: // Snow side
-		return snowSideTex(samplePos, pos, sampleDistance);
+		return snowSideTex(samplePos, pos, sampleDistance, halfWhite);
 	case 8: // Wood
 		return woodTex(samplePos);
 	case 9: // Leaf
@@ -226,13 +249,12 @@ float4 sampleTexelValue(int slice, float3 pos, float3 samplePos, int sampleDista
 	}
 }
 
-
 // Gets the value for a texel on a face 
 // slice: type of the block
 // modSlice: type of the block modifier
 // pos: worldposition of fragment
 // posEye: position of fragment in relation to camera
-float4 getTexel(int slice, int modSlice, float3 pos, float3 posEye) {
+float4 getTexel(int slice, int modSlice, float3 pos, float3 posEye, half4 halfWhite) {
 	float distFromEye = length(posEye);
 	
 	float textureSize = 512;
@@ -260,15 +282,15 @@ float4 getTexel(int slice, int modSlice, float3 pos, float3 posEye) {
 	for (int x = 0; x < 2; x++) {
 		for (int y = 0; y < 2; y++) {
 			for (int z = 0; z < 2; z++) {
-				float4 baseVal = sampleTexelValue(slice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance);
+				float4 baseVal = sampleTexelValue(slice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
 				if (modSlice == 0) {
 					texelTotal += baseVal;
 				}
 				else {
-					float4 modVal = sampleTexelValue(modSlice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance);
+					float4 modVal = sampleTexelValue(modSlice, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
 					float4 val;
-					texelTotal.rgb += float4(HSVtoRGB(lerp(RGBtoHSV(modVal.rgb), RGBtoHSV(baseVal.rgb), 1 - modVal.a)), 1);
-					//texelTotal.rgb += lerp(modVal, baseVal, 1 - modVal.a).rgb;
+					//texelTotal.rgb += float4(HSVtoRGB(lerp(RGBtoHSV(modVal.rgb), RGBtoHSV(baseVal.rgb), 1 - modVal.a)), 1);
+					texelTotal.rgb += lerp(modVal, baseVal, 1 - modVal.a).rgb;
 					texelTotal.a += min(modVal.a + baseVal.a, 1);
 				}
 				samples++;
