@@ -145,9 +145,9 @@ public class ChunkVoxelDataThread {
         for (int i = 0; i < trees; i++) {
             Vector3 pos = new Vector3((float)rng.NextDouble() * ChunkConfig.chunkSize, 0, (float)rng.NextDouble() * ChunkConfig.chunkSize);
             pos += order.position;
-            pos = WorldUtils.floor(pos);
+            pos = Utils.floorVector(pos);
             pos = findGroundLevel(pos);
-            pos = WorldUtils.floor(pos);
+            pos = Utils.floorVector(pos);
             if (pos != Vector3.negativeInfinity) {
                 MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
                 result.trees[i] = tree[0];
