@@ -23,6 +23,9 @@ float4 grassTex(float3 pos, float maxFreq) {
 	float saturation = 0.85;
 	float value = 0.6;
 
+	if(maxFreq > 200)
+		return float4(HSVtoRGB(float3(0.8, saturation, value)), 1);
+
 	float f = 2;
 	float v = noise(pos, f) * 0.1 +
 		noise(pos, f * 3) * 0.1 +
@@ -163,18 +166,9 @@ float4 leafTex(float3 pos,float maxFreq) {
 	float saturation = 0.85;
 	float value = 0.2;
 
+	const float noiseSampleCount = 7;
 	float f = 4;
-	//float v = noise(pos, f) * 0.1 +
-	//	noise(pos, f * 3) * 0.1 +
-	//	noise(pos, f * 6) * 0.1 +
-	//	noise(pos, f * 10) * 0.1 +
-	//	noise(pos, f * 30) * 0.13 +
-	//	noise(pos, f * 70) * 0.1 +
-	//	noise(pos, f * 100) * 0.05 +
-	//	noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
-
-
-	float noiseFreq[7] = {
+	float noiseFreq[noiseSampleCount] = {
 		f,
 		f * 3,
 		f * 6,
@@ -184,7 +178,7 @@ float4 leafTex(float3 pos,float maxFreq) {
 		f * 100
 	};
 
-	float noiseMag[7] = {
+	float noiseMag[noiseSampleCount] = {
 		0.1,
 		0.1,
 		0.1,
@@ -194,12 +188,12 @@ float4 leafTex(float3 pos,float maxFreq) {
 		0.05
 	};
 
-	if (f * 2 > maxFreq)
+	if (f * 2 <= maxFreq)
 		value += noise(pos, f * 1.5) * noise(pos, f * 2) * 0.5;
 	else
 		value += 0.1;
 
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < noiseSampleCount; i++) {
 		if (noiseFreq[i] <= maxFreq)
 			value += noise(pos, noiseFreq[i]) * noiseMag[i];
 		else
@@ -220,26 +214,7 @@ float4  waterTex(float3 pos) {
 }
 
 
-// Gets the value for a texel on a face 
-float4 getTexel(int slice, float3 pos, float3 posEye) {
-	float distFromEye = length(posEye);
-
-	float maxFreq = 100;
-	
-	if (distFromEye > 110)
-		maxFreq = 5;	
-	else if (distFromEye > 60)
-		maxFreq = 10;
-	else if (distFromEye > 40)
-		maxFreq = 30;
-	else if (distFromEye > 15)
-		maxFreq = 50;
-	else if (distFromEye > 5)
-		maxFreq = 80;	
-
-
-	//return float4(maxFreq / 100.0, maxFreq / 100.0, maxFreq / 100.0, 1);
-
+float4 getTexelValue(int slice, float3 pos) {
 	switch (slice + 1) {
 	case 1: // Dirt
 		return dirtTex(pos);
@@ -248,9 +223,9 @@ float4 getTexel(int slice, float3 pos, float3 posEye) {
 	case 3: // Sand
 		return sandTex(pos);
 	case 4: // Grass top
-		return grassTex(pos, maxFreq);
+		return grassTex(pos, 200);
 	case 5: // Grass side
-		return grassSideTex(pos, maxFreq);
+		return grassSideTex(pos, 200);
 	case 6: // Snow top
 		return snowTex(pos);
 	case 7: // Snow side
@@ -258,12 +233,103 @@ float4 getTexel(int slice, float3 pos, float3 posEye) {
 	case 8: // Wood
 		return woodTex(pos);
 	case 9: // Leaf
-		return leafTex(pos, maxFreq);
+		return leafTex(pos, 200);
 	case 10: // Water
 		return waterTex(pos);
 	default:
 		return float4(1, 1, 1, 0);
 	}
+}
+
+
+// Gets the value for a texel on a face 
+float4 getTexel(int slice, float3 pos, float3 posEye) {
+	float distFromEye = length(posEye);
+
+	float maxFreq = 200;
+	/*
+	if (distFromEye > 110)
+		maxFreq = 5;	
+	else if (distFromEye > 60)
+		maxFreq = 10;
+	else if (distFromEye > 40)
+		maxFreq = 30;
+	else if (distFromEye > 20)
+		maxFreq = 50;
+	else if (distFromEye > 10)
+		maxFreq = 70;
+	else if (distFromEye > 5)
+		maxFreq = 100;
+	*/
+
+	float textureSize = 512;
+	float sampleSize = 1;
+	if (distFromEye > 110)
+		sampleSize = 64;
+	else if (distFromEye > 60)
+		sampleSize = 32;
+	else if (distFromEye > 40)
+		sampleSize = 16;
+	else if (distFromEye > 20)
+		sampleSize = 8;
+	else if (distFromEye > 10)
+		sampleSize = 4;
+	else if (distFromEye > 5)
+		sampleSize = 2;
+	
+
+	//sampleSize = 4;
+
+
+	pos.x = ((int)(pos.x * textureSize)) / textureSize;
+	pos.y = ((int)(pos.y * textureSize)) / textureSize;
+	pos.z = ((int)(pos.z * textureSize)) / textureSize;
+
+
+	
+	float4 texelTotal = float4(0, 0, 0, 0);
+	float samples = 0;
+	for (int x = 0; x < 2; x++) {
+		for (int y = 0; y < 2; y++) {
+			for (int z = 0; z < 2; z++) {
+				texelTotal += getTexelValue(slice, pos + float3(x * sampleSize / textureSize, y * sampleSize / textureSize, z * sampleSize / textureSize));
+				samples++;
+			}
+		}
+	}
+
+
+
+
+
+	return texelTotal / samples;
+
+	//return float4(maxFreq / 100.0, maxFreq / 100.0, maxFreq / 100.0, 1);
+
+	//switch (slice + 1) {
+	//case 1: // Dirt
+	//	return dirtTex(pos);
+	//case 2: // Stone
+	//	return stoneTex(pos);
+	//case 3: // Sand
+	//	return sandTex(pos);
+	//case 4: // Grass top
+	//	return grassTex(pos, maxFreq);
+	//case 5: // Grass side
+	//	return grassSideTex(pos, maxFreq);
+	//case 6: // Snow top
+	//	return snowTex(pos);
+	//case 7: // Snow side
+	//	return snowSideTex(pos);
+	//case 8: // Wood
+	//	return woodTex(pos);
+	//case 9: // Leaf
+	//	return leafTex(pos, maxFreq);
+	//case 10: // Water
+	//	return waterTex(pos);
+	//default:
+	//	return float4(1, 1, 1, 0);
+	//}
 }
 
 
