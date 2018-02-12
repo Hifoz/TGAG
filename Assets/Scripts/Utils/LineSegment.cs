@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 /// <summary>
-/// Class representing a line, this is used to represent trees
+/// Class representing a line
 /// </summary>
 public class LineSegment {
     public LineSegment(Vector3 a, Vector3 b, bool endLine = false) {
