@@ -1,6 +1,7 @@
 ﻿Shader "Custom/2DArrayTexture" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
+		_Type("Type (0=terrain, 1=trees)", int)=0
 	}
 	SubShader {
 		Pass {
@@ -77,32 +78,11 @@
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
 				fixed3 light = (i.diff /*+ specular * 0.4*/) * shadow + i.ambient;
 
-				int slice = i.color.r + 0.5;
-				int modSlice = i.color.g + 0.5;
-
-				half4 modTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, modSlice));
-				half4 baseTex = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, slice));
-				float a = modTex.a;
-				
-				//Experimental. for testing gpu-generated textures:
-				/*float4 gpuGeneratedTexture = getTexel(slice, i.worldPos);
-				if (gpuGeneratedTexture.w != 2) {
-					baseTex = gpuGeneratedTexture;
-				}
-				float4 gpuGeneratedModTexture = getTexel(modSlice, i.worldPos);
-				if (gpuGeneratedModTexture.w != 2) {
-					modTex = gpuGeneratedModTexture;
-				}*/
-
-
+				int baseType = i.color.r + 0.5;
+				int modType = i.color.g + 0.5;
 				half4 o;
-				if (i.color.g == 0) {
-					o = baseTex;
-				} else {
-					o = lerp(modTex, baseTex, 1 - modTex.a);
-					o.a = min(modTex.a + baseTex.a, 1);
-				}
 
+				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
 
 				o.rbg *= light;
 				return o;

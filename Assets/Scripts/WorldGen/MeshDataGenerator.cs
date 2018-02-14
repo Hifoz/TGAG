@@ -18,8 +18,7 @@ public class MeshData {
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
-    public static List<int>[] terrainTextureTypes;
-    public static List<int>[] treeTextureTypes;
+
 
     protected List<Vector3> vertices = new List<Vector3>();
     protected List<int> triangles = new List<int>();
@@ -202,26 +201,8 @@ public class MeshDataGenerator {
 
         }
 
-
-
-
-        // Get a slice from the textureType list of choice:
-        int slice;
-        int modSlice;
-        if (meshDataType == MeshDataType.TERRAIN) {
-            slice = terrainTextureTypes[(int)texTypes[0]][rnd.Next(0, terrainTextureTypes[(int)texTypes[0]].Count)];
-            modSlice = terrainTextureTypes[(int)texTypes[1]][rnd.Next(0, terrainTextureTypes[(int)texTypes[1]].Count)];
-        } else if (meshDataType == MeshDataType.TREE) {
-            slice = treeTextureTypes[(int)texTypes[0]][rnd.Next(0, treeTextureTypes[(int)texTypes[0]].Count)];
-            modSlice = treeTextureTypes[(int)texTypes[1]][rnd.Next(0, treeTextureTypes[(int)texTypes[1]].Count)];
-        } else {
-            Debug.Log("MeshDataGenerator.meshDataType not set.");
-            slice = 0;
-            modSlice = 0;
-        }
-
         for (int i = 0; i < 4; i++)
-            colors.Add(new Color(slice, modSlice, 0));                  // Because Unity does not have an official way of sending 
+            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0));                  // Because Unity does not have an official way of sending 
                                                                         //  the slice info to the shader we store it in the colour.
                                                                         //  Basetype in red channel and modifier in green channel.
                                                                         // If we ever need to use the color channels for something

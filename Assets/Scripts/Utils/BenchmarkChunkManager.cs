@@ -10,8 +10,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
     Stopwatch stopwatch;
 
     public GameObject chunkPrefab;
-    public TextureManager terrainTextureManager;
-    public TextureManager treeTextureManager;
+    public TextureManager textureManager;
     public GameObject treePrefab;
     public GameObject animalPrefab;
     private Vector3 offset;
@@ -23,28 +22,63 @@ public class BenchmarkChunkManager : MonoBehaviour {
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     private GameObject[] animals = new GameObject[20];
-    private int orderedAnimalIndex = -1;
+    private HashSet<int> orderedAnimals = new HashSet<int>();
+
+    private bool inProgress = false;
+    private string path;
 
     /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start() {
         Settings.load();
-        init();
-        StartCoroutine(BenchmarkWorldGen(8, 8));
+        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
+        Benchmark(8, 8, 1, true, true);
     }
 
-    // Update is called once per frame
-    IEnumerator BenchmarkWorldGen(int startThreads, int endThreads) {
+    public bool InProgress { get { return inProgress; } }
+    public string Path { get { return path; } }
+
+    /// <summary>
+    /// Call this corutine to start a benchmark run
+    /// </summary>
+    /// <param name="startThreads">Thread count to start from</param>
+    /// <param name="endThreads">Thread count to end on</param>
+    /// <param name="step">Step count to increment threads by</param>
+    /// <param name="terrain">Set this to true to generate terrain</param>
+    /// <param name="animals">Set this to true to generate animals</param>
+    public bool Benchmark(int startThreads, int endThreads, int step, bool terrain, bool animals) {
+        if (!inProgress) {
+            StartCoroutine(BenchmarkWorldGen(startThreads, endThreads, step, terrain, animals));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Call this function to start a benchmark run,
+    /// if a benchmark is already in progress nothing happends.
+    /// </summary>
+    /// <param name="startThreads">Thread count to start from</param>
+    /// <param name="endThreads">Thread count to end on</param>
+    /// <param name="step">Step count to increment threads by</param>
+    /// <param name="terrain">Set this to true to generate terrain</param>
+    /// <param name="animals">Set this to true to generate animals</param>
+    /// <returns>Success flag</returns>
+    IEnumerator BenchmarkWorldGen(int startThreads, int endThreads, int step, bool terrain, bool animals) {
+        inProgress = true;
         yield return 0; //THis random yield i put in for debugging suddenly fixed all bugs.
-        string path = string.Format("C:/temp/TGAG_MultiThreading_Benchmark_{0}.txt", DateTime.Now.Ticks);
+        path = string.Format("C:/temp/TGAG_MultiThreading_Benchmark_{0}.txt", DateTime.Now.Ticks);
         Directory.CreateDirectory("C:/temp");
         StreamWriter file = File.CreateText(path);
 
-        file.WriteLine(string.Format("Testing from {0} to {1} threads ({2}):", startThreads, endThreads, DateTime.Now.ToString()));
+        file.WriteLine(string.Format("Testing from {0} to {1} threads with a step of {2}. ({3}):", startThreads, endThreads, step, DateTime.Now.ToString()));
+        file.WriteLine(string.Format("Terrain: {0}", (terrain) ? "Enabled" : "Disabled"));
+        file.WriteLine(string.Format("Animals: {0}", (animals) ? "Enabled" : "Disabled"));
 
-        for (int run = startThreads; run <= endThreads; run++) {
-            UnityEngine.Debug.Log(String.Format("Testing with {0} threads!", run));
+        for (int run = startThreads; run <= endThreads; run += step) {
+            UnityEngine.Debug.Log(String.Format("Testing with {0} thread(s)!", run));
             clear();
             CVDT = new ChunkVoxelDataThread[run];
             for (int i = 0; i < run; i++) {
@@ -54,9 +88,9 @@ public class BenchmarkChunkManager : MonoBehaviour {
             stopwatch.Start();
 
             orderNewChunks();
+            orderAnimals();
 
             while (!(benchmakrRunFinished())) {
-                handleAnimals();
                 consumeThreadResults();
                 yield return 0;
             }
@@ -69,6 +103,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         }
         file.Close();
         UnityEngine.Debug.Log("DONE TESTING!");
+        inProgress = false;
     }
 
     /// <summary>
@@ -97,48 +132,31 @@ public class BenchmarkChunkManager : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// Initializes the ChunkManager
-    /// </summary>
-    public void init() {
-        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
-
-        MeshDataGenerator.terrainTextureTypes = terrainTextureManager.getSliceTypeList();
-        MeshDataGenerator.treeTextureTypes = treeTextureManager.getSliceTypeList();
-    }
-
     private bool benchmakrRunFinished() {
-        return (activeChunks.Count == ChunkConfig.chunkCount * ChunkConfig.chunkCount) && (orderedAnimalIndex + 1) == animals.Length;
+        bool a = (activeChunks.Count == ChunkConfig.chunkCount * ChunkConfig.chunkCount);
+        bool b = orderedAnimals.Count == 0;
+        return a && b;
     }
 
     /// <summary>
     /// Handles spawning of animals.
     /// </summary>
-    private void handleAnimals() {
-        if (animalPrefab) {
-            float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-            float lower = -maxDistance + LandAnimal.roamDistance;
-            float upper = -lower;
-            for (int i = 0; i < animals.Length; i++) {
-                GameObject animal = animals[i];
-                if (animal == null) {
-                    if (orderedAnimalIndex == -1) {
-                        animals[i] = Instantiate(animalPrefab);
-                        AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
-                        orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
-                        orderedAnimalIndex = i;
-                    }
-                } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, Vector3.zero) > maxDistance) {
-                    LandAnimal landAnimal = animal.GetComponent<LandAnimal>();
-                    float x = UnityEngine.Random.Range(lower, upper);
-                    float z = UnityEngine.Random.Range(lower, upper);
-                    float y = ChunkConfig.chunkHeight + 10;
-                    landAnimal.Spawn(new Vector3(x, y, z));
-                }
-            }
-            if (orderedAnimalIndex != -1) {
-                animals[orderedAnimalIndex].SetActive(false);
-            }
+    private void orderAnimals() {
+        float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
+        float lower = -maxDistance + LandAnimal.roamDistance;
+        float upper = -lower;
+        for (int i = 0; i < animals.Length; i++) {
+            animals[i] = Instantiate(animalPrefab);
+            AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
+            animalSkeleton.index = i;
+            orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
+            orderedAnimals.Add(i);
+
+            float x = UnityEngine.Random.Range(lower, upper);
+            float z = UnityEngine.Random.Range(lower, upper);
+            float y = ChunkConfig.chunkHeight + 10;
+            animals[i].transform.position = new Vector3(x, y, z);
+            animals[i].GetComponent<LandAnimal>().enabled = false;
         }
     }
 
@@ -186,7 +204,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         chunk.GetComponent<MeshCollider>().isTrigger = false;
         chunk.GetComponent<MeshCollider>().convex = false;
         chunk.name = "chunk";
-        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
         chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
         cd.chunk = chunk;
 
@@ -197,7 +215,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         waterChunk.GetComponent<MeshCollider>().convex = true;
         waterChunk.GetComponent<MeshCollider>().isTrigger = true;
         waterChunk.name = "waterChunk";
-        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", terrainTextureManager.getTextureArray());
+        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
         waterChunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
         cd.waterChunk = waterChunk;
 
@@ -207,7 +225,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             tree.transform.position = chunkMeshData.treePositions[i];
             tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
             tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", treeTextureManager.getTextureArray());
+            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
 
             trees[i] = tree;
         }
@@ -221,10 +239,12 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
-        GameObject animal = animals[orderedAnimalIndex];
-        animal.SetActive(true);
+        GameObject animal = animals[animalSkeleton.index];
+        LandAnimal landAnimal = animal.GetComponent<LandAnimal>();
+        landAnimal.enabled = true;
         animal.GetComponent<LandAnimal>().setSkeleton(animalSkeleton);
-        orderedAnimalIndex = -1;
+        landAnimal.enabled = false;
+        orderedAnimals.Remove(animalSkeleton.index);
     }
 
     /// <summary>
