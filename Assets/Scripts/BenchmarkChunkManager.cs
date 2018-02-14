@@ -7,7 +7,7 @@ using System.IO;
 
 public class BenchmarkChunkManager : MonoBehaviour {
 
-    Stopwatch stopwatch;
+    Stopwatch stopwatch = new Stopwatch();
 
     public GameObject chunkPrefab;
     public TextureManager textureManager;
@@ -24,8 +24,12 @@ public class BenchmarkChunkManager : MonoBehaviour {
     private GameObject[] animals = new GameObject[20];
     private HashSet<int> orderedAnimals = new HashSet<int>();
 
+    bool terrainFlag = true;
+    bool animalsFlag = true;
+
     private bool inProgress = false;
-    private string path;
+    private string path = "";
+    private int currentThreads = 0;
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -33,11 +37,35 @@ public class BenchmarkChunkManager : MonoBehaviour {
     void Start() {
         Settings.load();
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
-        Benchmark(8, 8, 1, true, true);
     }
 
     public bool InProgress { get { return inProgress; } }
     public string Path { get { return path; } }
+    public int CurrentThreads { get { return currentThreads; } }
+
+    public float getTime() {
+        return (float)stopwatch.Elapsed.TotalSeconds;
+    }
+
+    public float getProgress() {
+        int generatedThings = 0;
+        int totalThings = 0;
+
+        if (terrainFlag) {
+            generatedThings += activeChunks.Count;
+            totalThings += ChunkConfig.chunkCount * ChunkConfig.chunkCount;
+        }
+
+        if (animalsFlag) {
+            generatedThings += (animals.Length - orderedAnimals.Count);
+            totalThings += animals.Length;
+        }
+
+        if (totalThings == 0) {
+            return 1f;
+        }
+        return generatedThings / (float)totalThings;
+    }
 
     /// <summary>
     /// Call this corutine to start a benchmark run
@@ -67,8 +95,11 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// <param name="animals">Set this to true to generate animals</param>
     /// <returns>Success flag</returns>
     IEnumerator BenchmarkWorldGen(int startThreads, int endThreads, int step, bool terrain, bool animals) {
+        terrainFlag = terrain;
+        animalsFlag = animals;
         inProgress = true;
         yield return 0; //THis random yield i put in for debugging suddenly fixed all bugs.
+
         path = string.Format("C:/temp/TGAG_MultiThreading_Benchmark_{0}.txt", DateTime.Now.Ticks);
         Directory.CreateDirectory("C:/temp");
         StreamWriter file = File.CreateText(path);
@@ -80,15 +111,19 @@ public class BenchmarkChunkManager : MonoBehaviour {
         for (int run = startThreads; run <= endThreads; run += step) {
             UnityEngine.Debug.Log(String.Format("Testing with {0} thread(s)!", run));
             clear();
+            currentThreads = run;
             CVDT = new ChunkVoxelDataThread[run];
             for (int i = 0; i < run; i++) {
                 CVDT[i] = new ChunkVoxelDataThread(orders, results);
             }
-            stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            orderNewChunks();
-            orderAnimals();
+            if (terrain) {
+                orderNewChunks();
+            }
+            if (animals) {
+                orderAnimals();
+            }
 
             while (!(benchmakrRunFinished())) {
                 consumeThreadResults();
@@ -98,6 +133,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             double time = stopwatch.Elapsed.TotalSeconds;
 
             stopwatch.Stop();
+            stopwatch.Reset();
             UnityEngine.Debug.Log(String.Format("Took {0} seconds with {1} threads!", time, run));
             file.WriteLine(String.Format("Time: {0} Seconds | Threads: {1}", time, run));
         }
@@ -120,6 +156,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         }
         while (activeChunks.Count > 0) {
             Destroy(activeChunks[0].chunk);
+            Destroy(activeChunks[0].waterChunk);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
@@ -133,8 +170,8 @@ public class BenchmarkChunkManager : MonoBehaviour {
     }
 
     private bool benchmakrRunFinished() {
-        bool a = (activeChunks.Count == ChunkConfig.chunkCount * ChunkConfig.chunkCount);
-        bool b = orderedAnimals.Count == 0;
+        bool a = (activeChunks.Count == ChunkConfig.chunkCount * ChunkConfig.chunkCount) || !terrainFlag;
+        bool b = orderedAnimals.Count == 0 || !animalsFlag;
         return a && b;
     }
 
@@ -283,9 +320,11 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// Stops all of the ChunkVoxelDataThreads.
     /// </summary>
     private void stopThreads() {
-        foreach (var thread in CVDT) {
-            orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
-            thread.stop();
+        if (CVDT != null) {
+            foreach (var thread in CVDT) {
+                orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
+                thread.stop();
+            }
         }
     }
 
