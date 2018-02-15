@@ -64,6 +64,7 @@ public class ChunkManager : MonoBehaviour {
         }
         while (activeChunks.Count > 0) {
             Destroy(activeChunks[0].chunk);
+            Destroy(activeChunks[0].waterChunk);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }

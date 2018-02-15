@@ -25,7 +25,9 @@ public class Bone {
 /// <summary>
 /// AnimalSkeleton, represents an animal skeleton through animation bones, and LineSegments.
 /// </summary>
-public class AnimalSkeleton {   
+public class AnimalSkeleton {
+
+    public int index; // Index of animal in ChunkManager
     
     private static ThreadSafeRng rng = new ThreadSafeRng();
 
@@ -51,7 +53,6 @@ public class AnimalSkeleton {
     private MeshData meshData;
     private List<Matrix4x4> bindPoses = new List<Matrix4x4>();
     private List<BoneWeight> weights;
-
 
     private const float skeletonThiccness = 0.25f;
     private const float voxelSize = 0.25f;

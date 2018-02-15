@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -26,6 +24,13 @@ public class MainMenuUI : MonoBehaviour {
     /// </summary>
     public void LaunchGame() {
         SceneManager.LoadScene("main");
+    }
+
+    /// <summary>
+    /// Launches benchmark scene.
+    /// </summary>
+    public void LaunchBenchmark() {
+        SceneManager.LoadScene("Benchmark");
     }
 
     /// <summary>
