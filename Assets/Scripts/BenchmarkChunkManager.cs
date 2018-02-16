@@ -155,8 +155,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             }
         }
         while (activeChunks.Count > 0) {
-            Destroy(activeChunks[0].chunk);
-            Destroy(activeChunks[0].waterChunk);
+            Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
@@ -234,28 +233,36 @@ public class BenchmarkChunkManager : MonoBehaviour {
         pendingChunks.Remove(chunkMeshData.chunkPos);
         ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
-        GameObject chunk = createChunk();
-        chunk.transform.position = chunkMeshData.chunkPos;
-        chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
-        chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
-        chunk.GetComponent<MeshCollider>().isTrigger = false;
-        chunk.GetComponent<MeshCollider>().convex = false;
+
+        GameObject chunk = new GameObject();
         chunk.name = "chunk";
-        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
-        chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-        cd.chunk = chunk;
+        for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
+            GameObject subChunk = createChunk();
+            subChunk.transform.parent = chunk.transform;
+            subChunk.transform.position = chunkMeshData.chunkPos;
+            subChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData[i]);
+            subChunk.GetComponent<MeshCollider>().sharedMesh = subChunk.GetComponent<MeshFilter>().mesh;
+            subChunk.GetComponent<MeshCollider>().isTrigger = false;
+            subChunk.GetComponent<MeshCollider>().convex = false;
+            subChunk.name = "subchunk";
+            subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
+            subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+            cd.terrainChunk.Add(subChunk);
+        }
 
-        GameObject waterChunk = createChunk();
-        waterChunk.transform.position = chunkMeshData.chunkPos;
-        waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData);
-        waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
-        waterChunk.GetComponent<MeshCollider>().convex = true;
-        waterChunk.GetComponent<MeshCollider>().isTrigger = true;
-        waterChunk.name = "waterChunk";
-        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
-        waterChunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
-        cd.waterChunk = waterChunk;
-
+        for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
+            GameObject waterChunk = createChunk();
+            waterChunk.transform.parent = chunk.transform;
+            waterChunk.transform.position = chunkMeshData.chunkPos;
+            waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData[i]);
+            waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
+            waterChunk.GetComponent<MeshCollider>().convex = true;
+            waterChunk.GetComponent<MeshCollider>().isTrigger = true;
+            waterChunk.name = "waterSubChunk";
+            waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
+            waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+            cd.waterChunk.Add(waterChunk);
+        }
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {
             GameObject tree = createTree();

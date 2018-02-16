@@ -4,16 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-// had to change this to make it more thread compatible.
-
-public class MeshData {
-    public Vector3[] vertices;
-    public int[] triangles;
-    public Color[] colors;
-    public Vector2[] uvs;
-    public Vector2[] uvs2;
-}
-
 /// <summary>
 /// A Voxel Mesh generator 
 /// </summary>
@@ -24,7 +14,6 @@ public class MeshDataGenerator {
     protected List<int> triangles = new List<int>();
     protected List<Color> colors = new List<Color>();
     protected List<Vector2> uvs = new List<Vector2>();
-    protected List<Vector2> uvs2 = new List<Vector2>();
     protected BlockData[,,] pointmap;
 
     System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
@@ -38,6 +27,7 @@ public class MeshDataGenerator {
     }
     protected MeshDataType meshDataType;
 
+
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
     /// Generates a mesh from MeshData.
@@ -50,18 +40,18 @@ public class MeshDataGenerator {
         mesh.triangles = md.triangles;
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
-        mesh.uv2 = md.uvs2;
         mesh.RecalculateNormals(); //Normals could be provided by MeshData instead, to save mainthread cpu time.
         return mesh;
     }
+
 
     /// <summary>
     /// Generates all data needed for a mesh of cubes
     /// </summary>
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
-    /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
+    /// <returns>an array of meshdata objects made from input data</returns>
+    public static MeshData[] GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         MeshDataGenerator MDG = new MeshDataGenerator();
         MDG.meshDataType = meshDataType;
 
@@ -81,10 +71,10 @@ public class MeshDataGenerator {
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
-        meshData.uvs2 = MDG.uvs2.ToArray();
 
-        return meshData;
+        return meshData.split();
     }
+
 
     /// <summary>
     /// Generates the mesh data for a cube
@@ -98,16 +88,13 @@ public class MeshDataGenerator {
         if (cubePos.x != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
         if (cubePos.y != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
         if (cubePos.z != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
-
-
-        //if (cubePos.x != pointmap.GetLength(0) - 1 && pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
-        //if (cubePos.z != pointmap.GetLength(2) - 1 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1].blockType == 0) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.x != 0 && pointmap[(int)cubePos.x - 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.y != 0 && pointmap[(int)cubePos.x, (int)cubePos.y - 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.z != 0 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z - 1].blockType == 0) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
     }
 
+    /// <summary>
+    /// Checks if a voxels is fully opaque
+    /// </summary>
+    /// <param name="voxelPos">position of voxel</param>
+    /// <returns>Whether the voxel is opaque</returns>
     protected bool checkIfSolidVoxel(Vector3Int voxelPos) {
         if (pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.NONE ||
             pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.WATER)
@@ -175,6 +162,7 @@ public class MeshDataGenerator {
 
     }
 
+
     /// <summary>
     /// Stores the indices of the texture slices to use for a face of a block.
     /// </summary>
@@ -202,12 +190,9 @@ public class MeshDataGenerator {
         }
 
         for (int i = 0; i < 4; i++)
-            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0));                  // Because Unity does not have an official way of sending 
-                                                                        //  the slice info to the shader we store it in the colour.
-                                                                        //  Basetype in red channel and modifier in green channel.
-                                                                        // If we ever need to use the color channels for something
-                                                                        //  more important, this could probably be sent via uv2 instead.
+            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
     }
+
 
     /// <summary>
     /// Adds texture coordinates for a face of a block.
