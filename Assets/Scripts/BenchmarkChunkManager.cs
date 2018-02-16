@@ -155,7 +155,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             }
         }
         while (activeChunks.Count > 0) {
-            Destroy(activeChunks[0].chunk[0].transform.parent);
+            Destroy(activeChunks[0].chunk[0].transform.parent.gameObject);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
