@@ -63,8 +63,7 @@ public class ChunkManager : MonoBehaviour {
             }
         }
         while (activeChunks.Count > 0) {
-            Destroy(activeChunks[0].chunk);
-            Destroy(activeChunks[0].waterChunk);
+            Destroy(activeChunks[0].chunk[0].transform.parent);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
@@ -136,14 +135,23 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void updateChunkGrid() {
         for (int i = 0; i < activeChunks.Count; i++) {
-            Vector3 chunkPos = (activeChunks[i].chunk.transform.position - offset - getPlayerPos()) / ChunkConfig.chunkSize;
+            Vector3 chunkPos = (activeChunks[i].pos - offset - getPlayerPos()) / ChunkConfig.chunkSize;
             int ix = Mathf.FloorToInt(chunkPos.x);
             int iz = Mathf.FloorToInt(chunkPos.z);
             if (checkBounds(ix, iz)) {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
-                inactiveChunks.Push(activeChunks[i].chunk);
-                inactiveChunks.Push(activeChunks[i].waterChunk);
+                GameObject p = activeChunks[i].chunk[0].transform.parent.gameObject;
+                for (int j = 0; j < activeChunks[i].chunk.Count; j++) {
+                    activeChunks[i].chunk[j].transform.parent = this.transform;
+                    inactiveChunks.Push(activeChunks[i].chunk[j]);
+                }
+                for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
+                    activeChunks[i].waterChunk[j].transform.parent = this.transform;
+                    inactiveChunks.Push(activeChunks[i].waterChunk[j]);
+                }
+                Destroy(p);
+
                 inactiveChunks.Peek().SetActive(false);
 
                 foreach(var tree in activeChunks[i].trees) {
@@ -196,27 +204,36 @@ public class ChunkManager : MonoBehaviour {
         pendingChunks.Remove(chunkMeshData.chunkPos);
         ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
-        GameObject chunk = getChunk();
-        chunk.transform.position = chunkMeshData.chunkPos;
-        chunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData);
-        chunk.GetComponent<MeshCollider>().sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
-        chunk.GetComponent<MeshCollider>().isTrigger = false;
-        chunk.GetComponent<MeshCollider>().convex = false;
+        GameObject chunk = new GameObject();
         chunk.name = "chunk";
-        chunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
-        chunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-        cd.chunk = chunk;
+        for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
+            GameObject subChunk = getChunk();
+            subChunk.transform.parent = chunk.transform;
+            subChunk.transform.position = chunkMeshData.chunkPos;
+            subChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData[i]);
+            subChunk.GetComponent<MeshCollider>().sharedMesh = subChunk.GetComponent<MeshFilter>().mesh;
+            subChunk.GetComponent<MeshCollider>().isTrigger = false;
+            subChunk.GetComponent<MeshCollider>().convex = false;
+            subChunk.name = "subchunk";
+            subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
+            subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+            cd.chunk.Add(subChunk);
+        }
 
-        GameObject waterChunk = getChunk();
-        waterChunk.transform.position = chunkMeshData.chunkPos;
-        waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData);
-        waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
-        waterChunk.GetComponent<MeshCollider>().convex = true;
-        waterChunk.GetComponent<MeshCollider>().isTrigger = true;
-        waterChunk.name = "waterChunk";
-        waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
-        waterChunk.GetComponent<MeshRenderer>().material.renderQueue = chunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
-        cd.waterChunk = waterChunk;
+        for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
+            GameObject waterChunk = getChunk();
+            waterChunk.transform.parent = chunk.transform;
+            waterChunk.transform.position = chunkMeshData.chunkPos;
+            waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData[i]);
+            waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
+            waterChunk.GetComponent<MeshCollider>().convex = true;
+            waterChunk.GetComponent<MeshCollider>().isTrigger = true;
+            waterChunk.name = "waterSubChunk";
+            waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
+            waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+            cd.waterChunk.Add(waterChunk);
+        }
+
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {

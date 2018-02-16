@@ -11,7 +11,52 @@ public class MeshData {
     public int[] triangles;
     public Color[] colors;
     public Vector2[] uvs;
-    public Vector2[] uvs2;
+    //public Vector2[] uvs2;
+
+
+    public MeshData[] split() {
+        int maxVertices = 60000;
+        if (vertices.Length <= maxVertices)
+            return new MeshData[]{ this };
+
+        List<MeshData> splitData = new List<MeshData>();
+        int numMeshes = Mathf.CeilToInt(vertices.Length / (float)maxVertices);
+
+        int maxVertsPerMesh = vertices.Length / numMeshes;
+        maxVertsPerMesh = Mathf.CeilToInt(maxVertsPerMesh / 4.0f) * 4;
+        int trianglesPerMesh = maxVertsPerMesh * 3 / 2;
+
+        for(int m = 0; m < numMeshes; m++) {
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = new List<int>();
+            List<Color> colors = new List<Color>();
+            List<Vector2> uvs = new List<Vector2>();
+            //List<Vector2> uvs2 = new List<Vector2>();
+
+            for (int v = 0; v < maxVertsPerMesh; v++) {
+                if (m * maxVertsPerMesh + v >= this.vertices.Length)
+                    break;
+                vertices.Add(this.vertices[m * maxVertsPerMesh + v]);
+                colors.Add(this.colors[m * maxVertsPerMesh + v]);
+                uvs.Add(this.uvs[m * maxVertsPerMesh + v]);
+                //uvs2.Add(this.uvs2[m * maxVertsPerMesh + v]);
+            }
+            for (int t = 0; t < trianglesPerMesh; t++) {
+                if (m * trianglesPerMesh + t >= this.triangles.Length)
+                    break;
+                triangles.Add(this.triangles[m * trianglesPerMesh + t] - m * maxVertsPerMesh);
+            }
+            MeshData resPart = new MeshData();
+            resPart.vertices = vertices.ToArray();
+            resPart.triangles = triangles.ToArray();
+            resPart.colors = colors.ToArray();
+            resPart.uvs = uvs.ToArray();
+            //resPart.uvs2 = uvs2.ToArray();
+            splitData.Add(resPart);
+
+        }
+        return splitData.ToArray();
+    }
 }
 
 /// <summary>
@@ -24,7 +69,7 @@ public class MeshDataGenerator {
     protected List<int> triangles = new List<int>();
     protected List<Color> colors = new List<Color>();
     protected List<Vector2> uvs = new List<Vector2>();
-    protected List<Vector2> uvs2 = new List<Vector2>();
+    //protected List<Vector2> uvs2 = new List<Vector2>();
     protected BlockData[,,] pointmap;
 
     System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
@@ -50,7 +95,7 @@ public class MeshDataGenerator {
         mesh.triangles = md.triangles;
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
-        mesh.uv2 = md.uvs2;
+        //mesh.uv2 = md.uvs2;
         mesh.RecalculateNormals(); //Normals could be provided by MeshData instead, to save mainthread cpu time.
         return mesh;
     }
@@ -61,7 +106,7 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
+    public static MeshData[] GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         MeshDataGenerator MDG = new MeshDataGenerator();
         MDG.meshDataType = meshDataType;
 
@@ -81,9 +126,9 @@ public class MeshDataGenerator {
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
-        meshData.uvs2 = MDG.uvs2.ToArray();
+        //meshData.uvs2 = MDG.uvs2.ToArray();
 
-        return meshData;
+        return meshData.split();
     }
 
     /// <summary>
@@ -98,14 +143,6 @@ public class MeshDataGenerator {
         if (cubePos.x != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
         if (cubePos.y != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
         if (cubePos.z != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
-
-
-        //if (cubePos.x != pointmap.GetLength(0) - 1 && pointmap[(int)cubePos.x + 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.y == pointmap.GetLength(1) - 1 || pointmap[(int)cubePos.x, (int)cubePos.y + 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
-        //if (cubePos.z != pointmap.GetLength(2) - 1 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z + 1].blockType == 0) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.x != 0 && pointmap[(int)cubePos.x - 1, (int)cubePos.y, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.y != 0 && pointmap[(int)cubePos.x, (int)cubePos.y - 1, (int)cubePos.z].blockType == 0) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
-        //if (cubePos.z != 0 && pointmap[(int)cubePos.x, (int)cubePos.y, (int)cubePos.z - 1].blockType == 0) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
     }
 
     protected bool checkIfSolidVoxel(Vector3Int voxelPos) {
