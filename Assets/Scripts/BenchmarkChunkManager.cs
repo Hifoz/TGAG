@@ -155,7 +155,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             }
         }
         while (activeChunks.Count > 0) {
-            Destroy(activeChunks[0].chunk[0].transform.parent.gameObject);
+            Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
@@ -247,7 +247,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             subChunk.name = "subchunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-            cd.chunk.Add(subChunk);
+            cd.terrainChunk.Add(subChunk);
         }
 
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {

@@ -53,7 +53,7 @@ public class ChunkManager : MonoBehaviour {
     /// <summary>
     /// Clears and resets the ChunkManager, used when changing WorldGen settings at runtime.
     /// </summary>
-    public void clear() {        
+    public void clear() {
         while (pendingChunks.Count > 0) {
             while (results.getCount() > 0) {
                 Result result = results.Dequeue();
@@ -63,7 +63,7 @@ public class ChunkManager : MonoBehaviour {
             }
         }
         while (activeChunks.Count > 0) {
-            Destroy(activeChunks[0].chunk[0].transform.parent.gameObject);
+            Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
@@ -141,16 +141,16 @@ public class ChunkManager : MonoBehaviour {
             if (checkBounds(ix, iz)) {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
-                GameObject p = activeChunks[i].chunk[0].transform.parent.gameObject;
-                for (int j = 0; j < activeChunks[i].chunk.Count; j++) {
-                    activeChunks[i].chunk[j].transform.parent = this.transform;
-                    inactiveChunks.Push(activeChunks[i].chunk[j]);
+                GameObject chunk = activeChunks[i].terrainChunk[0].transform.parent.gameObject;
+                for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
+                    activeChunks[i].terrainChunk[j].transform.parent = this.transform;
+                    inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
                 }
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].waterChunk[j]);
                 }
-                Destroy(p);
+                Destroy(chunk);
 
                 inactiveChunks.Peek().SetActive(false);
 
@@ -206,6 +206,7 @@ public class ChunkManager : MonoBehaviour {
 
         GameObject chunk = new GameObject();
         chunk.name = "chunk";
+        chunk.transform.parent = this.transform;
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = getChunk();
             subChunk.transform.parent = chunk.transform;
@@ -214,10 +215,10 @@ public class ChunkManager : MonoBehaviour {
             subChunk.GetComponent<MeshCollider>().sharedMesh = subChunk.GetComponent<MeshFilter>().mesh;
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
-            subChunk.name = "subchunk";
+            subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-            cd.chunk.Add(subChunk);
+            cd.terrainChunk.Add(subChunk);
         }
 
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {

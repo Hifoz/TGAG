@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class ChunkData {
     public Vector3 pos;
-    public List<GameObject> chunk = new List<GameObject>();
+    public List<GameObject> terrainChunk = new List<GameObject>();
     public List<GameObject> waterChunk = new List<GameObject>();
     public GameObject[] trees;
 

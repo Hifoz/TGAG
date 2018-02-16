@@ -33,7 +33,6 @@ class WaterMeshDataGenerator : MeshDataGenerator {
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
-        //meshData.uvs2 = MDG.uvs2.ToArray();
 
         return meshData.split();
     }
