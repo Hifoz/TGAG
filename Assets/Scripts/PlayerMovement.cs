@@ -4,6 +4,9 @@ using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour {
+    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3(); // Because we need the player position in the CVDTs
+    public static Vector3 playerPosx;// = new ThreadSafeVector3(); // Because we need the player position in the CVDTs
+
     public float walkingSpeed = 10f;
     public float flyingSpeed = 10f;
     public float gravity = 6f;
@@ -26,7 +29,8 @@ public class PlayerMovement : MonoBehaviour {
 	void Update () {
         updateMovement();
         updateRotation();
-	}
+        playerPos.set(transform.position);
+    }
 
     /// <summary>
     /// Updates the movement of the player

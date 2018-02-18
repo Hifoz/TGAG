@@ -38,7 +38,7 @@ public class ChunkManager : MonoBehaviour {
         Settings.load();
         CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
         for (int i = 0; i < Settings.WorldGenThreads; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(orders, results);
+            CVDT[i] = new ChunkVoxelDataThread(ordersSG, results);
         }
         init();
 
@@ -49,6 +49,7 @@ public class ChunkManager : MonoBehaviour {
 	void Update () {
         clearChunkGrid();
         updateChunkGrid();
+        validateOrders();
         orderNewChunks();
         consumeThreadResults();
         handleAnimals();
@@ -100,7 +101,8 @@ public class ChunkManager : MonoBehaviour {
                     if (orderedAnimalIndex == -1) {
                         animals[i] = Instantiate(animalPrefab);
                         AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
-                        orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
+                        //orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
+                        ordersSG.Add(new Order(animalSkeleton, Task.ANIMAL));
                         orderedAnimalIndex = i;
                     }
                 } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
@@ -177,11 +179,22 @@ public class ChunkManager : MonoBehaviour {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
-                    orders.Enqueue(new Order(chunkPos, Task.CHUNK));
+                    //orders.Enqueue(new Order(chunkPos, Task.CHUNK));
+                    ordersSG.Add(new Order(chunkPos, Task.CHUNK));
                     pendingChunks.Add(chunkPos);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Removes any orders that are for chunks that are to far away
+    /// </summary>
+    private void validateOrders() {
+        ordersSG.RemoveAll(delegate (Order order) {
+            Vector3 distFromPlayer = order.position - PlayerMovement.playerPos.get();
+            return (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * ChunkConfig.chunkCount || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * ChunkConfig.chunkCount);
+        });
     }
 
     /// <summary>
@@ -343,7 +356,8 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void stopThreads() {
         foreach (var thread in CVDT) {
-            orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
+            //orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
+            ordersSG.Add(new Order(Vector3.down, Task.CHUNK));
             thread.stop();
         }
     }

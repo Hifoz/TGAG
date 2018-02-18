@@ -50,7 +50,8 @@ public class Result {
 public class ChunkVoxelDataThread {
 
     private Thread thread;
-    private BlockingQueue<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
+//    private BlockingQueue<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
+    private BlockingList<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<Result> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
     private bool run;
 
@@ -60,7 +61,8 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunkVoxelDataThread(BlockingQueue<Order> orders, LockingQueue<Result> results) {        
+//    public ChunkVoxelDataThread(BlockingQueue<Order> orders, LockingQueue<Result> results) {        
+    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results) {        
         this.orders = orders;
         this.results = results;
         run = true;
@@ -90,11 +92,13 @@ public class ChunkVoxelDataThread {
         Debug.Log("Thread alive!");
         while (run) {
             try {
-                Order order = orders.Dequeue();
-                if (order.position == Vector3.down) {
-                    break;
+                //Order order = orders.Dequeue();
+                Order order = orders.Take(getClosestChunkIndex);
+
+                if(order != null && order.position != Vector3.down) {
+                    results.Enqueue(handleOrder(order));
                 }
-                results.Enqueue(handleOrder(order));
+
             } catch(Exception e) {
                 Debug.LogException(e);
             }
@@ -190,5 +194,23 @@ public class ChunkVoxelDataThread {
         }
         Debug.Log("Failed to find ground");
         return Vector3.negativeInfinity;
+    }
+
+    /// <summary>
+    /// Used to find the index of the order whos chunk position is closest to the player.
+    /// </summary>
+    /// <param name="list">list of orders</param>
+    /// <returns>index of closest</returns>
+    private int getClosestChunkIndex(List<Order> list) {
+        int closestIndex = -1;
+        float closestDistance = Int32.MaxValue;
+        for (int i = 0; i < list.Count; i++) {
+            float dist = Vector3.Distance(PlayerMovement.playerPos.get(), list[i].position);
+            if (dist < closestDistance) {
+                closestIndex = i;
+                closestDistance = dist;
+            }
+        }
+        return closestIndex;
     }
 }

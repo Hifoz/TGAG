@@ -54,6 +54,9 @@ public class BlockingList<T> {
             }
 
             int index = list.Count == 1 ? 0 : func(list);
+            if (index == -1)
+                return default(T);
+
             T res = list[index];
             list.RemoveAt(index);
             count--;
@@ -79,6 +82,14 @@ public class BlockingList<T> {
         }
     }
 
+
+    public void RemoveAll(Predicate<T> match) {
+        lock (list) {
+            int invalidCount = list.RemoveAll(match);
+            count -= invalidCount;
+            Monitor.Pulse(list);
+        }
+    }
 
 
 }
