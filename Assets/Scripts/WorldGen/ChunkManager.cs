@@ -49,8 +49,8 @@ public class ChunkManager : MonoBehaviour {
 	void Update () {
         clearChunkGrid();
         updateChunkGrid();
-        validateOrders();
         orderNewChunks();
+        validateOrders();
         consumeThreadResults();
         handleAnimals();
     }
@@ -148,14 +148,15 @@ public class ChunkManager : MonoBehaviour {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
                 GameObject chunk = activeChunks[i].terrainChunk[0].transform.parent.gameObject;
-                for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
-                    activeChunks[i].terrainChunk[j].transform.parent = this.transform;
-                    inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
-                }
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].waterChunk[j]);
                 }
+                for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
+                    activeChunks[i].terrainChunk[j].transform.parent = this.transform;
+                    inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
+                }
+
                 Destroy(chunk);
 
                 inactiveChunks.Peek().SetActive(false);

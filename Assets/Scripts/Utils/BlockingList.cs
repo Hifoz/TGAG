@@ -53,7 +53,7 @@ public class BlockingList<T> {
                 Monitor.Wait(list);
             }
 
-            int index = list.Count == 1 ? 0 : func(list);
+            int index = list.Count == 1 ? -1 : func(list);
             if (index == -1)
                 return default(T);
 
