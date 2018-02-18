@@ -24,6 +24,10 @@ public class ChunkManager : MonoBehaviour {
     private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
+    // Smart Generation
+    private BlockingList<Order> ordersSG = new BlockingList<Order>();
+
+
     private GameObject[] animals = new GameObject[20];
     private int orderedAnimalIndex = -1;
 

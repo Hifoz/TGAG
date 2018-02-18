@@ -22,7 +22,8 @@ public class BlockData {
         SNOW,
 
 
-        COUNT
+        COUNT,
+        ALLWHITE
     }
 
     public BlockType blockType;

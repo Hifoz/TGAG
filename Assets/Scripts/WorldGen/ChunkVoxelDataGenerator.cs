@@ -34,13 +34,16 @@ public class ChunkVoxelDataGenerator {
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
+                    //*
+                    data[x, y, z] = new BlockData(BlockData.BlockType.ALLWHITE); // To lower resource usage while working on the smart generation
+                    /*/
                     if (posContainsVoxel(new Vector3(x, y, z) + pos))
                         data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < 15) // temp
                         data[x, y, z] = new BlockData(BlockData.BlockType.WATER);
                     else
                         data[x, y, z] = new BlockData(BlockData.BlockType.NONE);
-                    
+                    /**/
                 }
             }
         }

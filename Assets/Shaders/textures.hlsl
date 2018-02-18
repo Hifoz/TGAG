@@ -265,6 +265,8 @@ float4 sampleTexelValue(int type, float3 pos, float3 samplePos, float sampleDist
 		return leafTex(samplePos);
 	case 11: // Water
 		return waterTex(samplePos);
+	case 12: // AllWhite
+		return float4(1, 1, 1, 1);
 	default:
 		return float4(1, 1, 1, 0);
 	}
