@@ -50,7 +50,7 @@ public class ChunkManager : MonoBehaviour {
         clearChunkGrid();
         updateChunkGrid();
         orderNewChunks();
-        validateOrders();
+        //validateOrders();
         consumeThreadResults();
         handleAnimals();
     }
@@ -148,13 +148,13 @@ public class ChunkManager : MonoBehaviour {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
                 GameObject chunk = activeChunks[i].terrainChunk[0].transform.parent.gameObject;
-                for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
-                    activeChunks[i].waterChunk[j].transform.parent = this.transform;
-                    inactiveChunks.Push(activeChunks[i].waterChunk[j]);
-                }
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
                     activeChunks[i].terrainChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
+                }
+                for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
+                    activeChunks[i].waterChunk[j].transform.parent = this.transform;
+                    inactiveChunks.Push(activeChunks[i].waterChunk[j]);
                 }
 
                 Destroy(chunk);
@@ -182,6 +182,7 @@ public class ChunkManager : MonoBehaviour {
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     //orders.Enqueue(new Order(chunkPos, Task.CHUNK));
                     ordersSG.Add(new Order(chunkPos, Task.CHUNK));
+                    Debug.Log("order placed");
                     pendingChunks.Add(chunkPos);
                 }
             }
@@ -193,8 +194,8 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void validateOrders() {
         ordersSG.RemoveAll(delegate (Order order) {
-            Vector3 distFromPlayer = order.position - PlayerMovement.playerPos.get();
-            return (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * ChunkConfig.chunkCount || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * ChunkConfig.chunkCount);
+            Vector3 distFromPlayer = order.position - getPlayerPos();
+            return (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f);
         });
     }
 
@@ -210,6 +211,9 @@ public class ChunkManager : MonoBehaviour {
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
+                    break;
+                case Task.CANCEL:
+                    pendingChunks.Remove(result.chunkVoxelData.chunkPos);
                     break;
             }
         }

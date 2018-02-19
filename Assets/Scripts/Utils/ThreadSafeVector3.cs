@@ -6,15 +6,17 @@ using UnityEngine;
 
 public class ThreadSafeVector3 {
     private Vector3 vec;
-    private Mutex mutex = new Mutex();
+    private Mutex mutex = new Mutex(true);
 
     public ThreadSafeVector3() {
         this.vec = new Vector3();
+        mutex.ReleaseMutex();
     }
 
 
     public ThreadSafeVector3(Vector3 vec) {
         this.vec = vec;
+        mutex.ReleaseMutex();
     }
 
     public Vector3 get() {

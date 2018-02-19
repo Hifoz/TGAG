@@ -14,7 +14,9 @@ public class ChunkVoxelData {
     public Vector3[] treePositions;
 }
 
-public enum Task { CHUNK = 0, ANIMAL}
+public enum Task { CHUNK = 0, ANIMAL,
+    CANCEL
+}
 
 /// <summary>
 /// A class representing an order to be done by the thread
@@ -94,8 +96,18 @@ public class ChunkVoxelDataThread {
             try {
                 //Order order = orders.Dequeue();
                 Order order = orders.Take(getClosestChunkIndex);
+                if (order.position == Vector3.down) {
+                    break;
+                }
 
-                if(order != null && order.position != Vector3.down) {
+                Vector3 distFromPlayer = order.position - getPlayerPos();
+                if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
+                    Result res = new Result();
+                    res.task = Task.CANCEL;
+                    res.chunkVoxelData = new ChunkVoxelData();
+                    res.chunkVoxelData.chunkPos = order.position;
+                    results.Enqueue(res);
+                } else {
                     results.Enqueue(handleOrder(order));
                 }
 
@@ -135,8 +147,8 @@ public class ChunkVoxelDataThread {
     /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData();
-        //Generate the chunk terrain
         result.chunkPos = order.position;
+        //Generate the chunk terrain
         result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order.position));
         result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order.position));
         //Generate the trees in the chunk
@@ -212,5 +224,19 @@ public class ChunkVoxelDataThread {
             }
         }
         return closestIndex;
+    }
+
+
+    /// <summary>
+    /// Gets the "chunk normalized" player position.
+    /// </summary>
+    /// <returns>Player position</returns>
+    private Vector3 getPlayerPos() {
+        Vector3 pos = PlayerMovement.playerPos.get();
+        float x = pos.x;
+        float z = pos.z;
+        x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
+        z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
+        return new Vector3(x, 0, z);
     }
 }

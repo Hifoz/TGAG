@@ -37,7 +37,7 @@ public class BlockingList<T> {
         }
         lock (list) {
             list.AddRange(collection);
-            count++;
+            count = list.Count;
             Monitor.Pulse(list);
         }
     }
@@ -53,8 +53,8 @@ public class BlockingList<T> {
                 Monitor.Wait(list);
             }
 
-            int index = list.Count == 1 ? -1 : func(list);
-            if (index == -1)
+            int index = list.Count == 1 ? 0 : func(list);
+            if (index < 0 || index > list.Count - 1)
                 return default(T);
 
             T res = list[index];
@@ -87,7 +87,6 @@ public class BlockingList<T> {
         lock (list) {
             int invalidCount = list.RemoveAll(match);
             count -= invalidCount;
-            Monitor.Pulse(list);
         }
     }
 
