@@ -14,7 +14,9 @@ public class ChunkVoxelData {
     public Vector3[] treePositions;
 }
 
-public enum Task { CHUNK = 0, ANIMAL,
+public enum Task {
+    CHUNK = 0,
+    ANIMAL,
     CANCEL
 }
 
@@ -52,8 +54,7 @@ public class Result {
 public class ChunkVoxelDataThread {
 
     private Thread thread;
-//    private BlockingQueue<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
-    private BlockingList<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
+    private BlockingList<Order> orders;   //When the main thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<Result> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
     private bool run;
 
@@ -63,7 +64,6 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-//    public ChunkVoxelDataThread(BlockingQueue<Order> orders, LockingQueue<Result> results) {        
     public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results) {        
         this.orders = orders;
         this.results = results;
@@ -94,7 +94,6 @@ public class ChunkVoxelDataThread {
         Debug.Log("Thread alive!");
         while (run) {
             try {
-                //Order order = orders.Dequeue();
                 Order order = orders.Take(getClosestChunkIndex);
                 if (order.position == Vector3.down) {
                     break;

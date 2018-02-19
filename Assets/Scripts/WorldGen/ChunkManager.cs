@@ -20,13 +20,9 @@ public class ChunkManager : MonoBehaviour {
     private ChunkData[,] chunkGrid;
 
     private ChunkVoxelDataThread[] CVDT;
-    private BlockingQueue<Order> orders = new BlockingQueue<Order>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
+    private BlockingList<Order> orders = new BlockingList<Order>();
     private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
-
-    // Smart Generation
-    private BlockingList<Order> ordersSG = new BlockingList<Order>();
-
 
     private GameObject[] animals = new GameObject[20];
     private int orderedAnimalIndex = -1;
@@ -38,7 +34,7 @@ public class ChunkManager : MonoBehaviour {
         Settings.load();
         CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
         for (int i = 0; i < Settings.WorldGenThreads; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(ordersSG, results);
+            CVDT[i] = new ChunkVoxelDataThread(orders, results);
         }
         init();
 
@@ -50,7 +46,6 @@ public class ChunkManager : MonoBehaviour {
         clearChunkGrid();
         updateChunkGrid();
         orderNewChunks();
-        //validateOrders();
         consumeThreadResults();
         handleAnimals();
     }
@@ -101,8 +96,7 @@ public class ChunkManager : MonoBehaviour {
                     if (orderedAnimalIndex == -1) {
                         animals[i] = Instantiate(animalPrefab);
                         AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
-                        //orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
-                        ordersSG.Add(new Order(animalSkeleton, Task.ANIMAL));
+                        orders.Add(new Order(animalSkeleton, Task.ANIMAL));
                         orderedAnimalIndex = i;
                     }
                 } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
@@ -113,7 +107,7 @@ public class ChunkManager : MonoBehaviour {
                     landAnimal.Spawn(player.position + new Vector3(x, y, z));
                     //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 10% chance of regenerating animal on respawn
                     //    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
-                    //    orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
+                    //    orders.Add(new Order(animalSkeleton, Task.ANIMAL));
                     //    orderedAnimalIndex = i;
                     //}
                 }
@@ -180,23 +174,12 @@ public class ChunkManager : MonoBehaviour {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
-                    //orders.Enqueue(new Order(chunkPos, Task.CHUNK));
-                    ordersSG.Add(new Order(chunkPos, Task.CHUNK));
+                    orders.Add(new Order(chunkPos, Task.CHUNK));
                     Debug.Log("order placed");
                     pendingChunks.Add(chunkPos);
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Removes any orders that are for chunks that are to far away
-    /// </summary>
-    private void validateOrders() {
-        ordersSG.RemoveAll(delegate (Order order) {
-            Vector3 distFromPlayer = order.position - getPlayerPos();
-            return (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f);
-        });
     }
 
     /// <summary>
@@ -361,8 +344,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void stopThreads() {
         foreach (var thread in CVDT) {
-            //orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
-            ordersSG.Add(new Order(Vector3.down, Task.CHUNK));
+            orders.Add(new Order(Vector3.down, Task.CHUNK));
             thread.stop();
         }
     }

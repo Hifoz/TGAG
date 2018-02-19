@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 
 /// <summary>
-/// A blocking List
+/// Custom made blocking list
 /// </summary>
 /// <typeparam name="T">Type of the list content</typeparam>
 public class BlockingList<T> {
