@@ -17,8 +17,6 @@ public class PlayerMovement : MonoBehaviour {
     private Vector3 currentSpeed;
     private Vector3 currentVelocity;
 
-
-
 	void Start () {
         characterController = GetComponent<CharacterController>();
 	}

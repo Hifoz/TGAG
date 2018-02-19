@@ -2,57 +2,29 @@
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
-public class LandAnimal : MonoBehaviour {
-    AnimalSkeleton skeleton;
-    private float ikSpeed = 10;
-    private const float ikTolerance = 0.1f;
+public abstract class LandAnimal : MonoBehaviour {
+    protected AnimalSkeleton skeleton;
+    protected float ikSpeed = 10;
+    protected const float ikTolerance = 0.1f;
 
-    public const float roamDistance = 40;
-    private Vector3 roamCenter;
+    protected Vector3 heading = Vector3.zero;
+    protected float speed = 2f;
+    protected const float walkSpeed = 2f;
+    protected const float runSpeed = walkSpeed * 3f;
+    protected const float levelSpeed = 3f;
+    protected const float walkAnimSpeed = 0.2f;
+    protected const float runAnimSpeed = walkAnimSpeed * 3f;
 
-    private Vector3 heading = Vector3.zero;
-    private float speed = 2f;
-    private const float levelSpeed = 3f;
-    private const float walkSpeed = 0.2f;
+    protected float timer = 0;
 
-    private float timer = 0;
-    
     // Update is called once per frame
-    void Update() {        
+    void Update() {
         if (skeleton != null) {
             move();
             levelSpine();
             walk();
-            timer += Time.deltaTime;
+            timer += Time.deltaTime * speed / 2f;
         }
-    }
-
-    /// <summary>
-    /// Spawns the animal at position
-    /// </summary>
-    /// <param name="pos">Vector3 pos</param>
-    public void Spawn(Vector3 pos) {
-        transform.rotation = Quaternion.identity;
-        transform.localRotation = Quaternion.identity;
-        if (skeleton != null) {
-            foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
-                bone.bone.rotation = Quaternion.identity;
-                bone.bone.localRotation = Quaternion.identity;
-            }
-        }
-
-        transform.position = pos;
-        roamCenter = pos;
-        roamCenter.y = 0;
-
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-            Vector3 groundTarget = hit.point + Vector3.up * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
-            transform.position = groundTarget;
-        }
-
-        heading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        transform.LookAt(transform.position - heading);
     }
 
     /// <summary>
@@ -71,10 +43,12 @@ public class LandAnimal : MonoBehaviour {
         GetComponent<SkinnedMeshRenderer>().bones = bones;
     }
 
+    protected abstract void move();
+
     /// <summary>
     /// Tries to level the spine with the ground
     /// </summary>
-    private void levelSpine() {
+    protected void levelSpine() {
         float spineLength = skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH);
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
 
@@ -95,36 +69,12 @@ public class LandAnimal : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// Moves the animal in world space
-    /// </summary>
-    private void move() {
-        float dist = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), roamCenter);
-        Vector3 toCenter = roamCenter - transform.position;
-        toCenter.y = 0;
-        if (dist > roamDistance && Vector3.Angle(toCenter, heading) > 90) {
-            heading = -heading;
-            heading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * heading;
-            transform.LookAt(transform.position - heading);
-        }
-        transform.position += heading * speed * Time.deltaTime;
-        Debug.DrawLine(transform.position, transform.position + heading * 10, Color.blue);
-
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-            Vector3 groundTarget = hit.point + Vector3.up * (skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f);
-            if (Vector3.Distance(groundTarget, transform.position) > 0.1f) {
-                transform.position += (groundTarget - transform.position).normalized * Time.deltaTime * 3f;
-            }
-        } else {
-            transform.position = new Vector3(0, -1000, 0);
-        }        
-    }
+   
 
     /// <summary>
     /// Keeps the legs of the animal grounded.
     /// </summary>
-    private void stayGrounded() { //TODO - Update to new system of getting legs
+    protected void stayGrounded() { //TODO - Update to new system of getting legs
         //List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
         //List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
         
@@ -144,7 +94,7 @@ public class LandAnimal : MonoBehaviour {
     /// </summary>
     /// <param name="leg">List<Bone> leg</param>
     /// <param name="sign">int sign, used to get a correct offset for IK target</param>
-    private void groundLeg(List<Bone> leg, int sign) {
+    protected void groundLeg(List<Bone> leg, int sign) {
         Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
 
         RaycastHit hit;
@@ -156,7 +106,7 @@ public class LandAnimal : MonoBehaviour {
     /// <summary>
     /// Makes the animal do a walking animation
     /// </summary>
-    private void walk() {
+    protected void walk() {
         int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
         for(int i = 0; i < legPairs; i++) {
             walkLeg(skeleton.getLeg(true, i), -1, Mathf.PI * i);
@@ -170,7 +120,7 @@ public class LandAnimal : MonoBehaviour {
     /// <param name="leg">List<Bone> leg</param>
     /// <param name="sign">int sign, used to get a correct offset for IK target</param>
     /// <param name="radOffset">Walk animation offset in radians</param>
-    private void walkLeg(List<Bone> leg, int sign, float radOffset) {
+    protected void walkLeg(List<Bone> leg, int sign, float radOffset) {
         float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
 
         Vector3 target = leg[0].bone.position + sign * transform.right * legLength / 4f; //Offset to the right
@@ -199,7 +149,7 @@ public class LandAnimal : MonoBehaviour {
     /// <param name="limb">Limb to bend</param>
     /// <param name="target">Target to reach</param>
     /// <returns>Bool target reached</returns>
-    private bool ccd(List<Bone> limb, Vector3 target, float speed) {
+    protected bool ccd(List<Bone> limb, Vector3 target, float speed) {
         Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);
@@ -221,8 +171,7 @@ public class LandAnimal : MonoBehaviour {
                     }
                 }
             }
-        } 
-        
+        }        
         return dist < ikTolerance;
     }
 
@@ -231,7 +180,7 @@ public class LandAnimal : MonoBehaviour {
     /// </summary>
     /// <param name="bone">Bone bone, the bone to check</param>
     /// <returns>True if bone satisfies bone constraints, false otherwise</returns>
-    private bool checkConstraints(Bone bone) {
+    protected bool checkConstraints(Bone bone) {
         Vector3 rotation = bone.bone.localEulerAngles;
         rotation.x = (rotation.x > 180) ? rotation.x - 360 : rotation.x;
         rotation.y = (rotation.y > 180) ? rotation.y - 360 : rotation.y;

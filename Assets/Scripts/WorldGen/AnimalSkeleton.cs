@@ -182,6 +182,7 @@ public class AnimalSkeleton {
         makeSkeletonLines();
         centerSkeletonLines();
         makeAnimBones();
+        createColliders();
     }
 
     /// <summary>
@@ -419,6 +420,17 @@ public class AnimalSkeleton {
         skeletonBones[BodyPart.ALL].Add(b);
         skeletonBones[bodyPart].Add(b);
         return b;
+    }
+
+    /// <summary>
+    /// Adds colliders to the skeleton
+    /// </summary>
+    private void createColliders() {
+        Bone spine = skeletonBones[BodyPart.SPINE][0];
+        BoxCollider col = spine.bone.gameObject.AddComponent<BoxCollider>();
+        Vector3 size = col.size;
+        size.z = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH) + 0.1f;
+        col.size = size;
     }
 
     /// <summary>
