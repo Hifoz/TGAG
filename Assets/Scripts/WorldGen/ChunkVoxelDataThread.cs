@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
 
@@ -54,7 +53,6 @@ public class ChunkVoxelDataThread {
     private LockingQueue<Result> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
     private bool run;
 
-    private ChunkVoxelDataGenerator CVDG = new ChunkVoxelDataGenerator();
     /// <summary>
     /// Constructor that takes the two needed queues, also starts thread excecution.
     /// </summary>
@@ -87,19 +85,40 @@ public class ChunkVoxelDataThread {
     /// The function running the thread, processes orders and returns results to main thread.
     /// </summary>
     private void threadRunner() {
-        Debug.Log("Thread alive!");
-        while (run) {
+        UnityEngine.Debug.Log("Thread alive!");
+        Stopwatch stopwatch = new Stopwatch();
+        while (run) {            
             try {
+                stopwatch.Start();
                 Order order = orders.Dequeue();
+                stopwatch.Stop();
+                float time = (float)stopwatch.Elapsed.Milliseconds;
+                UnityEngine.Debug.Log(String.Format("GET TIME {0}s!", time));
+                stopwatch.Reset();
+
                 if (order.position == Vector3.down) {
                     break;
-                }
-                results.Enqueue(handleOrder(order));
+                }               
+
+                stopwatch.Start();
+                var result = handleOrder(order);
+                stopwatch.Stop();
+                time = (float)stopwatch.Elapsed.Milliseconds;
+                UnityEngine.Debug.Log(String.Format("PROCESS TIME {0}s!", time));
+                stopwatch.Reset();
+
+                stopwatch.Start();
+                results.Enqueue(result);
+                stopwatch.Stop();
+                time = (float)stopwatch.Elapsed.Milliseconds;
+                UnityEngine.Debug.Log(String.Format("PUT TIME {0}s!", time));
+                stopwatch.Reset();
+
             } catch(Exception e) {
-                Debug.LogException(e);
+                UnityEngine.Debug.LogException(e);
             }
         }
-        Debug.Log("Thread stopped!");
+        UnityEngine.Debug.Log("Thread stopped!");
     }
 
     /// <summary>
@@ -133,8 +152,8 @@ public class ChunkVoxelDataThread {
         ChunkVoxelData result = new ChunkVoxelData();
         //Generate the chunk terrain
         result.chunkPos = order.position;
-        result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order.position));
-        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order.position));
+        result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
         int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
@@ -188,7 +207,7 @@ public class ChunkVoxelDataThread {
             }
             iter++;
         }
-        Debug.Log("Failed to find ground");
+        //Debug.Log("Failed to find ground");
         return Vector3.negativeInfinity;
     }
 }
