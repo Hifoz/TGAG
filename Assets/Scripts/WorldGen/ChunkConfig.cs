@@ -9,7 +9,7 @@ public static class ChunkConfig {
     //General
     public static int seed = 1337;
     public static int chunkSize = 20;
-    public static int chunkCount = 20;
+    public static int chunkCount = 40;
     public static int chunkHeight = 100; // Chunk height must not exceed (5376/(chunkSize^2))
     //2D noise settings
     public static float frequency2D = 0.005f;

@@ -60,8 +60,9 @@ public class MeshDataGenerator {
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
-                    if (pointmap[x, y, z].blockType != BlockData.BlockType.NONE && pointmap[x, y, z].blockType != BlockData.BlockType.WATER)
+                    if (pointmap[x, y, z].blockType != BlockData.BlockType.NONE && pointmap[x, y, z].blockType != BlockData.BlockType.WATER) {
                         MDG.GenerateCube(new Vector3Int(x, y, z), offset, pointmap[x, y, z], voxelSize);
+                    }
                 }
             }
         }

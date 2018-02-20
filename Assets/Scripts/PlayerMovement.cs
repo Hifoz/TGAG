@@ -4,6 +4,12 @@ using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour {
+
+    // Values are needed in the CVDTs for calculating order priority
+    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3(); 
+    public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
+    public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
+
     public float walkingSpeed = 10f;
     public float flyingSpeed = 10f;
     public float gravity = 6f;
@@ -26,7 +32,11 @@ public class PlayerMovement : MonoBehaviour {
 	void Update () {
         updateMovement();
         updateRotation();
-	}
+
+        playerPos.set(transform.position);
+        playerRot.set(transform.rotation * Vector3.forward);
+        playerSpeed.set(currentSpeed);
+    }
 
     /// <summary>
     /// Updates the movement of the player
@@ -75,16 +85,5 @@ public class PlayerMovement : MonoBehaviour {
         Quaternion rotation = Quaternion.LookRotation(currentSpeed);
         transform.rotation = rotation;
 
-    }
-
-
-    private void OnTriggerEnter(Collider other) {
-        if (other.name == "waterChunk")
-            Debug.Log("Entering water");
-    }
-
-    private void OnTriggerExit(Collider other) {
-        if (other.name == "waterChunk")
-            Debug.Log("Leaving water");
     }
 }
