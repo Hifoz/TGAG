@@ -17,15 +17,9 @@ public class BenchmarkChunkManager : MonoBehaviour {
     private List<ChunkData> activeChunks = new List<ChunkData>();
 
     private ChunkVoxelDataThread[] CVDT;
-   // private BlockingQueue<Order> orders = new BlockingQueue<Order>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
+    private BlockingList<Order> orders = new BlockingList<Order>(); //When this thread puts a position in this list, the thread generates a mesh for that position.
     private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
-
-
-    // Smart Generation
-    private BlockingList<Order> ordersSG = new BlockingList<Order>();
-
-
 
     private GameObject[] animals = new GameObject[20];
     private HashSet<int> orderedAnimals = new HashSet<int>();
@@ -120,7 +114,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             currentThreads = run;
             CVDT = new ChunkVoxelDataThread[run];
             for (int i = 0; i < run; i++) {
-                CVDT[i] = new ChunkVoxelDataThread(ordersSG, results);
+                CVDT[i] = new ChunkVoxelDataThread(orders, results);
             }
             stopwatch.Start();
 
@@ -191,8 +185,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             animals[i] = Instantiate(animalPrefab);
             AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
             animalSkeleton.index = i;
-//            orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
-            ordersSG.Add(new Order(animalSkeleton, Task.ANIMAL));
+            orders.Add(new Order(animalSkeleton, Task.ANIMAL));
             orderedAnimals.Add(i);
 
             float x = UnityEngine.Random.Range(lower, upper);
@@ -210,8 +203,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset;
-//                orders.Enqueue(new Order(chunkPos, Task.CHUNK));
-                ordersSG.Add(new Order(chunkPos, Task.CHUNK));
+                orders.Add(new Order(chunkPos, Task.CHUNK));
                 pendingChunks.Add(chunkPos);
             }
         }
@@ -337,8 +329,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
     private void stopThreads() {
         if (CVDT != null) {
             foreach (var thread in CVDT) {
-//                orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
-                ordersSG.Add(new Order(Vector3.down, Task.CHUNK));
+                orders.Add(new Order(Vector3.down, Task.CHUNK));
                 thread.stop();
             }
         }

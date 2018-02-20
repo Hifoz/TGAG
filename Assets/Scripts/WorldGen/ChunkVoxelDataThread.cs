@@ -64,6 +64,8 @@ public class ChunkVoxelDataThread {
     private bool run;
 
     private ChunkVoxelDataGenerator CVDG = new ChunkVoxelDataGenerator();
+
+
     /// <summary>
     /// Constructor that takes the two needed queues, also starts thread excecution.
     /// </summary>
@@ -225,19 +227,15 @@ public class ChunkVoxelDataThread {
             Vector3 chunkPos = list[i].position;
             Vector3 playerPos = PlayerMovement.playerPos.get();
             Vector3 playerMoveDir = PlayerMovement.playerSpeed.get();
-            Vector3 camRot = CameraController.cameraDir.get();
+            Vector3 cameraViewDir = CameraController.cameraDir.get();
 
-
-            Vector3 pDir = playerMoveDir + camRot;
-
+            Vector3 preferredDir = playerMoveDir * 2 + cameraViewDir;
             Vector3 chunkDir = (chunkPos - playerPos);
             chunkDir.y = 0;
 
-
-            float angle = Vector3.Angle(pDir, chunkDir);
-            float dist = Vector3.Distance(playerPos, chunkPos);
-
-            float value = angle + dist;
+            float angleFromPreferredDir = Vector3.Angle(preferredDir, chunkDir);
+            float distFromPlayer = Vector3.Distance(playerPos, chunkPos);
+            float value = angleFromPreferredDir + distFromPlayer;
 
             if (value < preferredValue) {
                 resultIndex = i;

@@ -60,12 +60,12 @@ public class CameraController : MonoBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
-        if (other.name == "waterChunk")
+        if (other.name == "waterSubChunk")
             inWater += 1;
     }
 
     private void OnTriggerExit(Collider other) {
-        if (other.name == "waterChunk")
+        if (other.name == "waterSubChunk")
             inWater -= 1;
     }
 }

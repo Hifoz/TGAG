@@ -213,6 +213,7 @@ public class ChunkManager : MonoBehaviour {
         GameObject chunk = new GameObject();
         chunk.name = "chunk";
         chunk.transform.parent = this.transform;
+
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = getChunk();
             subChunk.transform.parent = chunk.transform;
@@ -242,7 +243,6 @@ public class ChunkManager : MonoBehaviour {
             waterChunk.SetActive(true);
             cd.waterChunk.Add(waterChunk);
         }
-
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {

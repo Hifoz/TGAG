@@ -33,8 +33,8 @@ public class BlockingList<T> {
     public void AddRange(ICollection<T> collection) {
         if(collection == null) {
             throw new ArgumentNullException("collection");
-
         }
+
         lock (list) {
             list.AddRange(collection);
             count += collection.Count;
