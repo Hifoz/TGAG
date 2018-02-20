@@ -9,21 +9,19 @@ using UnityEngine;
 public class BlockData {
     public enum BlockType {
         NONE,
-        // Base types:
+
         DIRT,
         STONE,
         SAND,
         WOOD,
         LEAF,
         WATER,
-        
-        // Modifiers:
+
         GRASS,
         SNOW,
 
-
-        COUNT,
-        ALLWHITE
+        ALLWHITE,
+        COUNT
     }
 
     public BlockType blockType;

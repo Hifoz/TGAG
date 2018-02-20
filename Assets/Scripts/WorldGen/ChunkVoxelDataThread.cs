@@ -14,9 +14,7 @@ public class ChunkVoxelData {
     public Vector3[] treePositions;
     private Vector3 position;
 
-    public ChunkVoxelData() {}
-
-    public ChunkVoxelData(Vector3 position) {
+    public ChunkVoxelData(Vector3 position = default(Vector3)) {
         this.position = position;
     }
 }
@@ -101,7 +99,7 @@ public class ChunkVoxelDataThread {
         Debug.Log("Thread alive!");
         while (run) {
             try {
-                Order order = orders.Take(getPreferredChunk);
+                Order order = orders.Take(getPreferredOrder);
                 if(order == null) {
                     Debug.Log("Order is null");
                     continue;
@@ -129,7 +127,7 @@ public class ChunkVoxelDataThread {
 
         switch (order.task) {
             case Task.CHUNK:
-                Vector3 distFromPlayer = order.position - getPlayerPos();
+                Vector3 distFromPlayer = order.position - PlayerMovement.playerPos.get();
                 if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
                     result.task = Task.CANCEL;
                     result.chunkVoxelData = new ChunkVoxelData(order.position);
@@ -220,28 +218,26 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="list">list of orders</param>
     /// <returns>index of preferred order</returns>
-    private int getPreferredChunk(List<Order> list) {
+    private int getPreferredOrder(List<Order> list) {
         int resultIndex = -1;
         float preferredValue = Int32.MaxValue;
         for(int i = 0; i < list.Count; i++) {
             Vector3 chunkPos = list[i].position;
-            float value = 0;
-
-            Vector3 pPos = PlayerMovement.playerPos.get();
-            Vector3 pSpeed = PlayerMovement.playerSpeed.get();
+            Vector3 playerPos = PlayerMovement.playerPos.get();
+            Vector3 playerMoveDir = PlayerMovement.playerSpeed.get();
             Vector3 camRot = CameraController.cameraDir.get();
 
 
-            Vector3 pDir = pSpeed + camRot;
-            pDir.y = 0;
+            Vector3 pDir = playerMoveDir + camRot;
 
-            Vector3 chunkDir = (chunkPos - pPos);
+            Vector3 chunkDir = (chunkPos - playerPos);
             chunkDir.y = 0;
 
 
             float angle = Vector3.Angle(pDir, chunkDir);
-            float dist = Vector3.Distance(pPos, chunkPos);
-            value = angle + dist * 4;
+            float dist = Vector3.Distance(playerPos, chunkPos);
+
+            float value = angle + dist;
 
             if (value < preferredValue) {
                 resultIndex = i;
@@ -249,19 +245,5 @@ public class ChunkVoxelDataThread {
             }
         }
         return resultIndex;
-    }
-
-
-    /// <summary>
-    /// Gets the "chunk normalized" player position.
-    /// </summary>
-    /// <returns>Player position</returns>
-    private Vector3 getPlayerPos() {
-        Vector3 pos = PlayerMovement.playerPos.get();
-        float x = pos.x;
-        float z = pos.z;
-        x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
-        z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
-        return new Vector3(x, 0, z);
     }
 }
