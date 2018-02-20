@@ -5,10 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour {
 
-    // Values are needed in the CVDTs for calculating order priority
-    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3(); 
-    public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
-    public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
+    //// Values are needed in the CVDTs for calculating order priority
+    //public static ThreadSafeVector3 playerPos = new ThreadSafeVector3(); 
+    //public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
+    //public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
 
     public float walkingSpeed = 10f;
     public float flyingSpeed = 10f;
@@ -31,9 +31,9 @@ public class PlayerMovement : MonoBehaviour {
         updateMovement();
         updateRotation();
 
-        playerPos.set(transform.position);
-        playerRot.set(transform.rotation * Vector3.forward);
-        playerSpeed.set(currentSpeed);
+        //playerPos.set(transform.position);
+        //playerRot.set(transform.rotation * Vector3.forward);
+        //playerSpeed.set(currentSpeed);
     }
 
     /// <summary>
