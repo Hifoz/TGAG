@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-
+// A minimal threadsafe wrapper for a vector3
 public class ThreadSafeVector3 {
     private Vector3 vec;
     private Mutex mutex = new Mutex(true);

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour {
+    // Value needed in the CVDTs for calculating order priority
+    public static ThreadSafeVector3 cameraDir = new ThreadSafeVector3();
+
+
     public Transform target;
     public float targetDistance = 5;
     public float cameraHeight = 0.75f;
@@ -39,6 +43,8 @@ public class CameraController : MonoBehaviour {
         else if(inWater == 0 && underwaterOverlay.activeInHierarchy == true)
             underwaterOverlay.SetActive(false);
 
+
+        cameraDir.set(transform.rotation * Vector3.forward);
     }
 
     /// <summary>

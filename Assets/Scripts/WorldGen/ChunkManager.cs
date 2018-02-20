@@ -145,15 +145,17 @@ public class ChunkManager : MonoBehaviour {
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
                     activeChunks[i].terrainChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
+                    inactiveChunks.Peek().SetActive(false);
                 }
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].waterChunk[j]);
+                    inactiveChunks.Peek().SetActive(false);
                 }
 
                 Destroy(chunk);
 
-                inactiveChunks.Peek().SetActive(false);
+                //inactiveChunks.Peek().SetActive(false);
 
                 foreach(var tree in activeChunks[i].trees) {
                     inactiveTrees.Push(tree);
@@ -175,7 +177,6 @@ public class ChunkManager : MonoBehaviour {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     orders.Add(new Order(chunkPos, Task.CHUNK));
-                    Debug.Log("order placed");
                     pendingChunks.Add(chunkPos);
                 }
             }
@@ -223,6 +224,7 @@ public class ChunkManager : MonoBehaviour {
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+            subChunk.SetActive(true);
             cd.terrainChunk.Add(subChunk);
         }
 
@@ -237,6 +239,7 @@ public class ChunkManager : MonoBehaviour {
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+            waterChunk.SetActive(true);
             cd.waterChunk.Add(waterChunk);
         }
 
@@ -296,7 +299,6 @@ public class ChunkManager : MonoBehaviour {
     private GameObject getChunk() {
         if (inactiveChunks.Count > 0) {
             var chunk = inactiveChunks.Pop();
-            chunk.SetActive(true);
             return chunk;
         } else {
             return createChunk();

@@ -4,7 +4,11 @@ using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour {
-    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3(); // Because we need the player position in the CVDTs
+
+    // Values needed in the CVDTs for calculating order priority
+    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3(); 
+    public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
+    public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
 
     public float walkingSpeed = 10f;
     public float flyingSpeed = 10f;
@@ -28,7 +32,10 @@ public class PlayerMovement : MonoBehaviour {
 	void Update () {
         updateMovement();
         updateRotation();
+
         playerPos.set(transform.position);
+        playerRot.set(transform.rotation * Vector3.forward);
+        playerSpeed.set(currentSpeed);
     }
 
     /// <summary>

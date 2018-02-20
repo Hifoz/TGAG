@@ -12,6 +12,13 @@ public class ChunkVoxelData {
     public MeshData[] trees;
     public MeshData[] treeTrunks;
     public Vector3[] treePositions;
+    private Vector3 position;
+
+    public ChunkVoxelData() {}
+
+    public ChunkVoxelData(Vector3 position) {
+        this.position = position;
+    }
 }
 
 public enum Task {
@@ -64,7 +71,7 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results) {        
+    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results) {
         this.orders = orders;
         this.results = results;
         run = true;
@@ -94,21 +101,15 @@ public class ChunkVoxelDataThread {
         Debug.Log("Thread alive!");
         while (run) {
             try {
-                Order order = orders.Take(getClosestChunkIndex);
+                Order order = orders.Take(getPreferredChunk);
+                if(order == null) {
+                    Debug.Log("Order is null");
+                    continue;
+                }
                 if (order.position == Vector3.down) {
                     break;
                 }
-
-                Vector3 distFromPlayer = order.position - getPlayerPos();
-                if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
-                    Result res = new Result();
-                    res.task = Task.CANCEL;
-                    res.chunkVoxelData = new ChunkVoxelData();
-                    res.chunkVoxelData.chunkPos = order.position;
-                    results.Enqueue(res);
-                } else {
-                    results.Enqueue(handleOrder(order));
-                }
+                results.Enqueue(handleOrder(order));
 
             } catch(Exception e) {
                 Debug.LogException(e);
@@ -128,7 +129,13 @@ public class ChunkVoxelDataThread {
 
         switch (order.task) {
             case Task.CHUNK:
-                result.chunkVoxelData = handleChunkOrder(order);
+                Vector3 distFromPlayer = order.position - getPlayerPos();
+                if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
+                    result.task = Task.CANCEL;
+                    result.chunkVoxelData = new ChunkVoxelData(order.position);
+                } else {
+                    result.chunkVoxelData = handleChunkOrder(order);
+                }
                 break;
             case Task.ANIMAL:
                 order.animalSkeleton.generateInThread();
@@ -138,6 +145,7 @@ public class ChunkVoxelDataThread {
 
         return result;
     }
+
 
     /// <summary>
     /// Generates a chunk with trees
@@ -208,21 +216,39 @@ public class ChunkVoxelDataThread {
     }
 
     /// <summary>
-    /// Used to find the index of the order whos chunk position is closest to the player.
+    /// Used to find the index of the order that is most preferrable to handle next.
     /// </summary>
     /// <param name="list">list of orders</param>
-    /// <returns>index of closest</returns>
-    private int getClosestChunkIndex(List<Order> list) {
-        int closestIndex = -1;
-        float closestDistance = Int32.MaxValue;
-        for (int i = 0; i < list.Count; i++) {
-            float dist = Vector3.Distance(PlayerMovement.playerPos.get(), list[i].position);
-            if (dist < closestDistance) {
-                closestIndex = i;
-                closestDistance = dist;
+    /// <returns>index of preferred order</returns>
+    private int getPreferredChunk(List<Order> list) {
+        int resultIndex = -1;
+        float preferredValue = Int32.MaxValue;
+        for(int i = 0; i < list.Count; i++) {
+            Vector3 chunkPos = list[i].position;
+            float value = 0;
+
+            Vector3 pPos = PlayerMovement.playerPos.get();
+            Vector3 pSpeed = PlayerMovement.playerSpeed.get();
+            Vector3 camRot = CameraController.cameraDir.get();
+
+
+            Vector3 pDir = pSpeed + camRot;
+            pDir.y = 0;
+
+            Vector3 chunkDir = (chunkPos - pPos);
+            chunkDir.y = 0;
+
+
+            float angle = Vector3.Angle(pDir, chunkDir);
+            float dist = Vector3.Distance(pPos, chunkPos);
+            value = angle + dist * 4;
+
+            if (value < preferredValue) {
+                resultIndex = i;
+                preferredValue = value;
             }
         }
-        return closestIndex;
+        return resultIndex;
     }
 
 
