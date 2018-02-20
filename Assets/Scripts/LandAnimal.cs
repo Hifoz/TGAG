@@ -19,6 +19,7 @@ public abstract class LandAnimal : MonoBehaviour {
     protected const float walkSpeed = 5f;
     protected const float runSpeed = walkSpeed * 4f;
 
+    protected bool grounded = false;
     protected Vector3 gravity = Physics.gravity;
     private const float levelSpeed = 3f;
 
@@ -94,28 +95,20 @@ public abstract class LandAnimal : MonoBehaviour {
 
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
             float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
-            if (dist2ground <= stanceHeight) {
-                gravity += -Physics.gravity * Time.deltaTime;
+            if (Mathf.Abs(stanceHeight - dist2ground) <= stanceHeight) {
+                gravity += -Physics.gravity * (stanceHeight - dist2ground) / stanceHeight * Time.deltaTime;
             } else {
                 gravity += Physics.gravity * Time.deltaTime;
+            }
+
+            if (dist2ground <= stanceHeight + 0.2f) {
+                grounded = true;
+            } else {
+                grounded = false;
             }
         }
 
         spineHeading = spine.bone.rotation * Vector3.back;
-    }
-
-    /// <summary>
-    /// Grounds one leg
-    /// </summary>
-    /// <param name="leg">List<Bone> leg</param>
-    /// <param name="sign">int sign, used to get a correct offset for IK target</param>
-    private void groundLeg(List<Bone> leg, int sign) {
-        Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
-
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
-            ccd(leg, hit.point, ikSpeed);
-        }
     }
 
     /// <summary>
@@ -125,7 +118,7 @@ public abstract class LandAnimal : MonoBehaviour {
         int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
         for(int i = 0; i < legPairs; i++) {
             walkLeg(skeleton.getLeg(true, i), -1, Mathf.PI * i);
-            walkLeg(skeleton.getLeg(false, i), 1, Mathf.PI * (i + 1));
+            walkLeg(skeleton.getLeg(false, i), 1, Mathf.PI * (i + 1));            
         }
     }
 
@@ -135,7 +128,7 @@ public abstract class LandAnimal : MonoBehaviour {
     /// <param name="leg">List<Bone> leg</param>
     /// <param name="sign">int sign, used to get a correct offset for IK target</param>
     /// <param name="radOffset">Walk animation offset in radians</param>
-    private void walkLeg(List<Bone> leg, int sign, float radOffset) {
+    private bool walkLeg(List<Bone> leg, int sign, float radOffset) {
         float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
         float jointLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH);
 
@@ -158,9 +151,11 @@ public abstract class LandAnimal : MonoBehaviour {
 
             target = hit.point;
             target.y += heightOffset;
-            ccd(leg, target, ikSpeed);
+            if (ccd(leg, target, ikSpeed)) {
+                return true;
+            }
         }
-
+        return false;
     }
 
     /// <summary>

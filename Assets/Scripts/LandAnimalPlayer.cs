@@ -8,6 +8,8 @@ public class LandAnimalPlayer : LandAnimal {
     public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
     public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
 
+    bool jumping = false;
+
     /// <summary>
     /// Function for that lets the player control the animal
     /// </summary>
@@ -37,6 +39,9 @@ public class LandAnimalPlayer : LandAnimal {
             finalHeading -= desiredHeading;
             setSpeed();
         }
+        if (!jumping && grounded && Input.GetKeyDown(KeyCode.Space)) {
+            StartCoroutine(jump());
+        }
 
         if (finalHeading != Vector3.zero) {
             desiredHeading = finalHeading;
@@ -61,5 +66,17 @@ public class LandAnimalPlayer : LandAnimal {
         } else {
             desiredSpeed = walkSpeed;
         }
+    }
+
+    private IEnumerator jump() {
+        jumping = true;
+        gravity += -Physics.gravity * 2f;
+        yield return new WaitForSeconds(1.0f);
+        jumping = false;
+    }
+
+    private void OnCollisionEnter(Collision collision) {
+        gravity = Vector3.zero;
+        jumping = false;
     }
 }
