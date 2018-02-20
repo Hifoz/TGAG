@@ -30,8 +30,7 @@ public class LandAnimalNPC : LandAnimal {
             transform.position = groundTarget;
         }
 
-        heading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        transform.LookAt(transform.position - heading);
+        desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
     }
 
     /// <summary>
@@ -46,17 +45,7 @@ public class LandAnimalNPC : LandAnimal {
             desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * desiredHeading;
         }
         transform.LookAt(transform.position - heading);
-        transform.position += heading * speed * Time.deltaTime;
+        GetComponent<Rigidbody>().velocity = heading * speed + gravity;
         Debug.DrawLine(transform.position, transform.position + heading * 10, Color.blue);
-
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-            Vector3 groundTarget = hit.point + Vector3.up * (skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f);
-            if (Vector3.Distance(groundTarget, transform.position) > 0.1f) {
-                transform.position += (groundTarget - transform.position).normalized * Time.deltaTime * 3f;
-            }
-        } else {
-            transform.position = new Vector3(0, -1000, 0);
-        }
     }
 }

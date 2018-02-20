@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
+[RequireComponent(typeof(Rigidbody))]
 public abstract class LandAnimal : MonoBehaviour {
     protected AnimalSkeleton skeleton;
     private float ikSpeed = 10;
@@ -9,6 +10,7 @@ public abstract class LandAnimal : MonoBehaviour {
 
     protected Vector3 desiredHeading = Vector3.zero;
     protected Vector3 heading = Vector3.zero;
+    protected Vector3 spineHeading = Vector3.forward;
     private const float headingChangeRate = 5f;
 
     protected float desiredSpeed = 2f;
@@ -16,11 +18,14 @@ public abstract class LandAnimal : MonoBehaviour {
     private const float acceleration = 5f;
     protected const float walkSpeed = 5f;
     protected const float runSpeed = walkSpeed * 4f;
+
+    protected Vector3 gravity = Physics.gravity;
     private const float levelSpeed = 3f;
+
     private float timer = 0;
 
     // Update is called once per frame
-    void Update() {
+    void FixedUpdate() {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
@@ -82,6 +87,21 @@ public abstract class LandAnimal : MonoBehaviour {
                 spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
             }
         }
+
+        RaycastHit hit;
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit)) {
+            Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
+
+            float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
+            float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
+            if (dist2ground <= stanceHeight) {
+                gravity += -Physics.gravity * Time.deltaTime;
+            } else {
+                gravity += Physics.gravity * Time.deltaTime;
+            }
+        }
+
+        spineHeading = spine.bone.rotation * Vector3.back;
     }
 
     /// <summary>
@@ -190,5 +210,9 @@ public abstract class LandAnimal : MonoBehaviour {
         bool min = rotation.x > bone.minAngles.x && rotation.y > bone.minAngles.y && rotation.z > bone.minAngles.z;
         bool max = rotation.x < bone.maxAngles.x && rotation.y < bone.maxAngles.y && rotation.z < bone.maxAngles.z;
         return min && max;
+    }
+
+    private void OnCollisionEnter(Collision collision) {
+        gravity = Vector3.zero;
     }
 }
