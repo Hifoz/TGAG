@@ -122,14 +122,20 @@ public abstract class LandAnimal : MonoBehaviour {
     /// <param name="radOffset">Walk animation offset in radians</param>
     protected void walkLeg(List<Bone> leg, int sign, float radOffset) {
         float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
+        float jointLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH);
 
         Vector3 target = leg[0].bone.position + sign * transform.right * legLength / 4f; //Offset to the right
         target += heading * Mathf.Cos(timer + radOffset) * legLength / 4f;  //Forward/Backward motion
         float rightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Right/Left motion
         rightOffset = (rightOffset > 0) ? rightOffset : 0;
         target += sign * transform.right * rightOffset;
-        target.y -= skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH) / 2f;
-        ccd(leg.GetRange(0, 2), target, ikSpeed / 4f);
+
+        Vector3 subTarget = target;
+        subTarget.y -= jointLength / 2f;
+        for (int i = 0; i < leg.Count - 1; i++) {
+            ccd(leg.GetRange(i, 2), target, ikSpeed / 4f);
+            //subTarget += (subTarget - leg[0].bone.position).normalized;
+        }
 
         RaycastHit hit;
         if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {

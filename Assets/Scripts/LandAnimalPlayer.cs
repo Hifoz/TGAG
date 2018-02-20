@@ -30,7 +30,13 @@ public class LandAnimalPlayer : LandAnimal {
         }
 
         if (Vector3.Distance(groundTarget, transform.position) > 0.1f) {
-            transform.position += (groundTarget - transform.position).normalized * Time.deltaTime * 3f;
+            Vector3 fallDir = (groundTarget - transform.position);
+            if (fallDir.magnitude < 1f) {
+                fallDir.Normalize();
+            } else {
+                fallDir /= 2f;
+            }
+            transform.position += fallDir * Time.deltaTime * 3f;
         }
     }
 }
