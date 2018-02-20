@@ -41,12 +41,12 @@ public class LandAnimalNPC : LandAnimal {
         float dist = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), roamCenter);
         Vector3 toCenter = roamCenter - transform.position;
         toCenter.y = 0;
-        if (dist > roamDistance && Vector3.Angle(toCenter, heading) > 90) {
-            heading = -heading;
-            heading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * heading;
-            transform.LookAt(transform.position - heading);
+        if (dist > roamDistance && Vector3.Angle(toCenter, desiredHeading) > 90) {
+            desiredHeading = -desiredHeading;
+            desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * desiredHeading;
         }
-        transform.position += heading * walkSpeed * Time.deltaTime;
+        transform.LookAt(transform.position - heading);
+        transform.position += heading * speed * Time.deltaTime;
         Debug.DrawLine(transform.position, transform.position + heading * 10, Color.blue);
 
         RaycastHit hit;

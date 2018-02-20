@@ -41,11 +41,9 @@ public class ChunkManager : MonoBehaviour {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        orders.Enqueue(new Order(new AnimalSkeleton(player.transform), Task.ANIMAL));
-        while (results.getCount() == 0) {
-            //---FREEZE LOOOL---
-        }
-        player.GetComponent<LandAnimalPlayer>().setSkeleton(results.Dequeue().animalSkeleton);
+        AnimalSkeleton playerSkeleton = new AnimalSkeleton(player.transform);
+        playerSkeleton.generateInThread();
+        player.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
     }
 	
 	// Update is called once per frame
@@ -107,12 +105,12 @@ public class ChunkManager : MonoBehaviour {
                         orderedAnimalIndex = i;
                     }
                 } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
-                    LandAnimalNPC LandAnimalNPC = animal.GetComponent<LandAnimalNPC>();
+                    LandAnimalNPC landAnimalNPC = animal.GetComponent<LandAnimalNPC>();
                     float x = UnityEngine.Random.Range(lower, upper);
                     float z = UnityEngine.Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
-                    landAnimal.Spawn(player.position + new Vector3(x, y, z));
-                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 10% chance of regenerating animal on respawn
+                    landAnimalNPC.Spawn(player.position + new Vector3(x, y, z));
+                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 1.0f) { // 10% chance of regenerating animal on respawn
                     //    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
                     //    orders.Add(new Order(animalSkeleton, Task.ANIMAL));
                     //    orderedAnimalIndex = i;
