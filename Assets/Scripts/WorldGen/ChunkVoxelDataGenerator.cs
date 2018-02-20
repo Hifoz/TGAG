@@ -40,7 +40,6 @@ public class ChunkVoxelDataGenerator {
                         data[x, y, z] = new BlockData(BlockData.BlockType.WATER);
                     else
                         data[x, y, z] = new BlockData(BlockData.BlockType.NONE);
-                    
                 }
             }
         }

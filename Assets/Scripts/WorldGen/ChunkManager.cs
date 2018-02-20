@@ -20,7 +20,7 @@ public class ChunkManager : MonoBehaviour {
     private ChunkData[,] chunkGrid;
 
     private ChunkVoxelDataThread[] CVDT;
-    private BlockingQueue<Order> orders = new BlockingQueue<Order>(); //When this thread puts a position in this queue, the thread generates a mesh for that position.
+    private BlockingList<Order> orders = new BlockingList<Order>();
     private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
@@ -103,7 +103,7 @@ public class ChunkManager : MonoBehaviour {
                     if (orderedAnimalIndex == -1) {
                         animals[i] = Instantiate(animalPrefab);
                         AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
-                        orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
+                        orders.Add(new Order(animalSkeleton, Task.ANIMAL));
                         orderedAnimalIndex = i;
                     }
                 } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
@@ -111,12 +111,12 @@ public class ChunkManager : MonoBehaviour {
                     float x = UnityEngine.Random.Range(lower, upper);
                     float z = UnityEngine.Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
-                    LandAnimalNPC.Spawn(player.position + new Vector3(x, y, z));
-                    if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 10% chance of regenerating animal on respawn
-                        AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
-                        orders.Enqueue(new Order(animalSkeleton, Task.ANIMAL));
-                        orderedAnimalIndex = i;
-                    }
+                    landAnimal.Spawn(player.position + new Vector3(x, y, z));
+                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 10% chance of regenerating animal on respawn
+                    //    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
+                    //    orders.Add(new Order(animalSkeleton, Task.ANIMAL));
+                    //    orderedAnimalIndex = i;
+                    //}
                 }
             }
             if (orderedAnimalIndex != -1) {
@@ -152,14 +152,17 @@ public class ChunkManager : MonoBehaviour {
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
                     activeChunks[i].terrainChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
+                    inactiveChunks.Peek().SetActive(false);
                 }
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     inactiveChunks.Push(activeChunks[i].waterChunk[j]);
+                    inactiveChunks.Peek().SetActive(false);
                 }
+
                 Destroy(chunk);
 
-                inactiveChunks.Peek().SetActive(false);
+                //inactiveChunks.Peek().SetActive(false);
 
                 foreach(var tree in activeChunks[i].trees) {
                     inactiveTrees.Push(tree);
@@ -180,7 +183,7 @@ public class ChunkManager : MonoBehaviour {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
                 Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
-                    orders.Enqueue(new Order(chunkPos, Task.CHUNK));
+                    orders.Add(new Order(chunkPos, Task.CHUNK));
                     pendingChunks.Add(chunkPos);
                 }
             }
@@ -200,6 +203,9 @@ public class ChunkManager : MonoBehaviour {
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
                     break;
+                case Task.CANCEL:
+                    pendingChunks.Remove(result.chunkVoxelData.chunkPos);
+                    break;
             }
         }
     }
@@ -214,6 +220,7 @@ public class ChunkManager : MonoBehaviour {
         GameObject chunk = new GameObject();
         chunk.name = "chunk";
         chunk.transform.parent = this.transform;
+
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = getChunk();
             subChunk.transform.parent = chunk.transform;
@@ -225,6 +232,7 @@ public class ChunkManager : MonoBehaviour {
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+            subChunk.SetActive(true);
             cd.terrainChunk.Add(subChunk);
         }
 
@@ -239,9 +247,9 @@ public class ChunkManager : MonoBehaviour {
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+            waterChunk.SetActive(true);
             cd.waterChunk.Add(waterChunk);
         }
-
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {
@@ -298,7 +306,6 @@ public class ChunkManager : MonoBehaviour {
     private GameObject getChunk() {
         if (inactiveChunks.Count > 0) {
             var chunk = inactiveChunks.Pop();
-            chunk.SetActive(true);
             return chunk;
         } else {
             return createChunk();
@@ -346,7 +353,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void stopThreads() {
         foreach (var thread in CVDT) {
-            orders.Enqueue(new Order(Vector3.down, Task.CHUNK));
+            orders.Add(new Order(Vector3.down, Task.CHUNK));
             thread.stop();
         }
     }
