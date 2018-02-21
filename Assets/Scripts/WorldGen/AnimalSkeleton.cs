@@ -5,12 +5,25 @@ using System.Collections.Generic;
 /// <summary>
 /// Enum used to specify a bodypart
 /// </summary>
-public enum BodyPart { ALL = 0, HEAD, NECK, SPINE, RIGHT_LEGS, LEFT_LEGS, TAIL }
+public enum BodyPart {
+    ALL = 0,
+    HEAD,
+    NECK,
+    SPINE,
+    RIGHT_LEGS, LEFT_LEGS,
+    TAIL
+}
 
 /// <summary>
 /// Enums used to specify a parameter for the skeleton
 /// </summary>
-public enum BodyParameter { HEAD_SIZE = 0, NECK_LENGTH, SPINE_LENGTH, LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH, TAIL_LENGTH }
+public enum BodyParameter {
+    HEAD_SIZE = 0,
+    NECK_LENGTH,
+    SPINE_LENGTH,
+    LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH,
+    TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH 
+}
 
 /// <summary>
 /// Class used to represent a Bone with constraints
@@ -40,8 +53,10 @@ public class AnimalSkeleton {
             { BodyParameter.LEG_JOINTS, new Pair<int>(2, 3) },
             { BodyParameter.LEG_LENGTH, new Pair<float>(5, 10) },
             //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
-            { BodyParameter.TAIL_LENGTH, new Pair<float>(4, 5) }
-    } );
+            { BodyParameter.TAIL_JOINTS, new Pair<int>(2, 5) },
+            { BodyParameter.TAIL_LENGTH, new Pair<float>(3, 7) }
+            //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
+    });
 
     private Transform rootBone;
     private MixedDictionary<BodyParameter> bodyParameters = new MixedDictionary<BodyParameter>();
@@ -81,6 +96,15 @@ public class AnimalSkeleton {
     /// <returns>List<Bone> bones</returns>
     public List<Bone> getBones(BodyPart bodyPart) {
         return skeletonBones[bodyPart];
+    }
+
+    /// <summary>
+    /// Gets the specified lines
+    /// </summary>
+    /// <param name="bodyPart">Bodypart of lines to get</param>
+    /// <returns>List of lines for bodypart</returns>
+    public List<LineSegment> getLines(BodyPart bodyPart) {
+        return skeletonLines[bodyPart];
     }
 
     /// <summary>
@@ -225,6 +249,10 @@ public class AnimalSkeleton {
             BodyParameter.LEG_JOINT_LENGTH,
             bodyParameters.Get<float>(BodyParameter.LEG_LENGTH) / bodyParameters.Get<int>(BodyParameter.LEG_JOINTS)
         );
+        bodyParameters.Add(
+            BodyParameter.TAIL_JOINT_LENGTH,
+            bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH) / bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS)
+        );
     }
 
     /// <summary>
@@ -241,46 +269,21 @@ public class AnimalSkeleton {
         //SPINE
         LineSegment spineLine = new LineSegment(neckLine.b, neckLine.b + new Vector3(0, 0, 1) * bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH));
         addSkeletonLine(spineLine, BodyPart.SPINE);
-        //TAIL
-        LineSegment tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH));
+        //
+        LineSegment tailLine;
+        tailLine = new LineSegment(spineLine.b, spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH));
         addSkeletonLine(tailLine, BodyPart.TAIL);
         //LEGS
         int legPairs = bodyParameters.Get<int>(BodyParameter.LEG_PAIRS);
-        int legJoints = bodyParameters.Get<int>(BodyParameter.LEG_JOINTS);
-        float jointLength = bodyParameters.Get<float>(BodyParameter.LEG_JOINT_LENGTH);
+        float legLength = bodyParameters.Get<float>(BodyParameter.LEG_LENGTH);
         float spineLength = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
         for (int i = 0; i < legPairs; i++) {
             Vector3 offset = new Vector3(0, 0, 1) * spineLength * ((float)i / (float)(legPairs - 1)) + spineLine.a;
-            addLeg(offset, legJoints, jointLength, BodyPart.RIGHT_LEGS);
-            addLeg(offset, legJoints, jointLength, BodyPart.LEFT_LEGS);
+            LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0).normalized * legLength) + offset;
+            LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0).normalized * legLength) + offset;
+            addSkeletonLine(right, BodyPart.RIGHT_LEGS);
+            addSkeletonLine(left, BodyPart.LEFT_LEGS);
         }        
-    }
-
-    /// <summary>
-    /// Adds a leg to the skeleton
-    /// </summary>
-    /// <param name="offset">Offset position for the leg</param>
-    /// <param name="legJoints">number of joints in the leg</param>
-    /// <param name="legLength">total length of the leg</param>
-    /// <param name="leg">Bodypart of leg (left or right)</param>
-    private void addLeg(Vector3 offset, int legJoints, float jointLength, BodyPart leg) {
-        if (leg != BodyPart.RIGHT_LEGS && leg != BodyPart.LEFT_LEGS) {
-            throw new Exception("addLeg error: BodyPart is not a leg!");
-        }
-
-        int sing = (leg == BodyPart.RIGHT_LEGS) ? 1 : -1;
-
-        LineSegment parent;
-        LineSegment current = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f * sing, -0.5f, 0).normalized * jointLength);
-        current += offset;
-        addSkeletonLine(current, leg);
-        parent = current;
-
-        for (int i = 1; i < legJoints; i++) {
-            current = new LineSegment(parent.b, parent.b + Vector3.down * jointLength);
-            addSkeletonLine(current, leg);
-            parent = current;
-        }
     }
 
     /// <summary>
@@ -316,55 +319,46 @@ public class AnimalSkeleton {
     }
 
     /// <summary>
-    /// Gets the specified leg lines
-    /// </summary>
-    /// <param name="leg">bool rightLeg</param>
-    /// <param name="number">Number of leg to get</param>
-    /// <returns>List<LineSegment> leg to get</returns>
-    private List<LineSegment> getLegLines(bool rightLeg, int number) {
-        int legJoints = bodyParameters.Get<int>(BodyParameter.LEG_JOINTS);
-        List<LineSegment> legs = skeletonLines[(rightLeg) ? BodyPart.RIGHT_LEGS : BodyPart.LEFT_LEGS];
-        return legs.GetRange(number * legJoints, legJoints);
-    }
-
-    /// <summary>
     /// Populates the skeletonBones dicitonary with bones
     /// </summary>
     private void makeAnimBones() {
+        //SPINE
         LineSegment spineLine = skeletonLines[BodyPart.SPINE][0];
         Bone spineBone = createAndBindBone(Vector3.Lerp(spineLine.a, spineLine.b, 0.5f), rootBone, spineLine, "Mid Spine", BodyPart.SPINE);
-        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBone.bone, skeletonLines[BodyPart.HEAD], "Head", BodyPart.HEAD);
-        createAndBindBone(skeletonLines[BodyPart.TAIL][0].a, spineBone.bone, skeletonLines[BodyPart.TAIL], "Tail", BodyPart.TAIL);
-
-        int legPairs = bodyParameters.Get<int>(BodyParameter.LEG_PAIRS);
-        for(int i = 0; i < legPairs; i++) {
-            createAndBindLegBones(spineBone, getLegLines(true, i), string.Format("Right Leg {0}", i), BodyPart.RIGHT_LEGS);
-            createAndBindLegBones(spineBone, getLegLines(false, i), string.Format("Left Leg {0}", i), BodyPart.LEFT_LEGS);
-        }
-
         spineBone.minAngles = new Vector3(-90, -1, -1);
         spineBone.maxAngles = new Vector3(90, 1, 1);
+        //NECK
+        Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
+        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBoneBase.bone, "Neck", BodyPart.NECK);
+        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBone.bone, skeletonLines[BodyPart.HEAD], "Head", BodyPart.HEAD);
+        //TAIL
+        int tailJointCount = bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS);
+        createAndBindBones(skeletonLines[BodyPart.TAIL][0], spineBone.bone, tailJointCount, "Tail", BodyPart.TAIL);
+        //LEGS
+        int legPairs = bodyParameters.Get<int>(BodyParameter.LEG_PAIRS);
+        int legJointCount = bodyParameters.Get<int>(BodyParameter.LEG_JOINTS);
+        for (int i = 0; i < legPairs; i++) {
+            createAndBindBones(skeletonLines[BodyPart.RIGHT_LEGS][i], spineBone.bone, legJointCount, string.Format("Right Leg {0}", i), BodyPart.RIGHT_LEGS);
+            createAndBindBones(skeletonLines[BodyPart.LEFT_LEGS][i], spineBone.bone, legJointCount, string.Format("Left Leg {0}", i), BodyPart.LEFT_LEGS);
+        }
     }
 
     /// <summary>
-    /// Creates and binds an entire leg
+    /// Creates and binds a multi joint bone. 
     /// </summary>
-    /// <param name="spineBone">Spine bone</param>
-    /// <param name="legLines">The lines representing the leg</param>
-    /// <param name="name">Name of the leg</param>
-    /// <param name="leg">Bodypart of leg</param>
-    private void createAndBindLegBones(Bone spineBone, List<LineSegment> legLines, string name, BodyPart leg) {
-        if (leg != BodyPart.RIGHT_LEGS && leg != BodyPart.LEFT_LEGS) {
-            throw new Exception("addLeg error: BodyPart is not a leg!");
-        }
-
-        Transform parent = spineBone.bone;
-        foreach(LineSegment joint in legLines) {
-            parent = createAndBindBone(joint.a, parent, joint, name, leg).bone;
+    /// <param name="line">Line to create multiple bones for</param>
+    /// <param name="parent">parent bone</param>
+    /// <param name="jointCount">Number of joints in bone</param>
+    /// <param name="name">Name of bone</param>
+    /// <param name="bodyPart">Bodypart of bone</param>
+    private void createAndBindBones(LineSegment line, Transform parent, int jointCount, string name, BodyPart bodyPart) {
+        float jointLength = line.length() / jointCount;
+        for(int i = 0; i < jointCount; i++) {
+            LineSegment skinningBone = new LineSegment(line.a + line.getDir() * jointLength * i, line.a + line.getDir() * jointLength * (i + 1));
+            parent = createAndBindBone(skinningBone.a, parent, skinningBone, name, bodyPart).bone;
         }
         //add Foot
-        createAndBindBone(legLines[legLines.Count - 1].b, parent, name + " foot", leg);
+        createAndBindBone(line.b, parent, name + " effector", bodyPart);
     }
 
     /// <summary>

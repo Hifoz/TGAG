@@ -25,6 +25,9 @@ public abstract class LandAnimal : MonoBehaviour {
 
     private float timer = 0;
 
+    private Vector3[] currentTailPositions;
+    private Vector3[] desiredTailPositions;
+
     // Update is called once per frame
     void FixedUpdate() {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
@@ -38,6 +41,7 @@ public abstract class LandAnimal : MonoBehaviour {
             move();
             levelSpine();
             walk();
+            tailPhysics();
             timer += Time.deltaTime * speed / 2f;
         }
     }
@@ -56,6 +60,14 @@ public abstract class LandAnimal : MonoBehaviour {
             bones[i] = skeletonBones[i].bone;
         }
         GetComponent<SkinnedMeshRenderer>().bones = bones;
+
+        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+        Vector3 defaultTailDir = (tail[tail.Count - 1].bone.position - tail[0].bone.position).normalized;
+        currentTailPositions = new Vector3[tail.Count - 1];
+        desiredTailPositions = new Vector3[tail.Count - 1];
+        for (int i = 0; i < currentTailPositions.Length; i++) {
+            currentTailPositions[i] = tail[i + 1].bone.position;
+        }
     }
 
     public void resetJoints() {
@@ -65,6 +77,24 @@ public abstract class LandAnimal : MonoBehaviour {
     }
 
     protected abstract void move();
+
+    /// <summary>
+    /// Gives the tail physics animations (no actual physics calculations involved)
+    /// </summary>
+    private void tailPhysics() {
+        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+        Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].getDir();
+        float tailJointLength = skeleton.getBodyParameter<float>(BodyParameter.TAIL_JOINT_LENGTH);
+        for (int i = 0; i < desiredTailPositions.Length; i++) {
+            desiredTailPositions[i] = tail[0].bone.position + desiredTailDir * tailJointLength * (i + 1);
+        }
+
+        for (int i = 0; i < tail.Count - 1; i++) {
+            ccd(tail.GetRange(i, 2), currentTailPositions[i], ikSpeed);
+            float distance = Vector3.Distance(currentTailPositions[i], desiredTailPositions[i]);
+            currentTailPositions[i] = Vector3.MoveTowards(currentTailPositions[i], desiredTailPositions[i], Time.deltaTime * 4f * distance);
+        }
+    }
 
     /// <summary>
     /// Tries to level the spine with the ground

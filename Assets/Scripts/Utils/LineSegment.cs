@@ -44,6 +44,22 @@ public class LineSegment {
     }
 
     /// <summary>
+    /// Gets the direction of the line (normalized)
+    /// </summary>
+    /// <returns>direction og bone</returns>
+    public Vector3 getDir() {
+        return (b - a).normalized;
+    }
+
+    /// <summary>
+    /// Returns the length of the line
+    /// </summary>
+    /// <returns>length of the line</returns>
+    public float length() {
+        return (b - a).magnitude;
+    }
+
+    /// <summary>
     /// Computes the distance between a point and a line segment.
     /// Based on: http://geomalgorithms.com/a02-_lines.html
     /// </summary>
