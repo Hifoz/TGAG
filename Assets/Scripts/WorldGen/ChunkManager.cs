@@ -39,6 +39,11 @@ public class ChunkManager : MonoBehaviour {
         init();
 
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        AnimalSkeleton playerSkeleton = new AnimalSkeleton(player.transform);
+        playerSkeleton.generateInThread();
+        player.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
     }
 	
 	// Update is called once per frame
@@ -88,7 +93,7 @@ public class ChunkManager : MonoBehaviour {
     private void handleAnimals() {
         if (animalPrefab) {
             float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-            float lower = -maxDistance + LandAnimal.roamDistance;
+            float lower = -maxDistance + LandAnimalNPC.roamDistance;
             float upper = -lower;
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
@@ -100,12 +105,12 @@ public class ChunkManager : MonoBehaviour {
                         orderedAnimalIndex = i;
                     }
                 } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
-                    LandAnimal landAnimal = animal.GetComponent<LandAnimal>();
+                    LandAnimalNPC landAnimalNPC = animal.GetComponent<LandAnimalNPC>();
                     float x = UnityEngine.Random.Range(lower, upper);
                     float z = UnityEngine.Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
-                    landAnimal.Spawn(player.position + new Vector3(x, y, z));
-                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 0.1f) { // 10% chance of regenerating animal on respawn
+                    landAnimalNPC.Spawn(player.position + new Vector3(x, y, z));
+                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 1.0f) { // 10% chance of regenerating animal on respawn
                     //    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
                     //    orders.Add(new Order(animalSkeleton, Task.ANIMAL));
                     //    orderedAnimalIndex = i;
@@ -266,7 +271,7 @@ public class ChunkManager : MonoBehaviour {
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
         GameObject animal = animals[orderedAnimalIndex];
         animal.SetActive(true);
-        animal.GetComponent<LandAnimal>().setSkeleton(animalSkeleton);
+        animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
         orderedAnimalIndex = -1;
     }
 

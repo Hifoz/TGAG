@@ -129,7 +129,7 @@ public class ChunkVoxelDataThread {
 
         switch (order.task) {
             case Task.CHUNK:
-                Vector3 distFromPlayer = order.position - PlayerMovement.playerPos.get();
+                Vector3 distFromPlayer = order.position - LandAnimalPlayer.playerPos.get();
                 if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
                     result.task = Task.CANCEL;
                     result.chunkVoxelData = new ChunkVoxelData(order.position);
@@ -225,8 +225,8 @@ public class ChunkVoxelDataThread {
         float preferredValue = Int32.MaxValue;
         for(int i = 0; i < list.Count; i++) {
             Vector3 chunkPos = list[i].position;
-            Vector3 playerPos = PlayerMovement.playerPos.get();
-            Vector3 playerMoveDir = PlayerMovement.playerSpeed.get();
+            Vector3 playerPos = LandAnimalPlayer.playerPos.get();
+            Vector3 playerMoveDir = LandAnimalPlayer.playerSpeed.get();
             Vector3 cameraViewDir = CameraController.cameraDir.get();
 
             Vector3 preferredDir = playerMoveDir * 2 + cameraViewDir;

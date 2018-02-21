@@ -2,57 +2,48 @@
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
-public class LandAnimal : MonoBehaviour {
-    AnimalSkeleton skeleton;
+[RequireComponent(typeof(Rigidbody))]
+public abstract class LandAnimal : MonoBehaviour {
+    protected AnimalSkeleton skeleton;
     private float ikSpeed = 10;
     private const float ikTolerance = 0.1f;
 
-    public const float roamDistance = 40;
-    private Vector3 roamCenter;
+    protected Vector3 desiredHeading = Vector3.zero;
+    protected Vector3 heading = Vector3.zero;
+    protected Vector3 spineHeading = Vector3.forward;
+    private const float headingChangeRate = 5f;
 
-    private Vector3 heading = Vector3.zero;
-    private float speed = 2f;
+    protected float desiredSpeed = 2f;
+    protected float speed = 2f;
+    private const float acceleration = 5f;
+    protected const float walkSpeed = 5f;
+    protected const float runSpeed = walkSpeed * 4f;
+
+    protected bool grounded = false;
+    protected Vector3 gravity = Physics.gravity;
     private const float levelSpeed = 3f;
-    private const float walkSpeed = 0.2f;
 
     private float timer = 0;
-    
+
+    private Vector3[] currentTailPositions;
+    private Vector3[] desiredTailPositions;
+
     // Update is called once per frame
-    void Update() {        
+    void FixedUpdate() {
+        if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
+            heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        }
+        if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
+            speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+        }
+
         if (skeleton != null) {
             move();
             levelSpine();
             walk();
-            timer += Time.deltaTime;
+            tailPhysics();
+            timer += Time.deltaTime * speed / 2f;
         }
-    }
-
-    /// <summary>
-    /// Spawns the animal at position
-    /// </summary>
-    /// <param name="pos">Vector3 pos</param>
-    public void Spawn(Vector3 pos) {
-        transform.rotation = Quaternion.identity;
-        transform.localRotation = Quaternion.identity;
-        if (skeleton != null) {
-            foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
-                bone.bone.rotation = Quaternion.identity;
-                bone.bone.localRotation = Quaternion.identity;
-            }
-        }
-
-        transform.position = pos;
-        roamCenter = pos;
-        roamCenter.y = 0;
-
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-            Vector3 groundTarget = hit.point + Vector3.up * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
-            transform.position = groundTarget;
-        }
-
-        heading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        transform.LookAt(transform.position - heading);
     }
 
     /// <summary>
@@ -69,6 +60,40 @@ public class LandAnimal : MonoBehaviour {
             bones[i] = skeletonBones[i].bone;
         }
         GetComponent<SkinnedMeshRenderer>().bones = bones;
+
+        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+        Vector3 defaultTailDir = (tail[tail.Count - 1].bone.position - tail[0].bone.position).normalized;
+        currentTailPositions = new Vector3[tail.Count - 1];
+        desiredTailPositions = new Vector3[tail.Count - 1];
+        for (int i = 0; i < currentTailPositions.Length; i++) {
+            currentTailPositions[i] = tail[i + 1].bone.position;
+        }
+    }
+
+    public void resetJoints() {
+        foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
+            bone.bone.transform.rotation = Quaternion.identity;
+        }
+    }
+
+    protected abstract void move();
+
+    /// <summary>
+    /// Gives the tail physics animations (no actual physics calculations involved)
+    /// </summary>
+    private void tailPhysics() {
+        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+        Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].getDir();
+        float tailJointLength = skeleton.getBodyParameter<float>(BodyParameter.TAIL_JOINT_LENGTH);
+        for (int i = 0; i < desiredTailPositions.Length; i++) {
+            desiredTailPositions[i] = tail[0].bone.position + desiredTailDir * tailJointLength * (i + 1);
+        }
+
+        for (int i = 0; i < tail.Count - 1; i++) {
+            ccd(tail.GetRange(i, 2), currentTailPositions[i], ikSpeed);
+            float distance = Vector3.Distance(currentTailPositions[i], desiredTailPositions[i]);
+            currentTailPositions[i] = Vector3.MoveTowards(currentTailPositions[i], desiredTailPositions[i], Time.deltaTime * 4f * distance);
+        }
     }
 
     /// <summary>
@@ -93,64 +118,27 @@ public class LandAnimal : MonoBehaviour {
                 spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
             }
         }
-    }
-
-    /// <summary>
-    /// Moves the animal in world space
-    /// </summary>
-    private void move() {
-        float dist = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), roamCenter);
-        Vector3 toCenter = roamCenter - transform.position;
-        toCenter.y = 0;
-        if (dist > roamDistance && Vector3.Angle(toCenter, heading) > 90) {
-            heading = -heading;
-            heading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * heading;
-            transform.LookAt(transform.position - heading);
-        }
-        transform.position += heading * speed * Time.deltaTime;
-        Debug.DrawLine(transform.position, transform.position + heading * 10, Color.blue);
 
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-            Vector3 groundTarget = hit.point + Vector3.up * (skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f);
-            if (Vector3.Distance(groundTarget, transform.position) > 0.1f) {
-                transform.position += (groundTarget - transform.position).normalized * Time.deltaTime * 3f;
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit)) {
+            Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
+
+            float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
+            float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
+            if (Mathf.Abs(stanceHeight - dist2ground) <= stanceHeight) {
+                gravity += -Physics.gravity * (stanceHeight - dist2ground) / stanceHeight * Time.deltaTime;
+            } else {
+                gravity += Physics.gravity * Time.deltaTime;
             }
-        } else {
-            transform.position = new Vector3(0, -1000, 0);
-        }        
-    }
 
-    /// <summary>
-    /// Keeps the legs of the animal grounded.
-    /// </summary>
-    private void stayGrounded() { //TODO - Update to new system of getting legs
-        //List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
-        //List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
-        
-        //var right1 = rightLegs.GetRange(0, 3);
-        //var right2 = rightLegs.GetRange(3, 3);
-        //var left1 = leftLegs.GetRange(0, 3);
-        //var left2 = leftLegs.GetRange(3, 3);
-
-        //groundLeg(right1, -1);
-        //groundLeg(right2, -1);
-        //groundLeg(left1, 1);
-        //groundLeg(left2, 1);
-    }
-
-    /// <summary>
-    /// Grounds one leg
-    /// </summary>
-    /// <param name="leg">List<Bone> leg</param>
-    /// <param name="sign">int sign, used to get a correct offset for IK target</param>
-    private void groundLeg(List<Bone> leg, int sign) {
-        Vector3 target = leg[0].bone.position + sign * transform.right * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
-
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
-            ccd(leg, hit.point, ikSpeed);
+            if (dist2ground <= stanceHeight + 0.2f) {
+                grounded = true;
+            } else {
+                grounded = false;
+            }
         }
+
+        spineHeading = spine.bone.rotation * Vector3.back;
     }
 
     /// <summary>
@@ -160,7 +148,7 @@ public class LandAnimal : MonoBehaviour {
         int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
         for(int i = 0; i < legPairs; i++) {
             walkLeg(skeleton.getLeg(true, i), -1, Mathf.PI * i);
-            walkLeg(skeleton.getLeg(false, i), 1, Mathf.PI * (i + 1));
+            walkLeg(skeleton.getLeg(false, i), 1, Mathf.PI * (i + 1));            
         }
     }
 
@@ -170,16 +158,21 @@ public class LandAnimal : MonoBehaviour {
     /// <param name="leg">List<Bone> leg</param>
     /// <param name="sign">int sign, used to get a correct offset for IK target</param>
     /// <param name="radOffset">Walk animation offset in radians</param>
-    private void walkLeg(List<Bone> leg, int sign, float radOffset) {
+    private bool walkLeg(List<Bone> leg, int sign, float radOffset) {
         float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
+        float jointLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH);
 
         Vector3 target = leg[0].bone.position + sign * transform.right * legLength / 4f; //Offset to the right
         target += heading * Mathf.Cos(timer + radOffset) * legLength / 4f;  //Forward/Backward motion
         float rightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Right/Left motion
         rightOffset = (rightOffset > 0) ? rightOffset : 0;
         target += sign * transform.right * rightOffset;
-        target.y -= skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH) / 2f;
-        ccd(leg.GetRange(0, 2), target, ikSpeed / 4f);
+
+        Vector3 subTarget = target;
+        subTarget.y -= jointLength / 2f;
+        for (int i = 0; i < leg.Count - 1; i++) {
+            ccd(leg.GetRange(i, 2), target, ikSpeed / 4f);
+        }
 
         RaycastHit hit;
         if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
@@ -188,9 +181,11 @@ public class LandAnimal : MonoBehaviour {
 
             target = hit.point;
             target.y += heightOffset;
-            ccd(leg, target, ikSpeed);
+            if (ccd(leg, target, ikSpeed)) {
+                return true;
+            }
         }
-
+        return false;
     }
 
     /// <summary>
@@ -221,8 +216,7 @@ public class LandAnimal : MonoBehaviour {
                     }
                 }
             }
-        } 
-        
+        }        
         return dist < ikTolerance;
     }
 
@@ -241,5 +235,9 @@ public class LandAnimal : MonoBehaviour {
         bool min = rotation.x > bone.minAngles.x && rotation.y > bone.minAngles.y && rotation.z > bone.minAngles.z;
         bool max = rotation.x < bone.maxAngles.x && rotation.y < bone.maxAngles.y && rotation.z < bone.maxAngles.z;
         return min && max;
+    }
+
+    private void OnCollisionEnter(Collision collision) {
+        gravity = Vector3.zero;
     }
 }
