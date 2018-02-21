@@ -36,6 +36,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// </summary>
     void Start() {
         Settings.load();
+        ChunkConfig.chunkCount = 20;
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
     }
 
