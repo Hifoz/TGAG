@@ -111,8 +111,8 @@ public static class LSystemTreeGenerator {
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE);
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE)[0];
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds), MeshDataGenerator.MeshDataType.TREE)[0];
         return meshData;
     }
     

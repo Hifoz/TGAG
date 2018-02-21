@@ -13,7 +13,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData GenerateWaterMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
+    public static MeshData[] GenerateWaterMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         WaterMeshDataGenerator MDG = new WaterMeshDataGenerator();
         MDG.meshDataType = meshDataType;
 
@@ -33,9 +33,8 @@ class WaterMeshDataGenerator : MeshDataGenerator {
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
-        meshData.uvs2 = MDG.uvs2.ToArray();
 
-        return meshData;
+        return meshData.split();
     }
 
     private void GenerateWaterCube(Vector3Int cubePos, Vector3 offset, BlockData blockData, float voxelSize) {

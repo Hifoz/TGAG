@@ -4,16 +4,25 @@ using System.Threading;
 using UnityEngine;
 
 public class ChunkVoxelData {
-    public MeshData meshData;
-    public MeshData waterMeshData;
+    public MeshData[] meshData;
+    public MeshData[] waterMeshData;
     public Vector3 chunkPos;
 
     public MeshData[] trees;
     public MeshData[] treeTrunks;
     public Vector3[] treePositions;
+    private Vector3 position;
+
+    public ChunkVoxelData(Vector3 position = default(Vector3)) {
+        this.position = position;
+    }
 }
 
-public enum Task { CHUNK = 0, ANIMAL}
+public enum Task {
+    CHUNK = 0,
+    ANIMAL,
+    CANCEL
+}
 
 /// <summary>
 /// A class representing an order to be done by the thread
@@ -49,16 +58,19 @@ public class Result {
 public class ChunkVoxelDataThread {
 
     private Thread thread;
-    private BlockingQueue<Order> orders; //When the main thread puts a position in this queue, the thread generates a mesh for that position.
+    private BlockingList<Order> orders;   //When the main thread puts a position in this queue, the thread generates a mesh for that position.
     private LockingQueue<Result> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
     private bool run;
+
+    private ChunkVoxelDataGenerator CVDG = new ChunkVoxelDataGenerator();
+
 
     /// <summary>
     /// Constructor that takes the two needed queues, also starts thread excecution.
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunkVoxelDataThread(BlockingQueue<Order> orders, LockingQueue<Result> results) {        
+    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results) {
         this.orders = orders;
         this.results = results;
         run = true;
@@ -89,30 +101,15 @@ public class ChunkVoxelDataThread {
         Stopwatch stopwatch = new Stopwatch();
         while (run) {            
             try {
-                stopwatch.Start();
-                Order order = orders.Dequeue();
-                stopwatch.Stop();
-                float time = (float)stopwatch.Elapsed.Milliseconds;
-                UnityEngine.Debug.Log(String.Format("GET TIME {0}s!", time));
-                stopwatch.Reset();
-
+                Order order = orders.Take(getPreferredOrder);
+                if(order == null) {
+                    Debug.Log("Order is null");
+                    continue;
+                }
                 if (order.position == Vector3.down) {
                     break;
-                }               
-
-                stopwatch.Start();
-                var result = handleOrder(order);
-                stopwatch.Stop();
-                time = (float)stopwatch.Elapsed.Milliseconds;
-                UnityEngine.Debug.Log(String.Format("PROCESS TIME {0}s!", time));
-                stopwatch.Reset();
-
-                stopwatch.Start();
-                results.Enqueue(result);
-                stopwatch.Stop();
-                time = (float)stopwatch.Elapsed.Milliseconds;
-                UnityEngine.Debug.Log(String.Format("PUT TIME {0}s!", time));
-                stopwatch.Reset();
+                }
+                results.Enqueue(handleOrder(order));
 
             } catch(Exception e) {
                 UnityEngine.Debug.LogException(e);
@@ -132,7 +129,13 @@ public class ChunkVoxelDataThread {
 
         switch (order.task) {
             case Task.CHUNK:
-                result.chunkVoxelData = handleChunkOrder(order);
+                Vector3 distFromPlayer = order.position - LandAnimalPlayer.playerPos.get();
+                if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
+                    result.task = Task.CANCEL;
+                    result.chunkVoxelData = new ChunkVoxelData(order.position);
+                } else {
+                    result.chunkVoxelData = handleChunkOrder(order);
+                }
                 break;
             case Task.ANIMAL:
                 order.animalSkeleton.generateInThread();
@@ -143,6 +146,7 @@ public class ChunkVoxelDataThread {
         return result;
     }
 
+
     /// <summary>
     /// Generates a chunk with trees
     /// </summary>
@@ -150,10 +154,10 @@ public class ChunkVoxelDataThread {
     /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData();
-        //Generate the chunk terrain
         result.chunkPos = order.position;
-        result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
-        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
+        //Generate the chunk terrain
+        result.meshData = MeshDataGenerator.GenerateMeshData(CVDG.getChunkVoxelData(order.position));
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(CVDG.getChunkVoxelData(order.position));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
         int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
@@ -209,5 +213,35 @@ public class ChunkVoxelDataThread {
         }
         //Debug.Log("Failed to find ground");
         return Vector3.negativeInfinity;
+    }
+
+    /// <summary>
+    /// Used to find the index of the order that is most preferrable to handle next.
+    /// </summary>
+    /// <param name="list">list of orders</param>
+    /// <returns>index of preferred order</returns>
+    private int getPreferredOrder(List<Order> list) {
+        int resultIndex = -1;
+        float preferredValue = Int32.MaxValue;
+        for(int i = 0; i < list.Count; i++) {
+            Vector3 chunkPos = list[i].position;
+            Vector3 playerPos = LandAnimalPlayer.playerPos.get();
+            Vector3 playerMoveDir = LandAnimalPlayer.playerSpeed.get();
+            Vector3 cameraViewDir = CameraController.cameraDir.get();
+
+            Vector3 preferredDir = playerMoveDir * 2 + cameraViewDir;
+            Vector3 chunkDir = (chunkPos - playerPos);
+            chunkDir.y = 0;
+
+            float angleFromPreferredDir = Vector3.Angle(preferredDir, chunkDir);
+            float distFromPlayer = Vector3.Distance(playerPos, chunkPos);
+            float value = angleFromPreferredDir + distFromPlayer;
+
+            if (value < preferredValue) {
+                resultIndex = i;
+                preferredValue = value;
+            }
+        }
+        return resultIndex;
     }
 }
