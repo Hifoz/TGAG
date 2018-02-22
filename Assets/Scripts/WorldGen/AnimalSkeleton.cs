@@ -69,8 +69,8 @@ public class AnimalSkeleton {
     private List<Matrix4x4> bindPoses = new List<Matrix4x4>();
     private List<BoneWeight> weights;
 
-    private const float skeletonThiccness = 0.25f;
-    private const float voxelSize = 0.25f;
+    private const float skeletonThiccness = 0.5f;
+    private const float voxelSize = 0.5f;
 
     //    _____       _     _ _        __  __      _   _               _     
     //   |  __ \     | |   | (_)      |  \/  |    | | | |             | |    
@@ -481,7 +481,10 @@ public class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
+        StopWatch sw = new StopWatch();
+        //sw.start();
         meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.TERRAIN)[0];
+        //sw.done("Animal mesh generator");
     }
 
     private BlockData.BlockType calcBlockType(Vector3 pos) {

@@ -34,7 +34,7 @@ public class ChunkManager : MonoBehaviour {
         Settings.load();
         CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
         for (int i = 0; i < Settings.WorldGenThreads; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(orders, results);
+            CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
         }
         init();
 

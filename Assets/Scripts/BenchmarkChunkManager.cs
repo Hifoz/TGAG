@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 public class BenchmarkChunkManager : MonoBehaviour {
 
@@ -36,6 +37,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// </summary>
     void Start() {
         Settings.load();
+        ChunkConfig.chunkCount = 20;
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
     }
 
@@ -95,6 +97,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// <param name="animals">Set this to true to generate animals</param>
     /// <returns>Success flag</returns>
     IEnumerator BenchmarkWorldGen(int startThreads, int endThreads, int step, bool terrain, bool animals) {
+        QualitySettings.vSyncCount = 0;
         terrainFlag = terrain;
         animalsFlag = animals;
         inProgress = true;
@@ -114,7 +117,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             currentThreads = run;
             CVDT = new ChunkVoxelDataThread[run];
             for (int i = 0; i < run; i++) {
-                CVDT[i] = new ChunkVoxelDataThread(orders, results);
+                CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
             }
             stopwatch.Start();
 
@@ -125,7 +128,13 @@ public class BenchmarkChunkManager : MonoBehaviour {
                 orderAnimals();
             }
 
+            int frameCount = 0;
+
             while (!(benchmakrRunFinished())) {
+                //foreach (var thread in CVDT) {
+                //    UnityEngine.Debug.Log(thread.getThreadState().ToString());
+                //}
+                frameCount++;
                 consumeThreadResults();
                 yield return 0;
             }
@@ -134,8 +143,9 @@ public class BenchmarkChunkManager : MonoBehaviour {
 
             stopwatch.Stop();
             stopwatch.Reset();
-            UnityEngine.Debug.Log(String.Format("Took {0} seconds with {1} threads!", time, run));
-            file.WriteLine(String.Format("Time: {0} Seconds | Threads: {1}", time, run));
+            string result = String.Format("Time: {0} Seconds | Average fps: {1} | Threads: {2}", time.ToString("N2"), (frameCount / time).ToString("N2"), run);
+            UnityEngine.Debug.Log(result);
+            file.WriteLine(String.Format(result));
         }
         file.Close();
         UnityEngine.Debug.Log("DONE TESTING!");

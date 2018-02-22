@@ -7,12 +7,7 @@ using UnityEngine;
 /// <summary>
 /// Generates int[,,] arrays of voxel data for creation of chunk meshes.
 /// </summary>
-public class ChunkVoxelDataGenerator {
-
-    /// <summary>
-    /// Empty constructor
-    /// </summary>
-    public ChunkVoxelDataGenerator() { }
+public static class ChunkVoxelDataGenerator {
 
     /// <summary>
     /// Determines if there is a voxel at the given location.
@@ -28,7 +23,7 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
     /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
-    public BlockData[,,] getChunkVoxelData(Vector3 pos) {
+    public static BlockData[,,] getChunkVoxelData(Vector3 pos) {
         BlockData[,,] data = new BlockData[ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2];
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
@@ -62,7 +57,7 @@ public class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private void decideBlockType(BlockData[,,] data, Vector3Int pos) {
+    private static void decideBlockType(BlockData[,,] data, Vector3Int pos) {
         BlockData blockData = data[pos.x, pos.y, pos.z];
 
         // Add block type here:
