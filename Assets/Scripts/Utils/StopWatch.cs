@@ -15,6 +15,16 @@ public class StopWatch {
     }
 
     /// <summary>
+    /// Resets watch and returns time
+    /// </summary>
+    /// <returns></returns>
+    public float reset() {
+        float time = stopwatch.ElapsedMilliseconds;
+        stopwatch.Reset();
+        return time;
+    }
+
+    /// <summary>
     /// Stops and outputs results to console
     /// </summary>
     /// <param name="message">message to add to the output</param>

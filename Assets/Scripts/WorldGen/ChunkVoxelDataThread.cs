@@ -68,13 +68,18 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results) {
+    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results, int index) {
         this.orders = orders;
         this.results = results;
         run = true;
         thread = new Thread(new ThreadStart(threadRunner)); //This starts running the update function
         thread.Priority = System.Threading.ThreadPriority.Highest;
+        thread.Name = "WorldGen Thread " + index.ToString();
         thread.Start();
+    }
+
+    public ThreadState getThreadState() {
+        return thread.ThreadState;
     }
 
     /// <summary>
@@ -178,7 +183,6 @@ public class ChunkVoxelDataThread {
                 i--; //Try again
             }
         }
-
         return result;
     }
 
