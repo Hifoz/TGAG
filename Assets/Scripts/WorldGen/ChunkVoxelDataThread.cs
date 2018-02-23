@@ -174,7 +174,7 @@ public class ChunkVoxelDataThread {
             pos = Utils.floorVector(pos);
             pos = findGroundLevel(pos);
             pos = Utils.floorVector(pos);
-            if (pos != Vector3.negativeInfinity) {
+            if (!float.IsInfinity(pos.x) && !float.IsInfinity(pos.y) && !float.IsInfinity(pos.z)) { // Don't use Vector3.negativeInfinity to check, apparently it doesn't catch it...
                 MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
                 result.trees[i] = tree[0];
                 result.treeTrunks[i] = tree[1];
