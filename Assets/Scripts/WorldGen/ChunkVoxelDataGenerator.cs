@@ -15,7 +15,8 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">The position to investigate</param>
     /// <returns>bool contains voxel</returns>
     public static bool posContainsVoxel(Vector3 pos) {
-        return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+        return pos.y < calcHeight(pos);
+        //return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public static class ChunkVoxelDataGenerator {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (posContainsVoxel(new Vector3(x, y, z) + pos))
                         data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
-                    else if (y < 15) // temp
+                    else if (y < ChunkConfig.waterHeight)
                         data[x, y, z] = new BlockData(BlockData.BlockType.WATER);
                     else
                         data[x, y, z] = new BlockData(BlockData.BlockType.NONE);
@@ -62,12 +63,12 @@ public static class ChunkVoxelDataGenerator {
 
         // Add block type here:
 
-        if (pos.y < 15)
+        if (pos.y < ChunkConfig.waterHeight)
             blockData.blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.NONE) {
-            if (pos.y > 40) {
+            if (pos.y > ChunkConfig.snowHeight - SimplexNoise.Simplex2D(pos, 0.002f)) {
                 blockData.modifier = BlockData.BlockType.SNOW;
             } else if (blockData.blockType == BlockData.BlockType.DIRT) {
                 blockData.modifier = BlockData.BlockType.GRASS;

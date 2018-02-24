@@ -22,12 +22,6 @@ public class MeshDataGenerator {
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
-    public enum MeshDataType {
-        TERRAIN, TREE, WATER
-    }
-    protected MeshDataType meshDataType;
-
-
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
     /// Generates a mesh from MeshData.
@@ -51,9 +45,8 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
-    public static MeshData[] GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
+    public static MeshData[] GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
         MeshDataGenerator MDG = new MeshDataGenerator();
-        MDG.meshDataType = meshDataType;
 
         MDG.pointmap = pointmap;
 

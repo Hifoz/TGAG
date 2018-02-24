@@ -23,8 +23,7 @@ public class MeshData {
         List<MeshData> splitData = new List<MeshData>();
         int numMeshes = Mathf.CeilToInt(vertices.Length / (float)maxVertices);
 
-        int maxVertsPerMesh = vertices.Length / numMeshes;
-        maxVertsPerMesh = Mathf.CeilToInt(maxVertsPerMesh / 4.0f) * 4;
+        int maxVertsPerMesh = Mathf.CeilToInt(vertices.Length / numMeshes / 4.0f) * 4;
         int trianglesPerMesh = maxVertsPerMesh * 3 / 2;
 
         for(int m = 0; m < numMeshes; m++) {
@@ -45,12 +44,13 @@ public class MeshData {
                     break;
                 triangles.Add(this.triangles[m * trianglesPerMesh + t] - m * maxVertsPerMesh);
             }
-            MeshData resPart = new MeshData();
-            resPart.vertices = vertices.ToArray();
-            resPart.triangles = triangles.ToArray();
-            resPart.colors = colors.ToArray();
-            resPart.uvs = uvs.ToArray();
-            splitData.Add(resPart);
+
+            splitData.Add(new MeshData {
+                vertices = vertices.ToArray(),
+                triangles = triangles.ToArray(),
+                colors = colors.ToArray(),
+                uvs = uvs.ToArray()
+            });
 
         }
         return splitData.ToArray();

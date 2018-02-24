@@ -483,7 +483,7 @@ public class AnimalSkeleton {
         meshData = new MeshData();
         StopWatch sw = new StopWatch();
         //sw.start();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.TERRAIN)[0];
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize))[0];
         //sw.done("Animal mesh generator");
     }
 

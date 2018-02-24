@@ -3,15 +3,6 @@
 
 #include "utils.hlsl"
 
-/*
-	WIP!
-	Porting TerrainTextureGenerator from C# to HLSL.
-	Reason wht doing texture generation on GPU is better:
-	1. More variety. No more choosing between pre-generated textures, textures are now generated per texel in the world.
-	2. Better distribution of resources. The CPU is already busy with terrain generation and many other things, and the GPU is doing a relatively small amount of work.
-		2.1 Performance hit on GPU seems pretty small from a fairly quick test done with grass being done on the GPU.
-*/
-
 
 // Generate texture for grass
 // pos: worldposition to sample
@@ -313,7 +304,6 @@ float4 getTexel(int type, int modType, float3 pos, float3 posEye, half4 halfWhit
 				else {
 					float4 modVal = sampleTexelValue(modType, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
 					float4 val;
-					//texelTotal.rgb += float4(HSVtoRGB(lerp(RGBtoHSV(modVal.rgb), RGBtoHSV(baseVal.rgb), 1 - modVal.a)), 1);
 					texelTotal.rgb += lerp(modVal, baseVal, 1 - modVal.a).rgb;
 					texelTotal.a += min(modVal.a + baseVal.a, 1);
 				}
