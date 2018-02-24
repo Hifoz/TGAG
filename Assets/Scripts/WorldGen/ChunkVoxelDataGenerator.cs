@@ -15,8 +15,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">The position to investigate</param>
     /// <returns>bool contains voxel</returns>
     public static bool posContainsVoxel(Vector3 pos) {
-        return pos.y < calcHeight(pos);
-        //return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+        return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
     }
 
     /// <summary>
@@ -68,7 +67,7 @@ public static class ChunkVoxelDataGenerator {
 
         // Add modifier type:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.NONE) {
-            if (pos.y > ChunkConfig.snowHeight - SimplexNoise.Simplex2D(pos, 0.002f)) {
+            if (pos.y > ChunkConfig.snowHeight - SimplexNoise.Simplex2D(new Vector2(pos.x, pos.z), 0.002f)) {
                 blockData.modifier = BlockData.BlockType.SNOW;
             } else if (blockData.blockType == BlockData.BlockType.DIRT) {
                 blockData.modifier = BlockData.BlockType.GRASS;
@@ -110,7 +109,7 @@ public static class ChunkVoxelDataGenerator {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
-        return ChunkConfig.Structure3DRate > noise01;
+        return ChunkConfig.Structure3DRate * 0.75f > noise01;
     }
 
     /// <summary>

@@ -11,8 +11,8 @@ public static class ChunkConfig {
     public static int chunkSize = 20;
     public static int chunkCount = 40;
     public static int chunkHeight = 200;
-    public static int waterHeight = 15;
-    public static int snowHeight = 100;
+    public static int waterHeight = 18;
+    public static int snowHeight = 90;
     //2D noise settings
     public static float frequency2D = 0.002f;
     public static float noiseExponent2D = 3;
