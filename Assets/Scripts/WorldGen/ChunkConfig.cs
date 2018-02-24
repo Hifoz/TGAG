@@ -16,7 +16,7 @@ public static class ChunkConfig {
     //2D noise settings
     public static float frequency2D = 0.002f;
     public static float noiseExponent2D = 3;
-    public static int octaves2D = 7;
+    public static int octaves2D = 5;
     //3D noise settings
     public static float Structure3DRate = 0.75f;
     public static float Unstructure3DRate = 0.85f;

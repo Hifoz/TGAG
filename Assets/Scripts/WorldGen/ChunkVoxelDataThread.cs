@@ -86,7 +86,7 @@ public class ChunkVoxelDataThread {
     /// Returns thread run state.
     /// </summary>
     /// <returns>bool isRunning</returns>
-    public bool isRunning() {        
+    public bool isRunning() {
         return run;
     }
 
@@ -102,7 +102,7 @@ public class ChunkVoxelDataThread {
     /// </summary>
     private void threadRunner() {
         UnityEngine.Debug.Log("Thread alive!");
-        while (run) {            
+        while (run) {
             try {
                 Order order = orders.Take(getPreferredOrder);
                 if(order == null) {
