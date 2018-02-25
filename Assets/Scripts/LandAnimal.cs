@@ -154,8 +154,14 @@ public abstract class LandAnimal : MonoBehaviour {
 
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
             float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
-            if (Mathf.Abs(stanceHeight - dist2ground) <= stanceHeight) {
-                gravity += -Physics.gravity * (stanceHeight - dist2ground) / stanceHeight * Time.deltaTime;
+            float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
+            if (distFromStance <= stanceHeight) {
+                float sign = Mathf.Sign(dist2ground - stanceHeight);
+                if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+                    gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+                } else {
+                    gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;                    
+                }
             } else {
                 gravity += Physics.gravity * Time.deltaTime;
             }

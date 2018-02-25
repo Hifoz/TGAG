@@ -207,7 +207,6 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="verticies">Verticies to encode into colors</param>
     protected void addSliceData(List<Vector3> verts) {
-        Debug.Log(verts.Count);
         Vector3 scalingVector = new Vector3(pointmap.GetLength(0), pointmap.GetLength(1), pointmap.GetLength(2));
         foreach (Vector3 vert in verts) {
             colors.Add(new Color(
