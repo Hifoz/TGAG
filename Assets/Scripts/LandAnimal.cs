@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
 public abstract class LandAnimal : MonoBehaviour {
     protected AnimalSkeleton skeleton;
-    private float ikSpeed = 10;
-    private const float ikTolerance = 0.1f;
+    private float ikSpeed = 10f;
+    private const float ikTolerance = 0.005f;
 
     protected Vector3 desiredHeading = Vector3.zero;
     protected Vector3 heading = Vector3.zero;
@@ -28,21 +29,39 @@ public abstract class LandAnimal : MonoBehaviour {
     private Vector3[] currentTailPositions;
     private Vector3[] desiredTailPositions;
 
+    bool ragDolling = false;
+
     // Update is called once per frame
     void FixedUpdate() {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
         if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
-            speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+            if (grounded) {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+            } else {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
+            }
         }
 
         if (skeleton != null) {
             move();
             levelSpine();
-            walk();
+            doGravity();            
             tailPhysics();
-            timer += Time.deltaTime * speed / 2f;
+            if (grounded) {
+                walk();
+                timer += Time.deltaTime * speed / 2f;
+                ragDolling = false;
+            } else if (!grounded && !ragDolling) {
+                ragDolling = true;
+                for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
+                    StartCoroutine(ragdollLimb(skeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], false));
+                    StartCoroutine(ragdollLimb(skeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], false));
+                }
+                LineSegment neckLine = skeleton.getLines(BodyPart.NECK)[0];
+                StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), new LineSegment(neckLine.b, neckLine.a), true));
+            }
         }
     }
 
@@ -70,6 +89,9 @@ public abstract class LandAnimal : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Resets the rotation of all joints, mostly for debugging
+    /// </summary>
     public void resetJoints() {
         foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
             bone.bone.transform.rotation = Quaternion.identity;
@@ -83,6 +105,7 @@ public abstract class LandAnimal : MonoBehaviour {
     /// </summary>
     private void tailPhysics() {
         List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
         Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].getDir();
         float tailJointLength = skeleton.getBodyParameter<float>(BodyParameter.TAIL_JOINT_LENGTH);
         for (int i = 0; i < desiredTailPositions.Length; i++) {
@@ -97,18 +120,78 @@ public abstract class LandAnimal : MonoBehaviour {
     }
 
     /// <summary>
+    /// Courutine for "ragdolling" a limb when not grounded.
+    /// </summary>
+    /// <param name="limb">Limb to ragdoll</param>
+    /// <param name="model">Rigid position of limb</param>
+    /// <returns></returns>
+    private IEnumerator ragdollLimb(List<Bone> limb, LineSegment model, bool returnAfter) {
+        Vector3[] desiredPositions = new Vector3[limb.Count - 1];
+        Vector3[] currentPositions = new Vector3[limb.Count - 1];
+
+        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
+
+        for (int i = 0; i < currentPositions.Length; i++) {
+            currentPositions[i] = limb[i + 1].bone.position;
+        }
+
+        while (!grounded) {
+            for (int i = 0; i < desiredPositions.Length; i++) {
+                desiredPositions[i] = limb[0].bone.position + spine.rotation * model.getDir() * model.length() * (i + 1) / limb.Count;
+            }
+
+            for (int i = 0; i < limb.Count - 1; i++) {
+                ccd(limb.GetRange(i, 2), currentPositions[i], ikSpeed);
+                float distance = Vector3.Distance(currentPositions[i], desiredPositions[i]);
+                currentPositions[i] = Vector3.MoveTowards(currentPositions[i], desiredPositions[i], Time.deltaTime * distance);
+            }
+            yield return 0;
+        }
+
+        if (returnAfter) {
+            Quaternion[] rotations = new Quaternion[limb.Count];
+            for(int i = 0; i < rotations.Length; i++) {
+                rotations[i] = limb[i].bone.localRotation;
+            }
+
+            for (float t = 0; t < 1f; t += Time.deltaTime * 6f) {
+                for (int i = 0; i < rotations.Length; i++) {
+                    limb[i].bone.localRotation = Quaternion.Lerp(rotations[i], Quaternion.identity, t);
+                }
+                yield return 0;
+            }
+        }
+    }
+
+    /// <summary>
     /// Tries to level the spine with the ground
     /// </summary>
     private void levelSpine() {
-        float spineLength = skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH);
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
+        levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
+        spineHeading = spine.bone.rotation * Vector3.back;
+    }
+
+    /// <summary>
+    /// Levels the spine with terrain along axis
+    /// </summary>
+    /// <param name="axis">Axis to level along</param>
+    private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
 
+        Vector3 point1 = spine.bone.position + axis * length / 2f + Vector3.up * 20;
+        Vector3 point2 = spine.bone.position - axis * length / 2f + Vector3.up * 20;
+
+        int layerMask = 1 << 8;
         RaycastHit hit1;
         RaycastHit hit2;
-        Physics.Raycast(new Ray(spine.bone.position + spine.bone.forward * spineLength / 2f, Vector3.down), out hit1);
-        Physics.Raycast(new Ray(spine.bone.position - spine.bone.forward * spineLength / 2f, Vector3.down), out hit2);
+        Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
+        Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
+        point1 = spine.bone.position + currentAxis * length / 2f;
+        point2 = spine.bone.position - currentAxis * length / 2f;
         Vector3 a = hit1.point - hit2.point;
-        Vector3 b = spine.bone.forward * spineLength;
+        Vector3 b = point1 - point2;
 
         float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
         Vector3 normal = Vector3.Cross(a, b);
@@ -118,27 +201,33 @@ public abstract class LandAnimal : MonoBehaviour {
                 spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
             }
         }
+    }
 
+    /// <summary>
+    /// Does the physics for gravity
+    /// </summary>
+    private void doGravity() {
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit)) {
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, (1<<8))) {
             Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
 
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
             float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
-            if (Mathf.Abs(stanceHeight - dist2ground) <= stanceHeight) {
-                gravity += -Physics.gravity * (stanceHeight - dist2ground) / stanceHeight * Time.deltaTime;
-            } else {
-                gravity += Physics.gravity * Time.deltaTime;
-            }
-
-            if (dist2ground <= stanceHeight + 0.2f) {
+            float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
+            if (distFromStance <= stanceHeight) {
                 grounded = true;
+                float sign = Mathf.Sign(dist2ground - stanceHeight);
+                if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+                    gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+                } else {
+                    gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;                    
+                }
             } else {
                 grounded = false;
+                gravity += Physics.gravity * Time.deltaTime;
             }
         }
-
-        spineHeading = spine.bone.rotation * Vector3.back;
     }
 
     /// <summary>
@@ -161,12 +250,13 @@ public abstract class LandAnimal : MonoBehaviour {
     private bool walkLeg(List<Bone> leg, int sign, float radOffset) {
         float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
         float jointLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH);
+        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
 
-        Vector3 target = leg[0].bone.position + sign * transform.right * legLength / 4f; //Offset to the right
+        Vector3 target = leg[0].bone.position + sign * spine.right * legLength / 4f; //Offset to the right
         target += heading * Mathf.Cos(timer + radOffset) * legLength / 4f;  //Forward/Backward motion
         float rightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Right/Left motion
         rightOffset = (rightOffset > 0) ? rightOffset : 0;
-        target += sign * transform.right * rightOffset;
+        target += sign * spine.right * rightOffset;
 
         Vector3 subTarget = target;
         subTarget.y -= jointLength / 2f;
@@ -175,7 +265,7 @@ public abstract class LandAnimal : MonoBehaviour {
         }
 
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
+        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit)) {
             float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Up/Down motion
             heightOffset = (heightOffset > 0) ? heightOffset : 0;
 
@@ -195,7 +285,7 @@ public abstract class LandAnimal : MonoBehaviour {
     /// <param name="target">Target to reach</param>
     /// <returns>Bool target reached</returns>
     private bool ccd(List<Bone> limb, Vector3 target, float speed) {
-        Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
+        //Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);
 

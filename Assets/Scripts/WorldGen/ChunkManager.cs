@@ -221,6 +221,7 @@ public class ChunkManager : MonoBehaviour {
 
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = getChunk();
+            subChunk.layer = 8;
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
             subChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData[i]);
@@ -236,6 +237,7 @@ public class ChunkManager : MonoBehaviour {
 
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
             GameObject waterChunk = getChunk();
+            waterChunk.layer = 0;
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
             waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData[i]);

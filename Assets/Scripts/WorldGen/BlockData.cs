@@ -17,6 +17,8 @@ public struct BlockData { // 2 bytes. 1 byte per blocktype stored
         LEAF,
         WATER,
 
+        ANIMAL,
+
         GRASS,
         SNOW,
 

@@ -16,12 +16,18 @@ public class MeshDataGenerator {
     protected List<Vector2> uvs = new List<Vector2>();
     protected BlockDataMap pointmap;
 
+    protected Vector3 offset;
+
     System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
 
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
     }
+    public enum MeshDataType {
+        TERRAIN, ANIMAL
+    }
+    protected MeshDataType meshDataType;
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
     /// Generates a mesh from MeshData.
@@ -45,8 +51,10 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
-    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
+    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         MeshDataGenerator MDG = new MeshDataGenerator();
+        MDG.meshDataType = meshDataType;
+        MDG.offset = offset;
 
         MDG.pointmap = pointmap;
 
@@ -54,7 +62,7 @@ public class MeshDataGenerator {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
                     if (pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) {
-                        MDG.GenerateCube(new Vector3Int(x, y, z), offset, pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
+                        MDG.GenerateCube(new Vector3Int(x, y, z), pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
                     }
                 }
             }
@@ -76,13 +84,13 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="cubePos">point position of the cube</param>
     /// <param name="blockData">data on the block</param>
-    private void GenerateCube(Vector3Int cubePos, Vector3 offset, BlockData blockData, float voxelSize) {
-        if (cubePos.x != pointmap.GetLength(0) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xp, cubePos - offset, blockData, voxelSize);
-        if (cubePos.y == pointmap.GetLength(1) - 1 || checkIfSolidVoxel(cubePos + new Vector3Int(0, 1, 0)) == false) GenerateCubeFace(FaceDirection.yp, cubePos - offset, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
-        if (cubePos.z != pointmap.GetLength(2) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, 1)) == false) GenerateCubeFace(FaceDirection.zp, cubePos - offset, blockData, voxelSize);
-        if (cubePos.x != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos - offset, blockData, voxelSize);
-        if (cubePos.y != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos - offset, blockData, voxelSize);
-        if (cubePos.z != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos - offset, blockData, voxelSize);
+    private void GenerateCube(Vector3Int cubePos, BlockData blockData, float voxelSize) {
+        if (cubePos.x != pointmap.GetLength(0) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xp, cubePos, blockData, voxelSize);
+        if (cubePos.y == pointmap.GetLength(1) - 1 || checkIfSolidVoxel(cubePos + new Vector3Int(0, 1, 0)) == false) GenerateCubeFace(FaceDirection.yp, cubePos, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
+        if (cubePos.z != pointmap.GetLength(2) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, 1)) == false) GenerateCubeFace(FaceDirection.zp, cubePos, blockData, voxelSize);
+        if (cubePos.x != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos, blockData, voxelSize);
+        if (cubePos.y != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos, blockData, voxelSize);
+        if (cubePos.z != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos, blockData, voxelSize);
     }
 
     /// <summary>
@@ -108,7 +116,7 @@ public class MeshDataGenerator {
         int vertIndex = vertices.Count;
 
         float delta = voxelSize / 2f;
-        pointPos = pointPos * voxelSize;
+        pointPos = (pointPos - offset) * voxelSize;
 
 
         switch (dir) {
@@ -153,7 +161,11 @@ public class MeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
         addTextureCoordinates(blockData, dir);
-        addSliceData(blockData, dir);
+        if (meshDataType == MeshDataType.ANIMAL) {
+            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
+        } else {
+            addSliceData(blockData, dir);
+        }
 
     }
 
@@ -186,6 +198,22 @@ public class MeshDataGenerator {
 
         for (int i = 0; i < 4; i++)
             colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
+    }
+
+    /// <summary>
+    /// Encodes colors as unique positions used for noise calculations in animal shader
+    /// </summary>
+    /// <param name="verticies">Verticies to encode into colors</param>
+    protected void addSliceData(List<Vector3> verts) {
+        Vector3 scalingVector = new Vector3(pointmap.GetLength(0), pointmap.GetLength(1), pointmap.GetLength(2));
+        foreach (Vector3 vert in verts) {
+            colors.Add(new Color(
+                    vert.x / scalingVector.x,
+                    vert.y / scalingVector.y,
+                    vert.z / scalingVector.z
+                )
+            );
+        }
     }
 
 

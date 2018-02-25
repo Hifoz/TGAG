@@ -15,6 +15,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
     /// <returns>a mesh made from the input data</returns>
     public static MeshData[] GenerateWaterMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
         WaterMeshDataGenerator MDG = new WaterMeshDataGenerator();
+        MDG.meshDataType = MeshDataType.TERRAIN;
 
         MDG.pointmap = pointmap;
 
