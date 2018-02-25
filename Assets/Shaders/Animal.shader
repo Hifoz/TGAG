@@ -42,6 +42,7 @@
 				float3 eyeNormal : TEXCOORD3;
 				float3 worldPos : TEXCOORD4;
 				SHADOW_COORDS(5) // put shadows data into TEXCOORD5
+				float3 noisePos : TEXCOORD6;
 				fixed3 diff : COLOR0;
 				fixed3 ambient : COLOR1;
 			};
@@ -65,6 +66,8 @@
 				//Shadow
 				TRANSFER_SHADOW(o);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+
+				o.noisePos = v.color.rbg;
 				return o;
 			}
 
@@ -78,13 +81,11 @@
 				fixed3 light = (i.diff /*+ specular * 0.4*/) * shadow + i.ambient;
 
 				half4 o;
-				half3 green = { 0, 0.8, 0 };
-				half3 orange = { 0, 0.4, 0 };
+				half3 green = { 0, 1, 0 };
+				half3 blue = { 0, 0, 1 };
 				
 				o.a = 1;
-				float x = inRange(i.uv.x, 0.2, 0.8);
-				float y = inRange(i.uv.y, 0.2, 0.8);
-				o.rgb =  x * y * orange + (1 - x + 1 - y) * green;
+				o.rgb = lerp(green, blue, noise(i.noisePos * 111.3));
 				o.rbg *= light;
 				return o;
 			}

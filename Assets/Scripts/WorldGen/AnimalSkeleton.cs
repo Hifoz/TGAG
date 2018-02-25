@@ -46,7 +46,7 @@ public class AnimalSkeleton {
 
     private MixedDictionary<BodyParameter> bodyParametersRange = new MixedDictionary<BodyParameter>(
         new Dictionary<BodyParameter, object>() {
-            { BodyParameter.HEAD_SIZE, new Pair<float>(1, 3) },
+            { BodyParameter.HEAD_SIZE, new Pair<float>(1.5f, 4f) },
             { BodyParameter.NECK_LENGTH, new Pair<float>(2, 4) },
             { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
             { BodyParameter.LEG_PAIRS, new Pair<int>(2, 4) },
@@ -54,7 +54,7 @@ public class AnimalSkeleton {
             { BodyParameter.LEG_LENGTH, new Pair<float>(5, 10) },
             //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
             { BodyParameter.TAIL_JOINTS, new Pair<int>(2, 5) },
-            { BodyParameter.TAIL_LENGTH, new Pair<float>(3, 7) }
+            { BodyParameter.TAIL_LENGTH, new Pair<float>(3, 12) }
             //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
     });
 
@@ -482,7 +482,7 @@ public class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.TERRAIN)[0];
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.ANIMAL)[0];
     }
 
     /// <summary>
@@ -495,7 +495,7 @@ public class AnimalSkeleton {
         foreach (var line in skeleton) {
             float dist = line.distance(pos);
             if (dist < skeletonThiccness) {
-                return BlockData.BlockType.DIRT;
+                return BlockData.BlockType.ANIMAL;
             }
         }
         return BlockData.BlockType.NONE;

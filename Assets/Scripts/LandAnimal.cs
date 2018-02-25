@@ -130,8 +130,8 @@ public abstract class LandAnimal : MonoBehaviour {
         Vector3 a = hit1.point - hit2.point;
         Vector3 b = point1 - point2;
 
-        Debug.DrawLine(point1, hit1.point);
-        Debug.DrawLine(point2, hit2.point);
+        //Debug.DrawLine(point1, hit1.point);
+        //Debug.DrawLine(point2, hit2.point);
 
         float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
         Vector3 normal = Vector3.Cross(a, b);
