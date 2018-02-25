@@ -468,14 +468,15 @@ public class AnimalSkeleton {
         Vector3 size = upperBounds - lowerBounds;
         size /= voxelSize;
 
-        BlockData[,,] pointMap = new BlockData[Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z)];
+        BlockDataMap pointMap = new BlockDataMap(Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z));
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
+                    int i = pointMap.get1dIndex(x, y, z);
                     Vector3 samplePos = new Vector3(x, y, z) * voxelSize + lowerBounds;
-                    pointMap[x, y, z] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
-                    if (pointMap[x, y, z].blockType == BlockData.BlockType.DIRT) {
-                        pointMap[x, y, z].modifier = BlockData.BlockType.SNOW;
+                    pointMap.blockData[i] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
+                    if (pointMap.blockData[i].blockType == BlockData.BlockType.DIRT) {
+                        pointMap.blockData[i].modifier = BlockData.BlockType.SNOW;
                     }
                 }
             }
