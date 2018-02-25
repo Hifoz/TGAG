@@ -30,25 +30,20 @@
 				float4 vertex : POSITION;
 				float4 normal : NORMAL;
 				float4 color : COLOR;
-				float2 uv : TEXCOORD0;
-
 			};
 
 			struct v2f {
 				float4 pos : SV_POSITION;
-				float2 uv : TEXCOORD0;
-				float3 posEye : TEXCOORD1;
-				float3 lightDirEye : TEXCOORD2;
-				float3 eyeNormal : TEXCOORD3;
-				float3 worldPos : TEXCOORD4;
-				SHADOW_COORDS(5) // put shadows data into TEXCOORD5
-				float3 noisePos : TEXCOORD6;
+				float3 posEye : TEXCOORD0;
+				float3 lightDirEye : TEXCOORD1;
+				float3 eyeNormal : TEXCOORD2;
+				float3 worldPos : TEXCOORD3;
+				SHADOW_COORDS(4) // put shadows data into TEXCOORD4
+				float3 noisePos : TEXCOORD5;
 				fixed3 diff : COLOR0;
 				fixed3 ambient : COLOR1;
 			};
 			
-			sampler2D _MainTex;
-			float4 _MainTex_ST;
 
 			v2f vert(appdata v) {
 				v2f o;
@@ -65,7 +60,6 @@
 				o.ambient = ShadeSH9(half4(worldNormal, 1));
 				//Shadow
 				TRANSFER_SHADOW(o);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 
 				o.noisePos = v.color.rbg;
 				return o;
@@ -82,10 +76,12 @@
 
 				half4 o;
 				half3 green = { 0, 1, 0 };
-				half3 blue = { 0, 0, 1 };
+				half3 blue = { 0, 0.4, 0 };
 				
+				float n = noise(i.noisePos * 111.3);
+
 				o.a = 1;
-				o.rgb = lerp(green, blue, noise(i.noisePos * 111.3));
+				o.rgb = green * inRange(n, 0.0, 0.45) + blue * inRange(n, 0.55, 1.0);
 				o.rbg *= light;
 				return o;
 			}
