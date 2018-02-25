@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Stores data about a block
 /// </summary>
-public class BlockData {
+public struct BlockData { // 8 bytes. 4 bytes per blocktype stored
     public enum BlockType {
         NONE,
 
