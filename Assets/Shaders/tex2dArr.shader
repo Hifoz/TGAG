@@ -83,7 +83,6 @@
 				half4 o;
 
 				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
-				o.a = 1;
 				o.rbg *= light;
 				return o;
 			}

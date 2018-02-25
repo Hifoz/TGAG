@@ -209,7 +209,7 @@ public abstract class LandAnimal : MonoBehaviour {
     private void doGravity() {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit)) {
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, (1<<8))) {
             Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
 
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
