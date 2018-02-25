@@ -221,7 +221,7 @@ public class ChunkManager : MonoBehaviour {
 
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = getChunk();
-            subChunk.layer = (1 << 8);
+            subChunk.layer = 8;
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
             subChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData[i]);
