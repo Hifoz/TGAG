@@ -40,6 +40,7 @@ public abstract class LandAnimal : MonoBehaviour {
         if (skeleton != null) {
             move();
             levelSpine();
+            doGravity();
             walk();
             tailPhysics();
             timer += Time.deltaTime * speed / 2f;
@@ -103,15 +104,34 @@ public abstract class LandAnimal : MonoBehaviour {
     /// Tries to level the spine with the ground
     /// </summary>
     private void levelSpine() {
-        float spineLength = skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH);
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
+        levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
+        spineHeading = spine.bone.rotation * Vector3.back;
+    }
+
+    /// <summary>
+    /// Levels the spine with terrain along axis
+    /// </summary>
+    /// <param name="axis">Axis to level along</param>
+    private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
 
+        Vector3 point1 = spine.bone.position + axis * length / 2f + Vector3.up * 20;
+        Vector3 point2 = spine.bone.position - axis * length / 2f + Vector3.up * 20;
+
+        int layerMask = 1 << 8;
         RaycastHit hit1;
         RaycastHit hit2;
-        Physics.Raycast(new Ray(spine.bone.position + spine.bone.forward * spineLength / 2f, Vector3.down), out hit1);
-        Physics.Raycast(new Ray(spine.bone.position - spine.bone.forward * spineLength / 2f, Vector3.down), out hit2);
+        Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
+        Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
+        point1 = spine.bone.position + currentAxis * length / 2f;
+        point2 = spine.bone.position - currentAxis * length / 2f;
         Vector3 a = hit1.point - hit2.point;
-        Vector3 b = spine.bone.forward * spineLength;
+        Vector3 b = point1 - point2;
+
+        Debug.DrawLine(point1, hit1.point);
+        Debug.DrawLine(point2, hit2.point);
 
         float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
         Vector3 normal = Vector3.Cross(a, b);
@@ -121,7 +141,13 @@ public abstract class LandAnimal : MonoBehaviour {
                 spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
             }
         }
+    }
 
+    /// <summary>
+    /// Does the physics for gravity
+    /// </summary>
+    private void doGravity() {
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         RaycastHit hit;
         if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit)) {
             Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
@@ -140,8 +166,6 @@ public abstract class LandAnimal : MonoBehaviour {
                 grounded = false;
             }
         }
-
-        spineHeading = spine.bone.rotation * Vector3.back;
     }
 
     /// <summary>
@@ -164,12 +188,13 @@ public abstract class LandAnimal : MonoBehaviour {
     private bool walkLeg(List<Bone> leg, int sign, float radOffset) {
         float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
         float jointLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH);
+        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
 
-        Vector3 target = leg[0].bone.position + sign * transform.right * legLength / 4f; //Offset to the right
+        Vector3 target = leg[0].bone.position + sign * spine.right * legLength / 4f; //Offset to the right
         target += heading * Mathf.Cos(timer + radOffset) * legLength / 4f;  //Forward/Backward motion
         float rightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Right/Left motion
         rightOffset = (rightOffset > 0) ? rightOffset : 0;
-        target += sign * transform.right * rightOffset;
+        target += sign * spine.right * rightOffset;
 
         Vector3 subTarget = target;
         subTarget.y -= jointLength / 2f;
@@ -178,7 +203,7 @@ public abstract class LandAnimal : MonoBehaviour {
         }
 
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(target, Vector3.down), out hit)) {
+        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit)) {
             float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Up/Down motion
             heightOffset = (heightOffset > 0) ? heightOffset : 0;
 
@@ -198,7 +223,7 @@ public abstract class LandAnimal : MonoBehaviour {
     /// <param name="target">Target to reach</param>
     /// <returns>Bool target reached</returns>
     private bool ccd(List<Bone> limb, Vector3 target, float speed) {
-        Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
+        //Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);
 

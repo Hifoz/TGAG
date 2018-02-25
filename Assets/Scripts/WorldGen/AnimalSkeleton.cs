@@ -325,8 +325,8 @@ public class AnimalSkeleton {
         //SPINE
         LineSegment spineLine = skeletonLines[BodyPart.SPINE][0];
         Bone spineBone = createAndBindBone(Vector3.Lerp(spineLine.a, spineLine.b, 0.5f), rootBone, spineLine, "Mid Spine", BodyPart.SPINE);
-        spineBone.minAngles = new Vector3(-90, -1, -1);
-        spineBone.maxAngles = new Vector3(90, 1, 1);
+        spineBone.minAngles = new Vector3(-90, -1, -90);
+        spineBone.maxAngles = new Vector3(90, 1, 90);
         //NECK
         Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
         Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBoneBase.bone, "Neck", BodyPart.NECK);
@@ -482,12 +482,14 @@ public class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
-        StopWatch sw = new StopWatch();
-        //sw.start();
         meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.TERRAIN)[0];
-        //sw.done("Animal mesh generator");
     }
 
+    /// <summary>
+    /// Calculates the blocktype of the position
+    /// </summary>
+    /// <param name="pos">Position to examine</param>
+    /// <returns>Blocktype</returns>
     private BlockData.BlockType calcBlockType(Vector3 pos) {
         List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
         foreach (var line in skeleton) {
