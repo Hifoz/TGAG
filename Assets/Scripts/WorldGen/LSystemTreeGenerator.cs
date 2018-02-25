@@ -94,18 +94,19 @@ public static class LSystemTreeGenerator {
 
         Tree tree = GenerateLSystemTree(pos);
 
-        BlockData[,,] pointMap = new BlockData[Mathf.CeilToInt(tree.size.x), Mathf.CeilToInt(tree.size.y), Mathf.CeilToInt(tree.size.z)];
-        BlockData[,,] pointMapTrunk = new BlockData[Mathf.CeilToInt(tree.size.x), Mathf.CeilToInt(tree.size.y), Mathf.CeilToInt(tree.size.z)];
+        BlockDataMap pointMap = new BlockDataMap(Mathf.CeilToInt(tree.size.x), Mathf.CeilToInt(tree.size.y), Mathf.CeilToInt(tree.size.z));
+        BlockDataMap pointMapTrunk = new BlockDataMap(Mathf.CeilToInt(tree.size.x), Mathf.CeilToInt(tree.size.y), Mathf.CeilToInt(tree.size.z));
         //Debug.Log("(" + pointMap.GetLength(0) + "," + pointMap.GetLength(1) + "," + pointMap.GetLength(2) + ")");
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
+                    int i = pointMap.index1D(x, y, z);
                     Vector3 samplePos = new Vector3(x, y, z) + tree.lowerBounds;
                     samplePos = Utils.floorVector(samplePos);
-                    pointMap[x, y, z] = new BlockData(calcBlockType(samplePos, tree.tree), BlockData.BlockType.NONE);
-                    pointMapTrunk[x, y, z] = pointMap[x, y, z];
-                    if (pointMap[x, y, z].blockType == BlockData.BlockType.LEAF) {
-                        pointMapTrunk[x, y, z] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+                    pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos, tree.tree), BlockData.BlockType.NONE);
+                    pointMapTrunk.mapdata[i] = pointMap.mapdata[i];
+                    if (pointMap.mapdata[i].blockType == BlockData.BlockType.LEAF) {
+                        pointMapTrunk.mapdata[i] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
                     }
                 }
             }

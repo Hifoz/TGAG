@@ -13,7 +13,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>a mesh made from the input data</returns>
-    public static MeshData[] GenerateWaterMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
+    public static MeshData[] GenerateWaterMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
         WaterMeshDataGenerator MDG = new WaterMeshDataGenerator();
 
         MDG.pointmap = pointmap;
@@ -22,7 +22,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
                     if (MDG.checkIfWaterVoxel(new Vector3Int(x, y, z)))
-                        MDG.GenerateWaterCube(new Vector3Int(x, y, z), offset, pointmap[x, y, z], voxelSize);
+                        MDG.GenerateWaterCube(new Vector3Int(x, y, z), offset, pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
                 }
             }
         }
@@ -46,7 +46,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
     }
 
     protected bool checkIfWaterVoxel(Vector3Int voxelPos) {
-        if (pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.WATER)
+        if (pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER)
             return true;
         return false;
     }

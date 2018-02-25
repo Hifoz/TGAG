@@ -14,7 +14,7 @@ public class MeshDataGenerator {
     protected List<int> triangles = new List<int>();
     protected List<Color> colors = new List<Color>();
     protected List<Vector2> uvs = new List<Vector2>();
-    protected BlockData[,,] pointmap;
+    protected BlockDataMap pointmap;
 
     System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
 
@@ -45,7 +45,7 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
-    public static MeshData[] GenerateMeshData(BlockData[,,] pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
+    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
         MeshDataGenerator MDG = new MeshDataGenerator();
 
         MDG.pointmap = pointmap;
@@ -53,12 +53,13 @@ public class MeshDataGenerator {
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
-                    if (pointmap[x, y, z].blockType != BlockData.BlockType.NONE && pointmap[x, y, z].blockType != BlockData.BlockType.WATER) {
-                        MDG.GenerateCube(new Vector3Int(x, y, z), offset, pointmap[x, y, z], voxelSize);
+                    if (pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) {
+                        MDG.GenerateCube(new Vector3Int(x, y, z), offset, pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
                     }
                 }
             }
         }
+
 
         var meshData = new MeshData();
         meshData.vertices = MDG.vertices.ToArray();
@@ -90,8 +91,8 @@ public class MeshDataGenerator {
     /// <param name="voxelPos">position of voxel</param>
     /// <returns>Whether the voxel is opaque</returns>
     protected bool checkIfSolidVoxel(Vector3Int voxelPos) {
-        if (pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.NONE ||
-            pointmap[voxelPos.x, voxelPos.y, voxelPos.z].blockType == BlockData.BlockType.WATER)
+        if (pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.NONE ||
+            pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER)
             return false;
         return true;
     }
