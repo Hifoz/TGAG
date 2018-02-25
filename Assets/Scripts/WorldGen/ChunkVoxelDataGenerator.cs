@@ -23,18 +23,19 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
     /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
-    public static BlockData[,,] getChunkVoxelData(Vector3 pos) {
-        BlockData[,,] data = new BlockData[ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2];
+    public static BlockDataMap getChunkVoxelData(Vector3 pos) {
+        BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
+                    int i = data.index1D(x, y, z);
                     if (posContainsVoxel(new Vector3(x, y, z) + pos))
-                        data[x, y, z] = new BlockData(BlockData.BlockType.DIRT);
+                        data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < 15) // temp
-                        data[x, y, z] = new BlockData(BlockData.BlockType.WATER);
+                        data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
                     else
-                        data[x, y, z] = new BlockData(BlockData.BlockType.NONE);
+                        data.mapdata[i] = new BlockData(BlockData.BlockType.NONE);
                 }
             }
         }
@@ -42,7 +43,7 @@ public static class ChunkVoxelDataGenerator {
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
-                    if (data[x, y, z].blockType != BlockData.BlockType.NONE && data[x, y, z].blockType != BlockData.BlockType.WATER)
+                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
                         decideBlockType(data, new Vector3Int(x, y, z));
                 }
             }
@@ -57,20 +58,20 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockData[,,] data, Vector3Int pos) {
-        BlockData blockData = data[pos.x, pos.y, pos.z];
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos) {
+        int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Add block type here:
 
         if (pos.y < 15)
-            blockData.blockType = BlockData.BlockType.SAND;
+            data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:
-        if (pos.y == ChunkConfig.chunkHeight - 1 || data[pos.x, pos.y + 1, pos.z].blockType == BlockData.BlockType.NONE) {
+        if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
             if (pos.y > 40) {
-                blockData.modifier = BlockData.BlockType.SNOW;
-            } else if (blockData.blockType == BlockData.BlockType.DIRT) {
-                blockData.modifier = BlockData.BlockType.GRASS;
+                data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;
+            } else if (data.mapdata[pos1d].blockType == BlockData.BlockType.DIRT) {
+                data.mapdata[pos1d].modifier = BlockData.BlockType.GRASS;
             }
         }
 
