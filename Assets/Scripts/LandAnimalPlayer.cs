@@ -13,7 +13,10 @@ public class LandAnimalPlayer : LandAnimal {
     /// <summary>
     /// Function for that lets the player control the animal
     /// </summary>
-    override protected void move() {
+    override protected void move() {        
+        
+        desiredSpeed = 0;
+
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             desiredHeading = Camera.main.transform.forward;
             desiredHeading.y = 0;
@@ -21,7 +24,6 @@ public class LandAnimalPlayer : LandAnimal {
         }
 
         Vector3 finalHeading = Vector3.zero;
-        desiredSpeed = 0;
 
         if (Input.GetKey(KeyCode.W)) {
             finalHeading += desiredHeading;
@@ -45,26 +47,34 @@ public class LandAnimalPlayer : LandAnimal {
 
         if (finalHeading != Vector3.zero) {
             desiredHeading = finalHeading;
-        }        
+        }
 
-        transform.LookAt(transform.position - heading);
-
-        Vector3 velocity = spineHeading.normalized * speed;
+        Vector3 velocity;
+        if (grounded) {
+           velocity = spineHeading.normalized * speed;
+        } else {
+            velocity = heading.normalized * speed;
+        }
         GetComponent<Rigidbody>().velocity = velocity + gravity;
+        transform.LookAt(transform.position - heading);
 
         playerPos.set(transform.position);
         playerRot.set(transform.rotation * Vector3.forward);
-        playerSpeed.set(velocity);
+        playerSpeed.set(GetComponent<Rigidbody>().velocity);
     }
 
     /// <summary>
     /// Sets speed based on input
     /// </summary>
     private void setSpeed() {
-        if (Input.GetKey(KeyCode.LeftShift)) {
-            desiredSpeed = runSpeed;
+        if (!grounded) {
+            desiredSpeed = 0;
         } else {
-            desiredSpeed = walkSpeed;
+            if (Input.GetKey(KeyCode.LeftShift)) {
+                desiredSpeed = runSpeed;
+            } else {
+                desiredSpeed = walkSpeed;
+            }
         }
     }
 

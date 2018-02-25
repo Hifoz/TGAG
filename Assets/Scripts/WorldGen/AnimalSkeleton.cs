@@ -46,7 +46,7 @@ public class AnimalSkeleton {
 
     private MixedDictionary<BodyParameter> bodyParametersRange = new MixedDictionary<BodyParameter>(
         new Dictionary<BodyParameter, object>() {
-            { BodyParameter.HEAD_SIZE, new Pair<float>(1, 3) },
+            { BodyParameter.HEAD_SIZE, new Pair<float>(1.5f, 4f) },
             { BodyParameter.NECK_LENGTH, new Pair<float>(2, 4) },
             { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
             { BodyParameter.LEG_PAIRS, new Pair<int>(2, 4) },
@@ -54,7 +54,7 @@ public class AnimalSkeleton {
             { BodyParameter.LEG_LENGTH, new Pair<float>(5, 10) },
             //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
             { BodyParameter.TAIL_JOINTS, new Pair<int>(2, 5) },
-            { BodyParameter.TAIL_LENGTH, new Pair<float>(3, 7) }
+            { BodyParameter.TAIL_LENGTH, new Pair<float>(3, 12) }
             //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
     });
 
@@ -325,12 +325,13 @@ public class AnimalSkeleton {
         //SPINE
         LineSegment spineLine = skeletonLines[BodyPart.SPINE][0];
         Bone spineBone = createAndBindBone(Vector3.Lerp(spineLine.a, spineLine.b, 0.5f), rootBone, spineLine, "Mid Spine", BodyPart.SPINE);
-        spineBone.minAngles = new Vector3(-90, -1, -1);
-        spineBone.maxAngles = new Vector3(90, 1, 1);
+        spineBone.minAngles = new Vector3(-90, -1, -90);
+        spineBone.maxAngles = new Vector3(90, 1, 90);
         //NECK
         Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
+        neckBoneBase.minAngles = new Vector3(-90, -90, -90);
+        neckBoneBase.maxAngles = new Vector3(90, 90, 90);
         Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBoneBase.bone, "Neck", BodyPart.NECK);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBone.bone, skeletonLines[BodyPart.HEAD], "Head", BodyPart.HEAD);
         //TAIL
         int tailJointCount = bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS);
         createAndBindBones(skeletonLines[BodyPart.TAIL][0], spineBone.bone, tailJointCount, "Tail", BodyPart.TAIL);
@@ -482,18 +483,20 @@ public class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
-        StopWatch sw = new StopWatch();
-        //sw.start();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.TERRAIN)[0];
-        //sw.done("Animal mesh generator");
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.ANIMAL)[0];
     }
 
+    /// <summary>
+    /// Calculates the blocktype of the position
+    /// </summary>
+    /// <param name="pos">Position to examine</param>
+    /// <returns>Blocktype</returns>
     private BlockData.BlockType calcBlockType(Vector3 pos) {
         List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
         foreach (var line in skeleton) {
             float dist = line.distance(pos);
             if (dist < skeletonThiccness) {
-                return BlockData.BlockType.DIRT;
+                return BlockData.BlockType.ANIMAL;
             }
         }
         return BlockData.BlockType.NONE;
