@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
 public abstract class LandAnimal : MonoBehaviour {
     protected AnimalSkeleton skeleton;
-    private float ikSpeed = 10;
-    private const float ikTolerance = 0.1f;
+    private float ikSpeed = 2f;
+    private const float ikTolerance = 0.005f;
 
     protected Vector3 desiredHeading = Vector3.zero;
     protected Vector3 heading = Vector3.zero;
@@ -28,22 +29,39 @@ public abstract class LandAnimal : MonoBehaviour {
     private Vector3[] currentTailPositions;
     private Vector3[] desiredTailPositions;
 
+    bool ragDolling = false;
+
     // Update is called once per frame
     void FixedUpdate() {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
         if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
-            speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+            if (grounded) {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+            } else {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
+            }
         }
 
         if (skeleton != null) {
             move();
             levelSpine();
-            doGravity();
-            walk();
+            doGravity();            
             tailPhysics();
-            timer += Time.deltaTime * speed / 2f;
+            if (grounded) {
+                walk();
+                timer += Time.deltaTime * speed / 2f;
+                ragDolling = false;
+            } else if (!grounded && !ragDolling) {
+                ragDolling = true;
+                for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
+                    StartCoroutine(ragdollLimb(skeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], false));
+                    StartCoroutine(ragdollLimb(skeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], false));
+                }
+                LineSegment neckLine = skeleton.getLines(BodyPart.NECK)[0];
+                StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), new LineSegment(neckLine.b, neckLine.a), true));
+            }
         }
     }
 
@@ -87,6 +105,7 @@ public abstract class LandAnimal : MonoBehaviour {
     /// </summary>
     private void tailPhysics() {
         List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
         Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].getDir();
         float tailJointLength = skeleton.getBodyParameter<float>(BodyParameter.TAIL_JOINT_LENGTH);
         for (int i = 0; i < desiredTailPositions.Length; i++) {
@@ -97,6 +116,50 @@ public abstract class LandAnimal : MonoBehaviour {
             ccd(tail.GetRange(i, 2), currentTailPositions[i], ikSpeed);
             float distance = Vector3.Distance(currentTailPositions[i], desiredTailPositions[i]);
             currentTailPositions[i] = Vector3.MoveTowards(currentTailPositions[i], desiredTailPositions[i], Time.deltaTime * 4f * distance);
+        }
+    }
+
+    /// <summary>
+    /// Courutine for "ragdolling" a limb when not grounded.
+    /// </summary>
+    /// <param name="limb">Limb to ragdoll</param>
+    /// <param name="model">Rigid position of limb</param>
+    /// <returns></returns>
+    private IEnumerator ragdollLimb(List<Bone> limb, LineSegment model, bool returnAfter) {
+        Vector3[] desiredPositions = new Vector3[limb.Count - 1];
+        Vector3[] currentPositions = new Vector3[limb.Count - 1];
+
+        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
+
+        for (int i = 0; i < currentPositions.Length; i++) {
+            currentPositions[i] = limb[i + 1].bone.position;
+        }
+
+        while (!grounded) {
+            for (int i = 0; i < desiredPositions.Length; i++) {
+                desiredPositions[i] = limb[0].bone.position + spine.rotation * model.getDir() * model.length() * (i + 1) / limb.Count;
+            }
+
+            for (int i = 0; i < limb.Count - 1; i++) {
+                ccd(limb.GetRange(i, 2), currentPositions[i], ikSpeed);
+                float distance = Vector3.Distance(currentPositions[i], desiredPositions[i]);
+                currentPositions[i] = Vector3.MoveTowards(currentPositions[i], desiredPositions[i], Time.deltaTime * distance);
+            }
+            yield return 0;
+        }
+
+        if (returnAfter) {
+            Quaternion[] rotations = new Quaternion[limb.Count];
+            for(int i = 0; i < rotations.Length; i++) {
+                rotations[i] = limb[i].bone.localRotation;
+            }
+
+            for (float t = 0; t < 1f; t += Time.deltaTime * 6f) {
+                for (int i = 0; i < rotations.Length; i++) {
+                    limb[i].bone.localRotation = Quaternion.Lerp(rotations[i], Quaternion.identity, t);
+                }
+                yield return 0;
+            }
         }
     }
 
@@ -130,9 +193,6 @@ public abstract class LandAnimal : MonoBehaviour {
         Vector3 a = hit1.point - hit2.point;
         Vector3 b = point1 - point2;
 
-        //Debug.DrawLine(point1, hit1.point);
-        //Debug.DrawLine(point2, hit2.point);
-
         float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
         Vector3 normal = Vector3.Cross(a, b);
         if (angle > 0.01f) {
@@ -156,6 +216,7 @@ public abstract class LandAnimal : MonoBehaviour {
             float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
             float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
             if (distFromStance <= stanceHeight) {
+                grounded = true;
                 float sign = Mathf.Sign(dist2ground - stanceHeight);
                 if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
                     gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
@@ -163,13 +224,8 @@ public abstract class LandAnimal : MonoBehaviour {
                     gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;                    
                 }
             } else {
-                gravity += Physics.gravity * Time.deltaTime;
-            }
-
-            if (dist2ground <= stanceHeight + 0.2f) {
-                grounded = true;
-            } else {
                 grounded = false;
+                gravity += Physics.gravity * Time.deltaTime;
             }
         }
     }

@@ -329,8 +329,9 @@ public class AnimalSkeleton {
         spineBone.maxAngles = new Vector3(90, 1, 90);
         //NECK
         Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
+        neckBoneBase.minAngles = new Vector3(-90, -90, -90);
+        neckBoneBase.maxAngles = new Vector3(90, 90, 90);
         Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBoneBase.bone, "Neck", BodyPart.NECK);
-        createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBone.bone, skeletonLines[BodyPart.HEAD], "Head", BodyPart.HEAD);
         //TAIL
         int tailJointCount = bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS);
         createAndBindBones(skeletonLines[BodyPart.TAIL][0], spineBone.bone, tailJointCount, "Tail", BodyPart.TAIL);
