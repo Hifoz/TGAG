@@ -23,7 +23,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
                     if (MDG.checkIfWaterVoxel(new Vector3Int(x, y, z)))
-                        MDG.GenerateWaterCube(new Vector3Int(x, y, z), offset, pointmap.blockData[pointmap.get1dIndex(x, y, z)], voxelSize);
+                        MDG.GenerateWaterCube(new Vector3Int(x, y, z), offset, pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
                 }
             }
         }
@@ -47,7 +47,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
     }
 
     protected bool checkIfWaterVoxel(Vector3Int voxelPos) {
-        if (pointmap.blockData[pointmap.get1dIndex(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER)
+        if (pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER)
             return true;
         return false;
     }

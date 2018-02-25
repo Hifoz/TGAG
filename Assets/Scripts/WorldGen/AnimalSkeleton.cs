@@ -472,11 +472,11 @@ public class AnimalSkeleton {
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
-                    int i = pointMap.get1dIndex(x, y, z);
+                    int i = pointMap.index1D(x, y, z);
                     Vector3 samplePos = new Vector3(x, y, z) * voxelSize + lowerBounds;
-                    pointMap.blockData[i] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
-                    if (pointMap.blockData[i].blockType == BlockData.BlockType.DIRT) {
-                        pointMap.blockData[i].modifier = BlockData.BlockType.SNOW;
+                    pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
+                    if (pointMap.mapdata[i].blockType == BlockData.BlockType.DIRT) {
+                        pointMap.mapdata[i].modifier = BlockData.BlockType.SNOW;
                     }
                 }
             }
