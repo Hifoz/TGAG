@@ -1,7 +1,6 @@
-﻿Shader "Custom/2DArrayTexture" {
+﻿Shader "Custom/Animal" {
 	Properties {
-		_TexArr("Texture Array", 2DArray) = "" {}
-		_Type("Type (0=terrain, 1=trees)", int)=0
+		_MainTex("Texture", 2D) = "white" {}
 	}
 	SubShader {
 		Pass {
@@ -37,17 +36,19 @@
 
 			struct v2f {
 				float4 pos : SV_POSITION;
-				float4 color : COLOR0;
-				float3 uv : TEXCOORD0;
+				float2 uv : TEXCOORD0;
 				float3 posEye : TEXCOORD1;
 				float3 lightDirEye : TEXCOORD2;
 				float3 eyeNormal : TEXCOORD3;
 				float3 worldPos : TEXCOORD4;
 				SHADOW_COORDS(5) // put shadows data into TEXCOORD5
-				fixed3 diff : COLOR2;
-				fixed3 ambient : COLOR3;
+				fixed3 diff : COLOR0;
+				fixed3 ambient : COLOR1;
 			};
-	
+			
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+
 			v2f vert(appdata v) {
 				v2f o;
 				//Usuefull data
@@ -56,16 +57,14 @@
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
 				o.eyeNormal = normalize(UnityObjectToViewPos(v.normal));
 				o.posEye = UnityObjectToViewPos(v.vertex);
-				//o.lightDirEye = normalize(-_WorldSpaceLightPos0); //It's a directional light
+				//o.lightDirEye = normalize(_WorldSpaceLightPos0); //It's a directional light
 				//Light
 				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				o.diff = nl;
 				o.ambient = ShadeSH9(half4(worldNormal, 1));
 				//Shadow
 				TRANSFER_SHADOW(o);
-
-				o.uv.xy = v.uv;
-				o.color = v.color;	
+				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
 
@@ -75,15 +74,17 @@
 				//shadow
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
-				//float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 1);
+				//float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
 				fixed3 light = (i.diff /*+ specular * 0.4*/) * shadow + i.ambient;
 
-				int baseType = i.color.r + 0.5;
-				int modType = i.color.g + 0.5;
 				half4 o;
-
-				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
+				half3 green = { 0, 0.8, 0 };
+				half3 orange = { 0, 0.4, 0 };
+				
 				o.a = 1;
+				float x = inRange(i.uv.x, 0.2, 0.8);
+				float y = inRange(i.uv.y, 0.2, 0.8);
+				o.rgb =  x * y * orange + (1 - x + 1 - y) * green;
 				o.rbg *= light;
 				return o;
 			}

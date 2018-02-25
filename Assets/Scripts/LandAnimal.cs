@@ -70,6 +70,9 @@ public abstract class LandAnimal : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Resets the rotation of all joints, mostly for debugging
+    /// </summary>
     public void resetJoints() {
         foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
             bone.bone.transform.rotation = Quaternion.identity;
