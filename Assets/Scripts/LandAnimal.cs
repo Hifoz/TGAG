@@ -6,7 +6,7 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Rigidbody))]
 public abstract class LandAnimal : MonoBehaviour {
     protected AnimalSkeleton skeleton;
-    private float ikSpeed = 2f;
+    private float ikSpeed = 10f;
     private const float ikTolerance = 0.005f;
 
     protected Vector3 desiredHeading = Vector3.zero;
