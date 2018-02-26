@@ -89,10 +89,10 @@
 				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.x;
 				float frequency = 111.3 * i.animalData.y;
 
-				float skinTypeNoise = hash(i.animalData.x + i.animalData.y);
-				float skinType1 = inRange(skinTypeNoise, 0.0, 0.33);
-				float skinType2 = inRange(skinTypeNoise, 0.33, 0.66);
-				float skinType3 = inRange(skinTypeNoise, 0.66, 1.0);
+				float skinTypeNoise = clamp(hash(i.animalData.x * i.animalData.y), 0.02, 0.98);
+				float skinType1 = inRange(skinTypeNoise, 0.0, 0.33333);
+				float skinType2 = inRange(skinTypeNoise, 0.33334, 0.66666);
+				float skinType3 = inRange(skinTypeNoise, 0.66667, 1.0);
 
 				float n = noise(i.noisePos * frequency + seed);
 

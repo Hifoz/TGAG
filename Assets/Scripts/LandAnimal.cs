@@ -51,7 +51,7 @@ public abstract class LandAnimal : MonoBehaviour {
             tailPhysics();
             if (grounded) {
                 walk();
-                timer += Time.deltaTime * speed / 2f;
+                timer += (Time.deltaTime * speed / 2f) / skeleton.getBodyParameter<float>(BodyParameter.SCALE);
                 ragDolling = false;
             } else if (!grounded && !ragDolling) {
                 ragDolling = true;

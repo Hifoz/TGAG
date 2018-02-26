@@ -30,7 +30,7 @@ public class LineSegment {
     /// <param name="b"></param>
     /// <returns>Resulting lineSegment</returns>
     public static LineSegment operator+ (LineSegment a, Vector3 b) {
-        return new LineSegment(a.a + b, a.b + b);
+        return new LineSegment(a.a + b, a.b + b, a.radius);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public class LineSegment {
     /// <param name="b"></param>
     /// <returns>Resulting lineSegment</returns>
     public static LineSegment operator- (LineSegment a, Vector3 b) {
-        return new LineSegment(a.a - b, a.b - b);
+        return new LineSegment(a.a - b, a.b - b, a.radius);
     }
 
     /// <summary>
