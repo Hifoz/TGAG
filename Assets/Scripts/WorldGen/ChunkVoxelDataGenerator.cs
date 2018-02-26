@@ -14,19 +14,19 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <returns>bool contains voxel</returns>
-    [Obsolete("Use apply3dNoise() instead. (You will have to pre-calculate the 2d height for this).")]
+    [Obsolete("Use posContainsVoxel(Vector3 pos, int height) instead. (You will have to pre-calculate the 2d height for this).")]
     public static bool posContainsVoxel(Vector3 pos) {
-        return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+        return (pos.y < calcHeight(pos) || calc3DStructure(pos, -1)) && calc3DUnstructure(pos, -1);
     }
 
     /// <summary>
-    /// Determines if there is a voxel at the given location, with a precalculated 2d heightmap.
+    /// Determines if there is a voxel at the given location, with a precalculated 2d height.
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
-    /// <returns>Whether the location contains a voxel after applying 3d noise</returns>
-    public static bool apply3dNoise(Vector3 pos, int height) {
-        return (pos.y < height || calc3DStructure(pos)) && calc3DUnstructure(pos);
+    /// <returns>Whether the location contains a voxel</returns>
+    public static bool posContainsVoxel(Vector3 pos, int height) {
+        return (pos.y < height || calc3DStructure(pos, height)) && calc3DUnstructure(pos, height);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if(apply3dNoise(pos + new Vector3(x, y, z), heightmap[x, z]))
+                    if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z]))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
@@ -82,7 +82,6 @@ public static class ChunkVoxelDataGenerator {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Add block type here:
-
         if (pos.y < ChunkConfig.waterHeight)
             data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
 
@@ -127,10 +126,13 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DStructure(Vector3 pos) {
-        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+    private static bool calc3DStructure(Vector3 pos, int height) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D) +
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+        noise *= 0.5f;
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
+
         return ChunkConfig.Structure3DRate * 0.75f > noise01;
     }
 
@@ -140,8 +142,10 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DUnstructure(Vector3 pos) {
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+    private static bool calc3DUnstructure(Vector3 pos, int height) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D) + 
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+        noise *= 0.5f;
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
         return ChunkConfig.Unstructure3DRate < noise01;
