@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 /// <summary>
-/// Generates int[,,] arrays of voxel data for creation of chunk meshes.
+/// Generates voxel data for creation of chunk meshes.
 /// </summary>
 public static class ChunkVoxelDataGenerator {
 
@@ -14,25 +14,45 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <returns>bool contains voxel</returns>
+    [Obsolete("Use posContainsVoxel(Vector3 pos, int height) instead. (You will have to pre-calculate the 2d height for this).")]
     public static bool posContainsVoxel(Vector3 pos) {
-        return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+        return (pos.y < calcHeight(pos) || calc3DStructure(pos, -1)) && calc3DUnstructure(pos, -1);
+    }
+
+    /// <summary>
+    /// Determines if there is a voxel at the given location, with a precalculated 2d height.
+    /// </summary>
+    /// <param name="pos">The position to investigate</param>
+    /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
+    /// <returns>Whether the location contains a voxel</returns>
+    public static bool posContainsVoxel(Vector3 pos, int height) {
+        return (pos.y < height || calc3DStructure(pos, height)) && calc3DUnstructure(pos, height);
     }
 
     /// <summary>
     /// A function that creates voxel data for a chunk using simplex noise.
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
-    /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
+    /// <returns>Voxel data for the chunk</returns>
     public static BlockDataMap getChunkVoxelData(Vector3 pos) {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
+
+        // Pre-calculate 2d heightmap:
+        int[,] heightmap = new int[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
+            for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
+                int height = (int)calcHeight(new Vector3(x, 0, z) + pos);
+                heightmap[x, z] = height;
+            }
+        }
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if (posContainsVoxel(new Vector3(x, y, z) + pos))
+                    if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z]))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
-                    else if (y < 15) // temp
+                    else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
                     else
                         data.mapdata[i] = new BlockData(BlockData.BlockType.NONE);
@@ -62,16 +82,16 @@ public static class ChunkVoxelDataGenerator {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Add block type here:
-
-        if (pos.y < 15)
+        if (pos.y < ChunkConfig.waterHeight)
             data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
-            if (pos.y > 40) {
+            if (pos.y > ChunkConfig.snowHeight - SimplexNoise.Simplex2D(new Vector2(pos.x, pos.z), 0.002f)) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;
             } else if (data.mapdata[pos1d].blockType == BlockData.BlockType.DIRT) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.GRASS;
+
             }
         }
 
@@ -106,11 +126,14 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DStructure(Vector3 pos) {
-        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+    private static bool calc3DStructure(Vector3 pos, int height) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D) +
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+        noise *= 0.5f;
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
-        return ChunkConfig.Structure3DRate > noise01;
+
+        return ChunkConfig.Structure3DRate * 0.75f > noise01;
     }
 
     /// <summary>
@@ -119,8 +142,10 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DUnstructure(Vector3 pos) {
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+    private static bool calc3DUnstructure(Vector3 pos, int height) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D) + 
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+        noise *= 0.5f;
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
         return ChunkConfig.Unstructure3DRate < noise01;

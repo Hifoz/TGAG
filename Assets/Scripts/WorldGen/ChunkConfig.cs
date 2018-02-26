@@ -10,11 +10,13 @@ public static class ChunkConfig {
     public static int seed = 1337;
     public static int chunkSize = 20;
     public static int chunkCount = 40;
-    public static int chunkHeight = 100; // Chunk height must not exceed (5376/(chunkSize^2))
+    public static int chunkHeight = 200;
+    public static int waterHeight = 18;
+    public static int snowHeight = 90;
     //2D noise settings
-    public static float frequency2D = 0.005f;
-    public static float noiseExponent2D = 2;
-    public static int octaves2D = 2;
+    public static float frequency2D = 0.001f;
+    public static float noiseExponent2D = 3;
+    public static int octaves2D = 6;
     //3D noise settings
     public static float Structure3DRate = 0.75f;
     public static float Unstructure3DRate = 0.85f;

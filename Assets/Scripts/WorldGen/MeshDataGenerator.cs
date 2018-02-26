@@ -25,11 +25,9 @@ public class MeshDataGenerator {
         xp, xm, yp, ym, zp, zm
     }
     public enum MeshDataType {
-        TERRAIN, TREE, WATER, ANIMAL
+        TERRAIN, ANIMAL
     }
     protected MeshDataType meshDataType;
-
-
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
     /// Generates a mesh from MeshData.
