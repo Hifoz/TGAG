@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 /// <summary>
-/// Generates int[,,] arrays of voxel data for creation of chunk meshes.
+/// Generates voxel data for creation of chunk meshes.
 /// </summary>
 public static class ChunkVoxelDataGenerator {
 
@@ -14,42 +14,45 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <returns>bool contains voxel</returns>
+    [Obsolete("Use apply3dNoise() instead. (You will have to pre-calculate the 2d height for this).")]
     public static bool posContainsVoxel(Vector3 pos) {
         return (pos.y < calcHeight(pos) || calc3DStructure(pos)) && calc3DUnstructure(pos);
+    }
+
+    /// <summary>
+    /// Determines if there is a voxel at the given location, with a precalculated 2d heightmap.
+    /// </summary>
+    /// <param name="pos">The position to investigate</param>
+    /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
+    /// <returns>Whether the location contains a voxel after applying 3d noise</returns>
+    public static bool apply3dNoise(Vector3 pos, int height) {
+        return (pos.y < height || calc3DStructure(pos)) && calc3DUnstructure(pos);
     }
 
     /// <summary>
     /// A function that creates voxel data for a chunk using simplex noise.
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
-    /// <returns>int[,,] array containing data about the voxels in the chunk</returns>
+    /// <returns>Voxel data for the chunk</returns>
     public static BlockDataMap getChunkVoxelData(Vector3 pos) {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
-        // 2D Noise Pass:
+        // Pre-calculate 2d heightmap:
+        int[,] heightmap = new int[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                 int height = (int)calcHeight(new Vector3(x, 0, z) + pos);
-                for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
-                    int i = data.index1D(x, y, z);
-                    if (y < height) {
-                        data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
-                    } else {
-                        data.mapdata[i] = new BlockData(BlockData.BlockType.NONE);
-                    }
-                }
-
+                heightmap[x, z] = height;
             }
         }
 
-        // 3D Noise Pass and water addition:
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if ((data.mapdata[i].blockType == BlockData.BlockType.DIRT || calc3DStructure(pos + new Vector3(x, y, z))) && calc3DUnstructure(pos + new Vector3(x, y, z)))
+                    if(apply3dNoise(pos + new Vector3(x, y, z), heightmap[x, z]))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
-                    else if (y < ChunkConfig.waterHeight) // temp
+                    else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
                     else
                         data.mapdata[i] = new BlockData(BlockData.BlockType.NONE);
@@ -57,7 +60,6 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-        // BlockType Pass:
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {

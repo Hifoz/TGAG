@@ -206,14 +206,15 @@ public class ChunkVoxelDataThread {
 
         float height = ChunkVoxelDataGenerator.calcHeight(pos);
         pos.y = (int)height;
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
+        //bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
+        bool lastVoxel = ChunkVoxelDataGenerator.apply3dNoise(pos, (int)height);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
         while (iter < maxIter) {
             pos.y += dir;
             lastVoxel = currentVoxel;
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
+            currentVoxel = ChunkVoxelDataGenerator.apply3dNoise(pos, (int)height);
             if (lastVoxel != currentVoxel) {
                 if (!lastVoxel) { //Put the tree in an empty voxel
                     pos.y -= dir;
