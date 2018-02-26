@@ -18,7 +18,8 @@ public enum BodyPart {
 /// Enums used to specify a parameter for the skeleton
 /// </summary>
 public enum BodyParameter {
-    HEAD_SIZE = 0,
+    SCALE = 0,
+    HEAD_SIZE,
     NECK_LENGTH,
     SPINE_LENGTH,
     LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH,
@@ -46,6 +47,7 @@ public class AnimalSkeleton {
 
     private MixedDictionary<BodyParameter> bodyParametersRange = new MixedDictionary<BodyParameter>(
         new Dictionary<BodyParameter, object>() {
+            { BodyParameter.SCALE, new Pair<float>(0.5f, 1.0f) },
             { BodyParameter.HEAD_SIZE, new Pair<float>(2f, 4f) },
             { BodyParameter.NECK_LENGTH, new Pair<float>(3, 5) },
             { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
@@ -235,15 +237,25 @@ public class AnimalSkeleton {
     /// </summary>
     public void generateBodyParams() {
         bodyParameters.Clear();
+        bool scaleReady = false;
         foreach (KeyValuePair<BodyParameter, object> pair in bodyParametersRange.getDict()) {
+            float scale = 1;
+            if (scaleReady) {
+                scale = bodyParameters.Get<float>(BodyParameter.SCALE);
+            } 
+
             if (pair.Value.GetType().Equals(typeof(Pair<float>))) {
                 Pair<float> range = (Pair<float>)pair.Value;
-                bodyParameters.Add(pair.Key, rng.randomFloat(range.first, range.second));
+                bodyParameters.Add(pair.Key, rng.randomFloat(range.first, range.second) * scale);
             }
 
             if (pair.Value.GetType().Equals(typeof(Pair<int>))) {
                 Pair<int> range = (Pair<int>)pair.Value;
                 bodyParameters.Add(pair.Key, rng.randomInt(range.first, range.second));
+            }
+
+            if (!scaleReady) { //Scale is the first enum
+                scaleReady = true;
             }
         }
         bodyParameters.Add(
@@ -438,8 +450,11 @@ public class AnimalSkeleton {
         List<LineSegment> head = new List<LineSegment>();
         for (int i = -1; i <= 1; i += 2) {
             for (int j = -1; j <= 1; j += 2) {
-                head.Add(new LineSegment(new Vector3(0, 0, 0), new Vector3(i, j, 1) * headSize/2f));
-                head.Add(new LineSegment(new Vector3(i, j, 1) * headSize / 2f, new Vector3(0, 0, headSize)));
+                Vector3 nose = new Vector3(0, 0, 0);
+                Vector3 midHead = new Vector3(i, j, 1) * headSize / 2f;
+                Vector3 neck = new Vector3(0, 0, headSize);
+                head.Add(new LineSegment(nose, midHead));
+                head.Add(new LineSegment(midHead, neck));
             }
         }
         return head;
@@ -452,8 +467,7 @@ public class AnimalSkeleton {
     //   | |  | |  __/\__ \ | | | | |  | |  __/ |_| | | | (_) | (_| \__ \
     //   |_|  |_|\___||___/_| |_| |_|  |_|\___|\__|_| |_|\___/ \__,_|___/
     //                                                                   
-    //                                                                   
-
+    // 
 
     /// <summary>
     /// Generates the MeshData for the animal
@@ -465,26 +479,26 @@ public class AnimalSkeleton {
             updateBounds(line);
         }
 
-        upperBounds += Vector3.one * (skeletonThiccness + 2.5f);
-        lowerBounds -= Vector3.one * (skeletonThiccness + 2.5f);
+        float scale = bodyParameters.Get<float>(BodyParameter.SCALE);
+
+        upperBounds += Vector3.one * (skeletonThiccness * scale + 2.5f);
+        lowerBounds -= Vector3.one * (skeletonThiccness * scale + 2.5f);
         Vector3 size = upperBounds - lowerBounds;
-        size /= voxelSize;
+        size /= (voxelSize * scale);
 
         BlockDataMap pointMap = new BlockDataMap(Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z));
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
                     int i = pointMap.index1D(x, y, z);
-                    Vector3 samplePos = new Vector3(x, y, z) * voxelSize + lowerBounds;
-                    pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos), BlockData.BlockType.NONE);
-                    if (pointMap.mapdata[i].blockType == BlockData.BlockType.DIRT) {
-                        pointMap.mapdata[i].modifier = BlockData.BlockType.SNOW;
-                    }
+                    Vector3 samplePos = new Vector3(x, y, z) * (voxelSize * scale) + lowerBounds;
+                    pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos, scale), BlockData.BlockType.NONE);
                 }
             }
         }
+
         meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, voxelSize, -(lowerBounds / voxelSize), MeshDataGenerator.MeshDataType.ANIMAL)[0];
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL)[0];
     }
 
     /// <summary>
@@ -492,11 +506,11 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="pos">Position to examine</param>
     /// <returns>Blocktype</returns>
-    private BlockData.BlockType calcBlockType(Vector3 pos) {
+    private BlockData.BlockType calcBlockType(Vector3 pos, float scale) {
         List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
         foreach (var line in skeleton) {
             float dist = line.distance(pos);
-            if (dist < skeletonThiccness) {
+            if (dist < (skeletonThiccness * scale)) {
                 return BlockData.BlockType.ANIMAL;
             }
         }
