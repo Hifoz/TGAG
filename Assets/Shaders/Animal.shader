@@ -84,15 +84,16 @@
 				half3 darkRed = { 0.4, 0, 0 };
 				half3 blue = { 0, 0, 1 };
 				half3 darkBlue = { 0, 0, 0.4 };
-				
+				half3 white = { 1, 1, 1 };
+				half3 purple = { 0.5, 0, 0.5 };
 				
 				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.x;
 				float frequency = 111.3 * i.animalData.y;
 
-				float skinTypeNoise = clamp(hash(i.animalData.x * i.animalData.y), 0.02, 0.98);
-				float skinType1 = inRange(skinTypeNoise, 0.0, 0.33333);
-				float skinType2 = inRange(skinTypeNoise, 0.33334, 0.66666);
-				float skinType3 = inRange(skinTypeNoise, 0.66667, 1.0);
+				float skinTypeNoise = clamp(hash(i.animalData.x * i.animalData.y), 0.01, 0.99);
+				float skinType1 = inRange(skinTypeNoise, 0.0, 0.32);
+				float skinType2 = inRange(skinTypeNoise, 0.34, 0.62);
+				float skinType3 = inRange(skinTypeNoise, 0.64, 1.0);
 
 				float n = noise(i.noisePos * frequency + seed);
 
@@ -100,7 +101,8 @@
 				o.rgb = 
 					(green * inRange(n, 0.0, 0.45) + darkGreen * inRange(n, 0.55, 1.0)) * skinType1 +
 					(red * inRange(n, 0.0, 0.45) + darkRed * inRange(n, 0.55, 1.0)) * skinType2 +
-					(blue * inRange(n, 0.0, 0.45) + darkBlue * inRange(n, 0.55, 1.0)) * skinType3;
+					(blue * inRange(n, 0.0, 0.45) + darkBlue * inRange(n, 0.55, 1.0)) * skinType3 +
+					(white * inRange(n, 0.0, 0.45) + purple * inRange(n, 0.55, 1.0)) * (1 - ceil((skinType1 + skinType2 + skinType3) / 3));
 				o.rbg *= light;
 				return o;
 			}
