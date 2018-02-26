@@ -14,9 +14,9 @@ public static class ChunkConfig {
     public static int waterHeight = 18;
     public static int snowHeight = 90;
     //2D noise settings
-    public static float frequency2D = 0.002f;
+    public static float frequency2D = 0.001f;
     public static float noiseExponent2D = 3;
-    public static int octaves2D = 5;
+    public static int octaves2D = 6;
     //3D noise settings
     public static float Structure3DRate = 0.75f;
     public static float Unstructure3DRate = 0.85f;
