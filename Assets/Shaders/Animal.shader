@@ -30,6 +30,7 @@
 				float4 vertex : POSITION;
 				float4 normal : NORMAL;
 				float4 color : COLOR;
+				float2 uv : TEXCOORD0;
 			};
 
 			struct v2f {
@@ -40,6 +41,7 @@
 				float3 worldPos : TEXCOORD3;
 				SHADOW_COORDS(4) // put shadows data into TEXCOORD4
 				float3 noisePos : TEXCOORD5;
+				float2 animalData : TEXCOORD6;
 				fixed3 diff : COLOR0;
 				fixed3 ambient : COLOR1;
 			};
@@ -62,6 +64,7 @@
 				TRANSFER_SHADOW(o);
 
 				o.noisePos = v.color.rbg;
+				o.animalData = v.uv;
 				return o;
 			}
 
@@ -76,12 +79,28 @@
 
 				half4 o;
 				half3 green = { 0, 1, 0 };
-				half3 blue = { 0, 0.4, 0 };
+				half3 darkGreen = { 0, 0.4, 0 };
+				half3 red = { 1, 0, 0 };
+				half3 darkRed = { 0.4, 0, 0 };
+				half3 blue = { 0, 0, 1 };
+				half3 darkBlue = { 0, 0, 0.4 };
 				
-				float n = noise(i.noisePos * 111.3);
+				
+				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.x;
+				float frequency = 111.3 * i.animalData.y;
+
+				float skinTypeNoise = hash(i.animalData.x + i.animalData.y);
+				float skinType1 = inRange(skinTypeNoise, 0.0, 0.33);
+				float skinType2 = inRange(skinTypeNoise, 0.33, 0.66);
+				float skinType3 = inRange(skinTypeNoise, 0.66, 1.0);
+
+				float n = noise(i.noisePos * frequency + seed);
 
 				o.a = 1;
-				o.rgb = green * inRange(n, 0.0, 0.45) + blue * inRange(n, 0.55, 1.0);
+				o.rgb = 
+					(green * inRange(n, 0.0, 0.45) + darkGreen * inRange(n, 0.55, 1.0)) * skinType1 +
+					(red * inRange(n, 0.0, 0.45) + darkRed * inRange(n, 0.55, 1.0)) * skinType2 +
+					(blue * inRange(n, 0.0, 0.45) + darkBlue * inRange(n, 0.55, 1.0)) * skinType3;
 				o.rbg *= light;
 				return o;
 			}

@@ -10,7 +10,6 @@ public class MeshData {
     public Color[] colors;
     public Vector2[] uvs;
 
-
     /// <summary>
     /// Splits up the MeshData into more manageable chunks
     /// </summary>
