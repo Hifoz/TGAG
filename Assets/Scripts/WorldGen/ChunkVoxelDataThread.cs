@@ -87,7 +87,7 @@ public class ChunkVoxelDataThread {
     /// Returns thread run state.
     /// </summary>
     /// <returns>bool isRunning</returns>
-    public bool isRunning() {        
+    public bool isRunning() {
         return run;
     }
 
@@ -103,7 +103,7 @@ public class ChunkVoxelDataThread {
     /// </summary>
     private void threadRunner() {
         UnityEngine.Debug.Log("Thread alive!");
-        while (run) {            
+        while (run) {
             try {
                 Order order = orders.Take(getPreferredOrder);
                 if(order == null) {
@@ -164,26 +164,35 @@ public class ChunkVoxelDataThread {
         result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
-        int trees = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
-        result.trees = new MeshData[trees];
-        result.treeTrunks = new MeshData[trees];
-        result.treePositions = new Vector3[trees];
+        int treeCount = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
 
-        for (int i = 0; i < trees; i++) {
+        List<MeshData> trees = new List<MeshData>();
+        List<MeshData> treeTrunks = new List<MeshData>();
+        List<Vector3> treePositions = new List<Vector3>();
+
+        for (int i = 0; i < treeCount; i++) {
             Vector3 pos = new Vector3((float)rng.NextDouble() * ChunkConfig.chunkSize, 0, (float)rng.NextDouble() * ChunkConfig.chunkSize);
             pos += order.position;
             pos = Utils.floorVector(pos);
             pos = findGroundLevel(pos);
             pos = Utils.floorVector(pos);
-            if (pos != Vector3.negativeInfinity) {
-                MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
-                result.trees[i] = tree[0];
-                result.treeTrunks[i] = tree[1];
-                result.treePositions[i] = pos;
-            } else {
-                i--; //Try again
+            if(pos.y > ChunkConfig.waterHeight + 3) {
+                if(!float.IsInfinity(pos.x) && !float.IsInfinity(pos.y) && !float.IsInfinity(pos.z)) { // Don't use Vector3.negativeInfinity to check, apparently it doesn't catch it...
+                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
+                    trees.Add(tree[0]);
+                    treeTrunks.Add(tree[1]);
+                    treePositions.Add(pos);
+                } else {
+                    i--; //Try again
+                }
             }
         }
+        result.trees = trees.ToArray();
+        result.treeTrunks = treeTrunks.ToArray();
+        result.treePositions = treePositions.ToArray();
+
+
+
         return result;
     }
 
@@ -198,14 +207,15 @@ public class ChunkVoxelDataThread {
 
         float height = ChunkVoxelDataGenerator.calcHeight(pos);
         pos.y = (int)height;
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
+        //bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
+        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
         while (iter < maxIter) {
             pos.y += dir;
             lastVoxel = currentVoxel;
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
+            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height);
             if (lastVoxel != currentVoxel) {
                 if (!lastVoxel) { //Put the tree in an empty voxel
                     pos.y -= dir;

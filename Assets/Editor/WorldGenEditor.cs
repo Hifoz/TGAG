@@ -14,7 +14,8 @@ public class WorldGenEditor : EditorWindow {
     public static int seed = 1337;
     public static int chunkSize = 20;
     public static int chunkCount = 20;
-    public static int chunkHeight = 100; // Chunk height must not exceed (5376/(chunkSize^2))
+    public static int chunkHeight = 200;
+    public static int waterHeight = 50;
     //2D noise settings
     public static float frequency2D = 0.005f;
     public static float noiseExponent2D = 2;
@@ -43,6 +44,7 @@ public class WorldGenEditor : EditorWindow {
         chunkSize = EditorGUILayout.IntField("Chunk Size", chunkSize);
         chunkCount = EditorGUILayout.IntField("Chunk Count", chunkCount);
         chunkHeight = EditorGUILayout.IntField("Chunk Height", chunkHeight);
+        waterHeight = EditorGUILayout.IntField("Water Height", waterHeight);
         GUILayout.Label("2D noise settings", EditorStyles.boldLabel);
         frequency2D = EditorGUILayout.FloatField("Frequency 2D", frequency2D);
         noiseExponent2D = EditorGUILayout.FloatField("Noise Exponent 2D", noiseExponent2D);
@@ -82,6 +84,7 @@ public class WorldGenEditor : EditorWindow {
         chunkSize = ChunkConfig.chunkSize;
         chunkCount = ChunkConfig.chunkCount;
         chunkHeight = ChunkConfig.chunkHeight;
+        waterHeight = ChunkConfig.waterHeight;
         frequency2D = ChunkConfig.frequency2D;
         noiseExponent2D = ChunkConfig.noiseExponent2D; 
         octaves2D = ChunkConfig.octaves2D;
@@ -106,6 +109,7 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.chunkSize = chunkSize;
         ChunkConfig.chunkCount = chunkCount;
         ChunkConfig.chunkHeight = chunkHeight;
+        ChunkConfig.waterHeight = waterHeight;
         ChunkConfig.frequency2D = frequency2D;
         ChunkConfig.noiseExponent2D = noiseExponent2D;
         ChunkConfig.octaves2D = octaves2D;
