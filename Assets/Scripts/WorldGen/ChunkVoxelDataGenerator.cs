@@ -26,11 +26,28 @@ public static class ChunkVoxelDataGenerator {
     public static BlockDataMap getChunkVoxelData(Vector3 pos) {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
+        // 2D Noise Pass:
+        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
+            for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
+                int height = (int)calcHeight(new Vector3(x, 0, z) + pos);
+                for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
+                    int i = data.index1D(x, y, z);
+                    if (y < height) {
+                        data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
+                    } else {
+                        data.mapdata[i] = new BlockData(BlockData.BlockType.NONE);
+                    }
+                }
+
+            }
+        }
+
+        // 3D Noise Pass and water addition:
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if (posContainsVoxel(new Vector3(x, y, z) + pos))
+                    if ((data.mapdata[i].blockType == BlockData.BlockType.DIRT || calc3DStructure(pos + new Vector3(x, y, z))) && calc3DUnstructure(pos + new Vector3(x, y, z)))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < ChunkConfig.waterHeight) // temp
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
@@ -40,6 +57,7 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
+        // BlockType Pass:
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
