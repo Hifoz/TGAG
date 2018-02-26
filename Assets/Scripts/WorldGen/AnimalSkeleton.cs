@@ -46,8 +46,8 @@ public class AnimalSkeleton {
 
     private MixedDictionary<BodyParameter> bodyParametersRange = new MixedDictionary<BodyParameter>(
         new Dictionary<BodyParameter, object>() {
-            { BodyParameter.HEAD_SIZE, new Pair<float>(1.5f, 4f) },
-            { BodyParameter.NECK_LENGTH, new Pair<float>(2, 4) },
+            { BodyParameter.HEAD_SIZE, new Pair<float>(2f, 4f) },
+            { BodyParameter.NECK_LENGTH, new Pair<float>(3, 5) },
             { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
             { BodyParameter.LEG_PAIRS, new Pair<int>(2, 4) },
             { BodyParameter.LEG_JOINTS, new Pair<int>(2, 3) },
@@ -197,6 +197,7 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="root"></param>
     private void generateInMainThread(Transform root) {
+        root.rotation = Quaternion.identity;
         foreach (Transform child in root) {
             MonoBehaviour.Destroy(child.gameObject);
         }

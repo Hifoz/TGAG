@@ -7,11 +7,20 @@ public class LineSegment {
     public LineSegment(Vector3 a, Vector3 b, bool endLine = false) {
         this.a = a;
         this.b = b;
+        radius = 0;
+        this.endLine = endLine;
+    }
+
+    public LineSegment(Vector3 a, Vector3 b, float radius, bool endLine = false) {
+        this.a = a;
+        this.b = b;
+        this.radius = radius;
         this.endLine = endLine;
     }
 
     public Vector3 a;
     public Vector3 b;
+    public float radius;
     public bool endLine;
     
     /// <summary>

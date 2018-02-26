@@ -193,16 +193,16 @@ public class BenchmarkChunkManager : MonoBehaviour {
         float upper = -lower;
         for (int i = 0; i < animals.Length; i++) {
             animals[i] = Instantiate(animalPrefab);
-            AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
-            animalSkeleton.index = i;
-            orders.Add(new Order(animalSkeleton, Task.ANIMAL));
-            orderedAnimals.Add(i);
-
             float x = UnityEngine.Random.Range(lower, upper);
             float z = UnityEngine.Random.Range(lower, upper);
             float y = ChunkConfig.chunkHeight + 10;
             animals[i].transform.position = new Vector3(x, y, z);
             animals[i].GetComponent<LandAnimalNPC>().enabled = false;
+
+            AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
+            animalSkeleton.index = i;
+            orders.Add(new Order(animals[i].transform.position, animalSkeleton, Task.ANIMAL));
+            orderedAnimals.Add(i);
         }
     }
 

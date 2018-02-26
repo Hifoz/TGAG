@@ -33,8 +33,9 @@ public class Order {
         this.task = task;
     }
 
-    public Order(AnimalSkeleton animalSkeleton, Task task) {
+    public Order(Vector3 position, AnimalSkeleton animalSkeleton, Task task) {
         this.animalSkeleton = animalSkeleton;
+        this.position = position;
         this.task = task;
     }
 
