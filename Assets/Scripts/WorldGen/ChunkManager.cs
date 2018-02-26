@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -106,7 +106,7 @@ public class ChunkManager : MonoBehaviour {
                     float x = UnityEngine.Random.Range(lower, upper);
                     float z = UnityEngine.Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
-                    animal.transform.position = new Vector3(x, y, z);
+                    animal.transform.position = new Vector3(x, y, z) + player.transform.position;
 
                     AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
                     animalSkeleton.index = i;
@@ -265,12 +265,30 @@ public class ChunkManager : MonoBehaviour {
     /// Applies the animalSkeleton to the animal
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
-    private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
-        GameObject animal = animals[animalSkeleton.index];
-        animal.SetActive(true);
+    private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {        
+        GameObject animal = animals[animalSkeleton.index];  
         animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
-        animal.GetComponent<LandAnimalNPC>().Spawn(animal.transform.position);
+        StartCoroutine(spawnAnimal(animal)); //For the cases where the animal is not above a chunk  
         orderedAnimals.Remove(animalSkeleton.index);
+    }
+
+    /// <summary>
+    /// Spawn animal until successfull
+    /// </summary>
+    /// <param name="animal">Animal to spawn</param>
+    /// <returns></returns>
+    private IEnumerator spawnAnimal(GameObject animal) {
+        float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
+        float lower = -maxDistance + LandAnimalNPC.roamDistance;
+        float upper = -lower;
+        while (!animal.GetComponent<LandAnimalNPC>().Spawn(animal.transform.position)) {  
+            float x = Random.Range(lower, upper);
+            float z = Random.Range(lower, upper);
+            float y = ChunkConfig.chunkHeight + 10;
+            animal.transform.position = new Vector3(x, y, z) + player.transform.position;
+            yield return 0;
+        }
+        animal.SetActive(true);
     }
 
     /// <summary>

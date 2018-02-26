@@ -239,6 +239,9 @@ public class ChunkVoxelDataThread {
             float angleFromPreferredDir = Vector3.Angle(preferredDir, chunkDir);
             float distFromPlayer = Vector3.Distance(playerPos, chunkPos);
             float value = angleFromPreferredDir + distFromPlayer;
+            if (list[i].animalSkeleton != null) { //Animals are quick to generate.
+                value /= 4;
+            }
 
             if (value < preferredValue) {
                 resultIndex = i;

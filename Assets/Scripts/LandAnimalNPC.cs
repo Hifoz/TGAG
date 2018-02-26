@@ -10,7 +10,7 @@ public class LandAnimalNPC : LandAnimal {
     /// Spawns the animal at position
     /// </summary>
     /// <param name="pos">Vector3 pos</param>
-    public void Spawn(Vector3 pos) {
+    public bool Spawn(Vector3 pos) {
         transform.rotation = Quaternion.identity;
         transform.localRotation = Quaternion.identity;
         if (skeleton != null) {
@@ -28,9 +28,10 @@ public class LandAnimalNPC : LandAnimal {
         if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
             Vector3 groundTarget = hit.point + Vector3.up * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
             transform.position = groundTarget;
+            desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+            return true;
         }
-
-        desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+        return false;        
     }
 
     /// <summary>
@@ -46,6 +47,5 @@ public class LandAnimalNPC : LandAnimal {
         }
         transform.LookAt(transform.position - heading);
         GetComponent<Rigidbody>().velocity = heading * speed + gravity;
-        Debug.DrawLine(transform.position, transform.position + heading * 10, Color.blue);
     }
 }
