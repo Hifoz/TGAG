@@ -2,20 +2,32 @@
 
 /// <summary>
 /// Class representing a line
-/// Mainly used for animal skeletons
+/// Mainly used for trees and animals
 /// </summary>
-public class LineSegment {
+public class LineSegment { 
 
-    public LineSegment(Vector3 a, Vector3 b, float radius = 0.5f) {
+    /// <summary>
+    /// Constructor for line
+    /// </summary>
+    /// <param name="a">point a</param>
+    /// <param name="b">point b</param>
+    /// <param name="radius">radius of line</param>
+    /// <param name="endLine">last line?</param>
+    public LineSegment(Vector3 a, Vector3 b, float radius = 0, bool endLine = false) {
         this.a = a;
         this.b = b;
         this.radius = radius;
+        this.endLine = endLine;
     }
 
     public Vector3 a;
     public Vector3 b;
+    public bool endLine;
     public float radius;
-    
+
+    public Vector3 direction { get { return (b - a).normalized; } }
+    public float length { get { return (b - a).magnitude; } }
+
     /// <summary>
     /// Adds a vector to the line
     /// </summary>
@@ -23,7 +35,7 @@ public class LineSegment {
     /// <param name="b"></param>
     /// <returns>Resulting lineSegment</returns>
     public static LineSegment operator+ (LineSegment a, Vector3 b) {
-        return new LineSegment(a.a + b, a.b + b, a.radius);
+        return new LineSegment(a.a + b, a.b + b, a.radius, a.endLine);
     }
 
     /// <summary>
@@ -33,32 +45,7 @@ public class LineSegment {
     /// <param name="b"></param>
     /// <returns>Resulting lineSegment</returns>
     public static LineSegment operator- (LineSegment a, Vector3 b) {
-        return new LineSegment(a.a - b, a.b - b, a.radius);
-    }
-
-    /// <summary>
-    /// Add function for when you don't want to change the reference
-    /// </summary>
-    /// <param name="point">point to add</param>
-    public void add(Vector3 point) {
-        a += point;
-        b += point;
-    }
-
-    /// <summary>
-    /// Gets the direction of the line (normalized)
-    /// </summary>
-    /// <returns>direction og bone</returns>
-    public Vector3 getDir() {
-        return (b - a).normalized;
-    }
-
-    /// <summary>
-    /// Returns the length of the line
-    /// </summary>
-    /// <returns>length of the line</returns>
-    public float length() {
-        return (b - a).magnitude;
+        return new LineSegment(a.a - b, a.b - b, a.radius, a.endLine);
     }
 
     /// <summary>

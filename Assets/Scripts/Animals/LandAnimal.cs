@@ -105,7 +105,7 @@ public abstract class LandAnimal : MonoBehaviour {
     private void tailPhysics() {
         List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
         Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
-        Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].getDir();
+        Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].direction;
         float tailJointLength = skeleton.getBodyParameter<float>(BodyParameter.TAIL_JOINT_LENGTH);
         for (int i = 0; i < desiredTailPositions.Length; i++) {
             desiredTailPositions[i] = tail[0].bone.position + desiredTailDir * tailJointLength * (i + 1);
@@ -136,7 +136,7 @@ public abstract class LandAnimal : MonoBehaviour {
 
         while (!grounded) {
             for (int i = 0; i < desiredPositions.Length; i++) {
-                desiredPositions[i] = limb[0].bone.position + spine.rotation * model.getDir() * model.length() * (i + 1) / limb.Count;
+                desiredPositions[i] = limb[0].bone.position + spine.rotation * model.direction * model.length * (i + 1) / limb.Count;
             }
 
             for (int i = 0; i < limb.Count - 1; i++) {
