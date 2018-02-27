@@ -87,7 +87,7 @@
 				half3 white = { 1, 1, 1 };
 				half3 purple = { 0.5, 0, 0.5 };
 				
-				float3 seed = float3(1, 1, 1) * 841.4 * sin(i.animalData.x * 2.4 * i.animalData.y);
+				float3 seed = float3(1, 1, 1) * 841.4 * sin(i.animalData.x * i.animalData.y * 6.28);
 				float frequency = 111.3 * i.animalData.x;
 
 				//The magic numbers in the range comes from the fact that skin types are encoded as { 1, 2, 3, 4 } / 5;

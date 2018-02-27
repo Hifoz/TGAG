@@ -265,8 +265,8 @@ public class AnimalSkeleton {
     /// Makes the skeletonLines for the AnimalSkeleton
     /// </summary>
     private void makeSkeletonLines() {
-        //generateBodyParams();
-        generateBodyParamsDebug(true, true);
+        generateBodyParams();
+        //generateBodyParamsDebug(true, true);
         //SPINE
         float spineLen = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
         LineSegment spineLine = new LineSegment(

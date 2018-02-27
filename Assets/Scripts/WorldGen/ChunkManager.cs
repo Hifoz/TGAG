@@ -49,6 +49,7 @@ public class ChunkManager : MonoBehaviour {
             animals[i] = Instantiate(animalPrefab);
             animals[i].transform.position = new Vector3(9999, 9999, 9999);
         }
+        //StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame
@@ -57,7 +58,18 @@ public class ChunkManager : MonoBehaviour {
         updateChunkGrid();
         orderNewChunks();
         consumeThreadResults();
-        handleAnimals();
+        handleAnimals();        
+    }
+
+    /// <summary>
+    /// Prints debug info
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator debugRoutine() {
+        while (true) {
+            yield return new WaitForSeconds(0.5f);
+            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Active Chunks: " + activeChunks.Count + " | Inactive Chunks" + inactiveChunks.Count);
+        }
     }
 
     /// <summary>
@@ -103,8 +115,8 @@ public class ChunkManager : MonoBehaviour {
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
                if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
-                    float x = UnityEngine.Random.Range(lower, upper);
-                    float z = UnityEngine.Random.Range(lower, upper);
+                    float x = Random.Range(lower, upper);
+                    float z = Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
                     animal.transform.position = new Vector3(x, y, z) + player.transform.position;
 
@@ -208,6 +220,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void launchOrderedChunk(ChunkVoxelData chunkMeshData) {
         pendingChunks.Remove(chunkMeshData.chunkPos);
+
         ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
         GameObject chunk = new GameObject();
