@@ -2,39 +2,45 @@
 
 /// <summary>
 /// Class representing a line
-/// Mainly used for animal skeletons
+/// Mainly used for trees
 /// </summary>
-public class LineSegment {
+public struct LineSegmentStruct {
 
-    public LineSegment(Vector3 a, Vector3 b, float radius = 0.5f) {
+    public LineSegmentStruct(Vector3 a, Vector3 b, bool endLine = false) {
         this.a = a;
         this.b = b;
-        this.radius = radius;
+        this.endLine = endLine;
+    }
+
+    public LineSegmentStruct(LineSegmentStruct other, bool endLine = false) {
+        a = other.a;
+        b = other.b;
+        this.endLine = endLine;
     }
 
     public Vector3 a;
     public Vector3 b;
-    public float radius;
-    
-    /// <summary>
-    /// Adds a vector to the line
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns>Resulting lineSegment</returns>
-    public static LineSegment operator+ (LineSegment a, Vector3 b) {
-        return new LineSegment(a.a + b, a.b + b, a.radius);
-    }
+    public bool endLine;
 
-    /// <summary>
-    /// Subtracts a vector from the line
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns>Resulting lineSegment</returns>
-    public static LineSegment operator- (LineSegment a, Vector3 b) {
-        return new LineSegment(a.a - b, a.b - b, a.radius);
-    }
+    ///// <summary>
+    ///// Adds a vector to the line
+    ///// </summary>
+    ///// <param name="a"></param>
+    ///// <param name="b"></param>
+    ///// <returns>Resulting lineSegment</returns>
+    //public static LineSegmentStruct operator +(LineSegmentStruct a, Vector3 b) {
+    //    return new LineSegmentStruct(a.a + b, a.b + b);
+    //}
+
+    ///// <summary>
+    ///// Subtracts a vector from the line
+    ///// </summary>
+    ///// <param name="a"></param>
+    ///// <param name="b"></param>
+    ///// <returns>Resulting lineSegment</returns>
+    //public static LineSegmentStruct operator -(LineSegmentStruct a, Vector3 b) {
+    //    return new LineSegmentStruct(a.a - b, a.b - b);
+    //}
 
     /// <summary>
     /// Add function for when you don't want to change the reference

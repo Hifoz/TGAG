@@ -94,6 +94,7 @@
 				float skinType1 = inRange(skinTypeNoise, 0.0, 0.32);
 				float skinType2 = inRange(skinTypeNoise, 0.34, 0.62);
 				float skinType3 = inRange(skinTypeNoise, 0.64, 1.0);
+				//When no skin is selected, a rare white/purple gap skin is used
 
 				float n = noise(i.noisePos * frequency + seed);
 

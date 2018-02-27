@@ -29,7 +29,7 @@ public static class LSystemTreeGenerator {
     /// BlockData[,,] pointmap to the tree.
     /// </summary>
     public class Tree {
-        public List<LineSegment> tree;
+        public List<LineSegmentStruct> tree;
         public Vector3 size;
         public Vector3 lowerBounds;
         public Vector3 upperBounds;
@@ -123,12 +123,12 @@ public static class LSystemTreeGenerator {
     /// <param name="pos">Position being investigated</param>
     /// <param name="tree">Tree lines</param>
     /// <returns>Blocktype for position</returns>
-    private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
+    private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegmentStruct> tree) {
         foreach (var line in tree) {
             float dist = line.distance(pos);
             if (dist < ChunkConfig.treeThickness) {
                 return BlockData.BlockType.WOOD;
-            } else if (line.endLine == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+            } else if (line.endLine && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.LEAF;
             }
         }
@@ -168,7 +168,7 @@ public static class LSystemTreeGenerator {
     public static Tree GenerateLSystemTree(Vector3 pos) {
         //Initialize.
         Tree tree = new Tree();
-        tree.tree = new List<LineSegment>(); ;
+        tree.tree = new List<LineSegmentStruct>(); ;
         tree.lowerBounds = new Vector3(99999, 0, 99999);
         tree.upperBounds = new Vector3(-99999, -99999, -99999);
 
@@ -186,7 +186,7 @@ public static class LSystemTreeGenerator {
         foreach(char c in word) {
             switch (c) {
                 case 'D':
-                    tree.tree.Add(new LineSegment(turtle.pos, turtle.pos + turtle.heading * turtle.lineLen));
+                    tree.tree.Add(new LineSegmentStruct(turtle.pos, turtle.pos + turtle.heading * turtle.lineLen));
                     turtle.pos = turtle.pos + turtle.heading * turtle.lineLen;
                     tree.lowerBounds = updateLowerBounds(tree.lowerBounds, turtle.pos);
                     tree.upperBounds = updateUpperBounds(tree.upperBounds, turtle.pos);
@@ -210,12 +210,16 @@ public static class LSystemTreeGenerator {
                     states.Push(turtle);
                     break;
                 case ']':
-                    tree.tree[tree.tree.Count - 1].endLine = true; //When the turtle pops, the branch is complete.
+                    LineSegmentStruct line = tree.tree[tree.tree.Count - 1]; //When the turtle pops, the branch is complete.
+                    line = new LineSegmentStruct(line, true);
+                    tree.tree[tree.tree.Count - 1] = line;
                     turtle = states.Pop();
                     break;
             }
         }
-        tree.tree[tree.tree.Count - 1].endLine = true; //Last line is a leaf branch.
+        LineSegmentStruct branch = tree.tree[tree.tree.Count - 1]; //When the turtle pops, the branch is complete.
+        branch = new LineSegmentStruct(branch, true);
+        tree.tree[tree.tree.Count - 1] = branch;
         //Ready the result and return.
         float modifier = ((ChunkConfig.treeThickness < ChunkConfig.treeLeafThickness) ? ChunkConfig.treeLeafThickness : ChunkConfig.treeThickness) * boundingBoxModifier;
         tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
