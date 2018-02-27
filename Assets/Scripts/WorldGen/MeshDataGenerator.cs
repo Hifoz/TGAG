@@ -14,12 +14,12 @@ public class MeshDataGenerator {
     protected List<int> triangles = new List<int>();
     protected List<Color> colors = new List<Color>();
     protected List<Vector2> uvs = new List<Vector2>();
+    protected Vector2 animalData; //This vector will populate the animal UV, contains data used for noise seed and animal skin type.
     protected BlockDataMap pointmap;
 
     protected Vector3 offset;
 
-    System.Random rnd = new System.Random(System.DateTime.Now.Millisecond);
-
+    private static ThreadSafeRng rng = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -58,6 +58,11 @@ public class MeshDataGenerator {
 
         MDG.pointmap = pointmap;
 
+        if (meshDataType == MeshDataType.ANIMAL) {
+            //X = frequency, Y = skin type
+            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomInt(1, 5) / 5f);
+        }
+
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
@@ -74,7 +79,6 @@ public class MeshDataGenerator {
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
-
         return meshData.split();
     }
 
@@ -159,11 +163,11 @@ public class MeshDataGenerator {
         }
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
-
-        addTextureCoordinates(blockData, dir);
+        
         if (meshDataType == MeshDataType.ANIMAL) {
             addSliceData(vertices.GetRange(vertices.Count - 4, 4));
         } else {
+            addTextureCoordinates(blockData, dir);
             addSliceData(blockData, dir);
         }
 
@@ -213,6 +217,7 @@ public class MeshDataGenerator {
                     vert.z / scalingVector.z
                 )
             );
+            uvs.Add(animalData);
         }
     }
 

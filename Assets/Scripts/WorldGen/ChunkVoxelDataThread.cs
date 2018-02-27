@@ -11,10 +11,9 @@ public class ChunkVoxelData {
     public MeshData[] trees;
     public MeshData[] treeTrunks;
     public Vector3[] treePositions;
-    private Vector3 position;
 
-    public ChunkVoxelData(Vector3 position = default(Vector3)) {
-        this.position = position;
+    public ChunkVoxelData(Vector3 position) {
+        this.chunkPos = position;
     }
 }
 
@@ -33,8 +32,9 @@ public class Order {
         this.task = task;
     }
 
-    public Order(AnimalSkeleton animalSkeleton, Task task) {
+    public Order(Vector3 position, AnimalSkeleton animalSkeleton, Task task) {
         this.animalSkeleton = animalSkeleton;
+        this.position = position;
         this.task = task;
     }
 
@@ -101,7 +101,7 @@ public class ChunkVoxelDataThread {
     /// The function running the thread, processes orders and returns results to main thread.
     /// </summary>
     private void threadRunner() {
-        UnityEngine.Debug.Log("Thread alive!");
+        Debug.Log("Thread alive!");
         while (run) {
             try {
                 Order order = orders.Take(getPreferredOrder);
@@ -115,10 +115,10 @@ public class ChunkVoxelDataThread {
                 results.Enqueue(handleOrder(order));
 
             } catch(Exception e) {
-                UnityEngine.Debug.LogException(e);
+                Debug.LogException(e);
             }
         }
-        UnityEngine.Debug.Log("Thread stopped!");
+        Debug.Log("Thread stopped!");
     }
 
     /// <summary>
@@ -156,8 +156,7 @@ public class ChunkVoxelDataThread {
     /// <param name="order">Order order</param>
     /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
-        ChunkVoxelData result = new ChunkVoxelData();
-        result.chunkPos = order.position;
+        ChunkVoxelData result = new ChunkVoxelData(order.position);
         //Generate the chunk terrain
         result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
         result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
@@ -248,6 +247,9 @@ public class ChunkVoxelDataThread {
             float angleFromPreferredDir = Vector3.Angle(preferredDir, chunkDir);
             float distFromPlayer = Vector3.Distance(playerPos, chunkPos);
             float value = angleFromPreferredDir + distFromPlayer;
+            if (list[i].animalSkeleton != null) { //Animals are quick to generate.
+                value /= 4;
+            }
 
             if (value < preferredValue) {
                 resultIndex = i;

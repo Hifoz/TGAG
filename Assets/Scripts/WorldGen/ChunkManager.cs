@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,7 +25,7 @@ public class ChunkManager : MonoBehaviour {
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     private GameObject[] animals = new GameObject[20];
-    private int orderedAnimalIndex = -1;
+    private HashSet<int> orderedAnimals = new HashSet<int>();
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -44,6 +44,12 @@ public class ChunkManager : MonoBehaviour {
         AnimalSkeleton playerSkeleton = new AnimalSkeleton(player.transform);
         playerSkeleton.generateInThread();
         player.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
+
+        for (int i = 0; i < animals.Length; i++) {
+            animals[i] = Instantiate(animalPrefab);
+            animals[i].transform.position = new Vector3(9999, 9999, 9999);
+        }
+        //StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame
@@ -52,7 +58,18 @@ public class ChunkManager : MonoBehaviour {
         updateChunkGrid();
         orderNewChunks();
         consumeThreadResults();
-        handleAnimals();
+        handleAnimals();        
+    }
+
+    /// <summary>
+    /// Prints debug info
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator debugRoutine() {
+        while (true) {
+            yield return new WaitForSeconds(0.5f);
+            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Active Chunks: " + activeChunks.Count + " | Inactive Chunks" + inactiveChunks.Count);
+        }
     }
 
     /// <summary>
@@ -97,28 +114,18 @@ public class ChunkManager : MonoBehaviour {
             float upper = -lower;
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
-                if (animal == null) {
-                    if (orderedAnimalIndex == -1) {
-                        animals[i] = Instantiate(animalPrefab);
-                        AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
-                        orders.Add(new Order(animalSkeleton, Task.ANIMAL));
-                        orderedAnimalIndex = i;
-                    }
-                } else if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
-                    LandAnimalNPC landAnimalNPC = animal.GetComponent<LandAnimalNPC>();
-                    float x = UnityEngine.Random.Range(lower, upper);
-                    float z = UnityEngine.Random.Range(lower, upper);
+               if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
+                    float x = Random.Range(lower, upper);
+                    float z = Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
-                    landAnimalNPC.Spawn(player.position + new Vector3(x, y, z));
-                    //if (orderedAnimalIndex == -1 && UnityEngine.Random.Range(0f, 1f) < 1.0f) { // 10% chance of regenerating animal on respawn
-                    //    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
-                    //    orders.Add(new Order(animalSkeleton, Task.ANIMAL));
-                    //    orderedAnimalIndex = i;
-                    //}
+                    animal.transform.position = new Vector3(x, y, z) + player.transform.position;
+
+                    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
+                    animalSkeleton.index = i;
+                    orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
+                    orderedAnimals.Add(i);
+                    animal.SetActive(false);
                 }
-            }
-            if (orderedAnimalIndex != -1) {
-                animals[orderedAnimalIndex].SetActive(false);
             }
         }
     }
@@ -213,6 +220,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void launchOrderedChunk(ChunkVoxelData chunkMeshData) {
         pendingChunks.Remove(chunkMeshData.chunkPos);
+
         ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
         GameObject chunk = new GameObject();
@@ -270,11 +278,30 @@ public class ChunkManager : MonoBehaviour {
     /// Applies the animalSkeleton to the animal
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
-    private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
-        GameObject animal = animals[orderedAnimalIndex];
-        animal.SetActive(true);
+    private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {        
+        GameObject animal = animals[animalSkeleton.index];  
         animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
-        orderedAnimalIndex = -1;
+        StartCoroutine(spawnAnimal(animal)); //For the cases where the animal is not above a chunk  
+        orderedAnimals.Remove(animalSkeleton.index);
+    }
+
+    /// <summary>
+    /// Spawn animal until successfull
+    /// </summary>
+    /// <param name="animal">Animal to spawn</param>
+    /// <returns></returns>
+    private IEnumerator spawnAnimal(GameObject animal) {
+        float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
+        float lower = -maxDistance + LandAnimalNPC.roamDistance;
+        float upper = -lower;
+        while (!animal.GetComponent<LandAnimalNPC>().Spawn(animal.transform.position)) {  
+            float x = Random.Range(lower, upper);
+            float z = Random.Range(lower, upper);
+            float y = ChunkConfig.chunkHeight + 10;
+            animal.transform.position = new Vector3(x, y, z) + player.transform.position;
+            yield return 0;
+        }
+        animal.SetActive(true);
     }
 
     /// <summary>

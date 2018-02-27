@@ -124,11 +124,11 @@ public static class LSystemTreeGenerator {
     /// <param name="tree">Tree lines</param>
     /// <returns>Blocktype for position</returns>
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
-        foreach (var line in tree) {
-            float dist = line.distance(pos);
+        for (int i = 0; i < tree.Count; i++) {
+            float dist = tree[i].distance(pos);
             if (dist < ChunkConfig.treeThickness) {
                 return BlockData.BlockType.WOOD;
-            } else if (line.endLine == true && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+            } else if (tree[i].endLine && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.LEAF;
             }
         }
@@ -210,12 +210,16 @@ public static class LSystemTreeGenerator {
                     states.Push(turtle);
                     break;
                 case ']':
-                    tree.tree[tree.tree.Count - 1].endLine = true; //When the turtle pops, the branch is complete.
+                    LineSegment line = tree.tree[tree.tree.Count - 1]; //When the turtle pops, the branch is complete.
+                    line.endLine = true;
+                    tree.tree[tree.tree.Count - 1] = line;
                     turtle = states.Pop();
                     break;
             }
         }
-        tree.tree[tree.tree.Count - 1].endLine = true; //Last line is a leaf branch.
+        LineSegment lastLine = tree.tree[tree.tree.Count - 1]; //When the turtle pops, the branch is complete.
+        lastLine.endLine = true;
+        tree.tree[tree.tree.Count - 1] = lastLine;
         //Ready the result and return.
         float modifier = ((ChunkConfig.treeThickness < ChunkConfig.treeLeafThickness) ? ChunkConfig.treeLeafThickness : ChunkConfig.treeThickness) * boundingBoxModifier;
         tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
