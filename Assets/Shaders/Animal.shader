@@ -87,23 +87,24 @@
 				half3 white = { 1, 1, 1 };
 				half3 purple = { 0.5, 0, 0.5 };
 				
-				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.x;
-				float frequency = 111.3 * i.animalData.y;
+				float3 seed = float3(1, 1, 1) * 841.4 * sin(i.animalData.x * 2.4 * i.animalData.y);
+				float frequency = 111.3 * i.animalData.x;
 
-				float skinTypeNoise = clamp(hash(i.animalData.x * i.animalData.y), 0.01, 0.99);
-				float skinType1 = inRange(skinTypeNoise, 0.0, 0.32);
-				float skinType2 = inRange(skinTypeNoise, 0.34, 0.62);
-				float skinType3 = inRange(skinTypeNoise, 0.64, 1.0);
-				//When no skin is selected, a rare white/purple gap skin is used
+				//The magic numbers in the range comes from the fact that skin types are encoded as { 1, 2, 3, 4 } / 5;
+				//in i.animalData.y
+				float skinType1 = inRange(i.animalData.y, 0.18, 0.22);
+				float skinType2 = inRange(i.animalData.y, 0.38, 0.42);
+				float skinType3 = inRange(i.animalData.y, 0.58, 0.62);
+				float skinType4 = inRange(i.animalData.y, 0.78, 0.82);
 
-				float n = noise(i.noisePos * frequency + seed);
+				float n = noise(i.noisePos * frequency + seed) * 0.8f + 0.1;
 
 				o.a = 1;
 				o.rgb = 
 					(green * inRange(n, 0.0, 0.45) + darkGreen * inRange(n, 0.55, 1.0)) * skinType1 +
 					(red * inRange(n, 0.0, 0.45) + darkRed * inRange(n, 0.55, 1.0)) * skinType2 +
 					(blue * inRange(n, 0.0, 0.45) + darkBlue * inRange(n, 0.55, 1.0)) * skinType3 +
-					(white * inRange(n, 0.0, 0.45) + purple * inRange(n, 0.55, 1.0)) * (1 - ceil((skinType1 + skinType2 + skinType3) / 3));
+					(white * inRange(n, 0.0, 0.45) + purple * inRange(n, 0.55, 1.0)) * skinType4;
 				o.rbg *= light;
 				return o;
 			}

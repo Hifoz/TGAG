@@ -59,8 +59,7 @@ public abstract class LandAnimal : MonoBehaviour {
                     StartCoroutine(ragdollLimb(skeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], false));
                     StartCoroutine(ragdollLimb(skeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], false));
                 }
-                LineSegment neckLine = skeleton.getLines(BodyPart.NECK)[0];
-                StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), new LineSegment(neckLine.b, neckLine.a), true));
+                StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], true));
             }
         }
     }
@@ -154,11 +153,14 @@ public abstract class LandAnimal : MonoBehaviour {
                 rotations[i] = limb[i].bone.localRotation;
             }
 
-            for (float t = 0; t < 1f; t += Time.deltaTime * 6f) {
+            for (float t = 0; t <= 1f; t += Time.deltaTime * 6f) {
                 for (int i = 0; i < rotations.Length; i++) {
                     limb[i].bone.localRotation = Quaternion.Lerp(rotations[i], Quaternion.identity, t);
                 }
                 yield return 0;
+            }
+            for (int i = 0; i < rotations.Length; i++) {
+                limb[i].bone.localRotation = Quaternion.identity;
             }
         }
     }
@@ -170,7 +172,7 @@ public abstract class LandAnimal : MonoBehaviour {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
         levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
-        spineHeading = spine.bone.rotation * Vector3.back;
+        spineHeading = spine.bone.rotation * Vector3.forward;
     }
 
     /// <summary>

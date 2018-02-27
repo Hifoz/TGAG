@@ -45,7 +45,11 @@ public class LandAnimalNPC : LandAnimal {
             desiredHeading = -desiredHeading;
             desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * desiredHeading;
         }
-        transform.LookAt(transform.position - heading);
-        GetComponent<Rigidbody>().velocity = heading * speed + gravity;
+        transform.LookAt(transform.position + heading);
+        if (grounded) {
+            GetComponent<Rigidbody>().velocity = spineHeading * speed + gravity;
+        } else {
+            GetComponent<Rigidbody>().velocity = gravity;
+        }
     }
 }

@@ -187,7 +187,6 @@ public class AnimalSkeleton {
         rootBone = root;
         initDicts();
         makeSkeletonLines();
-        centerSkeletonLines();
         makeAnimBones();
         createColliders();
     }
@@ -254,28 +253,29 @@ public class AnimalSkeleton {
     private void makeSkeletonLines() {
         generateBodyParams();
         //generateBodyParamsDebug(false, true);
-        //HEAD
-        List<LineSegment> head = createHead(bodyParameters.Get<float>(BodyParameter.HEAD_SIZE));
-        addSkeletonLines(head, BodyPart.HEAD);
-        //NECK
-        LineSegment neckLine = new LineSegment(
-            head[head.Count - 1].b, 
-            head[head.Count - 1].b + new Vector3(0, -0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.NECK_LENGTH),
-            bodyParameters.Get<float>(BodyParameter.NECK_RADIUS)
-        );
-        addSkeletonLine(neckLine, BodyPart.NECK);
         //SPINE
+        float spineLen = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
         LineSegment spineLine = new LineSegment(
-            neckLine.b,
-            neckLine.b + new Vector3(0, 0, 1) * bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH),
+            Vector3.forward * spineLen / 2f,
+            -Vector3.forward * spineLen / 2f,                  
             bodyParameters.Get<float>(BodyParameter.SPINE_RADIUS)
         );
         addSkeletonLine(spineLine, BodyPart.SPINE);
+        //NECK
+        LineSegment neckLine = new LineSegment(
+            spineLine.a,
+            spineLine.a + new Vector3(0, 0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.NECK_LENGTH),
+            bodyParameters.Get<float>(BodyParameter.NECK_RADIUS)
+        );
+        addSkeletonLine(neckLine, BodyPart.NECK);
+        //HEAD
+        List<LineSegment> head = createHead(neckLine.b, bodyParameters.Get<float>(BodyParameter.HEAD_SIZE));
+        addSkeletonLines(head, BodyPart.HEAD);        
         //TAIL
         LineSegment tailLine;
         tailLine = new LineSegment(
             spineLine.b, 
-            spineLine.b + new Vector3(0, 0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH),
+            spineLine.b + new Vector3(0, 0.5f, -0.5f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH),
             bodyParameters.Get<float>(BodyParameter.TAIL_RADIUS)
         );
         addSkeletonLine(tailLine, BodyPart.TAIL);
@@ -285,7 +285,7 @@ public class AnimalSkeleton {
         float legRadius = bodyParameters.Get<float>(BodyParameter.LEG_RADIUS);
         float spineLength = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
         for (int i = 0; i < legPairs; i++) {
-            Vector3 offset = new Vector3(0, 0, 1) * spineLength * ((float)i / (legPairs - 1)) + spineLine.a;
+            Vector3 offset = -Vector3.forward * spineLength * ((float)i / (legPairs - 1)) + spineLine.a;
             LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
             LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
             addSkeletonLine(right, BodyPart.RIGHT_LEGS);
@@ -314,18 +314,6 @@ public class AnimalSkeleton {
     }
 
     /// <summary>
-    /// Centers the skeleton around the spine
-    /// </summary>
-    private void centerSkeletonLines() {
-        LineSegment spineLine = skeletonLines[BodyPart.SPINE][0];
-        Vector3 center = Vector3.Lerp(spineLine.a, spineLine.b, 0.5f);
-        List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
-        for (int i = 0; i < skeleton.Count; i++) {
-            skeleton[i].add(-center);
-        }
-    }
-
-    /// <summary>
     /// Populates the skeletonBones dicitonary with bones
     /// </summary>
     private void makeAnimBones() {
@@ -335,10 +323,10 @@ public class AnimalSkeleton {
         spineBone.minAngles = new Vector3(-90, -1, -90);
         spineBone.maxAngles = new Vector3(90, 1, 90);
         //NECK
-        Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
+        Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
         neckBoneBase.minAngles = new Vector3(-90, -90, -90);
         neckBoneBase.maxAngles = new Vector3(90, 90, 90);
-        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, neckBoneBase.bone, "Neck", BodyPart.NECK);
+        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, neckBoneBase.bone, "Neck", BodyPart.NECK);
         //TAIL
         int tailJointCount = bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS);
         createAndBindBones(skeletonLines[BodyPart.TAIL][0], spineBone.bone, tailJointCount, "Tail", BodyPart.TAIL);
@@ -440,16 +428,15 @@ public class AnimalSkeleton {
     /// </summary>
     /// <param name="headSize">float headSize</param>
     /// <returns>List<LineSegment> head</returns>
-    private List<LineSegment> createHead(float headSize) {
+    private List<LineSegment> createHead(Vector3 neckEnd, float headSize) {
         List<LineSegment> head = new List<LineSegment>();
         for (int i = -1; i <= 1; i += 2) {
             for (int j = -1; j <= 1; j += 2) {
-                Vector3 nose = new Vector3(0, 0, 0);
-                Vector3 midHead = new Vector3(i, j, 1) * headSize / 2f;
-                Vector3 neck = new Vector3(0, 0, headSize);
+                Vector3 nose = new Vector3(0, 0, headSize) + neckEnd;
+                Vector3 midHead = new Vector3(i, j, 1) * headSize / 2f + neckEnd;
                 float radius = bodyParameters.Get<float>(BodyParameter.HEAD_RADIUS);
-                head.Add(new LineSegment(nose, midHead, radius));
-                head.Add(new LineSegment(midHead, neck, radius));
+                head.Add(new LineSegment(neckEnd, midHead, radius));
+                head.Add(new LineSegment(midHead, nose, radius));
             }
         }
         return head;

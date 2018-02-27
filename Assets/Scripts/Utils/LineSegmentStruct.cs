@@ -22,25 +22,25 @@ public struct LineSegmentStruct {
     public Vector3 b;
     public bool endLine;
 
-    ///// <summary>
-    ///// Adds a vector to the line
-    ///// </summary>
-    ///// <param name="a"></param>
-    ///// <param name="b"></param>
-    ///// <returns>Resulting lineSegment</returns>
-    //public static LineSegmentStruct operator +(LineSegmentStruct a, Vector3 b) {
-    //    return new LineSegmentStruct(a.a + b, a.b + b);
-    //}
+    /// <summary>
+    /// Adds a vector to the line
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns>Resulting lineSegment</returns>
+    public static LineSegmentStruct operator +(LineSegmentStruct a, Vector3 b) {
+        return new LineSegmentStruct(a.a + b, a.b + b);
+    }
 
-    ///// <summary>
-    ///// Subtracts a vector from the line
-    ///// </summary>
-    ///// <param name="a"></param>
-    ///// <param name="b"></param>
-    ///// <returns>Resulting lineSegment</returns>
-    //public static LineSegmentStruct operator -(LineSegmentStruct a, Vector3 b) {
-    //    return new LineSegmentStruct(a.a - b, a.b - b);
-    //}
+    /// <summary>
+    /// Subtracts a vector from the line
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns>Resulting lineSegment</returns>
+    public static LineSegmentStruct operator -(LineSegmentStruct a, Vector3 b) {
+        return new LineSegmentStruct(a.a - b, a.b - b);
+    }
 
     /// <summary>
     /// Add function for when you don't want to change the reference

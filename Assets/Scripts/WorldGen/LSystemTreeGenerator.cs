@@ -124,11 +124,11 @@ public static class LSystemTreeGenerator {
     /// <param name="tree">Tree lines</param>
     /// <returns>Blocktype for position</returns>
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegmentStruct> tree) {
-        foreach (var line in tree) {
-            float dist = line.distance(pos);
+        for (int i = 0; i < tree.Count; i++) {
+            float dist = tree[i].distance(pos);
             if (dist < ChunkConfig.treeThickness) {
                 return BlockData.BlockType.WOOD;
-            } else if (line.endLine && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+            } else if (tree[i].endLine && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.LEAF;
             }
         }

@@ -56,7 +56,7 @@ public class LandAnimalPlayer : LandAnimal {
             velocity = heading.normalized * speed;
         }
         GetComponent<Rigidbody>().velocity = velocity + gravity;
-        transform.LookAt(transform.position - heading);
+        transform.LookAt(transform.position + heading);
 
         playerPos.set(transform.position);
         playerRot.set(transform.rotation * Vector3.forward);
