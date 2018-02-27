@@ -1,4 +1,4 @@
-﻿Shader "Custom/GPUTextures" {
+﻿Shader "Custom/Terrain" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
 		_Type("Type (0=terrain, 1=trees)", int)=0
