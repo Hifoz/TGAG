@@ -11,6 +11,7 @@ public class MeshDataGenerator {
 
 
     protected List<Vector3> vertices = new List<Vector3>();
+    protected List<Vector3> normals = new List<Vector3>();
     protected List<int> triangles = new List<int>();
     protected List<Color> colors = new List<Color>();
     protected List<Vector2> uvs = new List<Vector2>();
@@ -37,10 +38,10 @@ public class MeshDataGenerator {
     public static Mesh applyMeshData(MeshData md) {
         Mesh mesh = new Mesh();
         mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
         mesh.triangles = md.triangles;
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
-        mesh.RecalculateNormals(); //Normals could be provided by MeshData instead, to save mainthread cpu time.
         return mesh;
     }
 
@@ -76,6 +77,7 @@ public class MeshDataGenerator {
 
         var meshData = new MeshData();
         meshData.vertices = MDG.vertices.ToArray();
+        meshData.normals = MDG.normals.ToArray();
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
@@ -122,47 +124,56 @@ public class MeshDataGenerator {
         float delta = voxelSize / 2f;
         pointPos = (pointPos - offset) * voxelSize;
 
-
+        Vector3 normalDir = Vector3.zero;
         switch (dir) {
             case FaceDirection.xp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(delta, -delta, -delta),
                                                 pointPos + new Vector3(delta,  delta, -delta),
                                                 pointPos + new Vector3(delta, -delta,  delta),
                                                 pointPos + new Vector3(delta,  delta,  delta)});
+                normalDir = new Vector3(1, 0, 0);
                 break;
             case FaceDirection.xm:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
                                                 pointPos + new Vector3(-delta, -delta,  delta),
                                                 pointPos + new Vector3(-delta,  delta, -delta),
                                                 pointPos + new Vector3(-delta,  delta,  delta)});
+                normalDir = new Vector3(-1, 0, 0);
                 break;
             case FaceDirection.yp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, delta, -delta),
                                                 pointPos + new Vector3(-delta, delta,  delta),
                                                 pointPos + new Vector3(delta,  delta, -delta),
                                                 pointPos + new Vector3(delta,  delta,  delta)});
+                normalDir = new Vector3(0, 1, 0);
                 break;
             case FaceDirection.ym:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
                                                 pointPos + new Vector3(delta,  -delta, -delta),
                                                 pointPos + new Vector3(-delta, -delta,  delta),
                                                 pointPos + new Vector3(delta,  -delta,  delta)});
+                normalDir = new Vector3(0, -1, 0);
                 break;
             case FaceDirection.zp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, delta),
                                                 pointPos + new Vector3(delta,  -delta, delta),
                                                 pointPos + new Vector3(-delta,  delta, delta),
                                                 pointPos + new Vector3(delta,   delta, delta)});
+                normalDir = new Vector3(0, 0, 1);
                 break;
             case FaceDirection.zm:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
                                                 pointPos + new Vector3(-delta,  delta, -delta),
                                                 pointPos + new Vector3(delta,  -delta, -delta),
                                                 pointPos + new Vector3(delta,   delta, -delta)});
+                normalDir = new Vector3(0, 0, -1);
                 break;
         }
+        normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
+
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
+
         
         if (meshDataType == MeshDataType.ANIMAL) {
             addSliceData(vertices.GetRange(vertices.Count - 4, 4));

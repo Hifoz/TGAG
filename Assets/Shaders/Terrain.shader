@@ -1,4 +1,4 @@
-﻿Shader "Custom/GPUTextures" {
+﻿Shader "Custom/Terrain" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
 		_Type("Type (0=terrain, 1=trees)", int)=0
@@ -56,7 +56,7 @@
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
 				o.eyeNormal = normalize(UnityObjectToViewPos(v.normal));
 				o.posEye = UnityObjectToViewPos(v.vertex);
-				//o.lightDirEye = normalize(-_WorldSpaceLightPos0); //It's a directional light
+				o.lightDirEye = normalize(-_WorldSpaceLightPos0); //It's a directional light
 				//Light
 				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				o.diff = nl;
@@ -75,8 +75,8 @@
 				//shadow
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
-				//float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 1);
-				fixed3 light = (i.diff /*+ specular * 0.4*/) * shadow + i.ambient;
+				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 1);
+				fixed3 light = (i.diff + specular * 0.4) * shadow + i.ambient;
 
 				int baseType = i.color.r + 0.5;
 				int modType = i.color.g + 0.5;

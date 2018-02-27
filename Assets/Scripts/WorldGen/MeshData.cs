@@ -6,6 +6,7 @@ using UnityEngine;
 /// </summary>
 public class MeshData {
     public Vector3[] vertices;
+    public Vector3[] normals;
     public int[] triangles;
     public Color[] colors;
     public Vector2[] uvs;
@@ -27,6 +28,7 @@ public class MeshData {
 
         for(int m = 0; m < numMeshes; m++) {
             List<Vector3> vertices = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
             List<int> triangles = new List<int>();
             List<Color> colors = new List<Color>();
             List<Vector2> uvs = new List<Vector2>();
@@ -35,6 +37,7 @@ public class MeshData {
                 if (m * maxVertsPerMesh + v >= this.vertices.Length)
                     break;
                 vertices.Add(this.vertices[m * maxVertsPerMesh + v]);
+                normals.Add(this.normals[m * maxVertsPerMesh + v]);
                 colors.Add(this.colors[m * maxVertsPerMesh + v]);
                 uvs.Add(this.uvs[m * maxVertsPerMesh + v]);
             }
@@ -46,6 +49,7 @@ public class MeshData {
 
             splitData.Add(new MeshData {
                 vertices = vertices.ToArray(),
+                normals = normals.ToArray(),
                 triangles = triangles.ToArray(),
                 colors = colors.ToArray(),
                 uvs = uvs.ToArray()
