@@ -53,9 +53,9 @@
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				o.eyeNormal = normalize(UnityObjectToViewPos(v.normal));
+				o.eyeNormal = (mul(UNITY_MATRIX_MV, float4(v.normal.x, v.normal.y, v.normal.z, 0))).xyz;
 				o.posEye = UnityObjectToViewPos(v.vertex);
-				o.lightDirEye = normalize(_WorldSpaceLightPos0); //It's a directional light
+				o.lightDirEye = mul(UNITY_MATRIX_V, -_WorldSpaceLightPos0); //It's a directional light
 				//Light
 				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				o.diff = nl;
@@ -75,7 +75,7 @@
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
-				fixed3 light = (i.diff + specular * 0.4) * shadow + i.ambient;
+				fixed3 light = (i.diff + specular * 0.5) * shadow + i.ambient;
 
 				half4 o;
 				half3 green = { 0, 1, 0 };

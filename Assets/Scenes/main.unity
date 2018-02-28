@@ -193,8 +193,9 @@ GameObject:
   - component: {fileID: 231723601}
   - component: {fileID: 231723600}
   - component: {fileID: 231723599}
+  - component: {fileID: 231723602}
   m_Layer: 0
-  m_Name: PlayerAnimal
+  m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -275,6 +276,19 @@ SkinnedMeshRenderer:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0.5, y: 0.5, z: 0.5}
   m_DirtyAABB: 0
+--- !u!114 &231723602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 231723598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa0a37ae6bd11e44699039079d6bc351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  magicTrailPrefab: {fileID: 1478852246670964, guid: 7a21f5a7a68ada940946ec856d426a04,
+    type: 2}
 --- !u!1 &241119714
 GameObject:
   m_ObjectHideFlags: 0
@@ -767,8 +781,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 632.5, y: 338.5, z: 0}
-  m_LocalScale: {x: 0.62685186, y: 0.62685186, z: 0.62685186}
+  m_LocalPosition: {x: 634.5, y: 286, z: 0}
+  m_LocalScale: {x: 0.52962965, y: 0.52962965, z: 0.52962965}
   m_Children:
   - {fileID: 1043064330}
   - {fileID: 143669589}

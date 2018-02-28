@@ -35,6 +35,20 @@ public class LandAnimalNPC : LandAnimal {
     }
 
     /// <summary>
+    /// Function for when this animal used to be a player
+    /// </summary>
+    public void takeOverPlayer() {
+        roamCenter = transform.position + new Vector3(Random.Range(2f, 5f), 100, Random.Range(2f, 5f));
+        RaycastHit hit;
+        if (Physics.Raycast(new Ray(roamCenter, Vector3.down), out hit)) {
+            roamCenter = hit.point;    
+        }
+
+        desiredHeading = transform.rotation * Vector3.forward;
+        desiredHeading.y = 0;
+    }
+
+    /// <summary>
     /// Moves the animal in world space
     /// </summary>
     override protected void move() {
