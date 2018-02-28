@@ -9,8 +9,9 @@ using UnityEngine;
  * 
  * All variables are subject to change
  * 
- * 
- * Custom rules for tree generation based on biome? (Currently the rules are stored in LSystemTreeGenerator.rules, and the rule to use is rng)
+ * Trees:
+ *      Custom rules for tree generation based on biome? (Currently the rules are stored in LSystemTreeGenerator.rules, and the rule to use is rng)
+ *      Tree related varaibles currently stored in the biome could also be changed.
  *      Could also affect the texture type, so different foliage types can have different leaves and tree textures?
  * 
  * 
@@ -22,7 +23,6 @@ using UnityEngine;
  * 
  * 
  */
-
 
 public class Biome {
     //General

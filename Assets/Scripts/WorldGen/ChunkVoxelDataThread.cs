@@ -62,15 +62,18 @@ public class ChunkVoxelDataThread {
     private LockingQueue<Result> results; //When this thread makes a mesh for a chunk the result is put in this queue for the main thread to consume.
     private bool run;
 
+    BiomeManager biomeManager;
+
 
     /// <summary>
     /// Constructor that takes the two needed queues, also starts thread excecution.
     /// </summary>
     /// <param name="orders"></param>
     /// <param name="results"></param>
-    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results, int index) {
+    public ChunkVoxelDataThread(BlockingList<Order> orders, LockingQueue<Result> results, int index, BiomeManager biomeManager) {
         this.orders = orders;
         this.results = results;
+        this.biomeManager = biomeManager;
         run = true;
         thread = new Thread(new ThreadStart(threadRunner)); //This starts running the update function
         thread.Priority = System.Threading.ThreadPriority.Highest;
@@ -158,8 +161,8 @@ public class ChunkVoxelDataThread {
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData(order.position);
         //Generate the chunk terrain
-        result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
-        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position));
+        result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager));
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager));
         //Generate the trees in the chunk
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
         int treeCount = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
@@ -203,17 +206,18 @@ public class ChunkVoxelDataThread {
         const int maxIter = 100;
         int iter = 0;
 
-        float height = ChunkVoxelDataGenerator.calcHeight(pos);
+        Biome biome = biomeManager.getBiome(new Vector2Int((int)pos.x, (int)pos.z));
+        float height = ChunkVoxelDataGenerator.calcHeight(pos, biome);
         pos.y = (int)height;
         //bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height);
+        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biome);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
         while (iter < maxIter) {
             pos.y += dir;
             lastVoxel = currentVoxel;
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height);
+            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biome);
             if (lastVoxel != currentVoxel) {
                 if (!lastVoxel) { //Put the tree in an empty voxel
                     pos.y -= dir;

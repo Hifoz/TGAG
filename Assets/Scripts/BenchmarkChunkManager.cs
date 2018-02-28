@@ -25,6 +25,8 @@ public class BenchmarkChunkManager : MonoBehaviour {
     private GameObject[] animals = new GameObject[20];
     private HashSet<int> orderedAnimals = new HashSet<int>();
 
+    private BiomeManager biomeManager = new BiomeManager();
+
     bool terrainFlag = true;
     bool animalsFlag = true;
 
@@ -117,7 +119,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             currentThreads = run;
             CVDT = new ChunkVoxelDataThread[run];
             for (int i = 0; i < run; i++) {
-                CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
+                CVDT[i] = new ChunkVoxelDataThread(orders, results, i, biomeManager);
             }
             stopwatch.Start();
 

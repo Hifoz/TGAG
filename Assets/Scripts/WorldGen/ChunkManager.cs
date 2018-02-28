@@ -14,18 +14,26 @@ public class ChunkManager : MonoBehaviour {
     public GameObject treePrefab;
     public GameObject animalPrefab;
     private Vector3 offset;
+    
+    // Chunks
     private List<ChunkData> activeChunks = new List<ChunkData>();
     private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
     private Stack<GameObject> inactiveTrees = new Stack<GameObject>();
     private ChunkData[,] chunkGrid;
 
+    // Thread communication
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders = new BlockingList<Order>();
     private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
+    // Animals
     private GameObject[] animals = new GameObject[20];
     private HashSet<int> orderedAnimals = new HashSet<int>();
+
+    // Biome
+    BiomeManager biomeManager = new BiomeManager();
+
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -34,7 +42,7 @@ public class ChunkManager : MonoBehaviour {
         Settings.load();
         CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
         for (int i = 0; i < Settings.WorldGenThreads; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
+            CVDT[i] = new ChunkVoxelDataThread(orders, results, i, biomeManager);
         }
         init();
 
