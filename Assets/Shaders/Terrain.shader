@@ -54,9 +54,9 @@
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				o.eyeNormal = normalize(UnityObjectToViewPos(v.normal));
+				o.eyeNormal = worldNormal; // normalize(UnityObjectToViewPos(v.normal));
 				o.posEye = UnityObjectToViewPos(v.vertex);
-				o.lightDirEye = normalize(-_WorldSpaceLightPos0); //It's a directional light
+				o.lightDirEye = normalize(_WorldSpaceLightPos0); //It's a directional light
 				//Light
 				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				o.diff = nl;
@@ -76,14 +76,15 @@
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 1);
-				fixed3 light = (i.diff + specular * 0.4) * shadow + i.ambient;
+				fixed3 light = (/*i.diff +*/ specular * 1) /** shadow + i.ambient*/;
 
 				int baseType = i.color.r + 0.5;
 				int modType = i.color.g + 0.5;
 				half4 o;
 
-				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
-				o.rbg *= light;
+				//o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
+				o.a = 1;
+				o.rbg = i.eyeNormal;
 				return o;
 			}
 			ENDCG

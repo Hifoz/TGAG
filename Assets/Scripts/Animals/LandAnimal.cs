@@ -65,6 +65,14 @@ public abstract class LandAnimal : MonoBehaviour {
     }
 
     /// <summary>
+    /// Gets the underlying skeleton
+    /// </summary>
+    /// <returns>AnimalSkeleton</returns>
+    public AnimalSkeleton getSkeleton() {
+        return skeleton;
+    }
+
+    /// <summary>
     /// sets the skeleton, and applies the new mesh.
     /// </summary>
     public void setSkeleton(AnimalSkeleton skeleton) {

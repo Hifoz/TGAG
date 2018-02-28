@@ -40,15 +40,16 @@ public class ChunkManager : MonoBehaviour {
 
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
 
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        AnimalSkeleton playerSkeleton = new AnimalSkeleton(player.transform);
-        playerSkeleton.generateInThread();
-        player.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
-
         for (int i = 0; i < animals.Length; i++) {
             animals[i] = Instantiate(animalPrefab);
             animals[i].transform.position = new Vector3(9999, 9999, 9999);
         }
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        AnimalSkeleton playerSkeleton = new AnimalSkeleton(player.transform);
+        playerSkeleton.generateInThread();
+        player.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
+        player.GetComponent<Player>().initPlayer(animals);
         //StartCoroutine(debugRoutine());
     }
 	
