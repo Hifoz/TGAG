@@ -12,10 +12,15 @@ public class BiomeManager {
     private List<Biome> biomes = new List<Biome>();
     private List<BiomePoint> biomePoints = new List<BiomePoint>();
 
+    private float borderWidth = 10;
+    private float minPointDistance = 15; // Always keep minPointDistance larger than the borderWidth
+
+
+
     System.Random rng;
 
-    public BiomeManager() {
-        rng = new System.Random();
+    public BiomeManager(int seed = 42) {
+        rng = new System.Random(seed);
 
         biomes.Add(loadBasicBiome());
         biomes.Add(loadBasicBiome2());
@@ -25,8 +30,16 @@ public class BiomeManager {
             point = new Vector2Int(0, 0)
         });
         biomePoints.Add(new BiomePoint() {
+            biome = biomes[0],
+            point = new Vector2Int(100, 100)
+        });
+        biomePoints.Add(new BiomePoint() {
             biome = biomes[1],
-            point = new Vector2Int(10, 10)
+            point = new Vector2Int(0, 100)
+        });
+        biomePoints.Add(new BiomePoint() {
+            biome = biomes[1],
+            point = new Vector2Int(100, 0)
         });
     }
 
@@ -40,6 +53,17 @@ public class BiomeManager {
     }
 
 
+
+
+
+
+    /*
+     * Find the closest N biomepoints and find some weighted avg. using the border width
+     * so as to make a smooth transition from one biome to another
+     * Need to find a way to figure out N though
+     * Fidn the closest point and then all other points which are no further away than the border width? can then use that to do the stufferinos?
+     * 
+     */
     public Biome getBiome(Vector2Int pos) {
         BiomePoint best = biomePoints[0];
         float bestDist = Vector2Int.Distance(pos, biomePoints[0].point);
@@ -60,8 +84,6 @@ public class BiomeManager {
     public void loadFromFile(String folderpath) {
         throw new NotImplementedException("BiomeManager.loadFromFile(String folderpath) not yet implemented.");
     }
-
-
 
 
     /// <summary>
