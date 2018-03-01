@@ -64,28 +64,75 @@ public class BiomeManager {
      * Fidn the closest point and then all other points which are no further away than the border width? can then use that to do the stufferinos?
      * 
      */
+
+    /// <summary>
+    /// Gets the biome for this position. Might be from the closest biome point, or some avg. of multiple biomes
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
     public Biome getBiome(Vector2Int pos) {
-        BiomePoint best = biomePoints[0];
-        float bestDist = Vector2Int.Distance(pos, biomePoints[0].point);
-        foreach (BiomePoint b in biomePoints) {
-            float dist = Vector2Int.Distance(pos, b.point);
-            if (dist < bestDist) {
-                best = b;
-                bestDist = dist;
+
+        // Find all points in range
+        List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();
+
+            float range = closestBiomePointDist(pos) + borderWidth;
+        foreach (BiomePoint bp in biomePoints) {
+            float dist = Vector2Int.Distance(pos, bp.point);
+            if (dist < range) {
+                inRangeBiomes.Add(new Pair<Biome, float>(bp.biome, dist));
             }
         }
-        return best.biome;
+
+
+        if (inRangeBiomes.Count == 1) {
+            return inRangeBiomes[0].first;
+        }
+
+        // Combine all in-range biomes
+        Biome result = new Biome();
+
+
+
+        return inRangeBiomes[0].first;
     }
+
+    /// <summary>
+    /// Gets the distance from closest biome point
+    /// </summary>
+    /// <param name="pos">position to test</param>
+    /// <returns>distance from closest biome point</returns>
+    private float closestBiomePointDist(Vector2Int pos) {
+        float best = float.MaxValue;
+        foreach(BiomePoint bp in biomePoints) {
+            float dist = Vector2Int.Distance(pos, bp.point);
+            if(dist < best) {
+                best = dist;
+            }
+        }
+        return best;
+    }
+
+
 
     /// <summary>
     /// Loads biomes from a folder
     /// </summary>
     /// <param name="folderpath">path to folder containing biome files</param>
     public void loadFromFile(String folderpath) {
-        throw new NotImplementedException("BiomeManager.loadFromFile(String folderpath) not yet implemented.");
+        throw new NotImplementedException("BiomeManager.loadFromFile(...) not yet implemented.");
     }
 
 
+
+
+
+
+    /*
+     *
+     *    TEMPORARY BELOW
+     *
+     */
+     
     /// <summary>
     /// Loads the basic terrain, matching the contents of the ChunkConfig
     /// </summary>

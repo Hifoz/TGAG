@@ -17,7 +17,7 @@ using UnityEngine;
  * 
  * Ideas for other biome modifiers:
  * - Skybox-changes?
- * - Somehow change the rules for CVDG.decideBlockType()
+ * - Different rules for CVDG.decideBlockType() based on chunk
  * - 
  * 
  * 
