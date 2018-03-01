@@ -29,14 +29,14 @@ public class BiomeManager {
             biome = biomes[0],
             point = new Vector2Int(0, 0)
         });
-        biomePoints.Add(new BiomePoint() {
-            biome = biomes[0],
-            point = new Vector2Int(100, 100)
-        });
-        biomePoints.Add(new BiomePoint() {
-            biome = biomes[1],
-            point = new Vector2Int(0, 100)
-        });
+        //biomePoints.Add(new BiomePoint() {
+        //    biome = biomes[0],
+        //    point = new Vector2Int(100, 100)
+        //});
+        //biomePoints.Add(new BiomePoint() {
+        //    biome = biomes[1],
+        //    point = new Vector2Int(0, 100)
+        //});
         biomePoints.Add(new BiomePoint() {
             biome = biomes[1],
             point = new Vector2Int(100, 0)
@@ -67,11 +67,11 @@ public class BiomeManager {
      */
 
     /// <summary>
-    /// Gets the biome for this position. Might be from the closest biome point, or some avg. of multiple biomes
+    /// Gets the biomes for this position.
     /// </summary>
     /// <param name="pos">position to sample</param>
-    /// <returns>Biome for this position</returns>
-    public Biome getBiome(Vector2Int pos) {
+    /// <returns>Biomes for this position and their distance from the sample position</returns>
+    public List<Pair<Biome, float>> getInRangeBiomes(Vector2Int pos) {
 
         // Find all points in range
         List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // A lsit of biomes and their distance from the sample position
@@ -83,11 +83,7 @@ public class BiomeManager {
                 inRangeBiomes.Add(new Pair<Biome, float>(bp.biome, dist));
             }
         }
-
-        if (inRangeBiomes.Count == 1) {
-            return inRangeBiomes[0].first;
-        }
-        return new Biome(inRangeBiomes);
+        return inRangeBiomes;
     }
 
     /// <summary>

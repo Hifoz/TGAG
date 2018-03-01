@@ -6,23 +6,23 @@ using UnityEngine;
 /*
  * WIP:
  * 
- * All members should be readonly, so the values can't be changed outside of the constructor
- * 
- * 
- * All variables are subject to change
+ * All variables are subject to change or move
  * 
  * Trees:
- *      Custom rules for tree generation based on biome? (Currently the rules are stored in LSystemTreeGenerator.rules, and the rule to use is rng)
+ *      Custom rules for tree generation based on biome? Currently the rules are stored in LSystemTreeGenerator.rules, and the rule to use is rng, one could have a set of rules per biome
  *      Tree related varaibles currently stored in the biome could also be changed.
  *      Could also affect the texture type, so different foliage types can have different leaves and tree textures?
- * 
  * 
  * Ideas for other biome modifiers:
  * - Skybox-changes?
  * - Different rules for CVDG.decideBlockType() based on chunk
- * - 
  * 
  * 
+ * 
+ * 
+ * 
+ * IMPORTANT TO DO:
+ *  - CVDT.findGroundLevel() currently only using first biome on position
  * 
  */
 
@@ -63,7 +63,7 @@ public class Biome {
 
 
 
-        // Set the members to the weighted avg.
+        // Weighted averaging of members:
         foreach(Pair<Biome, float> b in biomes) {
             snowHeight += (int)(b.first.snowHeight * b.second);
             frequency2D += b.first.frequency2D * b.second;
@@ -73,7 +73,7 @@ public class Biome {
             Unstructure3DRate += b.first.Unstructure3DRate * b.second;
             frequency3D += b.first.frequency3D * b.second;
 
-            // not averaging foliage settings because we don't change them at the moment
+            // not averaging foliage settings because we don't change them per biome at the moment
         }
 
     }
@@ -102,7 +102,6 @@ public class Biome {
         this.grammarRecursionDepth = grammarRecursionDepth;
     }
 
-
     /// <summary>
     /// Loads a biome from a file
     /// </summary>
@@ -110,4 +109,5 @@ public class Biome {
     public void loadFromFile(String filepath) {
         throw new NotImplementedException("Biome.loadFromFile(String filepath) not yet implemented.");
     }
+
 }

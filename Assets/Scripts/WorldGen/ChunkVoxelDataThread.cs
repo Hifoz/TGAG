@@ -206,7 +206,7 @@ public class ChunkVoxelDataThread {
         const int maxIter = 100;
         int iter = 0;
 
-        Biome biome = biomeManager.getBiome(new Vector2Int((int)pos.x, (int)pos.z));
+        Biome biome = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z))[0].first; // TODO make this work properly with biome based chunk
         float height = ChunkVoxelDataGenerator.calcHeight(pos, biome);
         pos.y = (int)height;
         //bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);

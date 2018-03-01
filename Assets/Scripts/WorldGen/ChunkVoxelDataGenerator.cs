@@ -38,21 +38,32 @@ public static class ChunkVoxelDataGenerator {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
         // Pre-calculate 2d heightmap and biomemap:
-        int[,] heightmap = new int[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
-        Biome[,] biomemap = new Biome[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+        List<Pair<Biome, float>>[,] biomemap = new List<Pair<Biome, float>>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+        List<int>[,] heightmap = new List<int>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
-                biomemap[x, z] = biomeManager.getBiome(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
-                int height = (int)calcHeight(new Vector3(x, 0, z) + pos, biomemap[x, z]);
-                heightmap[x, z] = height;
+                biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
+                heightmap[x, z] = new List<int>();
+                for (int i = 0; i < biomemap[x, z].Count; i++) {
+                    heightmap[x, z][i] = (int)calcHeight(pos, biomemap[x, z][i].first);
+                }
             }
         }
 
+        // Calculate 3d noise and apply 2d and 3d noise
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z], biomemap[x, z]))
+                    float totalValue = 0;
+                    for(int j = 0; j < biomemap[x, z].Count; j++) {
+                        if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x,z][j], biomemap[x, z][j].first))
+                            totalValue += biomemap[x, z][j].second;
+                    }
+                    float result = totalValue /= biomemap[x, z].Count;
+
+                    if(result > 0.5f)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
@@ -66,7 +77,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
-                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z]);
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z][0].first); // TODO make this use biomes in some way?
                 }
             }
         }
@@ -119,7 +130,7 @@ public static class ChunkVoxelDataGenerator {
         }
         finalNoise = finalNoise / noiseScaler;
         finalNoise = Mathf.Pow(finalNoise, biome.noiseExponent2D);
-        return  finalNoise * ChunkConfig.chunkHeight;
+        return finalNoise * ChunkConfig.chunkHeight;
     }
 
     /// <summary>
