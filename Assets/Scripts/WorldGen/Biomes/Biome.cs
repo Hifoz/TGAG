@@ -6,6 +6,8 @@ using UnityEngine;
 /*
  * WIP:
  * 
+ * All members should be readonly, so the values can't be changed outside of the constructor
+ * 
  * 
  * All variables are subject to change
  * 
@@ -26,22 +28,79 @@ using UnityEngine;
 
 public class Biome {
     //General
-    public int snowHeight;
+    public readonly int snowHeight = 0;
     //2D noise settings
-    public float frequency2D;
-    public float noiseExponent2D;
-    public int octaves2D;
+    public readonly float frequency2D = 0;
+    public readonly float noiseExponent2D = 0;
+    public readonly int octaves2D = 0;
     //3D noise settings
-    public float Structure3DRate;
-    public float Unstructure3DRate;
-    public float frequency3D;
+    public readonly float Structure3DRate = 0;
+    public readonly float Unstructure3DRate = 0;
+    public readonly float frequency3D = 0;
     //Foliage
-    public int maxTreesPerChunk;
-    public float treeLineLength;
-    public float treeVoxelSize;
-    public float treeThickness;
-    public float treeLeafThickness;
-    public int grammarRecursionDepth;
+    public readonly int maxTreesPerChunk = 0;
+    public readonly float treeLineLength = 0;
+    public readonly float treeVoxelSize = 0;
+    public readonly float treeLeafThickness = 0;
+    public readonly int grammarRecursionDepth = 0;
+    private float treeThickness;
+
+
+    /// <summary>
+    /// Generate a new biome based on a list of biomes.
+    /// </summary>
+    /// <param name="biomes">Each pair should contain a biome, some value to calculate its weight(usually distance from some sample pos to the BiomePoint)</param>
+    public Biome(List<Pair<Biome, float>> biomes) {
+        // Calculate weights for all biomes:
+
+        float distSum = 0;
+        foreach (Pair<Biome, float> p in biomes) {
+            distSum += p.second;
+        }
+        foreach (Pair<Biome, float> p in biomes) {
+            p.second = p.second / distSum; // Change the float part of the pairs into a weight instead of the distance
+        }
+
+
+
+        // Set the members to the weighted avg.
+        foreach(Pair<Biome, float> b in biomes) {
+            snowHeight += (int)(b.first.snowHeight * b.second);
+            frequency2D += b.first.frequency2D * b.second;
+            noiseExponent2D += b.first.noiseExponent2D * b.second;
+            octaves2D += (int)(b.first.octaves2D * b.second);
+            Structure3DRate += b.first.Structure3DRate * b.second;
+            Unstructure3DRate += b.first.Unstructure3DRate * b.second;
+            frequency3D += b.first.frequency3D * b.second;
+
+            // not averaging foliage settings because we don't change them at the moment
+        }
+
+    }
+
+
+    // I know this one looks horrible, but it is more compact than than making all members protected and adding public getters, as this is only for use in sub-classes :\
+    /// <summary>
+    /// A constructor taking in all the parameters
+    /// </summary>
+    protected Biome(int snowHeight, float frequency2D, int noiseExponent2D, int octaves2D, 
+                 float Structure3DRate, float Unstructure3DRate, float frequency3D, 
+                 int maxTreesPerChunk, float treeLineLength, float treeVoxelSize, float treeThickness, 
+                 float treeLeafThickness, int grammarRecursionDepth) {
+        this.snowHeight = snowHeight;
+        this.frequency2D = frequency2D;
+        this.noiseExponent2D = noiseExponent2D;
+        this.octaves2D = octaves2D;
+        this.Structure3DRate = Structure3DRate;
+        this.Unstructure3DRate = Unstructure3DRate;
+        this.frequency3D = frequency3D;
+        this.maxTreesPerChunk = maxTreesPerChunk;
+        this.treeLineLength = treeLineLength;
+        this.treeVoxelSize = treeVoxelSize;
+        this.treeThickness = treeThickness;
+        this.treeLeafThickness = treeLeafThickness;
+        this.grammarRecursionDepth = grammarRecursionDepth;
+    }
 
 
     /// <summary>
