@@ -61,7 +61,7 @@ public class MeshDataGenerator {
 
         if (meshDataType == MeshDataType.ANIMAL) {
             //X = frequency, Y = skin type
-            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomInt(1, 5) / 5f);
+            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f));
         }
 
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {

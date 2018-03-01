@@ -78,33 +78,17 @@
 				fixed3 light = (i.diff + specular * 0.5) * shadow + i.ambient;
 
 				half4 o;
-				half3 green = { 0, 1, 0 };
-				half3 darkGreen = { 0, 0.4, 0 };
-				half3 red = { 1, 0, 0 };
-				half3 darkRed = { 0.4, 0, 0 };
-				half3 blue = { 0, 0, 1 };
-				half3 darkBlue = { 0, 0, 0.4 };
-				half3 white = { 1, 1, 1 };
-				half3 purple = { 0.5, 0, 0.5 };
+				half3 color1 = { cos(i.animalData.x / i.animalData.y * 614.22), cos(i.animalData.x * i.animalData.y * 14.22), sin(i.animalData.x + i.animalData.y * 214.22) };
+				half3 color2 = { sin(i.animalData.x * i.animalData.y * 22.22), cos(i.animalData.x + i.animalData.y * 61.22), sin(i.animalData.x - i.animalData.y * 114.22) };
 				
-				float3 seed = float3(1, 1, 1) * 841.4 * sin(i.animalData.x * i.animalData.y * 6.28);
+				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.y;
 				float frequency = 111.3 * i.animalData.x;
-
-				//The magic numbers in the range comes from the fact that skin types are encoded as { 1, 2, 3, 4 } / 5;
-				//in i.animalData.y
-				float skinType1 = inRange(i.animalData.y, 0.18, 0.22);
-				float skinType2 = inRange(i.animalData.y, 0.38, 0.42);
-				float skinType3 = inRange(i.animalData.y, 0.58, 0.62);
-				float skinType4 = inRange(i.animalData.y, 0.78, 0.82);
 
 				float n = noise(i.noisePos * frequency + seed) * 0.8f + 0.1;
 
 				o.a = 1;
-				o.rgb = 
-					(green * inRange(n, 0.0, 0.45) + darkGreen * inRange(n, 0.55, 1.0)) * skinType1 +
-					(red * inRange(n, 0.0, 0.45) + darkRed * inRange(n, 0.55, 1.0)) * skinType2 +
-					(blue * inRange(n, 0.0, 0.45) + darkBlue * inRange(n, 0.55, 1.0)) * skinType3 +
-					(white * inRange(n, 0.0, 0.45) + purple * inRange(n, 0.55, 1.0)) * skinType4;
+				o.rgb = color1 * inRange(n, 0.0, 0.45) + color2 * inRange(n, 0.55, 1.0);
+					
 				o.rbg *= light;
 				return o;
 			}
