@@ -280,9 +280,8 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {        
-        GameObject animal = animals[animalSkeleton.index];  
-        animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
-        StartCoroutine(spawnAnimal(animal)); //For the cases where the animal is not above a chunk  
+        GameObject animal = animals[animalSkeleton.index];
+        StartCoroutine(spawnAnimal(animal, animalSkeleton)); //For the cases where the animal is not above a chunk  
         orderedAnimals.Remove(animalSkeleton.index);
     }
 
@@ -291,7 +290,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     /// <param name="animal">Animal to spawn</param>
     /// <returns></returns>
-    private IEnumerator spawnAnimal(GameObject animal) {
+    private IEnumerator spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
         float lower = -maxDistance + LandAnimalNPC.roamDistance;
         float upper = -lower;
@@ -303,6 +302,7 @@ public class ChunkManager : MonoBehaviour {
             yield return 0;
         }
         animal.SetActive(true);
+        animal.GetComponent<LandAnimalNPC>().setSkeleton(skeleton);
     }
 
     /// <summary>

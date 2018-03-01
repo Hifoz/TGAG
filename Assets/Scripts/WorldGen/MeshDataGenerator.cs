@@ -9,7 +9,6 @@ using UnityEngine;
 /// </summary>
 public class MeshDataGenerator {
 
-
     protected List<Vector3> vertices = new List<Vector3>();
     protected List<Vector3> normals = new List<Vector3>();
     protected List<int> triangles = new List<int>();
@@ -60,7 +59,7 @@ public class MeshDataGenerator {
         MDG.pointmap = pointmap;
 
         if (meshDataType == MeshDataType.ANIMAL) {
-            //X = frequency, Y = skin type
+            //X = frequency, Y = seed
             MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f));
         }
 
