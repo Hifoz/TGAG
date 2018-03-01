@@ -1,4 +1,8 @@
-﻿Shader "Custom/Terrain" {
+﻿//#define DRAW_BW
+//#define DRAW_NORMAL
+
+
+Shader "Custom/Terrain" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
 		_Type("Type (0=terrain, 1=trees)", int)=0
@@ -46,6 +50,8 @@
 				SHADOW_COORDS(5) // put shadows data into TEXCOORD5
 				fixed3 diff : COLOR2;
 				fixed3 ambient : COLOR3;
+
+				float3 worldNormal : TEXCOORD6;
 			};
 	
 			v2f vert(appdata v) {
@@ -63,6 +69,8 @@
 				o.ambient = ShadeSH9(half4(worldNormal, 1));
 				//Shadow
 				TRANSFER_SHADOW(o);
+
+				o.worldNormal = v.normal;
 
 				o.uv.xy = v.uv;
 				o.color = v.color;	
@@ -82,8 +90,13 @@
 				int modType = i.color.g + 0.5;
 				half4 o;
 
+#if DRAW_BW
+				o = float4(0.5, 0.5, 0.5, 1);
+#elif DRAW_NORMAL
+				o.rgb = i.worldNormal;
+#else
 				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
-				//o = float4(0.5, 0.5, 0.5, 1);
+#endif
 				o.rbg *= light;
 				return o;
 			}

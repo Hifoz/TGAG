@@ -28,8 +28,9 @@ class WaterMeshDataGenerator : MeshDataGenerator {
             }
         }
 
-        var meshData = new MeshData();
+        MeshData meshData = new MeshData();
         meshData.vertices = MDG.vertices.ToArray();
+        meshData.normals = MDG.normals.ToArray();
         meshData.triangles = MDG.triangles.ToArray();
         meshData.colors = MDG.colors.ToArray();
         meshData.uvs = MDG.uvs.ToArray();
