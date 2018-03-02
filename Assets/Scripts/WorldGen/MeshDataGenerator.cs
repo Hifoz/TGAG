@@ -9,7 +9,6 @@ using UnityEngine;
 /// </summary>
 public class MeshDataGenerator {
 
-
     protected List<Vector3> vertices = new List<Vector3>();
     protected List<Vector3> normals = new List<Vector3>();
     protected List<int> triangles = new List<int>();
@@ -29,22 +28,48 @@ public class MeshDataGenerator {
         TERRAIN, ANIMAL
     }
     protected MeshDataType meshDataType;
+
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
     /// Generates a mesh from MeshData.
     /// </summary>
     /// <param name="md">MeshData</param>
     /// <returns>Mesh</returns>
-    public static Mesh applyMeshData(MeshData md) {
-        Mesh mesh = new Mesh();
+    public static void applyMeshData(MeshFilter meshFilter, MeshData md) {
+        Mesh mesh = meshFilter.mesh;
+        if (mesh == null) {
+            mesh = new Mesh();
+        } else {
+            mesh.Clear();
+        }
         mesh.vertices = md.vertices;
         mesh.normals = md.normals;
         mesh.triangles = md.triangles;
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
-        return mesh;
+        meshFilter.mesh = mesh;
     }
 
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    /// <returns>Mesh</returns>
+    public static void applyMeshData(MeshCollider meshCollider, MeshData md) {
+        Mesh mesh = meshCollider.sharedMesh;
+        if (mesh == null) {
+            mesh = new Mesh();
+        } else {
+            mesh.Clear();
+        }
+        mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        meshCollider.sharedMesh = mesh;
+    }
 
     /// <summary>
     /// Generates all data needed for a mesh of cubes
@@ -60,8 +85,8 @@ public class MeshDataGenerator {
         MDG.pointmap = pointmap;
 
         if (meshDataType == MeshDataType.ANIMAL) {
-            //X = frequency, Y = skin type
-            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomInt(1, 5) / 5f);
+            //X = frequency, Y = seed
+            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f));
         }
 
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {

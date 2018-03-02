@@ -26,41 +26,17 @@ public abstract class LandAnimal : MonoBehaviour {
 
     private float timer = 0;
 
-    private Vector3[] currentTailPositions;
-    private Vector3[] desiredTailPositions;
-
     bool ragDolling = false;
+    delegate bool ragDollCondition(); 
 
     // Update is called once per frame
-    void FixedUpdate() {
-        if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
-            heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
-        }
-        if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
-            if (grounded) {
-                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
-            } else {
-                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
-            }
-        }
-
+    void Update() {
         if (skeleton != null) {
+            calculateSpeedAndHeading();
             move();
             levelSpine();
-            doGravity();            
-            tailPhysics();
-            if (grounded) {
-                walk();
-                timer += (Time.deltaTime * speed / 2f) / skeleton.getBodyParameter<float>(BodyParameter.SCALE);
-                ragDolling = false;
-            } else if (!grounded && !ragDolling) {
-                ragDolling = true;
-                for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
-                    StartCoroutine(ragdollLimb(skeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], false));
-                    StartCoroutine(ragdollLimb(skeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], false));
-                }
-                StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], true));
-            }
+            doGravity();
+            handleRagdoll();
         }
     }
 
@@ -77,7 +53,16 @@ public abstract class LandAnimal : MonoBehaviour {
     /// </summary>
     public void setSkeleton(AnimalSkeleton skeleton) {
         this.skeleton = skeleton;
-        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.getMesh();
+        transform.rotation = Quaternion.identity;
+        transform.localRotation = Quaternion.identity;
+        if (skeleton != null) {
+            foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
+                bone.bone.rotation = Quaternion.identity;
+                bone.bone.localRotation = Quaternion.identity;
+            }
+        }
+
+        skeleton.applyMeshData();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
 
         List<Bone> skeletonBones = skeleton.getBones(BodyPart.ALL);
@@ -88,12 +73,8 @@ public abstract class LandAnimal : MonoBehaviour {
         GetComponent<SkinnedMeshRenderer>().bones = bones;
 
         List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
-        Vector3 defaultTailDir = (tail[tail.Count - 1].bone.position - tail[0].bone.position).normalized;
-        currentTailPositions = new Vector3[tail.Count - 1];
-        desiredTailPositions = new Vector3[tail.Count - 1];
-        for (int i = 0; i < currentTailPositions.Length; i++) {
-            currentTailPositions[i] = tail[i + 1].bone.position;
-        }
+        LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
+        StartCoroutine(ragdollLimb(tail, tailLine, () => { return true; }, false, 4f, transform));
     }
 
     /// <summary>
@@ -108,49 +89,70 @@ public abstract class LandAnimal : MonoBehaviour {
     protected abstract void move();
 
     /// <summary>
-    /// Gives the tail physics animations (no actual physics calculations involved)
+    /// Function for handling ragdoll effects when free falling
     /// </summary>
-    private void tailPhysics() {
-        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
-        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
-        Vector3 desiredTailDir = transform.rotation * skeleton.getLines(BodyPart.TAIL)[0].direction;
-        float tailJointLength = skeleton.getBodyParameter<float>(BodyParameter.TAIL_JOINT_LENGTH);
-        for (int i = 0; i < desiredTailPositions.Length; i++) {
-            desiredTailPositions[i] = tail[0].bone.position + desiredTailDir * tailJointLength * (i + 1);
-        }
-
-        for (int i = 0; i < tail.Count - 1; i++) {
-            ccd(tail.GetRange(i, 2), currentTailPositions[i], ikSpeed);
-            float distance = Vector3.Distance(currentTailPositions[i], desiredTailPositions[i]);
-            currentTailPositions[i] = Vector3.MoveTowards(currentTailPositions[i], desiredTailPositions[i], Time.deltaTime * 4f * distance);
+    private void handleRagdoll() {
+        if (grounded) {
+            walk();
+            timer += (Time.deltaTime * speed / 2f) / skeleton.getBodyParameter<float>(BodyParameter.SCALE);
+            ragDolling = false;
+        } else if (!grounded && !ragDolling) {
+            ragDolling = true;
+            for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
+                StartCoroutine(ragdollLimb(skeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], () => { return !grounded; }));
+                StartCoroutine(ragdollLimb(skeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], () => { return !grounded; }));
+            }
+            StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], () => { return !grounded; }, true));
         }
     }
 
     /// <summary>
-    /// Courutine for "ragdolling" a limb when not grounded.
+    /// Function for calculating speed and heading
+    /// </summary>
+    private void calculateSpeedAndHeading() {
+        if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
+            heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        }
+        if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
+            if (grounded) {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+            } else {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Courutine for "ragdolling" a limb while condition is true.
     /// </summary>
     /// <param name="limb">Limb to ragdoll</param>
     /// <param name="model">Rigid position of limb</param>
+    /// <param name="condition">condition to ragdoll by</param>
+    /// <param name="returnAfter">Should the limb return to zero rotation after ragdoll</param>
+    /// <param name="limbResistance">How much the limb resists displacement</param>
+    /// <param name="referenceTransform">the reference transform is the transform to use for calculating desired limb positions</param>
     /// <returns></returns>
-    private IEnumerator ragdollLimb(List<Bone> limb, LineSegment model, bool returnAfter) {
+    private IEnumerator ragdollLimb(List<Bone> limb, LineSegment model, ragDollCondition condition, bool returnAfter = false, float limbResistance = 1f, Transform referenceTransform = null) {
         Vector3[] desiredPositions = new Vector3[limb.Count - 1];
         Vector3[] currentPositions = new Vector3[limb.Count - 1];
 
-        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
+        if (referenceTransform == null) {
+            referenceTransform = skeleton.getBones(BodyPart.SPINE)[0].bone;
+        }
 
         for (int i = 0; i < currentPositions.Length; i++) {
             currentPositions[i] = limb[i + 1].bone.position;
         }
 
-        while (!grounded) {
+        while (condition()) {
             for (int i = 0; i < desiredPositions.Length; i++) {
-                desiredPositions[i] = limb[0].bone.position + spine.rotation * model.direction * model.length * (i + 1) / limb.Count;
+                desiredPositions[i] = limb[0].bone.position + referenceTransform.rotation * model.direction * model.length * (i + 1) / limb.Count;
             }
 
             for (int i = 0; i < limb.Count - 1; i++) {
                 ccd(limb.GetRange(i, 2), currentPositions[i], ikSpeed);
                 float distance = Vector3.Distance(currentPositions[i], desiredPositions[i]);
-                currentPositions[i] = Vector3.MoveTowards(currentPositions[i], desiredPositions[i], Time.deltaTime * distance);
+                currentPositions[i] = Vector3.MoveTowards(currentPositions[i], desiredPositions[i], Time.deltaTime * distance * limbResistance);
             }
             yield return 0;
         }
@@ -219,7 +221,8 @@ public abstract class LandAnimal : MonoBehaviour {
     private void doGravity() {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, (1<<8))) {
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
             Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
 
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
@@ -275,7 +278,8 @@ public abstract class LandAnimal : MonoBehaviour {
         }
 
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit)) {
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit, 50f, layerMask)) {
             float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Up/Down motion
             heightOffset = (heightOffset > 0) ? heightOffset : 0;
 
