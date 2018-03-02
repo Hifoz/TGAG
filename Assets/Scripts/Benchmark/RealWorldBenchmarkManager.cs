@@ -21,8 +21,7 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     /// <returns></returns>
     override public float getProgress() {
-        int time = stopwatch.Elapsed.Seconds;
-        return (float)time / duration;
+        return (float)stopwatch.Elapsed.TotalSeconds / duration;
     }
 
     /// <summary>
@@ -66,6 +65,7 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
             UnityEngine.Debug.Log(String.Format("Testing with {0} thread(s)!", run));
             chunkManager.Reset(run);
             currentThreads = run;
+
             int frameCount = 0;
             Vector3 point1 = new Vector3(ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2, 0, 0);
             Vector3 point2 = -point1;
@@ -73,7 +73,7 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
             float playerSpeed = 20; //This is currently the max animal speed
             Vector3 vel = new Vector3(1, 0, 0) * playerSpeed;
             stopwatch.Start();
-            while (stopwatch.Elapsed.Seconds <= duration) {
+            while (stopwatch.Elapsed.TotalSeconds <= duration) {
                 Vector3 playerPos = dummyPlayer.position;
                 if (playerPos.x >= target.x && vel.x > 0) {
                     playerPos = target;
