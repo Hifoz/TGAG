@@ -209,7 +209,8 @@ public class ChunkManager : MonoBehaviour {
     /// Consumes results from Worker threads.
     /// </summary>
     private void consumeThreadResults() {
-        while(results.getCount() > 0) {
+        int consumed = 0;
+        while(results.getCount() > 0 && consumed < Settings.MaxChunkLaunchesPerUpdate) {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
@@ -222,6 +223,7 @@ public class ChunkManager : MonoBehaviour {
                     pendingChunks.Remove(result.chunkVoxelData.chunkPos);
                     break;
             }
+            consumed++;
         }
     }
 
