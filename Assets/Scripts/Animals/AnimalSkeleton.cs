@@ -160,11 +160,23 @@ public class AnimalSkeleton {
     /// Call after "generateInMainThread" and "generateInThread".
     /// </summary>
     /// <returns>Mesh mesh</returns>
-    public Mesh getMesh() {
-        Mesh mesh = MeshDataGenerator.applyMeshData(meshData);
+    public void applyMeshData() {
+        GameObject animal = rootBone.gameObject;
+        SkinnedMeshRenderer renderer = animal.GetComponent<SkinnedMeshRenderer>();
+
+        Mesh mesh = renderer.sharedMesh;
+        if (mesh == null) {
+            mesh = new Mesh();            
+        }
+        mesh.Clear();
+        mesh.vertices = meshData.vertices;
+        mesh.normals = meshData.normals;
+        mesh.triangles = meshData.triangles;
+        mesh.colors = meshData.colors;
+        mesh.uv = meshData.uvs;
         mesh.boneWeights = weights.ToArray();
         mesh.bindposes = bindPoses.ToArray();
-        return mesh;
+        renderer.sharedMesh = mesh;
     }    
 
     /// <summary>

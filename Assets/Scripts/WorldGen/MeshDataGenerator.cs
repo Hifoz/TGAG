@@ -28,22 +28,46 @@ public class MeshDataGenerator {
         TERRAIN, ANIMAL
     }
     protected MeshDataType meshDataType;
+
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
     /// Generates a mesh from MeshData.
     /// </summary>
     /// <param name="md">MeshData</param>
     /// <returns>Mesh</returns>
-    public static Mesh applyMeshData(MeshData md) {
-        Mesh mesh = new Mesh();
+    public static void applyMeshData(MeshFilter meshFilter, MeshData md) {
+        Mesh mesh = meshFilter.mesh;
+        if (mesh == null) {
+            mesh = new Mesh();            
+        }
+        mesh.Clear();
         mesh.vertices = md.vertices;
         mesh.normals = md.normals;
         mesh.triangles = md.triangles;
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
-        return mesh;
+        meshFilter.mesh = mesh;
     }
 
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    /// <returns>Mesh</returns>
+    public static void applyMeshData(MeshCollider meshCollider, MeshData md) {
+        Mesh mesh = meshCollider.sharedMesh;
+        if (mesh == null) {
+            mesh = new Mesh();            
+        }
+        mesh.Clear();
+        mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        meshCollider.sharedMesh = mesh;
+    }
 
     /// <summary>
     /// Generates all data needed for a mesh of cubes

@@ -62,7 +62,7 @@ public abstract class LandAnimal : MonoBehaviour {
             }
         }
 
-        GetComponent<SkinnedMeshRenderer>().sharedMesh = skeleton.getMesh();
+        skeleton.applyMeshData();
         GetComponent<SkinnedMeshRenderer>().rootBone = transform;
 
         List<Bone> skeletonBones = skeleton.getBones(BodyPart.ALL);

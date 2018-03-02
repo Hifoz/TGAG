@@ -250,7 +250,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             GameObject subChunk = createChunk();
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
-            subChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData[i]);
+            MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
             subChunk.GetComponent<MeshCollider>().sharedMesh = subChunk.GetComponent<MeshFilter>().mesh;
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
@@ -264,7 +264,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
             GameObject waterChunk = createChunk();
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
-            waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData[i]);
+            MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
             waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
             waterChunk.GetComponent<MeshCollider>().convex = true;
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
@@ -277,8 +277,8 @@ public class BenchmarkChunkManager : MonoBehaviour {
         for (int i = 0; i < trees.Length; i++) {
             GameObject tree = createTree();
             tree.transform.position = chunkMeshData.treePositions[i];
-            tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
-            tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
+            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
+            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshCollider>(), chunkMeshData.treeTrunks[i]);
             tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
 
             trees[i] = tree;

@@ -24,14 +24,6 @@ public class GenericPool<T> {
     }
 
     /// <summary>
-    /// Destructor that clears the pool
-    /// </summary>
-    ~GenericPool() {
-        activeList.Clear();
-        inactive.Clear();
-    }
-
-    /// <summary>
     /// Gets an object from the pool
     /// </summary>
     /// <returns>T instance</returns>

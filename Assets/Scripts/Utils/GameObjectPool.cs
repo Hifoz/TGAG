@@ -27,20 +27,6 @@ public class GameObjectPool {
         this.objName = objName;
     }
 
-    /// <summary>
-    /// Destructor that clears the pool
-    /// </summary>
-    ~GameObjectPool() {
-        foreach(GameObject obj in active) {
-            MonoBehaviour.Destroy(obj);
-        }
-        foreach (GameObject obj in inactive) {
-            MonoBehaviour.Destroy(obj);
-        }
-        active.Clear();
-        inactive.Clear();
-    }
-
     public List<GameObject> activeList { get { return active; } }
     public Stack<GameObject> inactiveStack { get { return inactive; } }
 
@@ -53,7 +39,7 @@ public class GameObjectPool {
         if (inactive.Count == 0) {
             obj = MonoBehaviour.Instantiate(prefab);
             if (objParent != null) {
-                obj.transform.SetParent(objParent);
+                obj.transform.parent = objParent;
             }
             if (objName != null) {
                 obj.name = objName;
@@ -76,6 +62,18 @@ public class GameObjectPool {
             Debug.LogWarning("The object returned to the pool was not part of the pools active list!");
         }
         inactive.Push(obj);
-        obj.SetActive(true);
+        obj.SetActive(false);
+    }
+
+    /// <summary>
+    /// Destroys all gameobjects in the pool
+    /// </summary>
+    public void destroyAllGameObjects() {
+        foreach(GameObject obj in active) {
+            MonoBehaviour.Destroy(obj);
+        }
+        foreach (GameObject obj in inactive) {
+            MonoBehaviour.Destroy(obj);
+        }
     }
 }
