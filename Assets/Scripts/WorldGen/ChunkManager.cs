@@ -34,8 +34,8 @@ public class ChunkManager : MonoBehaviour {
     void Start () {
         Settings.load();
 
-        chunkPool = new GameObjectPool(chunkPrefab, transform, "Chunk");
-        treePool = new GameObjectPool(treePrefab, transform, "Tree");
+        chunkPool = new GameObjectPool(chunkPrefab, transform, "Chunk", false);
+        treePool = new GameObjectPool(treePrefab, transform, "Tree", false);
 
         CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
         for (int i = 0; i < Settings.WorldGenThreads; i++) {
@@ -59,7 +59,7 @@ public class ChunkManager : MonoBehaviour {
             playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
             playerObj.GetComponent<Player>().initPlayer(animals);
         }
-        StartCoroutine(debugRoutine());
+        //StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame
@@ -107,8 +107,8 @@ public class ChunkManager : MonoBehaviour {
         }
         chunkPool.destroyAllGameObjects();
         treePool.destroyAllGameObjects();
-        chunkPool = new GameObjectPool(chunkPrefab, transform, "Chunk");
-        treePool = new GameObjectPool(treePrefab, transform, "Tree");
+        chunkPool = new GameObjectPool(chunkPrefab, transform, "Chunk", false);
+        treePool = new GameObjectPool(treePrefab, transform, "Tree", false);
     }
 
     /// <summary>
@@ -129,9 +129,7 @@ public class ChunkManager : MonoBehaviour {
             float upper = -lower;
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
-                Vector3 heightNormalizedPlayerPos = player.position;
-                heightNormalizedPlayerPos.y = animal.transform.position.y;
-                if (animal.activeSelf && Vector3.Distance(animal.transform.position, heightNormalizedPlayerPos) > maxDistance) {
+                if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
                     float x = Random.Range(lower, upper);
                     float z = Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;

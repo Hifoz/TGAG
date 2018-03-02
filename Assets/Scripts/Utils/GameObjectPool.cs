@@ -12,8 +12,10 @@ public class GameObjectPool {
     private Transform objParent;
     private string objName;
 
-    private List<GameObject> active = new List<GameObject>();
+    bool maintainActive = true;
+    private List<GameObject> active;
     private Stack<GameObject> inactive = new Stack<GameObject>();
+
 
     /// <summary>
     /// Constructor taking a prefab
@@ -21,10 +23,15 @@ public class GameObjectPool {
     /// <param name="prefab">The prefab that the pool pools</param>
     /// <param name="objParent">The transform parent of the obj</param>
     /// <param name="objName">The name of the objects</param>
-    public GameObjectPool(GameObject prefab, Transform objParent = null, string objName = null) {
+    /// <param name="maintainActive">Should this pool keep track of the active objects?</param>
+    public GameObjectPool(GameObject prefab, Transform objParent = null, string objName = null, bool maintainActive = true) {
         this.prefab = prefab;
         this.objParent = objParent;
         this.objName = objName;
+        this.maintainActive = maintainActive;
+        if (maintainActive) {
+            active = new List<GameObject>();
+        }
     }
 
     public List<GameObject> activeList { get { return active; } }
@@ -43,12 +50,13 @@ public class GameObjectPool {
             }
             if (objName != null) {
                 obj.name = objName;
-            }
-            active.Add(obj);            
+            }           
         } else {
-            obj = inactive.Pop();
-            active.Add(obj);
+            obj = inactive.Pop();            
             obj.SetActive(true);
+        }
+        if (maintainActive) {
+            active.Add(obj);
         }
         return obj;
     }
@@ -58,7 +66,7 @@ public class GameObjectPool {
     /// </summary>
     /// <param name="obj">GameObject to return</param>
     public void returnObject(GameObject obj) {
-        if (!active.Remove(obj)) {
+        if (maintainActive && !active.Remove(obj)) {
             Debug.LogWarning("The object returned to the pool was not part of the pools active list!");
         }
         inactive.Push(obj);
@@ -69,8 +77,10 @@ public class GameObjectPool {
     /// Destroys all gameobjects in the pool
     /// </summary>
     public void destroyAllGameObjects() {
-        foreach(GameObject obj in active) {
-            MonoBehaviour.Destroy(obj);
+        if (maintainActive) {
+            foreach (GameObject obj in active) {
+                MonoBehaviour.Destroy(obj);
+            }
         }
         foreach (GameObject obj in inactive) {
             MonoBehaviour.Destroy(obj);

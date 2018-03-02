@@ -80,7 +80,7 @@
 				color1 = saturate(color1);
 				color2 = saturate(color2);
 				//Make all black animals black/white:
-				float nonZero = ceil((color1.x + color1.y + color1.z + color2.x + color2.y + color2.z) / 12); // if the colors are not zero, this will be 1
+				float nonZero = ceil((color1.x + color1.y + color1.z + color2.x + color2.y + color2.z - 0.05) / 12); // if the colors are not zero, this will be 1
 				color1 += half3(1, 1, 1) * (1 - nonZero);
 				
 				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.y;
