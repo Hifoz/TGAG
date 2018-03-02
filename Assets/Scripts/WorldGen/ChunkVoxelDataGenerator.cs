@@ -10,23 +10,13 @@ using UnityEngine;
 public static class ChunkVoxelDataGenerator {
 
     /// <summary>
-    /// Determines if there is a voxel at the given location.
-    /// </summary>
-    /// <param name="pos">The position to investigate</param>
-    /// <returns>bool contains voxel</returns>
-    [Obsolete("Use posContainsVoxel(Vector3 pos, int height) instead. (You will have to pre-calculate the 2d height for this).")]
-    public static bool posContainsVoxel(Vector3 pos) {
-        return (pos.y < calcHeight(pos, null) || calc3DStructure(pos, -1, null)) && calc3DUnstructure(pos, -1, null);
-    }
-
-    /// <summary>
     /// Determines if there is a voxel at the given location, with a precalculated 2d height.
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
     public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
-        return (pos.y < height || calc3DStructure(pos, height, biome)) && calc3DUnstructure(pos, height, biome);
+        return (pos.y < height || biome.Structure3DRate * 0.75f > calc3DStructure(pos, biome) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome);
     }
 
     /// <summary>
@@ -37,34 +27,20 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
     public static bool posContainsVoxel(Vector3 pos, List<int> heights, List<Pair<Biome, float>> biomes) {
-        // Might want to move the top part here into the biome manager again
-        float sD = float.MaxValue;
-        float bW = BiomeManager.borderWidth;
+        float structure = 0;
+        float unstructure = 0;
+        float height = 0;
+        float structureRate = 0;
+        float unstructureRate = 0;
 
-        foreach (Pair<Biome, float> p in biomes) {
-            if (p.second < sD)
-                sD = p.second;
-        }
-        float tot = 0;
-        foreach (Pair<Biome, float> p in biomes) {
-            p.second = 1 - (p.second - sD);
-            tot += p.second;
-        }
-        foreach (Pair<Biome, float> p in biomes) {
-            p.second = p.second / tot;
-        }
-
-
-
-
-            float totalValue = 0;
         for (int i = 0; i < biomes.Count; i++) {
-            if (posContainsVoxel(pos, heights[i], biomes[i].first))
-                totalValue += biomes[i].second;
+            structure += calc3DStructure(pos, biomes[i].first) * biomes[i].second;
+            unstructure += calc3DUnstructure(pos, biomes[i].first) * biomes[i].second;
+            height += heights[i] * biomes[i].second;
+            structureRate += biomes[i].first.Structure3DRate * biomes[i].second;
+            unstructureRate += biomes[i].first.Unstructure3DRate * biomes[i].second;
         }
-        float result = totalValue;
-
-        return result > 0.5f;
+        return (pos.y < height || structureRate * 0.75f > structure) && unstructureRate < unstructure;
     }
 
 
@@ -172,14 +148,14 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DStructure(Vector3 pos, int height, Biome biome) {
+    private static float calc3DStructure(Vector3 pos, Biome biome) {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, biome.frequency3D) +
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
 
-        return biome.Structure3DRate * 0.75f > noise01;
+        return noise01;
     }
 
     /// <summary>
@@ -188,12 +164,12 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DUnstructure(Vector3 pos, int height, Biome biome) {
+    private static float calc3DUnstructure(Vector3 pos, Biome biome) {
         float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) + 
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
         float noise01 = (noise + 1f) / 2f;
         noise01 = Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
-        return biome.Unstructure3DRate < noise01;
+        return noise01;
     }
 }

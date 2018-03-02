@@ -7,7 +7,7 @@ public class BiomeManager {
     private List<Biome> biomes = new List<Biome>();
     private List<Pair<Biome, Vector2Int>> biomePoints = new List<Pair<Biome, Vector2Int>>();
 
-    public static float borderWidth = 10;
+    public static float borderWidth = 150;
     System.Random rng;
 
 
@@ -18,7 +18,7 @@ public class BiomeManager {
         biomes.Add(new BasicBiome2());
 
         biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[0], new Vector2Int(0, 0)));
-        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[1], new Vector2Int(100, 0)));
+        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[1], new Vector2Int(300, 0)));
     }
 
     /// <summary>
@@ -46,6 +46,29 @@ public class BiomeManager {
             if (dist < range) {
                 inRangeBiomes.Add(new Pair<Biome, float>(bp.first, dist));
             }
+        }
+
+
+        if(inRangeBiomes.Count == 1) {
+            inRangeBiomes[0].second = 1;
+            return inRangeBiomes;
+        }
+
+
+        // Calculate the weights
+        float sD = float.MaxValue;
+        float bW = borderWidth;
+        foreach (Pair<Biome, float> p in inRangeBiomes) {
+            if (p.second < sD)
+                sD = p.second;
+        }
+        float tot = 0;
+        foreach (Pair<Biome, float> p in inRangeBiomes) {
+            p.second = 1 - (p.second - sD)/bW;
+            tot += p.second;
+        }
+        foreach (Pair<Biome, float> p in inRangeBiomes) {
+            p.second = p.second / tot;
         }
 
         return inRangeBiomes;
