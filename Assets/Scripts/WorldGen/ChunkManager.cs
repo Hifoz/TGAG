@@ -30,8 +30,8 @@ public class ChunkManager : MonoBehaviour {
     private ChunkData[,] chunkGrid;
 
     private ChunkVoxelDataThread[] CVDT;
-    private BlockingList<Order> orders = new BlockingList<Order>();
-    private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+    private BlockingList<Order> orders;
+    private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     private GameObject[] animals = new GameObject[20];
@@ -77,7 +77,8 @@ public class ChunkManager : MonoBehaviour {
         if (threadCount == 0) {
             threadCount = Settings.WorldGenThreads;
         }
-
+        orders = new BlockingList<Order>();
+        results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
         CVDT = new ChunkVoxelDataThread[threadCount];
         for (int i = 0; i < threadCount; i++) {
             CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
