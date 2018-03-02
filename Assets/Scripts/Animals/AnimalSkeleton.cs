@@ -60,27 +60,27 @@ public class AnimalSkeleton {
 
     private MixedDictionary<BodyParameter> bodyParametersRange = new MixedDictionary<BodyParameter>(
         new Dictionary<BodyParameter, object>() {
-            { BodyParameter.SCALE, new Pair<float>(0.5f, 1.0f) },
+            { BodyParameter.SCALE, new Range<float>(0.5f, 1.0f) },
 
-            { BodyParameter.HEAD_SIZE, new Pair<float>(2f, 4f) },
-            { BodyParameter.HEAD_RADIUS, new Pair<float>(0.5f, 1.0f) },
+            { BodyParameter.HEAD_SIZE, new Range<float>(2f, 4f) },
+            { BodyParameter.HEAD_RADIUS, new Range<float>(0.5f, 1.0f) },
 
-            { BodyParameter.NECK_LENGTH, new Pair<float>(4, 5) },
-            { BodyParameter.NECK_RADIUS, new Pair<float>(0.5f, 1.5f) },
+            { BodyParameter.NECK_LENGTH, new Range<float>(4, 5) },
+            { BodyParameter.NECK_RADIUS, new Range<float>(0.5f, 1.5f) },
 
-            { BodyParameter.SPINE_LENGTH, new Pair<float>(4, 7) },
-            { BodyParameter.SPINE_RADIUS, new Pair<float>(1.0f, 1.5f) },
+            { BodyParameter.SPINE_LENGTH, new Range<float>(4, 7) },
+            { BodyParameter.SPINE_RADIUS, new Range<float>(1.0f, 1.5f) },
 
-            { BodyParameter.LEG_PAIRS, new Pair<int>(2, 4) },
-            { BodyParameter.LEG_JOINTS, new Pair<int>(2, 3) },
-            { BodyParameter.LEG_LENGTH, new Pair<float>(5, 10) },
+            { BodyParameter.LEG_PAIRS, new Range<int>(2, 4) },
+            { BodyParameter.LEG_JOINTS, new Range<int>(2, 3) },
+            { BodyParameter.LEG_LENGTH, new Range<float>(5, 10) },
             //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
-            { BodyParameter.LEG_RADIUS, new Pair<float>(0.5f, 0.7f) },
+            { BodyParameter.LEG_RADIUS, new Range<float>(0.5f, 0.7f) },
 
-            { BodyParameter.TAIL_JOINTS, new Pair<int>(2, 5) },
-            { BodyParameter.TAIL_LENGTH, new Pair<float>(3, 12) },
+            { BodyParameter.TAIL_JOINTS, new Range<int>(2, 5) },
+            { BodyParameter.TAIL_LENGTH, new Range<float>(3, 12) },
             //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
-            { BodyParameter.TAIL_RADIUS, new Pair<float>(0.5f, 1.5f) }
+            { BodyParameter.TAIL_RADIUS, new Range<float>(0.5f, 1.5f) }
     });
 
     private Transform rootBone;
@@ -237,14 +237,14 @@ public class AnimalSkeleton {
                 scale = bodyParameters.Get<float>(BodyParameter.SCALE);
             } 
 
-            if (pair.Value.GetType().Equals(typeof(Pair<float>))) {
-                Pair<float> range = (Pair<float>)pair.Value;
-                bodyParameters.Add(pair.Key, rng.randomFloat(range.first, range.second) * scale);
+            if (pair.Value.GetType().Equals(typeof(Range<float>))) {
+                Range<float> range = (Range<float>)pair.Value;
+                bodyParameters.Add(pair.Key, rng.randomFloat(range.Min, range.Max) * scale);
             }
 
-            if (pair.Value.GetType().Equals(typeof(Pair<int>))) {
-                Pair<int> range = (Pair<int>)pair.Value;
-                bodyParameters.Add(pair.Key, rng.randomInt(range.first, range.second));
+            if (pair.Value.GetType().Equals(typeof(Range<int>))) {
+                Range<int> range = (Range<int>)pair.Value;
+                bodyParameters.Add(pair.Key, rng.randomInt(range.Min, range.Max));
             }
 
             if (!scaleReady) { //Scale is the first enum
@@ -588,21 +588,21 @@ public class AnimalSkeleton {
                 scale = bodyParameters.Get<float>(BodyParameter.SCALE);
             }
 
-            if (pair.Value.GetType().Equals(typeof(Pair<float>))) {
-                Pair<float> range = (Pair<float>)pair.Value;
+            if (pair.Value.GetType().Equals(typeof(Range<float>))) {
+                Range<float> range = (Range<float>)pair.Value;
                 if (maxFloat) {
-                    bodyParameters.Add(pair.Key, rng.randomFloat(range.second, range.second) * scale);
+                    bodyParameters.Add(pair.Key, rng.randomFloat(range.Max, range.Max) * scale);
                 } else {
-                    bodyParameters.Add(pair.Key, rng.randomFloat(range.first, range.first) * scale);
+                    bodyParameters.Add(pair.Key, rng.randomFloat(range.Min, range.Min) * scale);
                 }
             }
 
-            if (pair.Value.GetType().Equals(typeof(Pair<int>))) {
-                Pair<int> range = (Pair<int>)pair.Value;
+            if (pair.Value.GetType().Equals(typeof(Range<int>))) {
+                Range<int> range = (Range<int>)pair.Value;
                 if (maxInt) {
-                    bodyParameters.Add(pair.Key, rng.randomInt(range.second - 1, range.second - 1));
+                    bodyParameters.Add(pair.Key, rng.randomInt(range.Max - 1, range.Max - 1));
                 } else {
-                    bodyParameters.Add(pair.Key, rng.randomInt(range.first, range.first));
+                    bodyParameters.Add(pair.Key, rng.randomInt(range.Min, range.Min));
                 }
             }
 
