@@ -14,4 +14,8 @@ public class ChunkData {
     public ChunkData(Vector3 pos) {
         this.pos = pos;
     }
+
+    public ChunkData() {
+        
+    }
 }
