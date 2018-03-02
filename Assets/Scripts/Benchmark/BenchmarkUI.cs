@@ -15,9 +15,9 @@ public class BenchmarkUI : MonoBehaviour {
     int startThreads = 3;
     int endThreads = 3;
     int step = 1;
+    int duration = 60;
     bool terrain = true;
     bool animals = true;
-
 
     private void Update() {
         bool inProgress = BenchmarkManager.InProgress;
@@ -87,10 +87,28 @@ public class BenchmarkUI : MonoBehaviour {
     }
 
     /// <summary>
+    /// Called when duration is recieved
+    /// </summary>
+    /// <param name="inputField"></param>
+    public void OnDuration(InputField inputField) {
+        int value = int.Parse(inputField.text);
+        value = (value >= 0) ? value : 0;
+        inputField.text = value.ToString();
+        duration = value;
+    }
+
+    /// <summary>
     /// Called when start button is clicked
     /// </summary>
     public void OnStart() {
-        BenchmarkManager.Benchmark(startThreads, endThreads, step, terrain, animals);
+        ((SyntheticBenchmarkManager)BenchmarkManager).Benchmark(startThreads, endThreads, step, terrain, animals);
+    }
+
+    /// <summary>
+    /// Called when start button is clicked
+    /// </summary>
+    public void OnStartReal() {
+        ((RealWorldBenchmarkManager)BenchmarkManager).startBenchmark(duration, startThreads, endThreads, step);
     }
 
     /// <summary>

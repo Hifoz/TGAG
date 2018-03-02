@@ -34,6 +34,13 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     /// <summary>
+    /// Launches benchmark scene.
+    /// </summary>
+    public void LaunchRealBenchmark() {
+        SceneManager.LoadScene("RealWorldBenchmark");
+    }
+
+    /// <summary>
     /// Enables the options menu.
     /// </summary>
     public void EnterOptions() {
