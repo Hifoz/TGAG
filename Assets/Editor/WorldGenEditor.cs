@@ -103,8 +103,6 @@ public class WorldGenEditor : EditorWindow {
     private void apply() {
         Debug.Log("Applying settings!");
 
-        chunkManager.clear();
-
         ChunkConfig.seed = seed;
         ChunkConfig.chunkSize = chunkSize;
         ChunkConfig.chunkCount = chunkCount;
@@ -120,7 +118,7 @@ public class WorldGenEditor : EditorWindow {
         ChunkConfig.treeThickness = treeThickness;
         ChunkConfig.grammarRecursionDepth = grammarRecursionDepth;
 
-        chunkManager.init();
+        chunkManager.clear();
     }
 }
 #endif

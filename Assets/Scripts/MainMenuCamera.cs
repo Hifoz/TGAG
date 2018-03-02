@@ -6,6 +6,7 @@ using UnityEngine;
 /// Class for the camera in the main menu.
 /// </summary>
 public class MainMenuCamera : MonoBehaviour {
+    public Transform target;
     public float radius;
     public float height;
     public float speed;
@@ -14,7 +15,12 @@ public class MainMenuCamera : MonoBehaviour {
 	void Update () {
         angle += Time.deltaTime * speed;
 
-        transform.position = new Vector3(Mathf.Sin(angle), height / radius, Mathf.Cos(angle)) * radius;
-        transform.LookAt(Vector3.zero);
+        Vector3 targetPos = Vector3.zero;
+        if (target != null) {
+            targetPos = target.position;
+        }
+
+        transform.position = targetPos + new Vector3(Mathf.Sin(angle), height / radius, Mathf.Cos(angle)) * radius;
+        transform.LookAt(targetPos);
 	}
 }
