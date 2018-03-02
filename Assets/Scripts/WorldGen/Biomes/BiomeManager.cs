@@ -7,7 +7,7 @@ public class BiomeManager {
     private List<Biome> biomes = new List<Biome>();
     private List<Pair<Biome, Vector2Int>> biomePoints = new List<Pair<Biome, Vector2Int>>();
 
-    private float borderWidth = 10;
+    public static float borderWidth = 10;
     System.Random rng;
 
 

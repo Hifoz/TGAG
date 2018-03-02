@@ -38,27 +38,31 @@ public static class ChunkVoxelDataGenerator {
     /// <returns></returns>
     public static bool posContainsVoxel(Vector3 pos, List<int> heights, List<Pair<Biome, float>> biomes) {
         // Might want to move the top part here into the biome manager again
-        float distSum = 0;
-        float shortestDist = float.MaxValue;
+        float sD = float.MaxValue;
+        float bW = BiomeManager.borderWidth;
+
         foreach (Pair<Biome, float> p in biomes) {
-            distSum += p.second;
-            if (p.second < shortestDist)
-                shortestDist = p.second;
+            if (p.second < sD)
+                sD = p.second;
+        }
+        float tot = 0;
+        foreach (Pair<Biome, float> p in biomes) {
+            p.second = 1 - (p.second - sD);
+            tot += p.second;
         }
         foreach (Pair<Biome, float> p in biomes) {
-            p.second = p.second;
+            p.second = p.second / tot;
         }
 
 
 
 
-
-        float totalValue = 0;
+            float totalValue = 0;
         for (int i = 0; i < biomes.Count; i++) {
             if (posContainsVoxel(pos, heights[i], biomes[i].first))
                 totalValue += biomes[i].second;
         }
-        float result = totalValue / distSum;
+        float result = totalValue;
 
         return result > 0.5f;
     }
