@@ -13,7 +13,6 @@ public class BiomeManager {
     private List<BiomePoint> biomePoints = new List<BiomePoint>();
 
     private float borderWidth = 10;
-    private float minPointDistance = 15;
 
 
 
@@ -74,7 +73,7 @@ public class BiomeManager {
     public List<Pair<Biome, float>> getInRangeBiomes(Vector2Int pos) {
 
         // Find all points in range
-        List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // A lsit of biomes and their distance from the sample position
+        List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // A list of biomes and their distance from the sample position
 
         float range = closestBiomePointDist(pos) + borderWidth;
         foreach (BiomePoint bp in biomePoints) {

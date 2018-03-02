@@ -30,6 +30,35 @@ public static class ChunkVoxelDataGenerator {
     }
 
     /// <summary>
+    /// Determines if there is a voxel at a given location, using all biomes covering the sample position.
+    /// </summary>
+    /// <param name="pos">sample position</param>
+    /// <param name="heights">height from all biomes covering the sample position</param>
+    /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
+    /// <returns></returns>
+    public static bool posContainsVoxel(Vector3 pos, List<int> heights, List<Pair<Biome, float>> biomes) {
+        float distSum = 0;
+        foreach (Pair<Biome, float> p in biomes) {
+            distSum += p.second;
+        }
+        foreach (Pair<Biome, float> p in biomes) {
+            p.second = p.second / distSum;
+        }
+
+
+
+        float totalValue = 0;
+        for (int i = 0; i < biomes.Count; i++) {
+            if (posContainsVoxel(pos, heights[i], biomes[i].first))
+                totalValue += biomes[i].second;
+        }
+        float result = totalValue;
+
+        return result > 0.5f;
+    }
+
+
+    /// <summary>
     /// A function that creates voxel data for a chunk using simplex noise.
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
@@ -38,7 +67,7 @@ public static class ChunkVoxelDataGenerator {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
         // Pre-calculate 2d heightmap and biomemap:
-        List<Pair<Biome, float>>[,] biomemap = new List<Pair<Biome, float>>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+        List<Pair<Biome, float>>[,] biomemap = new List<Pair<Biome, float>>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
         List<int>[,] heightmap = new List<int>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
@@ -46,7 +75,7 @@ public static class ChunkVoxelDataGenerator {
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
                 heightmap[x, z] = new List<int>();
                 for (int i = 0; i < biomemap[x, z].Count; i++) {
-                    heightmap[x, z][i] = (int)calcHeight(pos, biomemap[x, z][i].first);
+                    heightmap[x, z].Add((int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z][i].first));
                 }
             }
         }
@@ -56,14 +85,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    float totalValue = 0;
-                    for(int j = 0; j < biomemap[x, z].Count; j++) {
-                        if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x,z][j], biomemap[x, z][j].first))
-                            totalValue += biomemap[x, z][j].second;
-                    }
-                    float result = totalValue /= biomemap[x, z].Count;
-
-                    if(result > 0.5f)
+                    if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z], biomemap[x, z]))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
@@ -84,6 +106,7 @@ public static class ChunkVoxelDataGenerator {
 
         return data;
     }
+
 
 
     /// <summary>
