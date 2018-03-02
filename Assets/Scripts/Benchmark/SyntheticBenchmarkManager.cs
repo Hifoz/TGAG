@@ -1,15 +1,10 @@
 ﻿using UnityEngine;
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
 
-public class BenchmarkChunkManager : MonoBehaviour {
-
-    Stopwatch stopwatch = new Stopwatch();
-
+public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     public GameObject chunkPrefab;
     public TextureManager textureManager;
     public GameObject treePrefab;
@@ -28,10 +23,6 @@ public class BenchmarkChunkManager : MonoBehaviour {
     bool terrainFlag = true;
     bool animalsFlag = true;
 
-    private bool inProgress = false;
-    private string path = "";
-    private int currentThreads = 0;
-
     /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
@@ -41,15 +32,11 @@ public class BenchmarkChunkManager : MonoBehaviour {
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
     }
 
-    public bool InProgress { get { return inProgress; } }
-    public string Path { get { return path; } }
-    public int CurrentThreads { get { return currentThreads; } }
-
-    public float getTime() {
-        return (float)stopwatch.Elapsed.TotalSeconds;
-    }
-
-    public float getProgress() {
+    /// <summary>
+    /// Returns progress of benchmark
+    /// </summary>
+    /// <returns></returns>
+    override public float getProgress() {
         int generatedThings = 0;
         int totalThings = 0;
 
@@ -68,6 +55,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         }
         return generatedThings / (float)totalThings;
     }
+
 
     /// <summary>
     /// Call this corutine to start a benchmark run
@@ -96,7 +84,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
     /// <param name="terrain">Set this to true to generate terrain</param>
     /// <param name="animals">Set this to true to generate animals</param>
     /// <returns>Success flag</returns>
-    IEnumerator BenchmarkWorldGen(int startThreads, int endThreads, int step, bool terrain, bool animals) {
+    private IEnumerator BenchmarkWorldGen(int startThreads, int endThreads, int step, bool terrain, bool animals) {
         QualitySettings.vSyncCount = 0;
         terrainFlag = terrain;
         animalsFlag = animals;
@@ -112,7 +100,7 @@ public class BenchmarkChunkManager : MonoBehaviour {
         file.WriteLine(string.Format("Animals: {0}", (animals) ? "Enabled" : "Disabled"));
 
         for (int run = startThreads; run <= endThreads; run += step) {
-            UnityEngine.Debug.Log(String.Format("Testing with {0} thread(s)!", run));
+            Debug.Log(string.Format("Testing with {0} thread(s)!", run));
             clear();
             currentThreads = run;
             CVDT = new ChunkVoxelDataThread[run];
@@ -143,12 +131,12 @@ public class BenchmarkChunkManager : MonoBehaviour {
 
             stopwatch.Stop();
             stopwatch.Reset();
-            string result = String.Format("Time: {0} Seconds | Average fps: {1} | Threads: {2}", time.ToString("N2"), (frameCount / time).ToString("N2"), run);
-            UnityEngine.Debug.Log(result);
-            file.WriteLine(String.Format(result));
+            string result = string.Format("Time: {0} Seconds | Average fps: {1} | Threads: {2}", time.ToString("N2"), (frameCount / time).ToString("N2"), run);
+            Debug.Log(result);
+            file.WriteLine(string.Format(result));
         }
         file.Close();
-        UnityEngine.Debug.Log("DONE TESTING!");
+        Debug.Log("DONE TESTING!");
         inProgress = false;
     }
 
