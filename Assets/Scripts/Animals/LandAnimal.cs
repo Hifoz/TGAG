@@ -30,7 +30,7 @@ public abstract class LandAnimal : MonoBehaviour {
     delegate bool ragDollCondition(); 
 
     // Update is called once per frame
-    void FixedUpdate() {
+    void Update() {
         if (skeleton != null) {
             calculateSpeedAndHeading();
             move();
@@ -221,7 +221,8 @@ public abstract class LandAnimal : MonoBehaviour {
     private void doGravity() {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, (1<<8))) {
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
             Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
 
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
@@ -277,7 +278,8 @@ public abstract class LandAnimal : MonoBehaviour {
         }
 
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit)) {
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit, 50f, layerMask)) {
             float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Up/Down motion
             heightOffset = (heightOffset > 0) ? heightOffset : 0;
 

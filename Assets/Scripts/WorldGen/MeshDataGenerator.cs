@@ -38,9 +38,10 @@ public class MeshDataGenerator {
     public static void applyMeshData(MeshFilter meshFilter, MeshData md) {
         Mesh mesh = meshFilter.mesh;
         if (mesh == null) {
-            mesh = new Mesh();            
+            mesh = new Mesh();
+        } else {
+            mesh.Clear();
         }
-        mesh.Clear();
         mesh.vertices = md.vertices;
         mesh.normals = md.normals;
         mesh.triangles = md.triangles;
@@ -58,9 +59,10 @@ public class MeshDataGenerator {
     public static void applyMeshData(MeshCollider meshCollider, MeshData md) {
         Mesh mesh = meshCollider.sharedMesh;
         if (mesh == null) {
-            mesh = new Mesh();            
+            mesh = new Mesh();
+        } else {
+            mesh.Clear();
         }
-        mesh.Clear();
         mesh.vertices = md.vertices;
         mesh.normals = md.normals;
         mesh.triangles = md.triangles;

@@ -167,8 +167,10 @@ public class AnimalSkeleton {
         Mesh mesh = renderer.sharedMesh;
         if (mesh == null) {
             mesh = new Mesh();            
+        } else {
+            mesh.Clear();
         }
-        mesh.Clear();
+
         mesh.vertices = meshData.vertices;
         mesh.normals = meshData.normals;
         mesh.triangles = meshData.triangles;
