@@ -11,22 +11,14 @@ public class LandAnimalNPC : LandAnimal {
     /// </summary>
     /// <param name="pos">Vector3 pos</param>
     public bool Spawn(Vector3 pos) {
-        transform.rotation = Quaternion.identity;
-        transform.localRotation = Quaternion.identity;
-        if (skeleton != null) {
-            foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
-                bone.bone.rotation = Quaternion.identity;
-                bone.bone.localRotation = Quaternion.identity;
-            }
-        }
-
         transform.position = pos;
         roamCenter = pos;
         roamCenter.y = 0;
 
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit)) {
-            Vector3 groundTarget = hit.point + Vector3.up * skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2f;
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, ChunkConfig.chunkHeight + 20f, layerMask)) {
+            Vector3 groundTarget = hit.point + Vector3.up * 10;
             transform.position = groundTarget;
             desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
             return true;

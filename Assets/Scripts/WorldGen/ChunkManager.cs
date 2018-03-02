@@ -3,32 +3,42 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
+/// Struct that contains statistics about what the ChunkManager does
+/// </summary>
+public struct ChunkManagerStats {
+    public int generatedChunks;
+    public int generatedAnimals;
+    public int cancelledChunks;
+}
+
+/// <summary>
 /// This class is responsible for handling the chunks that makes up the world.
 /// It creates and places chunks into the world, keeping the player at the center of the world.
 /// </summary>
 public class ChunkManager : MonoBehaviour {
 
+    public ChunkManagerStats stats = new ChunkManagerStats();
     public Transform player;
     public TextureManager textureManager;
     public GameObject chunkPrefab;
     public GameObject treePrefab;
     public GameObject animalPrefab;
     private Vector3 offset;
-    
+
     // Chunks
     private List<ChunkData> activeChunks = new List<ChunkData>();
-    private Stack<GameObject> inactiveChunks = new Stack<GameObject>();
-    private Stack<GameObject> inactiveTrees = new Stack<GameObject>();
     private ChunkData[,] chunkGrid;
+    private GameObjectPool chunkPool;
+    private GameObjectPool treePool;
 
     // Thread communication
     private ChunkVoxelDataThread[] CVDT;
-    private BlockingList<Order> orders = new BlockingList<Order>();
-    private LockingQueue<Result> results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+    private BlockingList<Order> orders;
+    private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     // Animals
-    private GameObject[] animals = new GameObject[20];
+    private GameObject[] animals = new GameObject[20]; //Might want to pool animals in the future too, but for now they're just at a fixed size of 20
     private HashSet<int> orderedAnimals = new HashSet<int>();
 
     // Biome
@@ -39,25 +49,8 @@ public class ChunkManager : MonoBehaviour {
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start () {
-        Settings.load();
-        CVDT = new ChunkVoxelDataThread[Settings.WorldGenThreads];
-        for (int i = 0; i < Settings.WorldGenThreads; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(orders, results, i, biomeManager);
-        }
-        init();
-
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
-
-        for (int i = 0; i < animals.Length; i++) {
-            animals[i] = Instantiate(animalPrefab);
-            animals[i].transform.position = new Vector3(9999, 9999, 9999);
-        }
-
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        AnimalSkeleton playerSkeleton = new AnimalSkeleton(player.transform);
-        playerSkeleton.generateInThread();
-        player.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
-        player.GetComponent<Player>().initPlayer(animals);
+        Reset();
         //StartCoroutine(debugRoutine());
     }
 	
@@ -77,7 +70,45 @@ public class ChunkManager : MonoBehaviour {
     IEnumerator debugRoutine() {
         while (true) {
             yield return new WaitForSeconds(0.5f);
-            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Active Chunks: " + activeChunks.Count + " | Inactive Chunks" + inactiveChunks.Count);
+            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Active Chunks: " + chunkPool.activeList.Count + " | Inactive Chunks: " + chunkPool.inactiveStack.Count);
+            Debug.Log("Active Trees: " + treePool.activeList.Count + "| Inactive trees: " + treePool.inactiveStack.Count);
+        }
+    }
+
+
+    public void Reset(int threadCount = 0) {
+        Settings.load();
+        clear();
+
+        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
+        chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+
+        if (threadCount == 0) {
+            threadCount = Settings.WorldGenThreads;
+        }
+        orders = new BlockingList<Order>();
+        results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+        CVDT = new ChunkVoxelDataThread[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            CVDT[i] = new ChunkVoxelDataThread(orders, results, i, biomeManager);
+        }
+
+        chunkPool = new GameObjectPool(chunkPrefab, transform, "chunk", false);
+        treePool = new GameObjectPool(treePrefab, transform, "tree", false);
+
+        if (animalPrefab != null) {
+            for (int i = 0; i < animals.Length; i++) {
+                animals[i] = Instantiate(animalPrefab);
+                animals[i].transform.position = new Vector3(9999, 9999, 9999);
+            }
+        }
+
+        GameObject playerObj = player.gameObject;
+        if (player.tag == "Player") { //To account for dummy players
+            AnimalSkeleton playerSkeleton = new AnimalSkeleton(playerObj.transform);
+            playerSkeleton.generateInThread();
+            playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
+            playerObj.GetComponent<Player>().initPlayer(animals);
         }
     }
 
@@ -85,32 +116,40 @@ public class ChunkManager : MonoBehaviour {
     /// Clears and resets the ChunkManager, used when changing WorldGen settings at runtime.
     /// </summary>
     public void clear() {
-        while (pendingChunks.Count > 0) {
-            while (results.getCount() > 0) {
-                Result result = results.Dequeue();
-                if (result.task == Task.CHUNK) {
-                    pendingChunks.Remove(result.chunkVoxelData.chunkPos);
-                }
-            }
-        }
+        stopThreads();
+        orderedAnimals.Clear();
+        pendingChunks.Clear();
+
         while (activeChunks.Count > 0) {
             Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
+
+            foreach(var chunk in activeChunks[0].terrainChunk) {
+                Destroy(chunk);
+            }
+
+            foreach (var chunk in activeChunks[0].waterChunk) {
+                Destroy(chunk);
+            }
+
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
             }
+
             activeChunks.RemoveAt(0);
         }
-        while (inactiveChunks.Count > 0) {
-            Destroy(inactiveChunks.Pop());
-        }
-    }
 
-    /// <summary>
-    /// Initializes the ChunkManager
-    /// </summary>
-    public void init() {
-        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
-        chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+        if (chunkPool != null) {
+            chunkPool.destroyAllGameObjects();
+        }
+        if (treePool != null) {
+            treePool.destroyAllGameObjects();
+        }
+
+        foreach (var animal in animals) {
+            if (animal != null) {
+                Destroy(animal);
+            }
+        }
     }
 
     /// <summary>
@@ -123,7 +162,7 @@ public class ChunkManager : MonoBehaviour {
             float upper = -lower;
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
-               if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
+                if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
                     float x = Random.Range(lower, upper);
                     float z = Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
@@ -162,25 +201,20 @@ public class ChunkManager : MonoBehaviour {
             if (checkBounds(ix, iz)) {
                 chunkGrid[ix, iz] = activeChunks[i];
             } else {
-                GameObject chunk = activeChunks[i].terrainChunk[0].transform.parent.gameObject;
+                GameObject chunk = activeChunks[i].chunkParent;
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
                     activeChunks[i].terrainChunk[j].transform.parent = this.transform;
-                    inactiveChunks.Push(activeChunks[i].terrainChunk[j]);
-                    inactiveChunks.Peek().SetActive(false);
+                    chunkPool.returnObject(activeChunks[i].terrainChunk[j]);
                 }
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
-                    inactiveChunks.Push(activeChunks[i].waterChunk[j]);
-                    inactiveChunks.Peek().SetActive(false);
+                    chunkPool.returnObject(activeChunks[i].waterChunk[j]);
                 }
 
                 Destroy(chunk);
 
-                //inactiveChunks.Peek().SetActive(false);
-
                 foreach(var tree in activeChunks[i].trees) {
-                    inactiveTrees.Push(tree);
-                    tree.SetActive(false); 
+                    treePool.returnObject(tree);
                 }
 
                 activeChunks.RemoveAt(i);
@@ -208,19 +242,24 @@ public class ChunkManager : MonoBehaviour {
     /// Consumes results from Worker threads.
     /// </summary>
     private void consumeThreadResults() {
-        while(results.getCount() > 0) {
+        int consumed = 0;
+        while(results.getCount() > 0 && consumed < Settings.MaxChunkLaunchesPerUpdate) {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
                     launchOrderedChunk(result.chunkVoxelData);
+                    stats.generatedChunks++;
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
+                    stats.generatedAnimals++;
                     break;
                 case Task.CANCEL:
                     pendingChunks.Remove(result.chunkVoxelData.chunkPos);
+                    stats.cancelledChunks++;
                     break;
             }
+            consumed++;
         }
     }
 
@@ -235,45 +274,44 @@ public class ChunkManager : MonoBehaviour {
         GameObject chunk = new GameObject();
         chunk.name = "chunk";
         chunk.transform.parent = this.transform;
+        cd.chunkParent = chunk;
 
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
-            GameObject subChunk = getChunk();
+            GameObject subChunk = chunkPool.getObject();
             subChunk.layer = 8;
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
-            subChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.meshData[i]);
+            MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
             subChunk.GetComponent<MeshCollider>().sharedMesh = subChunk.GetComponent<MeshFilter>().mesh;
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-            subChunk.SetActive(true);
             cd.terrainChunk.Add(subChunk);
         }
 
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
-            GameObject waterChunk = getChunk();
+            GameObject waterChunk = chunkPool.getObject();
             waterChunk.layer = 0;
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
-            waterChunk.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.waterMeshData[i]);
+            MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
             waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
             waterChunk.GetComponent<MeshCollider>().convex = true;
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
-            waterChunk.SetActive(true);
             cd.waterChunk.Add(waterChunk);
         }
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {
-            GameObject tree = getTree();
+            GameObject tree = treePool.getObject();
             tree.transform.position = chunkMeshData.treePositions[i];
-            tree.GetComponent<MeshFilter>().mesh = MeshDataGenerator.applyMeshData(chunkMeshData.trees[i]);
-            tree.GetComponent<MeshCollider>().sharedMesh = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
+            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
+            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshCollider>(), chunkMeshData.treeTrunks[i]);
             tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
 
             trees[i] = tree;
@@ -288,9 +326,8 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {        
-        GameObject animal = animals[animalSkeleton.index];  
-        animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
-        StartCoroutine(spawnAnimal(animal)); //For the cases where the animal is not above a chunk  
+        GameObject animal = animals[animalSkeleton.index];
+        StartCoroutine(spawnAnimal(animal, animalSkeleton)); //For the cases where the animal is not above a chunk  
         orderedAnimals.Remove(animalSkeleton.index);
     }
 
@@ -299,7 +336,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     /// <param name="animal">Animal to spawn</param>
     /// <returns></returns>
-    private IEnumerator spawnAnimal(GameObject animal) {
+    private IEnumerator spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
         float lower = -maxDistance + LandAnimalNPC.roamDistance;
         float upper = -lower;
@@ -311,6 +348,7 @@ public class ChunkManager : MonoBehaviour {
             yield return 0;
         }
         animal.SetActive(true);
+        animal.GetComponent<LandAnimalNPC>().setSkeleton(skeleton);
     }
 
     /// <summary>
@@ -336,61 +374,14 @@ public class ChunkManager : MonoBehaviour {
     }
 
     /// <summary>
-    /// Gets an inactive chunk, or creates a new chunk.
-    /// </summary>
-    /// <returns>An instance of a chunk gameobject</returns>
-    private GameObject getChunk() {
-        if (inactiveChunks.Count > 0) {
-            var chunk = inactiveChunks.Pop();
-            return chunk;
-        } else {
-            return createChunk();
-        }
-    }
-
-    /// <summary>
-    /// Gets an inactive tree, or creates a new tree.
-    /// </summary>
-    /// <returns>An instance of a tree gameobject</returns>
-    private GameObject getTree() {
-        if (inactiveTrees.Count > 0) {
-            var tree = inactiveTrees.Pop();
-            tree.SetActive(true);
-            return tree;
-        } else {
-            return createTree();
-        }
-    }
-
-    /// <summary>
-    /// Creates a chunk GameObject
-    /// </summary>
-    /// <returns>GameObject Chunk</returns>
-    private GameObject createChunk() {
-        GameObject chunk = Instantiate(chunkPrefab);
-        chunk.transform.parent = transform;
-        return chunk;
-    }
-
-
-    /// <summary>
-    /// Creates a tree GameObject
-    /// </summary>
-    /// <returns>GameObject tree</returns>
-    private GameObject createTree() {
-        GameObject tree = Instantiate(treePrefab);
-        tree.transform.parent = transform;
-        tree.name = "tree";
-        return tree;
-    }
-
-    /// <summary>
     /// Stops all of the ChunkVoxelDataThreads.
     /// </summary>
     private void stopThreads() {
-        foreach (var thread in CVDT) {
-            orders.Add(new Order(Vector3.down, Task.CHUNK));
-            thread.stop();
+        if (CVDT != null) {
+            foreach (var thread in CVDT) {
+                orders.Add(new Order(Vector3.down, Task.CHUNK));
+                thread.stop();
+            }
         }
     }
 
