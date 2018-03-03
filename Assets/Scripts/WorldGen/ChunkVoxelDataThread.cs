@@ -207,18 +207,13 @@ public class ChunkVoxelDataThread {
         int iter = 0;
         
         List<Pair<Biome, float>> biomes = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z));
-        List<int> heights = new List<int>();
-        float heightAvg = 0;
+        float height = 0;
         foreach (Pair<Biome, float> p in biomes) {
-            float h = ChunkVoxelDataGenerator.calcHeight(pos, p.first);
-            heights.Add((int)h);
-            heightAvg += h;
+            height += ChunkVoxelDataGenerator.calcHeight(pos, p.first) * p.second;
         }
-        heightAvg /= biomes.Count;
 
-        pos.y = (int)heightAvg;
-        //bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, heights, biomes);
+        pos.y = (int)height;
+        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
@@ -226,7 +221,7 @@ public class ChunkVoxelDataThread {
             pos.y += dir;
             lastVoxel = currentVoxel;
 
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, heights, biomes);
+            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes);
             if (lastVoxel != currentVoxel) {
                 if (!lastVoxel) { //Put the tree in an empty voxel
                     pos.y -= dir;
@@ -235,7 +230,6 @@ public class ChunkVoxelDataThread {
             }
             iter++;
         }
-        //Debug.Log("Failed to find ground");
         return Vector3.negativeInfinity;
     }
 

@@ -2,27 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class BasicBiome : Biome {
-    public BasicBiome() :
+class BasicBiome3 : Biome {
+    public BasicBiome3() :
         base(
             //General
-            snowHeight: 90,
+            snowHeight: 10,
             //2D noise settings
             frequency2D: 0.001f,
             noiseExponent2D: 3,
             octaves2D: 6,
             //3D noise settings
-            Structure3DRate: 0.57f,
-            Unstructure3DRate: 0.85f,
-            frequency3D: 0.0075f,
+            Structure3DRate: 0.8f,
+            Unstructure3DRate: 0.7f,
+            frequency3D: 0.009f,
             //Foliage
-            maxTreesPerChunk: 1,
+            maxTreesPerChunk: 2,
             treeLineLength: 2.0f,
             treeVoxelSize: 1.0f,
             treeThickness: 0.5f,
             treeLeafThickness: 3f,
             grammarRecursionDepth: 4
-        ) {}
+        ) { }
 
 
 }

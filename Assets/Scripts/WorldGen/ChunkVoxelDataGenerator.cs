@@ -16,7 +16,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
     public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
-        return (pos.y < height || biome.Structure3DRate * 0.75f > calc3DStructure(pos, biome) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome);
+        return (pos.y < height || biome.Structure3DRate * 0.75f > calc3DStructure(pos, biome, height) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
     }
 
     /// <summary>
@@ -26,21 +26,19 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="heights">height from all biomes covering the sample position</param>
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
-    public static bool posContainsVoxel(Vector3 pos, List<int> heights, List<Pair<Biome, float>> biomes) {
+    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<Biome, float>> biomes) {
         float structure = 0;
         float unstructure = 0;
-        float height = 0;
         float structureRate = 0;
         float unstructureRate = 0;
 
         for (int i = 0; i < biomes.Count; i++) {
-            structure += calc3DStructure(pos, biomes[i].first) * biomes[i].second;
-            unstructure += calc3DUnstructure(pos, biomes[i].first) * biomes[i].second;
-            height += heights[i] * biomes[i].second;
+            structure += calc3DStructure(pos, biomes[i].first, height) * biomes[i].second;
+            unstructure += calc3DUnstructure(pos, biomes[i].first, height) * biomes[i].second;
             structureRate += biomes[i].first.Structure3DRate * biomes[i].second;
             unstructureRate += biomes[i].first.Unstructure3DRate * biomes[i].second;
         }
-        return (pos.y < height || structureRate * 0.75f > structure) && unstructureRate < unstructure;
+        return (pos.y < height || structureRate > structure) && unstructureRate < unstructure;
     }
 
 
@@ -54,14 +52,13 @@ public static class ChunkVoxelDataGenerator {
 
         // Pre-calculate 2d heightmap and biomemap:
         List<Pair<Biome, float>>[,] biomemap = new List<Pair<Biome, float>>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
-        List<int>[,] heightmap = new List<int>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+        int[,] heightmap = new int[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
-                heightmap[x, z] = new List<int>();
                 for (int i = 0; i < biomemap[x, z].Count; i++) {
-                    heightmap[x, z].Add((int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z][i].first));
+                    heightmap[x, z] += (int)(calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z][i].first) * biomemap[x, z][i].second);
                 }
             }
         }
@@ -85,7 +82,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
-                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z][0].first); // TODO make this use biomes in some way?
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z]); // TODO make this use biomes in some way?
                 }
             }
         }
@@ -100,8 +97,15 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockDataMap data, Vector3Int pos, Biome biome) {
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<Biome, float>> biomes) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
+
+        // Calculate snow height:
+        float snowHeight = SimplexNoise.Simplex2D(new Vector2(pos.x, pos.z), 0.008f) * 2;
+        foreach(Pair<Biome, float> p in biomes) {
+            snowHeight += p.first.snowHeight * p.second;
+        }
+
 
         // Add block type here:
         if (pos.y < ChunkConfig.waterHeight)
@@ -109,7 +113,7 @@ public static class ChunkVoxelDataGenerator {
 
         // Add modifier type:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
-            if (pos.y > ChunkConfig.snowHeight - SimplexNoise.Simplex2D(new Vector2(pos.x, pos.z), 0.002f)) {
+            if (pos.y > snowHeight) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;
             } else if (data.mapdata[pos1d].blockType == BlockData.BlockType.DIRT) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.GRASS;
@@ -148,7 +152,7 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static float calc3DStructure(Vector3 pos, Biome biome) {
+    private static float calc3DStructure(Vector3 pos, Biome biome, int height) {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, biome.frequency3D) +
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
@@ -164,7 +168,7 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static float calc3DUnstructure(Vector3 pos, Biome biome) {
+    private static float calc3DUnstructure(Vector3 pos, Biome biome, int height) {
         float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) + 
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;

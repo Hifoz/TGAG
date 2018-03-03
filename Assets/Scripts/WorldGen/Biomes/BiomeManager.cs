@@ -7,7 +7,7 @@ public class BiomeManager {
     private List<Biome> biomes = new List<Biome>();
     private List<Pair<Biome, Vector2Int>> biomePoints = new List<Pair<Biome, Vector2Int>>();
 
-    public static float borderWidth = 150;
+    public static float borderWidth = 75;
     System.Random rng;
 
 
@@ -16,9 +16,11 @@ public class BiomeManager {
 
         biomes.Add(new BasicBiome());
         biomes.Add(new BasicBiome2());
+        biomes.Add(new BasicBiome3());
 
         biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[0], new Vector2Int(0, 0)));
-        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[1], new Vector2Int(300, 0)));
+        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[1], new Vector2Int(-300, 0)));
+        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[2], new Vector2Int(-150, 150)));
     }
 
     /// <summary>
@@ -38,7 +40,7 @@ public class BiomeManager {
     public List<Pair<Biome, float>> getInRangeBiomes(Vector2Int pos) {
 
         // Find all points in range
-        List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // A list of biomes and their distance from the sample position
+        List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // Might want to separate the biome from the weight, because we ogten just use one of them at the time.
 
         float range = closestBiomePointDist(pos) + borderWidth;
         foreach (Pair<Biome, Vector2Int> bp in biomePoints) {
