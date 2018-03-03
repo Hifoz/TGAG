@@ -205,19 +205,28 @@ public class ChunkVoxelDataThread {
     private Vector3 findGroundLevel(Vector3 pos) {
         const int maxIter = 100;
         int iter = 0;
+        
+        List<Pair<Biome, float>> biomes = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z));
+        List<int> heights = new List<int>();
+        float heightAvg = 0;
+        foreach (Pair<Biome, float> p in biomes) {
+            float h = ChunkVoxelDataGenerator.calcHeight(pos, p.first);
+            heights.Add((int)h);
+            heightAvg += h;
+        }
+        heightAvg /= biomes.Count;
 
-        Biome biome = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z))[0].first; // TODO make this work properly with biome based chunk
-        float height = ChunkVoxelDataGenerator.calcHeight(pos, biome);
-        pos.y = (int)height;
+        pos.y = (int)heightAvg;
         //bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos);
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biome);
+        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, heights, biomes);
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
         while (iter < maxIter) {
             pos.y += dir;
             lastVoxel = currentVoxel;
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biome);
+
+            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, heights, biomes);
             if (lastVoxel != currentVoxel) {
                 if (!lastVoxel) { //Put the tree in an empty voxel
                     pos.y -= dir;
