@@ -6,6 +6,11 @@ public class LandAnimalNPC : LandAnimal {
     public const float roamDistance = 40;
     private Vector3 roamCenter;
 
+    override protected void Start() {
+        base.Start();
+        desiredSpeed = walkSpeed;
+    }
+
     /// <summary>
     /// Spawns the animal at position
     /// </summary>
@@ -53,9 +58,9 @@ public class LandAnimalNPC : LandAnimal {
         }
         transform.LookAt(transform.position + heading);
         if (grounded) {
-            GetComponent<Rigidbody>().velocity = spineHeading * speed + gravity;
+            rb.velocity = spineHeading * speed + gravity;
         } else {
-            GetComponent<Rigidbody>().velocity = gravity;
+            rb.velocity = gravity;
         }
     }
 }

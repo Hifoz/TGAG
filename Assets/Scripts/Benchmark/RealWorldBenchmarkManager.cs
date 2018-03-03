@@ -92,9 +92,9 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
                 playerPos += dir * playerSpeed * Time.deltaTime;
                 dummyPlayer.position = playerPos;
                 
-                LandAnimalPlayer.playerPos.set(playerPos);
-                LandAnimalPlayer.playerRot.set(dir);
-                LandAnimalPlayer.playerSpeed.set(dir * playerSpeed);
+                Player.playerPos.set(playerPos);
+                Player.playerRot.set(dir);
+                Player.playerSpeed.set(dir * playerSpeed);
 
                 frameCount++;
                 yield return 0;

@@ -98,7 +98,7 @@ public class ChunkManager : MonoBehaviour {
 
         GameObject playerObj = player.gameObject;
         if (player.tag == "Player") { //To account for dummy players
-            AnimalSkeleton playerSkeleton = new AnimalSkeleton(playerObj.transform);
+            AnimalSkeleton playerSkeleton = new LandAnimalSkeleton(playerObj.transform);
             playerSkeleton.generateInThread();
             playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
             playerObj.GetComponent<Player>().initPlayer(animals);
@@ -161,7 +161,7 @@ public class ChunkManager : MonoBehaviour {
                     float y = ChunkConfig.chunkHeight + 10;
                     animal.transform.position = new Vector3(x, y, z) + player.transform.position;
 
-                    AnimalSkeleton animalSkeleton = new AnimalSkeleton(animal.transform);
+                    AnimalSkeleton animalSkeleton = new LandAnimalSkeleton(animal.transform);
                     animalSkeleton.index = i;
                     orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
                     orderedAnimals.Add(i);

@@ -2,11 +2,17 @@
 using System.Collections;
 
 public class Player : MonoBehaviour {
+    // Values are needed in the CVDTs for calculating order priority
+    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3();
+    public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
+    public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
 
     public GameObject magicTrailPrefab;
 
     private GameObject magicTrail;
     private GameObject[] animals;
+
+    private Rigidbody rb;
 
     // Use this for initialization
     void Start() {
@@ -17,6 +23,8 @@ public class Player : MonoBehaviour {
             magicTrail = Instantiate(magicTrailPrefab);
             magicTrail.SetActive(false);
         }
+
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -24,6 +32,10 @@ public class Player : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Mouse0)) {
             shootMagicTrail();
         }
+
+        playerPos.set(transform.position);
+        playerRot.set(transform.rotation * Vector3.forward);
+        playerSpeed.set(rb.velocity);
     }
 
     /// <summary>
