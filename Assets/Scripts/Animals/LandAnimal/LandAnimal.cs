@@ -136,6 +136,9 @@ public abstract class LandAnimal : Animal {
                 grounded = false;
                 gravity += Physics.gravity * Time.deltaTime;
             }
+        } else {
+            grounded = false;
+            gravity += Physics.gravity * Time.deltaTime;
         }
     }
 
