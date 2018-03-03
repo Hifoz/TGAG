@@ -66,30 +66,35 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
             chunkManager.Reset(run);
             currentThreads = run;
 
+            double lastSample = 0;
+            const float sampleFreq = 1f;
+            int framesInSample = 0;
+            List<float[]> fpsOverTime = new List<float[]>(); //To graph framrate over time
+
             int frameCount = 0;
-            Vector3 point1 = new Vector3(ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2, 0, 0);
-            Vector3 point2 = -point1;
-            Vector3 target = point1;
             float playerSpeed = 20; //This is currently the max animal speed
-            Vector3 vel = new Vector3(1, 0, 0) * playerSpeed;
+            Vector3 dir = new Vector3(1, 0, 0);
+
             stopwatch.Start();
             while (stopwatch.Elapsed.TotalSeconds <= duration) {
-                Vector3 playerPos = dummyPlayer.position;
-                if (playerPos.x >= target.x && vel.x > 0) {
-                    playerPos = target;
-                    target = point2;
-                    vel = new Vector3(-1, 0, 0) * playerSpeed;
-                } else if (playerPos.x <= target.x && vel.x < 0) {
-                    playerPos = target;
-                    target = point1;
-                    vel = new Vector3(1, 0, 0) * playerSpeed;
+                framesInSample++;
+                if (stopwatch.Elapsed.TotalSeconds >= lastSample + sampleFreq) {
+                    fpsOverTime.Add(new float[] { (float)stopwatch.Elapsed.TotalSeconds, framesInSample });
+                    framesInSample = 0;
+                    lastSample = stopwatch.Elapsed.TotalSeconds;
                 }
-                playerPos = Vector3.MoveTowards(playerPos, target, playerSpeed * Time.deltaTime);
+
+                if (UnityEngine.Random.Range(0f, 1f) < 0.01f) {
+                    dir = Quaternion.AngleAxis(UnityEngine.Random.Range(-45, 45), Vector3.up) * dir;
+                }
+
+                Vector3 playerPos = dummyPlayer.position;
+                playerPos += dir * playerSpeed * Time.deltaTime;
                 dummyPlayer.position = playerPos;
                 
                 LandAnimalPlayer.playerPos.set(playerPos);
-                LandAnimalPlayer.playerRot.set(vel.normalized);
-                LandAnimalPlayer.playerSpeed.set(vel);
+                LandAnimalPlayer.playerRot.set(dir);
+                LandAnimalPlayer.playerSpeed.set(dir * playerSpeed);
 
                 frameCount++;
                 yield return 0;
@@ -105,9 +110,19 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
             );
             UnityEngine.Debug.Log(result);
             file.WriteLine(String.Format(result));
+            file.WriteLine(fpsOverTimeToString(fpsOverTime));
         }
         file.Close();
         UnityEngine.Debug.Log("DONE TESTING!");
         inProgress = false;
+    }
+
+    private string fpsOverTimeToString(List<float[]> fpsOverTime) {
+        string data = string.Format("[{0}", Environment.NewLine);
+        foreach (float[] sample in fpsOverTime) {
+            data += string.Format("x:{0}|y:{1}{2}", sample[0].ToString("N2"), sample[1], Environment.NewLine);
+        }
+        data += string.Format("]{0}", Environment.NewLine);
+        return data;
     }
 }
