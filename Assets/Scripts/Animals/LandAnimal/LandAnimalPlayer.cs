@@ -3,11 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class LandAnimalPlayer : LandAnimal {
-    // Values are needed in the CVDTs for calculating order priority
-    public static ThreadSafeVector3 playerPos = new ThreadSafeVector3();
-    public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
-    public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
-
     bool jumping = false;
 
     /// <summary>
@@ -55,12 +50,8 @@ public class LandAnimalPlayer : LandAnimal {
         } else {
             velocity = heading.normalized * speed;
         }
-        GetComponent<Rigidbody>().velocity = velocity + gravity;
-        transform.LookAt(transform.position + heading);
-
-        playerPos.set(transform.position);
-        playerRot.set(transform.rotation * Vector3.forward);
-        playerSpeed.set(GetComponent<Rigidbody>().velocity);
+        rb.velocity = velocity + gravity;
+        transform.LookAt(transform.position + heading);        
     }
 
     /// <summary>
