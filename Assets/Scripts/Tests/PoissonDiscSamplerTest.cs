@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 class PoissonDiscSamplerTest : MonoBehaviour {
     public GameObject testObject;
@@ -8,13 +10,23 @@ class PoissonDiscSamplerTest : MonoBehaviour {
 
 
     private void Start() {
-        sampler = new PoissonDiscSampler(15, 1000, 1000);
-        Vector2[] samples = sampler.sample();
+        sampler = new PoissonDiscSampler(5, 100, 100);
+        StartCoroutine(run());
+    }
 
-        foreach(Vector2 sample in samples) {
+    public IEnumerator run() {
+        yield return new WaitForSeconds(1);
+        int count = 0;
+        StopWatch sw = new StopWatch();
+        sw.start();
+
+        foreach (Vector2 sample in sampler.sample()) {
             GameObject sampleObject = Instantiate(testObject);
             sampleObject.transform.position = new Vector3(sample.x, 0, sample.y);
+            count++;
         }
+
+        sw.done("w=100, h=100, r=5; result:" + count + " spheres.");
     }
 
 }
