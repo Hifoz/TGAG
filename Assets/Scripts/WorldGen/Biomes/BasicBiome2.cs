@@ -12,8 +12,8 @@ class BasicBiome2 : Biome {
             noiseExponent2D: 3,
             octaves2D: 6,
             //3D noise settings
-            Structure3DRate: 0.4f,
-            Unstructure3DRate: 0.4f,
+            Structure3DRate: 0.5f,
+            Unstructure3DRate: 0.3f,
             frequency3D: 0.0045f,
             //Foliage
             maxTreesPerChunk: 1,

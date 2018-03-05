@@ -2,6 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Data structure containg the source point of a biome
+/// </summary>
+class BiomePoint {
+    const int MINRADIUS = 10;
+    const int MAXRADIUS = 40;
+
+    public Vector2Int position;
+    public Biome biome;
+    public int radius;
+}
+
+
 
 public class BiomeManager {
     private List<Biome> biomes = new List<Biome>();
@@ -27,9 +40,10 @@ public class BiomeManager {
     /// Used to generate new Biome Points when necessary
     /// </summary>
     public void updateBiomes() {
-        throw new NotImplementedException("BiomeManager.updateBiomes() not yet implemented.");
+
+
     }
-    
+
 
 
     /// <summary>
