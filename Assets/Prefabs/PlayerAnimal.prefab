@@ -20,8 +20,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4038317340153104}
   - component: {fileID: 137434472144715832}
-  - component: {fileID: 114533742424477068}
   - component: {fileID: 54430949831116082}
+  - component: {fileID: 114009028626163160}
+  - component: {fileID: 114874013804140952}
   m_Layer: 0
   m_Name: PlayerAnimal
   m_TagString: Player
@@ -57,7 +58,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &114533742424477068
+--- !u!114 &114009028626163160
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -65,7 +66,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 1511914623557144}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: efb09ad206dc2094f9ac1c4b695a0b8a, type: 3}
+  m_Script: {fileID: 11500000, guid: fa0a37ae6bd11e44699039079d6bc351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  magicTrailPrefab: {fileID: 1478852246670964, guid: 7a21f5a7a68ada940946ec856d426a04,
+    type: 2}
+--- !u!114 &114874013804140952
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1511914623557144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1c6a85ac766d6a49b52a91a192168c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!137 &137434472144715832
@@ -82,7 +96,7 @@ SkinnedMeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 25605bf9ee4f35849a8775317a3442e1, type: 2}
+  - {fileID: 2100000, guid: 7232d2ef9391219479cbb8afe39d86d6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

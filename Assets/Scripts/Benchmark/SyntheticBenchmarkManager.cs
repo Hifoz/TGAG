@@ -190,7 +190,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             animals[i].transform.position = new Vector3(x, y, z);
             animals[i].GetComponent<LandAnimalNPC>().enabled = false;
 
-            AnimalSkeleton animalSkeleton = new AnimalSkeleton(animals[i].transform);
+            AnimalSkeleton animalSkeleton = new LandAnimalSkeleton(animals[i].transform);
             animalSkeleton.index = i;
             orders.Add(new Order(animals[i].transform.position, animalSkeleton, Task.ANIMAL));
             orderedAnimals.Add(i);
