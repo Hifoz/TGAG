@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Class for skeletons used by air animals
+/// </summary>
 public class AirAnimalSkeleton : AnimalSkeleton {
 
     /// <summary>
@@ -14,10 +17,10 @@ public class AirAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.HEAD_SIZE, new Range<float>(2f, 4f) },
                 { BodyParameter.HEAD_RADIUS, new Range<float>(0.5f, 1.0f) },
 
-                { BodyParameter.NECK_LENGTH, new Range<float>(4, 5) },
+                { BodyParameter.NECK_LENGTH, new Range<float>(3, 4) },
                 { BodyParameter.NECK_RADIUS, new Range<float>(0.5f, 0.8f) },
 
-                { BodyParameter.SPINE_LENGTH, new Range<float>(4, 7) },
+                { BodyParameter.SPINE_LENGTH, new Range<float>(5, 10) },
                 { BodyParameter.SPINE_RADIUS, new Range<float>(0.5f, 1.0f) },
 
                 { BodyParameter.LEG_PAIRS, new Range<int>(1, 1) }, //The only supported number of legpairs is 1
@@ -27,7 +30,7 @@ public class AirAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.LEG_RADIUS, new Range<float>(0.5f, 0.7f) },
 
                 { BodyParameter.TAIL_JOINTS, new Range<int>(2, 5) },
-                { BodyParameter.TAIL_LENGTH, new Range<float>(3, 12) },
+                { BodyParameter.TAIL_LENGTH, new Range<float>(4, 7) },
                 //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
                 { BodyParameter.TAIL_RADIUS, new Range<float>(0.5f, 0.8f) },
 
@@ -148,6 +151,12 @@ public class AirAnimalSkeleton : AnimalSkeleton {
         return head;
     }
 
+    /// <summary>
+    /// Creates a wing for the air animal
+    /// </summary>
+    /// <param name="spine">The spine of the animal</param>
+    /// <param name="rightWing">Is this a right wing?</param>
+    /// <returns>The lines in the wing</returns>
     private List<LineSegment> createWing(LineSegment spine, bool rightWing) {
         List<LineSegment> wing = new List<LineSegment>();
         float xDir = (rightWing) ? 1 : -1;
@@ -205,8 +214,6 @@ public class AirAnimalSkeleton : AnimalSkeleton {
             throw new System.Exception("createAndBindWing ERROR! Bodypart is not a wing! you provided: " + bodyPart.ToString());
         }
 
-        Vector3 max = new Vector3(1, 1, 180);
-        Vector3 min = new Vector3(-1, -1, -180);
         int wingJointCount = bodyParameters.Get<int>(BodyParameter.WING_JOINTS);
 
         List<LineSegment> wing = skeletonLines[bodyPart];
@@ -217,12 +224,6 @@ public class AirAnimalSkeleton : AnimalSkeleton {
             createAndBindBone(subBone.a, wingBones[0].bone, subBone, name, bodyPart);
             subBone = new LineSegment(subBone.b, boneLine.b);
             createAndBindBone(subBone.a, wingBones[1].bone, subBone, name, bodyPart);
-        }
-
-        wingBones = skeletonBones[bodyPart];
-        foreach (Bone bone in wingBones) {
-            bone.maxAngles = max;
-            bone.minAngles = min;
         }
     }
 }

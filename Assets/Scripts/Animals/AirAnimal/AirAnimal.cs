@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Collections;
 
+/// <summary>
+/// Super class for all air animals
+/// </summary>
 public abstract class AirAnimal : Animal {
     private enum KeyFrameType {
         SPINE,
@@ -75,6 +78,9 @@ public abstract class AirAnimal : Animal {
         }
     }
 
+    /// <summary>
+    /// Flaps the wings of the animal
+    /// </summary>
     private void flapWings() {
         float frames = FlyingKeyFramesCount - 1;
         float frame = Utils.frac(flapTimer) * frames;
@@ -98,6 +104,12 @@ public abstract class AirAnimal : Animal {
         }
     }
 
+    /// <summary>
+    /// Flaps the specified wing
+    /// </summary>
+    /// <param name="wing">Wing to flap</param>
+    /// <param name="frame">float giving the current key frame</param>
+    /// <param name="sign">used to correct the frames for right/left wings</param>
     private void flapWing(List<Bone> wing,  float frame, int sign) {
         wing[0].bone.localRotation = Quaternion.Euler(sign * Vector3.Lerp(
                 getKeyFrame(KeyFrameType.WING1, (int)frame), 
@@ -113,10 +125,23 @@ public abstract class AirAnimal : Animal {
        );
     }
 
+    /// <summary>
+    /// Gets an interpolated keyframe (interpolated between gliding and flapping)
+    /// </summary>
+    /// <param name="type">Type of keyframe to get</param>
+    /// <param name="index">Index of the key frame</param>
+    /// <returns>The keyframe</returns>
     private Vector3 getKeyFrame(KeyFrameType type, int index) {
         return Vector3.Lerp(GlidingKeyFrames[type][index], FlyingKeyFrames[type][index], flapType);
     }
 
+    /// <summary>
+    /// Transitions the between two animations 
+    /// </summary>
+    /// <param name="from">float 0-1: Current animation</param>
+    /// <param name="to">float 0-1: Desired animation</param>
+    /// <param name="time">Time for transition</param>
+    /// <returns></returns>
     private IEnumerator transitionAnimation(float from, float to, float time) {
         animInTransition = true;
         for (float t = 0; t <= 1f; t += Time.deltaTime / time) {

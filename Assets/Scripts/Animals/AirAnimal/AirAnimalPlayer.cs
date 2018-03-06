@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Class for the playable air animal
+/// </summary>
 public class AirAnimalPlayer : AirAnimal {
     Vector3 right = Vector3.right;
     Vector3 up = Vector3.up;
