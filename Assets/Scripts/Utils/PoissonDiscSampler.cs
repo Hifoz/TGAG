@@ -13,13 +13,16 @@ using System.Linq;
 class PoissonDiscSampler {
     private const int k = 30; // Max number of samples to test for any active list items
 
+    private bool wrap;
+
     private int width;
     private int height;
 
-    private float radius;
+    private int radius;
 
     private List<Vector2Int> activeList;
     private List<Vector2Int> acceptedList;
+    private bool[,] grid;
 
     private System.Random rng = new System.Random(ChunkConfig.seed);
 
@@ -29,13 +32,16 @@ class PoissonDiscSampler {
     /// <param name="radius">Sampling radius. All points will be minimum 'radius' meters away from eachother, and there will be no position further away than 2 * 'radius' from a point</param>
     /// <param name="width">width of sampling area</param>
     /// <param name="height">height of sampling area</param>
-    public PoissonDiscSampler(float radius, int width, int height) {
+    /// <param name="wrap"></param>
+    public PoissonDiscSampler(int radius, int width, int height, bool wrap = false) {
         this.radius = radius;
         this.width = width;
         this.height = height;
+        this.wrap = wrap;
         
         activeList = new List<Vector2Int>();
         acceptedList = new List<Vector2Int>();
+        grid = new bool[width, height];
     }
 
     /// <summary>
@@ -45,13 +51,16 @@ class PoissonDiscSampler {
     /// <param name="width">width of sampling area</param>
     /// <param name="height">height of sampling area</param>
     /// <param name="preExistingPoints">An array of pre-existing points</param>
-    public PoissonDiscSampler(float radius, int width, int height, Vector2Int[] preExistingPoints) {
+    /// <param name="wrap"></param>
+    public PoissonDiscSampler(int radius, int width, int height, Vector2Int[] preExistingPoints, bool wrap = false) {
         this.radius = radius;
         this.width = width;
         this.height = height;
+        this.wrap = wrap;
 
         activeList = new List<Vector2Int>(preExistingPoints);
         acceptedList = new List<Vector2Int>(preExistingPoints);
+        grid = new bool[width, height];
     }
 
 
@@ -63,6 +72,7 @@ class PoissonDiscSampler {
     private Vector2 addSample(Vector2Int position) {
         activeList.Add(position);
         acceptedList.Add(position);
+        grid[position.x, position.y] = true;
         return position;
     }
 
@@ -101,7 +111,7 @@ class PoissonDiscSampler {
                 float angle = 2 * Mathf.PI * (float)rng.NextDouble();
                 float distance = radius + radius * (float)rng.NextDouble();
                 Vector2Int samplePos = activeSample + new Vector2Int((int)(Mathf.Cos(angle) * distance), (int)(Mathf.Sin(angle) * distance));
-                if (samplePos.x >= 0 && samplePos.y >= 0 && samplePos.x < width && samplePos.y < height && sampleClearsNeighbourhood(samplePos)) {
+                if (samplePos.x >= 0 && samplePos.y >= 0 && samplePos.x < width && samplePos.y < height && validateSample(samplePos)) {
                     addedNew = true;
                     yield return addSample(samplePos);
                     break;
@@ -119,12 +129,33 @@ class PoissonDiscSampler {
     /// </summary>
     /// <param name="samplePos"></param>
     /// <returns></returns>
-    private bool sampleClearsNeighbourhood(Vector2 samplePos) {
+    private bool validateSample(Vector2Int samplePos) {
+        int gridX = 0;
+        int gridY = 0;
+        for(int x = samplePos.x - radius; x <= samplePos.x + radius; x++) {
+            for(int y = samplePos.y - radius; y <= samplePos.y + radius; y++) {
+                gridX = x;
+                gridY = y;
+
+                if (wrap) {
+                    gridX = Utils.mod(gridX, width);
+                    gridY = Utils.mod(gridY, height);
+                } else if(x < 0 || y < 0 || x >= width || y >= height) {
+                    continue;
+                }
+
+                if (grid[gridX, gridY] && Vector2.Distance(new Vector2Int(x, y), samplePos) < radius)
+                    return false;
+            }
+        }
+        return true;
+        /*
         foreach(Vector2Int pos in acceptedList) { // TODO: this doesnt need to check the entire grid, only those grid placements which could block the clearing
             if(pos != Vector2.zero && Vector2.Distance(pos, samplePos) < radius)
                 return false;
         }
         return true;
+        */
     }
 
 

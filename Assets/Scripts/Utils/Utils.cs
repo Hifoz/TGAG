@@ -12,4 +12,15 @@ public static class Utils {
         vec.z = Mathf.Floor(vec.z);
         return vec;
     }
+
+    /// <summary>
+    /// Modulos a value (Because % operator isn't proper modulo, but remainder, so it doesn't work properly on negative numbers)
+    /// </summary>
+    /// <param name="v"></param>
+    /// <param name="m"></param>
+    /// <returns></returns>
+    public static int mod(int v, int m) {
+        int r = v % m;
+        return r < 0 ? r + m : r;
+    }
 }
