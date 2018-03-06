@@ -11,7 +11,8 @@ public enum BodyPart {
     NECK,
     SPINE,
     RIGHT_LEGS, LEFT_LEGS,
-    TAIL
+    TAIL,
+    RIGHT_WING, LEFT_WING
 }
 
 /// <summary>
@@ -23,7 +24,8 @@ public enum BodyParameter {
     NECK_LENGTH, NECK_RADIUS,
     SPINE_LENGTH, SPINE_RADIUS,
     LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH, LEG_RADIUS,
-    TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH, TAIL_RADIUS 
+    TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH, TAIL_RADIUS,
+    WING_LENGTH, WING_JOINTS, WING_RADIUS
 }
 
 /// <summary>
@@ -261,14 +263,19 @@ public abstract class AnimalSkeleton {
     /// <param name="jointCount">Number of joints in bone</param>
     /// <param name="name">Name of bone</param>
     /// <param name="bodyPart">Bodypart of bone</param>
-    protected void createAndBindBones(LineSegment line, Transform parent, int jointCount, string name, BodyPart bodyPart) {
+    /// <returns>List<Bone> bones</returns>
+    protected List<Bone> createAndBindBones(LineSegment line, Transform parent, int jointCount, string name, BodyPart bodyPart) {
+        List<Bone> bones = new List<Bone>();
         float jointLength = line.length / jointCount;
         for(int i = 0; i < jointCount; i++) {
             LineSegment skinningBone = new LineSegment(line.a + line.direction * jointLength * i, line.a + line.direction * jointLength * (i + 1));
-            parent = createAndBindBone(skinningBone.a, parent, skinningBone, name, bodyPart).bone;
+            Bone bone = createAndBindBone(skinningBone.a, parent, skinningBone, name, bodyPart);
+            parent = bone.bone;
+            bones.Add(bone);
         }
         //add Foot
         createAndBindBone(line.b, parent, name + " effector", bodyPart);
+        return bones;
     }
 
     /// <summary>
