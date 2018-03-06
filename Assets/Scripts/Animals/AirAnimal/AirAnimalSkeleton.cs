@@ -53,6 +53,16 @@ public class AirAnimalSkeleton : AnimalSkeleton {
     }
 
     /// <summary>
+    /// Gets the main bones in a wing
+    /// </summary>
+    /// <param name="rightWing">bool rightWing</param>
+    /// <returns>The bones</returns>
+    public List<Bone> getWing(bool rightWing) {
+        BodyPart bodyPart = (rightWing) ? BodyPart.RIGHT_WING : BodyPart.LEFT_WING;
+        return skeletonBones[bodyPart].GetRange(0, bodyParameters.Get<int>(BodyParameter.WING_JOINTS));
+    }
+
+    /// <summary>
     /// Generates the bodyparamaters for the skeleton,
     /// they are stored in the bodyParameters dictionary
     /// </summary>
@@ -65,6 +75,10 @@ public class AirAnimalSkeleton : AnimalSkeleton {
         bodyParameters.Add(
             BodyParameter.TAIL_JOINT_LENGTH,
             bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH) / bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS)
+        );
+        bodyParameters.Add(
+            BodyParameter.WING_JOINT_LENGTH,
+            bodyParameters.Get<float>(BodyParameter.WING_LENGTH) / bodyParameters.Get<int>(BodyParameter.WING_JOINTS)
         );
     }
 
@@ -180,6 +194,12 @@ public class AirAnimalSkeleton : AnimalSkeleton {
         createAndBindWing(BodyPart.LEFT_WING, spineBone, "Left Wing");
     }
 
+    /// <summary>
+    /// Creates and binds the bones for a wing
+    /// </summary>
+    /// <param name="bodyPart">Bodypart for the wing</param>
+    /// <param name="spineBone">Spine bone of the skeleton</param>
+    /// <param name="name">Name for the wing</param>
     private void createAndBindWing(BodyPart bodyPart, Bone spineBone, string name) {
         if (bodyPart != BodyPart.RIGHT_WING && bodyPart != BodyPart.LEFT_WING) {
             throw new System.Exception("createAndBindWing ERROR! Bodypart is not a wing! you provided: " + bodyPart.ToString());

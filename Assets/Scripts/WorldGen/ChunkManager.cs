@@ -44,7 +44,7 @@ public class ChunkManager : MonoBehaviour {
     void Start () {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         Reset();
-        //StartCoroutine(debugRoutine());
+        StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame
@@ -63,8 +63,10 @@ public class ChunkManager : MonoBehaviour {
     IEnumerator debugRoutine() {
         while (true) {
             yield return new WaitForSeconds(0.5f);
-            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Active Chunks: " + chunkPool.activeList.Count + " | Inactive Chunks: " + chunkPool.inactiveStack.Count);
-            Debug.Log("Active Trees: " + treePool.activeList.Count + "| Inactive trees: " + treePool.inactiveStack.Count);
+            Debug.Log("====================================================================");
+            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Inactive Chunks: " + chunkPool.inactiveStack.Count);
+            Debug.Log("Inactive trees: " + treePool.inactiveStack.Count);
+            Debug.Log("Ordered animals: " + orderedAnimals.Count);
         }
     }
 
@@ -98,9 +100,10 @@ public class ChunkManager : MonoBehaviour {
 
         GameObject playerObj = player.gameObject;
         if (player.tag == "Player") { //To account for dummy players
-            AnimalSkeleton playerSkeleton = new LandAnimalSkeleton(playerObj.transform);
+            Camera.main.GetComponent<CameraController>().cameraHeight = 7.5f;
+            AnimalSkeleton playerSkeleton = new AirAnimalSkeleton(playerObj.transform);
             playerSkeleton.generateInThread();
-            playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
+            playerObj.GetComponent<AirAnimalPlayer>().setSkeleton(playerSkeleton);
             playerObj.GetComponent<Player>().initPlayer(animals);
         }
     }

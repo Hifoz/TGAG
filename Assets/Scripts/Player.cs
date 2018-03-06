@@ -29,9 +29,9 @@ public class Player : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) {
-            shootMagicTrail();
-        }
+        //if (Input.GetKeyDown(KeyCode.Mouse0)) {
+        //    shootMagicTrail();
+        //}
 
         playerPos.set(transform.position);
         playerRot.set(transform.rotation * Vector3.forward);
