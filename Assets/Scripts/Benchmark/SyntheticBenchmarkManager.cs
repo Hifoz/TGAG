@@ -20,7 +20,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     private GameObject[] animals = new GameObject[20];
     private HashSet<int> orderedAnimals = new HashSet<int>();
 
-    private BiomeManager biomeManager = new BiomeManager();
+    private BiomeManager biomeManager;
 
     bool terrainFlag = true;
     bool animalsFlag = true;
@@ -30,6 +30,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     void Start() {
         Settings.load();
+        biomeManager = new BiomeManager(null);
         ChunkConfig.chunkCount = 20;
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
     }

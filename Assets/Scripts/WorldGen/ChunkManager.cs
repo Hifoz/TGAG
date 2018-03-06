@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,6 +36,7 @@ public class ChunkManager : MonoBehaviour {
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     // Animals
@@ -42,7 +44,8 @@ public class ChunkManager : MonoBehaviour {
     private HashSet<int> orderedAnimals = new HashSet<int>();
 
     // Biome
-    BiomeManager biomeManager = new BiomeManager();
+    private BiomeManager biomeManager;
+    public GameObject biomeBeacon;
 
 
     /// <summary>
@@ -50,6 +53,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     void Start () {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
+        biomeManager = new BiomeManager(this);
         Reset();
         //StartCoroutine(debugRoutine());
     }
@@ -60,7 +64,7 @@ public class ChunkManager : MonoBehaviour {
         updateChunkGrid();
         orderNewChunks();
         consumeThreadResults();
-        handleAnimals();        
+        handleAnimals();
     }
 
     /// <summary>
@@ -163,8 +167,8 @@ public class ChunkManager : MonoBehaviour {
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
                 if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
-                    float x = Random.Range(lower, upper);
-                    float z = Random.Range(lower, upper);
+                    float x = UnityEngine.Random.Range(lower, upper);
+                    float z = UnityEngine.Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
                     animal.transform.position = new Vector3(x, y, z) + player.transform.position;
 
@@ -341,8 +345,8 @@ public class ChunkManager : MonoBehaviour {
         float lower = -maxDistance + LandAnimalNPC.roamDistance;
         float upper = -lower;
         while (!animal.GetComponent<LandAnimalNPC>().Spawn(animal.transform.position)) {  
-            float x = Random.Range(lower, upper);
-            float z = Random.Range(lower, upper);
+            float x = UnityEngine.Random.Range(lower, upper);
+            float z = UnityEngine.Random.Range(lower, upper);
             float y = ChunkConfig.chunkHeight + 10;
             animal.transform.position = new Vector3(x, y, z) + player.transform.position;
             yield return 0;
@@ -392,4 +396,15 @@ public class ChunkManager : MonoBehaviour {
     private void OnApplicationQuit() {
         stopThreads();
     }
+
+
+
+
+    public void generateBiomeBeacon(Vector2Int pos) {
+        GameObject o = Instantiate(biomeBeacon);
+        o.transform.position = new Vector3(pos.x, 200, pos.y);
+    }
+
+
+
 }

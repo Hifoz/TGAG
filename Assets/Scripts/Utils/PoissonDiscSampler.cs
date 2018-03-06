@@ -13,18 +13,16 @@ using System.Linq;
 class PoissonDiscSampler {
     private const int k = 30; // Max number of samples to test for any active list items
 
-    private bool wrap;
+    private int radius;
 
     private int width;
     private int height;
-
-    private int radius;
+    private bool wrap;
 
     private List<Vector2Int> activeList;
-    private List<Vector2Int> acceptedList;
     private bool[,] grid;
 
-    private System.Random rng = new System.Random(ChunkConfig.seed);
+    private System.Random rng;
 
     /// <summary>
     /// Constructor for a blank sampler
@@ -33,14 +31,15 @@ class PoissonDiscSampler {
     /// <param name="width">width of sampling area</param>
     /// <param name="height">height of sampling area</param>
     /// <param name="wrap"></param>
-    public PoissonDiscSampler(int radius, int width, int height, bool wrap = false) {
+    public PoissonDiscSampler(int radius, int width, int height, bool wrap = false, int seed = 42) {
         this.radius = radius;
         this.width = width;
         this.height = height;
         this.wrap = wrap;
-        
+
+        rng = new System.Random(seed);
+
         activeList = new List<Vector2Int>();
-        acceptedList = new List<Vector2Int>();
         grid = new bool[width, height];
     }
 
@@ -52,14 +51,15 @@ class PoissonDiscSampler {
     /// <param name="height">height of sampling area</param>
     /// <param name="preExistingPoints">An array of pre-existing points</param>
     /// <param name="wrap"></param>
-    public PoissonDiscSampler(int radius, int width, int height, Vector2Int[] preExistingPoints, bool wrap = false) {
+    public PoissonDiscSampler(int radius, int width, int height, Vector2Int[] preExistingPoints, int seed = 42) {
         this.radius = radius;
         this.width = width;
         this.height = height;
-        this.wrap = wrap;
+        this.wrap = false;
+
+        rng = new System.Random(seed);
 
         activeList = new List<Vector2Int>(preExistingPoints);
-        acceptedList = new List<Vector2Int>(preExistingPoints);
         grid = new bool[width, height];
     }
 
@@ -69,9 +69,8 @@ class PoissonDiscSampler {
     /// </summary>
     /// <param name="position">position of sample</param>
     /// <returns></returns>
-    private Vector2 addSample(Vector2Int position) {
+    private Vector2Int addSample(Vector2Int position) {
         activeList.Add(position);
-        acceptedList.Add(position);
         grid[position.x, position.y] = true;
         return position;
     }
@@ -98,7 +97,7 @@ class PoissonDiscSampler {
     /// Returns a lazy sequence for use in foreach loops.
     /// </summary>
     /// <returns>Lazy sequence for </returns>
-    public IEnumerable<Vector2> sample() {
+    public IEnumerable<Vector2Int> sample() {
         if(activeList.Count == 0) {
             yield return addSample(new Vector2Int(rng.Next(1, width), rng.Next(1, height)));
         }
@@ -149,13 +148,6 @@ class PoissonDiscSampler {
             }
         }
         return true;
-        /*
-        foreach(Vector2Int pos in acceptedList) { // TODO: this doesnt need to check the entire grid, only those grid placements which could block the clearing
-            if(pos != Vector2.zero && Vector2.Distance(pos, samplePos) < radius)
-                return false;
-        }
-        return true;
-        */
     }
 
 

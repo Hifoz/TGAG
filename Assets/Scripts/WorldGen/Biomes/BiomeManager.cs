@@ -2,45 +2,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Data structure containg the source point of a biome
-/// </summary>
-class BiomePoint {
-    const int MINRADIUS = 10;
-    const int MAXRADIUS = 40;
-
-    public Vector2Int position;
-    public Biome biome;
-    public int radius;
-}
-
-
-
 public class BiomeManager {
     private List<Biome> biomes = new List<Biome>();
     private List<Pair<Biome, Vector2Int>> biomePoints = new List<Pair<Biome, Vector2Int>>();
+
+    private PoissonDiscSampler sampler;
+    public static int radius = 5;
+    public static int poissonWidth = 50;
+    public static int poissonHeight = 50;
+
 
     public static float borderWidth = 75;
     System.Random rng;
 
 
-    public BiomeManager(int seed = 42) {
-        rng = new System.Random(seed);
+    public BiomeManager(ChunkManager chunkManager) {
+        rng = new System.Random(ChunkConfig.seed);
 
         biomes.Add(new BasicBiome());
         biomes.Add(new BasicBiome2());
         biomes.Add(new BasicBiome3());
 
-        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[0], new Vector2Int(0, 0)));
-        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[1], new Vector2Int(-300, 0)));
-        biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[2], new Vector2Int(-150, 150)));
-    }
 
-    /// <summary>
-    /// Used to generate new Biome Points when necessary
-    /// </summary>
-    public void updateBiomes() {
 
+        sampler = new PoissonDiscSampler(radius, poissonWidth, poissonHeight, wrap: true, seed: ChunkConfig.seed);
+
+        Vector2Int offset = new Vector2Int(poissonWidth/2, poissonHeight/2);
+        foreach(Vector2Int sample in sampler.sample()) {
+            biomePoints.Add(new Pair<Biome, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * 150));
+            if(chunkManager != null)
+                chunkManager.generateBiomeBeacon((sample - offset) * 150);
+        }
 
     }
 
@@ -57,6 +49,7 @@ public class BiomeManager {
         List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // Might want to separate the biome from the weight, because we ogten just use one of them at the time.
 
         float range = closestBiomePointDist(pos) + borderWidth;
+
         foreach (Pair<Biome, Vector2Int> bp in biomePoints) {
             float dist = Vector2Int.Distance(pos, bp.second);
             if (dist < range) {
