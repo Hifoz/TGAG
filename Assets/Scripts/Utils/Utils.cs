@@ -12,4 +12,13 @@ public static class Utils {
         vec.z = Mathf.Floor(vec.z);
         return vec;
     }
+
+    /// <summary>
+    /// Returns the fraction of the float
+    /// </summary>
+    /// <param name="number">Number to get fraction from</param>
+    /// <returns>float fraction</returns>
+    public static float frac(float number) {
+        return number - Mathf.Floor(number);
+    }
 }

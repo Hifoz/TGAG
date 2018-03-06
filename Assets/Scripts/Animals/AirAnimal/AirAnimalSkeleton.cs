@@ -20,7 +20,7 @@ public class AirAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.SPINE_LENGTH, new Range<float>(4, 7) },
                 { BodyParameter.SPINE_RADIUS, new Range<float>(0.5f, 1.0f) },
 
-                { BodyParameter.LEG_PAIRS, new Range<int>(1, 1) },
+                { BodyParameter.LEG_PAIRS, new Range<int>(1, 1) }, //The only supported number of legpairs is 1
                 { BodyParameter.LEG_JOINTS, new Range<int>(2, 3) },
                 { BodyParameter.LEG_LENGTH, new Range<float>(5, 10) },
                 //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
@@ -32,7 +32,7 @@ public class AirAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.TAIL_RADIUS, new Range<float>(0.5f, 0.8f) },
 
                 { BodyParameter.WING_LENGTH, new Range<float>(10f, 20f) },
-                { BodyParameter.WING_JOINTS, new Range<int>(2, 2) },
+                { BodyParameter.WING_JOINTS, new Range<int>(2, 2) }, //The only supported number of wingjonts is 2
                 { BodyParameter.WING_RADIUS, new Range<float>(0.5f, 0.75f) }
             }
         );
@@ -59,7 +59,7 @@ public class AirAnimalSkeleton : AnimalSkeleton {
     /// <returns>The bones</returns>
     public List<Bone> getWing(bool rightWing) {
         BodyPart bodyPart = (rightWing) ? BodyPart.RIGHT_WING : BodyPart.LEFT_WING;
-        return skeletonBones[bodyPart].GetRange(0, bodyParameters.Get<int>(BodyParameter.WING_JOINTS));
+        return skeletonBones[bodyPart].GetRange(0, bodyParameters.Get<int>(BodyParameter.WING_JOINTS) + 1);
     }
 
     /// <summary>
@@ -204,7 +204,11 @@ public class AirAnimalSkeleton : AnimalSkeleton {
         if (bodyPart != BodyPart.RIGHT_WING && bodyPart != BodyPart.LEFT_WING) {
             throw new System.Exception("createAndBindWing ERROR! Bodypart is not a wing! you provided: " + bodyPart.ToString());
         }
+
+        Vector3 max = new Vector3(1, 1, 180);
+        Vector3 min = new Vector3(-1, -1, -180);
         int wingJointCount = bodyParameters.Get<int>(BodyParameter.WING_JOINTS);
+
         List<LineSegment> wing = skeletonLines[bodyPart];
         List<Bone> wingBones = createAndBindBones(wing[0], spineBone.bone, wingJointCount, name, bodyPart);
         for (int i = 1; i < wing.Count; i++) {
@@ -213,6 +217,12 @@ public class AirAnimalSkeleton : AnimalSkeleton {
             createAndBindBone(subBone.a, wingBones[0].bone, subBone, name, bodyPart);
             subBone = new LineSegment(subBone.b, boneLine.b);
             createAndBindBone(subBone.a, wingBones[1].bone, subBone, name, bodyPart);
+        }
+
+        wingBones = skeletonBones[bodyPart];
+        foreach (Bone bone in wingBones) {
+            bone.maxAngles = max;
+            bone.minAngles = min;
         }
     }
 }

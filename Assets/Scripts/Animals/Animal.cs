@@ -130,7 +130,7 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="limb">Limb to bend</param>
     /// <param name="target">Target to reach</param>
     /// <returns>Bool target reached</returns>
-    protected bool ccd(List<Bone> limb, Vector3 target, float speed) {
+    protected bool ccd(List<Bone> limb, Vector3 target, float speed = ikSpeed) {
         //Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);

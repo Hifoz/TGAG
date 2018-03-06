@@ -44,7 +44,7 @@ public class ChunkManager : MonoBehaviour {
     void Start () {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         Reset();
-        StartCoroutine(debugRoutine());
+        //StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame

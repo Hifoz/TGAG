@@ -2,9 +2,9 @@
 using System.Collections;
 
 public class AirAnimalPlayer : AirAnimal {
-
     Vector3 right = Vector3.right;
     Vector3 up = Vector3.up;
+
     /// <summary>
     /// Function for that lets the player control the animal
     /// </summary>
@@ -25,20 +25,29 @@ public class AirAnimalPlayer : AirAnimal {
             finalHeading += desiredHeading;
             setSpeed();
         }
+        if (Input.GetKey(KeyCode.S)) {
+            finalHeading -= desiredHeading;
+            setSpeed();
+        }
         if (Input.GetKey(KeyCode.A)) {
             finalHeading += Quaternion.AngleAxis(-90, up) * desiredHeading;
+            setSpeed();
         }
         if (Input.GetKey(KeyCode.D)) {
             finalHeading += Quaternion.AngleAxis(90, up) * desiredHeading;
-        }
+            setSpeed();
+        }       
         if (Input.GetKey(KeyCode.Space)) {
             finalHeading += Quaternion.AngleAxis(-45, right) * desiredHeading;
+            setSpeed();
         }
         if (Input.GetKey(KeyCode.C)) {
             finalHeading += Quaternion.AngleAxis(45, right) * desiredHeading;
+            setSpeed();
         }
         if (finalHeading != Vector3.zero) {
             desiredHeading = finalHeading;
+            setSpeed();
         }
 
         Vector3 velocity;
