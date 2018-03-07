@@ -21,4 +21,18 @@ public static class Utils {
     public static float frac(float number) {
         return number - Mathf.Floor(number);
     }
+
+    /// <summary>
+    /// Multiplies the provided array of Vector3 by number (element wise multiplication)
+    /// </summary>
+    /// <param name="source">Vector3[]</param>
+    /// <param name="number">float</param>
+    /// <returns>resulting Vector3[] Array</returns>
+    public static Vector3[] multVectorArray(Vector3[] source, float number) {
+        Vector3[] result = new Vector3[source.Length];
+        for(int i = 0; i < result.Length; i++) {
+            result[i] = source[i] * number;
+        }
+        return result;
+    }
 }

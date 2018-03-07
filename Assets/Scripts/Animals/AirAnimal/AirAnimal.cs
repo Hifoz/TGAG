@@ -17,12 +17,10 @@ public abstract class AirAnimal : Animal {
     protected bool grounded = false;
     protected const float walkSpeed = 5f;
     protected const float flySpeed = 30f;
+    protected const float glideDrag = 0.25f;
+
+    protected const float animSpeedScaling = 0.09f;
     
-    private float flappingSpeed = 0.03f;
-    private float flapTimer = 0;
-    private float flapType = 0; //Which dict to get frames from
-    bool animInTransition = false;
-    int FlyingKeyFramesCount = 3;
     Dictionary<KeyFrameType, Vector3[]> FlyingKeyFrames = new Dictionary<KeyFrameType, Vector3[]>() {
         { KeyFrameType.SPINE, new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 0) } }, //Position for spine
         { KeyFrameType.WING1, new Vector3[] { new Vector3(0, 0, 85), new Vector3(0, 0, -45), new Vector3(0, 0, 85) } }, //Rotation for first bone in wing
@@ -35,6 +33,9 @@ public abstract class AirAnimal : Animal {
         { KeyFrameType.WING2, new Vector3[] { new Vector3(0, 0, -20), new Vector3(0, 0, 0), new Vector3(0, 0, -20) } } //Rotation for second bone in wing
     };
 
+    private AnimalAnimation flappingAnimation;
+    private AnimalAnimation glidingAnimation;
+
 
     override protected abstract void move();
 
@@ -42,7 +43,7 @@ public abstract class AirAnimal : Animal {
         if (skeleton != null) { 
             move();
             calculateSpeedAndHeading();
-            flapWings();
+            flappingAnimation.animate(speed * animSpeedScaling);
         }
     }
 
@@ -64,6 +65,31 @@ public abstract class AirAnimal : Animal {
         List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
         LineSegment leftLegsLine = skeleton.getLines(BodyPart.LEFT_LEGS)[0];
         StartCoroutine(ragdollLimb(leftLegs, leftLegsLine, () => { return true; }, false, 5f, transform));
+
+        generateAnimations();
+    }
+
+    /// <summary>
+    /// Generates animations for the AirAnimal
+    /// </summary>
+    private void generateAnimations() {
+        flappingAnimation = new AnimalAnimation();
+        int flappingAnimationFrameCount = 3;
+        BoneKeyFrames spine = new BoneKeyFrames(skeleton.getBones(BodyPart.SPINE)[0], flappingAnimationFrameCount);
+        BoneKeyFrames wing1_1 = new BoneKeyFrames(airSkeleton.getWing(true)[0], flappingAnimationFrameCount);
+        BoneKeyFrames wing1_2 = new BoneKeyFrames(airSkeleton.getWing(true)[1], flappingAnimationFrameCount);
+        BoneKeyFrames wing2_1 = new BoneKeyFrames(airSkeleton.getWing(false)[0], flappingAnimationFrameCount);
+        BoneKeyFrames wing2_2 = new BoneKeyFrames(airSkeleton.getWing(false)[1], flappingAnimationFrameCount);
+        spine.setPositions(new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 0) });
+        wing1_1.setRotations(new Vector3[] { new Vector3(0, 0, 85), new Vector3(0, 0, -45), new Vector3(0, 0, 85) }); 
+        wing1_2.setRotations(new Vector3[] { new Vector3(0, 0, -170), new Vector3(0, 0, 40), new Vector3(0, 0, -170) });
+        wing2_1.setRotations(Utils.multVectorArray(wing1_1.Rotations, -1));
+        wing2_2.setRotations(Utils.multVectorArray(wing1_2.Rotations, -1));
+        flappingAnimation.add(spine);
+        flappingAnimation.add(wing1_1);
+        flappingAnimation.add(wing1_2);
+        flappingAnimation.add(wing2_1);
+        flappingAnimation.add(wing2_2);
     }
 
     /// <summary>
@@ -73,82 +99,10 @@ public abstract class AirAnimal : Animal {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
-        if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {           
-            speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;           
+        if (desiredSpeed - speed > 0.2f) { //Acceleration           
+            speed += Time.deltaTime * acceleration;            
+        } else if (speed - desiredSpeed > 0.2f) { //Deceleration
+            speed -= Time.deltaTime * acceleration * glideDrag;
         }
-    }
-
-    /// <summary>
-    /// Flaps the wings of the animal
-    /// </summary>
-    private void flapWings() {
-        float frames = FlyingKeyFramesCount - 1;
-        float frame = Utils.frac(flapTimer) * frames;
-        flapTimer += Time.deltaTime * flappingSpeed * (speed + 0.5f);
-
-        flapWing(airSkeleton.getWing(true), frame, 1);
-        flapWing(airSkeleton.getWing(false), frame, -1);
-
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        spine.bone.localPosition = Vector3.Lerp(
-            getKeyFrame(KeyFrameType.SPINE, (int)frame), 
-            getKeyFrame(KeyFrameType.SPINE, (int)frame + 1), 
-            Utils.frac(frame)
-        );
-
-
-        if (desiredSpeed == 0 && !animInTransition && flapType != 0f) {
-            StartCoroutine(transitionAnimation(1f, 0f, 0.5f));
-        } else if (desiredSpeed != 0 && !animInTransition && flapType != 1f) {
-            StartCoroutine(transitionAnimation(0f, 1f, 0.5f));
-        }
-    }
-
-    /// <summary>
-    /// Flaps the specified wing
-    /// </summary>
-    /// <param name="wing">Wing to flap</param>
-    /// <param name="frame">float giving the current key frame</param>
-    /// <param name="sign">used to correct the frames for right/left wings</param>
-    private void flapWing(List<Bone> wing,  float frame, int sign) {
-        wing[0].bone.localRotation = Quaternion.Euler(sign * Vector3.Lerp(
-                getKeyFrame(KeyFrameType.WING1, (int)frame), 
-                getKeyFrame(KeyFrameType.WING1, (int)frame + 1), 
-                Utils.frac(frame)
-            )
-        );
-        wing[1].bone.localRotation = Quaternion.Euler(sign * Vector3.Lerp(
-               getKeyFrame(KeyFrameType.WING2, (int)frame), 
-               getKeyFrame(KeyFrameType.WING2, (int)frame + 1),
-               Utils.frac(frame)
-            )
-       );
-    }
-
-    /// <summary>
-    /// Gets an interpolated keyframe (interpolated between gliding and flapping)
-    /// </summary>
-    /// <param name="type">Type of keyframe to get</param>
-    /// <param name="index">Index of the key frame</param>
-    /// <returns>The keyframe</returns>
-    private Vector3 getKeyFrame(KeyFrameType type, int index) {
-        return Vector3.Lerp(GlidingKeyFrames[type][index], FlyingKeyFrames[type][index], flapType);
-    }
-
-    /// <summary>
-    /// Transitions the between two animations 
-    /// </summary>
-    /// <param name="from">float 0-1: Current animation</param>
-    /// <param name="to">float 0-1: Desired animation</param>
-    /// <param name="time">Time for transition</param>
-    /// <returns></returns>
-    private IEnumerator transitionAnimation(float from, float to, float time) {
-        animInTransition = true;
-        for (float t = 0; t <= 1f; t += Time.deltaTime / time) {
-            flapType = Mathf.Lerp(from, to, t);
-            yield return 0;
-        }
-        flapType = to;
-        animInTransition = false;
     }
 }
