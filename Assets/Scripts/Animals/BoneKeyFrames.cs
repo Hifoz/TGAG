@@ -4,6 +4,18 @@
 /// Class for a bone and keyframes
 /// </summary>
 public class BoneKeyFrames {
+    /// <summary>
+    /// Helper struct, encapsulates values related to animation and time
+    /// </summary>
+    private struct FrameTimeData {
+        public float timeFraction;
+        public float frame;
+        public float frameFraction;
+        public int thisFrame;
+        public int nextFrame;
+        public float timeModifier;
+    }
+
     public string name;
     Bone bone;
     int frameCount;
@@ -97,19 +109,35 @@ public class BoneKeyFrames {
     }
 
     /// <summary>
+    /// calculates the FrameTimeData for the current time
+    /// </summary>
+    /// <param name="speed">animation speed</param>
+    /// <param name="other">Used when interpolating, other BoneKeyFrames</param>
+    /// <param name="t">Used when interpolating, interpolation float</param>
+    /// <returns></returns>
+    private FrameTimeData calculateFrameTimeData(float speed, BoneKeyFrames other = null, float t = 0) {
+        if (other == null) {
+            other = this;
+        }
+
+        FrameTimeData frameTimeData = new FrameTimeData();
+        frameTimeData.timeFraction = Utils.frac(timer);
+        frameTimeData.frame = frameTimeData.timeFraction * (frameCount - 1);
+        frameTimeData.frameFraction = Utils.frac(frameTimeData.frame);
+        frameTimeData.thisFrame = (int)frameTimeData.frame;
+        frameTimeData.nextFrame = frameTimeData.thisFrame + 1;
+        frameTimeData.timeModifier = speed / (frameCount * Mathf.Lerp(frameTimes[frameTimeData.thisFrame], other.frameTimes[frameTimeData.thisFrame], t));
+        return frameTimeData;
+    }
+
+    /// <summary>
     /// Animates the bone with the given keyframes, provied the time as an argument
     /// </summary>
     /// <param name="speed">the animation speed, 1f for normal speed</param>
     public void animate(float speed) {
-        float fraction = Utils.frac(timer);
-        float frame = fraction * (frameCount - 1);
-        float frameFraction = Utils.frac(frame);
-        int thisFrame = (int)frame;
-        int nextFrame = thisFrame + 1;
-        float timeModifier = (frameTimes[thisFrame] / frameCount) * speed;
-        timer += Time.deltaTime * timeModifier;
-
-        Vector3[] values = getValuesAtTime(timer, frameFraction, thisFrame, nextFrame);
+        FrameTimeData frameTimeData = calculateFrameTimeData(speed);
+        timer += Time.deltaTime * frameTimeData.timeModifier;
+        Vector3[] values = getValuesAtTime(timer, frameTimeData);
 
         bone.bone.localRotation = Quaternion.Euler(values[0]);
         bone.bone.localPosition = values[1];
@@ -129,16 +157,10 @@ public class BoneKeyFrames {
             throw new System.Exception("BoneKeyFrames, animationLerp error! The other BoneKeyFrames is for a different bone!");
         }
 
-        float fraction = Utils.frac(timer);
-        float frame = fraction * (frameCount - 1);
-        float frameFraction = Utils.frac(frame);
-        int thisFrame = (int)frame;
-        int nextFrame = thisFrame + 1;
-        float timeModifier = (Mathf.Lerp(frameTimes[thisFrame], other.frameTimes[thisFrame], t) / frameCount) * speed;
-        timer += Time.deltaTime * timeModifier;
-
-        Vector3[] thisValues = getValuesAtTime(timer, frameFraction, thisFrame, nextFrame);
-        Vector3[] otherValues = other.getValuesAtTime(timer);
+        FrameTimeData frameTimeData = calculateFrameTimeData(speed, other, t);
+        timer += Time.deltaTime * frameTimeData.timeModifier;
+        Vector3[] thisValues = getValuesAtTime(timer, frameTimeData);
+        Vector3[] otherValues = other.getValuesAtTime(timer, speed);
 
         bone.bone.localRotation = Quaternion.Euler(Vector3.Lerp(thisValues[0], otherValues[0], t));
         bone.bone.localPosition = Vector3.Lerp(thisValues[1], otherValues[1], t);
@@ -151,28 +173,24 @@ public class BoneKeyFrames {
     /// </summary>
     /// <param name="time"></param>
     /// <returns>Vector[3], where: index 0 = rotations, index 1 = positions, index 2 = scales</returns>
-    private Vector3[] getValuesAtTime(float time) {
-        float fraction = Utils.frac(time);
-        float frame = fraction * frameCount;
-        int thisFrame = (int)frame;
-        int nextFrame = thisFrame + 1;
+    private Vector3[] getValuesAtTime(float time, float speed) {
         timer = time;
-        return getValuesAtTime(time, fraction, thisFrame, nextFrame);
+        FrameTimeData frameTimeData = calculateFrameTimeData(speed);
+
+        return getValuesAtTime(time, frameTimeData);
     }
 
     /// <summary>
     /// Computes the values at the provided time
     /// </summary>
     /// <param name="time"></param>
-    /// <param name="frameFraction">The fraction of the frame</param>
-    /// <param name="thisFrame">Index of current frame</param>
-    /// <param name="nextFrame">Index of next frame</param>
+    /// <param name="frameTimeData">The data for the frame</param>
     /// <returns>Vector[3], where: index 0 = rotations, index 1 = positions, index 2 = scales</returns>
-    private Vector3[] getValuesAtTime(float time, float frameFraction, int thisFrame, int nextFrame) {
+    private Vector3[] getValuesAtTime(float time, FrameTimeData frameTimeData) {
         Vector3[] values = new Vector3[3];
-        values[0] = (rotations != null) ? Vector3.Lerp(rotations[thisFrame], rotations[nextFrame], frameFraction) : bone.bone.localEulerAngles;
-        values[1] = (positions != null) ? Vector3.Lerp(positions[thisFrame], positions[nextFrame], frameFraction) : bone.bone.localPosition;
-        values[2] = (scales != null) ? Vector3.Lerp(scales[thisFrame], scales[nextFrame], frameFraction) : bone.bone.localScale;
+        values[0] = (rotations != null) ? Vector3.Lerp(rotations[frameTimeData.thisFrame], rotations[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localEulerAngles;
+        values[1] = (positions != null) ? Vector3.Lerp(positions[frameTimeData.thisFrame], positions[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localPosition;
+        values[2] = (scales != null) ? Vector3.Lerp(scales[frameTimeData.thisFrame], scales[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localScale;
         return values;
     }
 }

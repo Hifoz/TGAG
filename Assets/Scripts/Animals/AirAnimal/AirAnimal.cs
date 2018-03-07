@@ -6,12 +6,6 @@ using System.Collections;
 /// Super class for all air animals
 /// </summary>
 public abstract class AirAnimal : Animal {
-    private enum KeyFrameType {
-        SPINE,
-        WING1,
-        WING2
-    }
-
     protected AirAnimalSkeleton airSkeleton;
 
     protected bool grounded = false;
@@ -19,22 +13,12 @@ public abstract class AirAnimal : Animal {
     protected const float flySpeed = 30f;
     protected const float glideDrag = 0.25f;
 
-    protected const float animSpeedScaling = 0.09f;
-    
-    Dictionary<KeyFrameType, Vector3[]> FlyingKeyFrames = new Dictionary<KeyFrameType, Vector3[]>() {
-        { KeyFrameType.SPINE, new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 0) } }, //Position for spine
-        { KeyFrameType.WING1, new Vector3[] { new Vector3(0, 0, 85), new Vector3(0, 0, -45), new Vector3(0, 0, 85) } }, //Rotation for first bone in wing
-        { KeyFrameType.WING2, new Vector3[] { new Vector3(0, 0, -170), new Vector3(0, 0, 40), new Vector3(0, 0, -170) } } //Rotation for second bone in wing
-    };
-
-    Dictionary<KeyFrameType, Vector3[]> GlidingKeyFrames = new Dictionary<KeyFrameType, Vector3[]>() {
-        { KeyFrameType.SPINE, new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0.5f, 0), new Vector3(0, 0, 0) } }, //Position for spine
-        { KeyFrameType.WING1, new Vector3[] { new Vector3(0, 0, 20), new Vector3(0, 0, 0), new Vector3(0, 0, 20) } }, //Rotation for first bone in wing
-        { KeyFrameType.WING2, new Vector3[] { new Vector3(0, 0, -20), new Vector3(0, 0, 0), new Vector3(0, 0, -20) } } //Rotation for second bone in wing
-    };
+    private const float animSpeedScaling = 0.09f;
+    private bool animationInTransition = false;
 
     private AnimalAnimation flappingAnimation;
     private AnimalAnimation glidingAnimation;
+    private AnimalAnimation currentAnimation;
 
 
     override protected abstract void move();
@@ -43,7 +27,15 @@ public abstract class AirAnimal : Animal {
         if (skeleton != null) { 
             move();
             calculateSpeedAndHeading();
-            flappingAnimation.animate(speed * animSpeedScaling);
+            if (!animationInTransition) {
+                currentAnimation.animate(speed * animSpeedScaling);
+            }
+
+            if (desiredSpeed == 0 && !animationInTransition && currentAnimation != glidingAnimation) {
+                StartCoroutine(transistionAnimation(glidingAnimation, 0.5f));
+            } else if (desiredSpeed != 0 && !animationInTransition && currentAnimation != flappingAnimation) {
+                StartCoroutine(transistionAnimation(flappingAnimation, 0.5f));
+            }
         }
     }
 
@@ -73,13 +65,19 @@ public abstract class AirAnimal : Animal {
     /// Generates animations for the AirAnimal
     /// </summary>
     private void generateAnimations() {
+        //Getting relevant bones
+        Bone spineBone = skeleton.getBones(BodyPart.SPINE)[0];
+        List<Bone> rightWing = airSkeleton.getWing(true);
+        List<Bone> leftWing = airSkeleton.getWing(false);
+
+        //Flapping animation
         flappingAnimation = new AnimalAnimation();
         int flappingAnimationFrameCount = 3;
-        BoneKeyFrames spine = new BoneKeyFrames(skeleton.getBones(BodyPart.SPINE)[0], flappingAnimationFrameCount);
-        BoneKeyFrames wing1_1 = new BoneKeyFrames(airSkeleton.getWing(true)[0], flappingAnimationFrameCount);
-        BoneKeyFrames wing1_2 = new BoneKeyFrames(airSkeleton.getWing(true)[1], flappingAnimationFrameCount);
-        BoneKeyFrames wing2_1 = new BoneKeyFrames(airSkeleton.getWing(false)[0], flappingAnimationFrameCount);
-        BoneKeyFrames wing2_2 = new BoneKeyFrames(airSkeleton.getWing(false)[1], flappingAnimationFrameCount);
+        BoneKeyFrames spine = new BoneKeyFrames(spineBone, flappingAnimationFrameCount);
+        BoneKeyFrames wing1_1 = new BoneKeyFrames(rightWing[0], flappingAnimationFrameCount);
+        BoneKeyFrames wing1_2 = new BoneKeyFrames(rightWing[1], flappingAnimationFrameCount);
+        BoneKeyFrames wing2_1 = new BoneKeyFrames(leftWing[0], flappingAnimationFrameCount);
+        BoneKeyFrames wing2_2 = new BoneKeyFrames(leftWing[1], flappingAnimationFrameCount);
         spine.setPositions(new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 0) });
         wing1_1.setRotations(new Vector3[] { new Vector3(0, 0, 85), new Vector3(0, 0, -45), new Vector3(0, 0, 85) }); 
         wing1_2.setRotations(new Vector3[] { new Vector3(0, 0, -170), new Vector3(0, 0, 40), new Vector3(0, 0, -170) });
@@ -90,6 +88,38 @@ public abstract class AirAnimal : Animal {
         flappingAnimation.add(wing1_2);
         flappingAnimation.add(wing2_1);
         flappingAnimation.add(wing2_2);
+
+        //Gliding anmiation
+        glidingAnimation = new AnimalAnimation();
+        int glidingAnimationFrameCount = 3;
+        spine = new BoneKeyFrames(spineBone, glidingAnimationFrameCount);
+        wing1_1 = new BoneKeyFrames(rightWing[0], glidingAnimationFrameCount);
+        wing1_2 = new BoneKeyFrames(rightWing[1], glidingAnimationFrameCount);
+        wing2_1 = new BoneKeyFrames(leftWing[0], glidingAnimationFrameCount);
+        wing2_2 = new BoneKeyFrames(leftWing[1], glidingAnimationFrameCount);
+        spine.setPositions(new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0.5f, 0), new Vector3(0, 0, 0) });
+        wing1_1.setRotations(new Vector3[] { new Vector3(0, 0, 20), new Vector3(0, 0, 0), new Vector3(0, 0, 20) });
+        wing1_2.setRotations(new Vector3[] { new Vector3(0, 0, -20), new Vector3(0, 0, 0), new Vector3(0, 0, -20) });
+        wing2_1.setRotations(Utils.multVectorArray(wing1_1.Rotations, -1));
+        wing2_2.setRotations(Utils.multVectorArray(wing1_2.Rotations, -1));
+        glidingAnimation.add(spine);
+        glidingAnimation.add(wing1_1);
+        glidingAnimation.add(wing1_2);
+        glidingAnimation.add(wing2_1);
+        glidingAnimation.add(wing2_2);
+
+        //Init current animation
+        currentAnimation = glidingAnimation;
+    }
+
+    private IEnumerator transistionAnimation(AnimalAnimation next, float transitionTime = 1f) {
+        animationInTransition = true;
+        for (float t = 0; t <= 1f; t += Time.deltaTime / transitionTime) {
+            currentAnimation.animateLerp(next, t, speed * animSpeedScaling);
+            yield return 0;
+        }
+        currentAnimation = next;
+        animationInTransition = false;
     }
 
     /// <summary>
