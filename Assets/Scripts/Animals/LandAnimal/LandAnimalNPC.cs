@@ -3,7 +3,7 @@ using System.Collections;
 
 public class LandAnimalNPC : LandAnimal {
 
-    public const float roamDistance = 40;
+    public const float roamDistance = 50;
 
     override protected void Start() {
         base.Start();

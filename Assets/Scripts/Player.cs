@@ -110,28 +110,34 @@ public class Player : MonoBehaviour {
         Animal otherAnimal = other.GetComponent<Animal>();
         AnimalSkeleton otherSkeleton = otherAnimal.getSkeleton();
 
+        float mySpeed = myAnimal.getSpeed();
+        float otherSpeed = otherAnimal.getSpeed();
+
         Animal thisAnimal = null;
         if (GetComponent<LandAnimal>() != null) {
-            Debug.Log("1");
             thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
         } else if (GetComponent<AirAnimal>() != null) {
-            Debug.Log("2");
             thisAnimal = gameObject.AddComponent<AirAnimalNPC>();
         }      
         
         if (thisAnimal != null) {
             thisAnimal.setSkeleton(mySkeleton);
             thisAnimal.takeOverPlayer();
+            thisAnimal.setSpeed(mySpeed);
         }
 
+        Animal myNewAnimal = null;
         if (other.GetComponent<LandAnimal>() != null) {
-            Debug.Log("3");
-            other.AddComponent<LandAnimalPlayer>().setSkeleton(otherSkeleton);
-        } else if (other.GetComponent<AirAnimal>() != null) {
-            Debug.Log("4");
-            other.AddComponent<AirAnimalPlayer>().setSkeleton(otherSkeleton);
+            myNewAnimal = other.AddComponent<LandAnimalPlayer>();
+        } else if (other.GetComponent<AirAnimal>() != null) {            
+            myNewAnimal = other.AddComponent<AirAnimalPlayer>();
         }
         other.AddComponent<Player>().transferPlayer(magicTrail, animals);
+
+        if (myNewAnimal != null) {
+            myNewAnimal.setSkeleton(otherSkeleton);
+            myNewAnimal.setSpeed(otherSpeed);
+        }
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 

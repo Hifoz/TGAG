@@ -71,15 +71,25 @@ public abstract class Animal : MonoBehaviour {
             bones[i] = skeletonBones[i].bone;
         }
         GetComponent<SkinnedMeshRenderer>().bones = bones;
+
+        animationInTransition = false;
+        currentAnimation = null;
     }
 
     /// <summary>
-    /// Resets the rotation of all joints, mostly for debugging
+    /// Sets the speed of the animal
     /// </summary>
-    public void resetJoints() {
-        foreach (Bone bone in skeleton.getBones(BodyPart.ALL)) {
-            bone.bone.transform.rotation = Quaternion.identity;
-        }
+    /// <param name="speed">Value to use</param>
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
+    /// <summary>
+    /// Gets the speed of the animal
+    /// </summary>
+    /// <returns>float speed</returns>
+    public float getSpeed() {
+        return speed;
     }
 
     /// <summary>
@@ -267,6 +277,9 @@ public abstract class Animal : MonoBehaviour {
     private IEnumerator transistionAnimation(AnimalAnimation next, float speedScaling, float nextSpeedScaling, float transitionTime) {
         animationInTransition = true;
         for (float t = 0; t <= 1f; t += Time.deltaTime / transitionTime) {
+            if (!animationInTransition) {
+                break;
+            }
             currentAnimation.animateLerp(next, t, speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
             yield return 0;
         }
