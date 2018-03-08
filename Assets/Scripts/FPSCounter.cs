@@ -12,7 +12,7 @@ public class FPSCounter : MonoBehaviour {
     void Update() {
         frames++;
         timer += Time.deltaTime;
-        if (timer > 1) {
+        if (timer >= 1) {
             fpsLastSecond = string.Format("Frames last second: {0}", frames);
             frames = 0;
             timer = 0;

@@ -26,28 +26,33 @@ public class AirAnimalPlayer : AirAnimal {
 
         if (Input.GetKey(KeyCode.W)) {
             finalHeading += desiredHeading;
-            setSpeed();
         }
         if (Input.GetKey(KeyCode.S)) {
             finalHeading -= desiredHeading;
-            setSpeed();
         }
         if (Input.GetKey(KeyCode.A)) {
             finalHeading += Quaternion.AngleAxis(-90, up) * desiredHeading;
-            setSpeed();
         }
         if (Input.GetKey(KeyCode.D)) {
             finalHeading += Quaternion.AngleAxis(90, up) * desiredHeading;
-            setSpeed();
-        }       
+        }
+
+
         if (Input.GetKey(KeyCode.Space)) {
-            finalHeading += Quaternion.AngleAxis(-45, right) * desiredHeading;
-            setSpeed();
+            if (grounded) {
+                tryLaunch();
+            } else if (!grounded) {
+                finalHeading += Quaternion.AngleAxis(-45, right) * desiredHeading;
+            }                
         }
-        if (Input.GetKey(KeyCode.C)) {
-            finalHeading += Quaternion.AngleAxis(45, right) * desiredHeading;
-            setSpeed();
+
+        if (!grounded) {
+            if (Input.GetKey(KeyCode.C)) {
+                finalHeading += Quaternion.AngleAxis(45, right) * desiredHeading;
+            }
         }
+
+
         if (finalHeading != Vector3.zero) {
             desiredHeading = finalHeading;
             setSpeed();
@@ -59,7 +64,7 @@ public class AirAnimalPlayer : AirAnimal {
         } else {
             velocity = heading.normalized * speed;
         }
-        rb.velocity = velocity;
+        rb.velocity = velocity + gravity;
         transform.LookAt(transform.position + heading);
     }
 
@@ -72,6 +77,5 @@ public class AirAnimalPlayer : AirAnimal {
         } else {
             desiredSpeed = flySpeed;
         }           
-    }
-    
+    }    
 }

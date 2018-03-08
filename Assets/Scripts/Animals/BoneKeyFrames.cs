@@ -17,6 +17,7 @@ public class BoneKeyFrames {
     }
 
     public string name;
+
     Bone bone;
     int frameCount;
     float animTime;
@@ -109,28 +110,6 @@ public class BoneKeyFrames {
     }
 
     /// <summary>
-    /// calculates the FrameTimeData for the current time
-    /// </summary>
-    /// <param name="speed">animation speed</param>
-    /// <param name="other">Used when interpolating, other BoneKeyFrames</param>
-    /// <param name="t">Used when interpolating, interpolation float</param>
-    /// <returns></returns>
-    private FrameTimeData calculateFrameTimeData(float speed, BoneKeyFrames other = null, float t = 0) {
-        if (other == null) {
-            other = this;
-        }
-
-        FrameTimeData frameTimeData = new FrameTimeData();
-        frameTimeData.timeFraction = Utils.frac(timer);
-        frameTimeData.frame = frameTimeData.timeFraction * (frameCount - 1);
-        frameTimeData.frameFraction = Utils.frac(frameTimeData.frame);
-        frameTimeData.thisFrame = (int)frameTimeData.frame;
-        frameTimeData.nextFrame = frameTimeData.thisFrame + 1;
-        frameTimeData.timeModifier = speed / (frameCount * Mathf.Lerp(frameTimes[frameTimeData.thisFrame], other.frameTimes[frameTimeData.thisFrame], t));
-        return frameTimeData;
-    }
-
-    /// <summary>
     /// Animates the bone with the given keyframes, provied the time as an argument
     /// </summary>
     /// <param name="speed">the animation speed, 1f for normal speed</param>
@@ -157,8 +136,9 @@ public class BoneKeyFrames {
             throw new System.Exception("BoneKeyFrames, animationLerp error! The other BoneKeyFrames is for a different bone!");
         }
 
-        FrameTimeData frameTimeData = calculateFrameTimeData(speed, other, t);
-        timer += Time.deltaTime * frameTimeData.timeModifier;
+        FrameTimeData frameTimeData = calculateFrameTimeData(speed);
+        FrameTimeData frameTimeDataOther = other.calculateFrameTimeData(speed);
+        timer += Time.deltaTime * Mathf.Lerp(frameTimeData.timeModifier, frameTimeDataOther.timeModifier, t);
         Vector3[] thisValues = getValuesAtTime(timer, frameTimeData);
         Vector3[] otherValues = other.getValuesAtTime(timer, speed);
 
@@ -192,5 +172,21 @@ public class BoneKeyFrames {
         values[1] = (positions != null) ? Vector3.Lerp(positions[frameTimeData.thisFrame], positions[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localPosition;
         values[2] = (scales != null) ? Vector3.Lerp(scales[frameTimeData.thisFrame], scales[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localScale;
         return values;
+    }
+
+    /// <summary>
+    /// calculates the FrameTimeData for the current time
+    /// </summary>
+    /// <param name="speed">animation speed</param>
+    /// <returns></returns>
+    private FrameTimeData calculateFrameTimeData(float speed) {
+        FrameTimeData frameTimeData = new FrameTimeData();
+        frameTimeData.timeFraction = Utils.frac(timer);
+        frameTimeData.frame = frameTimeData.timeFraction * frameCount;
+        frameTimeData.frameFraction = Utils.frac(frameTimeData.frame);
+        frameTimeData.thisFrame = (int)frameTimeData.frame;
+        frameTimeData.nextFrame = (frameTimeData.thisFrame + 1) % frameCount;
+        frameTimeData.timeModifier = speed / (frameCount * frameTimes[frameTimeData.thisFrame]);
+        return frameTimeData;
     }
 }

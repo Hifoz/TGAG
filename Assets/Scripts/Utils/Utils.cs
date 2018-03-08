@@ -35,4 +35,30 @@ public static class Utils {
         }
         return result;
     }
+
+    /// <summary>
+    /// Shifts the array by a factor of "shift" (provided int)
+    /// </summary>
+    /// <typeparam name="T">Type of array</typeparam>
+    /// <param name="array">Array to shift</param>
+    /// <param name="shift">How many indexes to shift by</param>
+    /// <returns>Resulting array</returns>
+    public static T[] shiftArray<T>(T[] array, int shift) {
+        T[] result = new T[array.Length];
+        for(int i = 0; i < result.Length; i++) {
+            result[i] = array[mod(i + shift, array.Length)];
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Source: https://stackoverflow.com/questions/1082917/mod-of-negative-number-is-melting-my-brain
+    /// A mathematically correct modulo operation, that does not return negatives.
+    /// </summary>
+    /// <param name="x">number to modulate</param>
+    /// <param name="m">modulus number</param>
+    /// <returns>mod(x, m)</returns>
+    public static int mod(int x, int m) {
+        return (x % m + m) % m;
+    }
 }

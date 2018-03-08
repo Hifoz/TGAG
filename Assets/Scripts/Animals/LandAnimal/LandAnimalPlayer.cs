@@ -22,26 +22,24 @@ public class LandAnimalPlayer : LandAnimal {
 
         if (Input.GetKey(KeyCode.W)) {
             finalHeading += desiredHeading;
-            setSpeed();
         }
         if (Input.GetKey(KeyCode.A)) {
             finalHeading += Quaternion.AngleAxis(-90, Vector3.up) * desiredHeading;
-            setSpeed();
         }
         if (Input.GetKey(KeyCode.D)) {
             finalHeading += Quaternion.AngleAxis(90, Vector3.up) * desiredHeading;
-            setSpeed();
         }
         if (Input.GetKey(KeyCode.S)) {
             finalHeading -= desiredHeading;
-            setSpeed();
         }
+
         if (!jumping && grounded && Input.GetKeyDown(KeyCode.Space)) {
             StartCoroutine(jump());
         }
 
         if (finalHeading != Vector3.zero) {
             desiredHeading = finalHeading;
+            setSpeed();
         }
 
         Vector3 velocity;

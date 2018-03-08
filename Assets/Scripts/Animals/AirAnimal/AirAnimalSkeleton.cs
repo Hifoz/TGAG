@@ -25,12 +25,12 @@ public class AirAnimalSkeleton : AnimalSkeleton {
 
                 { BodyParameter.LEG_PAIRS, new Range<int>(1, 1) }, //The only supported number of legpairs is 1
                 { BodyParameter.LEG_JOINTS, new Range<int>(2, 3) },
-                { BodyParameter.LEG_LENGTH, new Range<float>(5, 10) },
+                { BodyParameter.LEG_LENGTH, new Range<float>(4, 7) },
                 //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
                 { BodyParameter.LEG_RADIUS, new Range<float>(0.5f, 0.7f) },
 
-                { BodyParameter.TAIL_JOINTS, new Range<int>(2, 5) },
-                { BodyParameter.TAIL_LENGTH, new Range<float>(4, 7) },
+                { BodyParameter.TAIL_JOINTS, new Range<int>(2, 4) },
+                { BodyParameter.TAIL_LENGTH, new Range<float>(5, 10) },
                 //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
                 { BodyParameter.TAIL_RADIUS, new Range<float>(0.5f, 0.8f) },
 
@@ -120,8 +120,8 @@ public class AirAnimalSkeleton : AnimalSkeleton {
         //LEGS
         float legLength = bodyParameters.Get<float>(BodyParameter.LEG_LENGTH);
         float legRadius = bodyParameters.Get<float>(BodyParameter.LEG_RADIUS);
-        LineSegment right = new LineSegment(spineLine.b, spineLine.b + new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius);
-        LineSegment left = new LineSegment(spineLine.b, spineLine.b + new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius);
+        LineSegment right = new LineSegment(spineLine.b, spineLine.b + new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius);
+        LineSegment left = new LineSegment(spineLine.b, spineLine.b + new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius);
         addSkeletonLine(right, BodyPart.RIGHT_LEGS);
         addSkeletonLine(left, BodyPart.LEFT_LEGS);
         //WINGS

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public abstract class Animal : MonoBehaviour {
 
     protected const float ikSpeed = 10f;
-    protected const float ikTolerance = 0.005f;
+    protected const float ikTolerance = 0.05f;
 
     protected Vector3 desiredHeading = Vector3.zero;
     protected Vector3 heading = Vector3.zero;
@@ -18,16 +18,25 @@ public abstract class Animal : MonoBehaviour {
     protected float speed = 0;
     protected float acceleration = 5f;
 
+    private const float levelSpeed = 3f;
+
+    protected bool grounded = false;
+    protected Vector3 gravity = Physics.gravity;
+
     protected AnimalSkeleton skeleton;
     protected delegate bool ragDollCondition();
 
     protected Rigidbody rb;
+
+    protected AnimalAnimation currentAnimation;
+    protected bool animationInTransition = false;
 
     virtual protected void Start() {
         rb = GetComponent<Rigidbody>();
     }
 
     protected abstract void move();
+    protected abstract void calculateSpeedAndHeading();
 
     /// <summary>
     /// Gets the underlying skeleton
@@ -99,7 +108,7 @@ public abstract class Animal : MonoBehaviour {
             }
 
             for (int i = 0; i < limb.Count - 1; i++) {
-                ccd(limb.GetRange(i, 2), currentPositions[i], ikSpeed);
+                ccdPartial(limb.GetRange(i, 2), currentPositions[i], ikSpeed);
                 float distance = Vector3.Distance(currentPositions[i], desiredPositions[i]);
                 currentPositions[i] = Vector3.MoveTowards(currentPositions[i], desiredPositions[i], Time.deltaTime * distance * limbResistance);
             }
@@ -129,19 +138,49 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <param name="limb">Limb to bend</param>
     /// <param name="target">Target to reach</param>
+    /// <param name="maxIter">Max number of iterations</param>
     /// <returns>Bool target reached</returns>
-    protected bool ccd(List<Bone> limb, Vector3 target, float speed = ikSpeed) {
-        //Debug.DrawLine(target, target + Vector3.up * 10, Color.red);
+    protected bool ccdComplete(List<Bone> limb, Vector3 target, int maxIter = 1) {
         Transform effector = limb[limb.Count - 1].bone;
         float dist = Vector3.Distance(effector.position, target);
-
-        if (dist > ikTolerance) {
+        int iter = 0;
+        while (dist > ikTolerance && iter <= maxIter) {
             for (int i = limb.Count - 1; i >= 0; i--) {
                 Transform bone = limb[i].bone;
 
                 Vector3 a = effector.position - bone.position;
                 Vector3 b = target - bone.position;
 
+                float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
+                Vector3 normal = Vector3.Cross(a, b);
+                if (angle > 0.01f) {
+                    bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg, normal) * bone.rotation;
+                    if (!checkConstraints(limb[i])) {
+                        bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg, normal) * bone.rotation;
+                    }
+                }
+            }
+            iter++;
+        }
+        return dist < ikTolerance;
+    }
+
+    /// <summary>
+    /// Does one iteration of CCD
+    /// </summary>
+    /// <param name="limb">Limb to bend</param>
+    /// <param name="target">Target to reach</param>
+    /// <param name="speed">How quickly to move towards target</param>
+    /// <returns>Bool target reached</returns>
+    protected bool ccdPartial(List<Bone> limb, Vector3 target, float speed = ikSpeed) {
+        Transform effector = limb[limb.Count - 1].bone;
+        float dist = Vector3.Distance(effector.position, target);
+        if (dist > ikTolerance) {
+            for (int i = limb.Count - 1; i >= 0; i--) {
+                Transform bone = limb[i].bone;
+
+                Vector3 a = effector.position - bone.position;
+                Vector3 b = target - bone.position;
 
                 float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
                 Vector3 normal = Vector3.Cross(a, b);
@@ -167,9 +206,153 @@ public abstract class Animal : MonoBehaviour {
         rotation.y = (rotation.y > 180) ? rotation.y - 360 : rotation.y;
         rotation.z = (rotation.z > 180) ? rotation.z - 360 : rotation.z;
 
-        //Debug.Log("Rot: " + rotation + "__Min: " + bone.minAngles + "__Max: " + bone.maxAngles);
         bool min = rotation.x > bone.minAngles.x && rotation.y > bone.minAngles.y && rotation.z > bone.minAngles.z;
         bool max = rotation.x < bone.maxAngles.x && rotation.y < bone.maxAngles.y && rotation.z < bone.maxAngles.z;
         return min && max;
+    }
+
+    /// <summary>
+    /// Attempts to ground the limb, moving the effector towards the ground
+    /// </summary>
+    /// <param name="limb">Limb to ground</param>
+    /// <param name="maxRange">If height is more the maxRange, no attempt will be made</param>
+    /// <param name="complete">Attempt to do a complete CCD or partial?</param>
+    /// <returns></returns>
+    protected bool groundLimb(List<Bone> limb, float maxRange = 1f, bool complete = true) {
+        RaycastHit hit;
+        Vector3 effector = limb[limb.Count - 1].bone.position;
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(effector + Vector3.up * 10, Vector3.down), out hit, 40f, layerMask)) {
+            if (effector.y - hit.point.y <= maxRange) {
+                if (complete) {
+                    return ccdComplete(limb, hit.point, 20);
+                } else {
+                    return ccdPartial(limb, hit.point, ikSpeed);
+                }
+            } else {
+                if (complete) {
+                    return ccdComplete(limb, effector + Vector3.down * maxRange, 20);
+                } else {
+                    return ccdPartial(limb, effector + Vector3.down * maxRange, ikSpeed);
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to transitions between the current animation and the next animation
+    /// </summary>
+    /// <param name="next">Animation to transition too</param>
+    /// <param name="speedScaling">float for scaling the speed of animation</param>
+    /// <param name="nextSpeedScaling">The speed scaling for the next anim</param>
+    /// <param name="transitionTime">Time to spend on transition</param>
+    /// <returns>Success flag</returns>
+    protected bool tryAnimationTransition(AnimalAnimation next, float speedScaling = 1f, float nextSpeedScaling = 1f, float transitionTime = 1f) {
+        if (!animationInTransition) {
+            StartCoroutine(transistionAnimation(next, speedScaling, nextSpeedScaling, transitionTime));
+        }
+        return !animationInTransition;
+    }
+
+    /// <summary>
+    /// Transitions between the current animation and the next animation
+    /// </summary>
+    /// <param name="next">Animation to transition too</param>
+    /// <param name="speedScaling">float for scaling the speed of animation</param>
+    /// <param name="transitionTime">Time to spend on transition</param>
+    /// <returns></returns>
+    private IEnumerator transistionAnimation(AnimalAnimation next, float speedScaling, float nextSpeedScaling, float transitionTime) {
+        animationInTransition = true;
+        for (float t = 0; t <= 1f; t += Time.deltaTime / transitionTime) {
+            currentAnimation.animateLerp(next, t, speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
+            yield return 0;
+        }
+        currentAnimation = next;
+        animationInTransition = false;
+    }
+
+    /// <summary>
+    /// Does the physics for gravity
+    /// </summary>
+    protected void doGravity() {
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        RaycastHit hit;
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
+            groundedGravity(hit, spine);
+        } else {
+            notGroundedGravity();
+        }
+    }
+
+    /// <summary>
+    /// Gravity calculations for when you are not grounded
+    /// </summary>
+    virtual protected void notGroundedGravity() {
+        grounded = false;
+        gravity += Physics.gravity * Time.deltaTime;
+    }
+
+    /// <summary>
+    /// Gravity calculation for when you are grounded
+    /// </summary>
+    /// <param name="hit">Point where raycast hit the ground</param>
+    /// <param name="spine">Spine of animal</param>
+    virtual protected void groundedGravity(RaycastHit hit, Bone spine) {
+        float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
+        float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
+        float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
+        if (distFromStance <= stanceHeight) {
+            grounded = true;
+            float sign = Mathf.Sign(dist2ground - stanceHeight);
+            if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+                gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+            } else {
+                gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
+            }
+        } else {
+            notGroundedGravity();
+        }
+    }
+
+    /// <summary>
+    /// Tries to level the spine with the ground
+    /// </summary>
+    virtual protected void levelSpine() {
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
+        levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
+        spineHeading = spine.bone.rotation * Vector3.forward;
+    }
+
+    /// <summary>
+    /// Levels the spine with terrain along axis
+    /// </summary>
+    /// <param name="axis">Axis to level along</param>
+    private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+
+        Vector3 point1 = spine.bone.position + axis * length / 2f + Vector3.up * 20;
+        Vector3 point2 = spine.bone.position - axis * length / 2f + Vector3.up * 20;
+
+        int layerMask = 1 << 8;
+        RaycastHit hit1;
+        RaycastHit hit2;
+        Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
+        Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
+        point1 = spine.bone.position + currentAxis * length / 2f;
+        point2 = spine.bone.position - currentAxis * length / 2f;
+        Vector3 a = hit1.point - hit2.point;
+        Vector3 b = point1 - point2;
+
+        float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
+        Vector3 normal = Vector3.Cross(a, b);
+        if (angle > 0.01f) {
+            spine.bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
+            if (!checkConstraints(spine)) {
+                spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
+            }
+        }
     }
 }
