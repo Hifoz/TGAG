@@ -28,6 +28,8 @@ public abstract class Animal : MonoBehaviour {
 
     protected Rigidbody rb;
 
+    protected Vector3 roamCenter;
+
     protected AnimalAnimation currentAnimation;
     protected bool animationInTransition = false;
 
@@ -354,5 +356,40 @@ public abstract class Animal : MonoBehaviour {
                 spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
             }
         }
+    }
+
+    /// <summary>
+    /// Spawns the animal at position
+    /// </summary>
+    /// <param name="pos">Vector3 pos</param>
+    public bool Spawn(Vector3 pos) {
+        transform.position = pos;
+        roamCenter = pos;
+        roamCenter.y = 0;
+
+        RaycastHit hit;
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, ChunkConfig.chunkHeight + 20f, layerMask)) {
+            Vector3 groundTarget = hit.point + Vector3.up * 10;
+            transform.position = groundTarget;
+            desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Function for when this animal used to be a player
+    /// </summary>
+    public void takeOverPlayer() {
+        roamCenter = transform.position + new Vector3(Random.Range(2f, 5f), 100, Random.Range(2f, 5f));
+        roamCenter.y = 0;
+        RaycastHit hit;
+        if (Physics.Raycast(new Ray(roamCenter, Vector3.down), out hit)) {
+            roamCenter = hit.point;
+        }
+
+        desiredHeading = transform.rotation * Vector3.forward;
+        desiredHeading.y = 0;
     }
 }

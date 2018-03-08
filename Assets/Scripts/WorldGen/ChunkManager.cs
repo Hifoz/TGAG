@@ -22,7 +22,8 @@ public class ChunkManager : MonoBehaviour {
     public TextureManager textureManager;
     public GameObject chunkPrefab;
     public GameObject treePrefab;
-    public GameObject animalPrefab;
+    public GameObject landAnimalPrefab;
+    public GameObject airAnimalPrefab;
     private Vector3 offset;
 
     private List<ChunkData> activeChunks = new List<ChunkData>();
@@ -70,7 +71,10 @@ public class ChunkManager : MonoBehaviour {
         }
     }
 
-
+    /// <summary>
+    /// Resets the chunkManager, clearing all data and initializing
+    /// </summary>
+    /// <param name="threadCount">Threadcount to use after reset</param>
     public void Reset(int threadCount = 0) {
         Settings.load();
         clear();
@@ -91,9 +95,9 @@ public class ChunkManager : MonoBehaviour {
         chunkPool = new GameObjectPool(chunkPrefab, transform, "chunk", false);
         treePool = new GameObjectPool(treePrefab, transform, "tree", false);
 
-        if (animalPrefab != null) {
+        if (landAnimalPrefab != null) {
             for (int i = 0; i < animals.Length; i++) {
-                animals[i] = Instantiate(animalPrefab);
+                animals[i] = Instantiate((Random.Range(0, 2) == 0) ? landAnimalPrefab : airAnimalPrefab);
                 animals[i].transform.position = new Vector3(9999, 9999, 9999);
             }
         }
@@ -152,7 +156,7 @@ public class ChunkManager : MonoBehaviour {
     /// Handles spawning of animals.
     /// </summary>
     private void handleAnimals() {
-        if (animalPrefab) {
+        if (landAnimalPrefab) {
             float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
             float lower = -maxDistance + LandAnimalNPC.roamDistance;
             float upper = -lower;
@@ -163,9 +167,16 @@ public class ChunkManager : MonoBehaviour {
                     float z = Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
                     animal.transform.position = new Vector3(x, y, z) + player.transform.position;
-
-                    AnimalSkeleton animalSkeleton = new LandAnimalSkeleton(animal.transform);
-                    animalSkeleton.index = i;
+                    AnimalSkeleton animalSkeleton;
+                    if (animal.GetComponent<LandAnimal>() != null) {
+                        animalSkeleton = new LandAnimalSkeleton(animal.transform);
+                        animalSkeleton.index = i;
+                    } else if (animal.GetComponent<AirAnimal>() != null) {
+                        animalSkeleton = new AirAnimalSkeleton(animal.transform);
+                        animalSkeleton.index = i;
+                    } else {
+                        throw new System.Exception("ChunkManager, handleAnimals error! The provided animal has no supported animal component!");
+                    }                    
                     orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
                     orderedAnimals.Add(i);
                     animal.SetActive(false);
@@ -336,7 +347,7 @@ public class ChunkManager : MonoBehaviour {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
         float lower = -maxDistance + LandAnimalNPC.roamDistance;
         float upper = -lower;
-        while (!animal.GetComponent<LandAnimalNPC>().Spawn(animal.transform.position)) {  
+        while (!animal.GetComponent<Animal>().Spawn(animal.transform.position)) {  
             float x = Random.Range(lower, upper);
             float z = Random.Range(lower, upper);
             float y = ChunkConfig.chunkHeight + 10;
@@ -344,7 +355,7 @@ public class ChunkManager : MonoBehaviour {
             yield return 0;
         }
         animal.SetActive(true);
-        animal.GetComponent<LandAnimalNPC>().setSkeleton(skeleton);
+        animal.GetComponent<Animal>().setSkeleton(skeleton);
     }
 
     /// <summary>

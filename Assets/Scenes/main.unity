@@ -137,7 +137,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 27318558}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1080.5365, y: 504, z: -12}
+  m_LocalPosition: {x: -1220.4436, y: 504, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 546177072}
@@ -537,7 +537,9 @@ MonoBehaviour:
   chunkPrefab: {fileID: 1818736290914746, guid: 418521e80a6a4c64e8a2f9d1d24db817,
     type: 2}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
-  animalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
+  landAnimalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
+    type: 2}
+  airAnimalPrefab: {fileID: 1263446260787308, guid: 70d74767b31c04843b941187b0032569,
     type: 2}
 --- !u!4 &988479787
 Transform:
@@ -830,8 +832,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 637, y: 287, z: 0}
-  m_LocalScale: {x: 0.5314815, y: 0.5314815, z: 0.5314815}
+  m_LocalPosition: {x: 637, y: 257, z: 0}
+  m_LocalScale: {x: 0.47592592, y: 0.47592592, z: 0.47592592}
   m_Children:
   - {fileID: 1043064330}
   - {fileID: 143669589}

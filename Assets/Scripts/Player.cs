@@ -29,9 +29,9 @@ public class Player : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        //if (Input.GetKeyDown(KeyCode.Mouse0)) {
-        //    shootMagicTrail();
-        //}
+        if (Input.GetKeyDown(KeyCode.Mouse0)) {
+            shootMagicTrail();
+        }
 
         playerPos.set(transform.position);
         playerRot.set(transform.rotation * Vector3.forward);
@@ -104,17 +104,33 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <param name="other">Animal to become</param>
     private void becomeOtherAnimal(GameObject other) {
-        LandAnimalPlayer myAnimal = GetComponent<LandAnimalPlayer>();
+        Animal myAnimal = GetComponent<Animal>();
         AnimalSkeleton mySkeleton = myAnimal.getSkeleton();
 
-        LandAnimalNPC otherAnimal = other.GetComponent<LandAnimalNPC>();
+        Animal otherAnimal = other.GetComponent<Animal>();
         AnimalSkeleton otherSkeleton = otherAnimal.getSkeleton();
 
-        LandAnimalNPC thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
-        thisAnimal.setSkeleton(mySkeleton);
-        thisAnimal.takeOverPlayer();
+        Animal thisAnimal = null;
+        if (GetComponent<LandAnimal>() != null) {
+            Debug.Log("1");
+            thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
+        } else if (GetComponent<AirAnimal>() != null) {
+            Debug.Log("2");
+            thisAnimal = gameObject.AddComponent<AirAnimalNPC>();
+        }      
+        
+        if (thisAnimal != null) {
+            thisAnimal.setSkeleton(mySkeleton);
+            thisAnimal.takeOverPlayer();
+        }
 
-        other.AddComponent<LandAnimalPlayer>().setSkeleton(otherSkeleton);
+        if (other.GetComponent<LandAnimal>() != null) {
+            Debug.Log("3");
+            other.AddComponent<LandAnimalPlayer>().setSkeleton(otherSkeleton);
+        } else if (other.GetComponent<AirAnimal>() != null) {
+            Debug.Log("4");
+            other.AddComponent<AirAnimalPlayer>().setSkeleton(otherSkeleton);
+        }
         other.AddComponent<Player>().transferPlayer(magicTrail, animals);
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
