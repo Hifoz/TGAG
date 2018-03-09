@@ -6,10 +6,6 @@ public abstract class LandAnimal : Animal {
     protected const float walkSpeed = 5f;
     protected const float runSpeed = walkSpeed * 4f;
 
-    protected bool grounded = false;
-    protected Vector3 gravity = Physics.gravity;
-    private const float levelSpeed = 3f;
-
     private float timer = 0;
 
     bool ragDolling = false;
@@ -58,7 +54,7 @@ public abstract class LandAnimal : Animal {
     /// <summary>
     /// Function for calculating speed and heading
     /// </summary>
-    private void calculateSpeedAndHeading() {
+    override protected void calculateSpeedAndHeading() {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
@@ -70,77 +66,6 @@ public abstract class LandAnimal : Animal {
             }
         }
     }    
-
-    /// <summary>
-    /// Tries to level the spine with the ground
-    /// </summary>
-    private void levelSpine() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
-        levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
-        spineHeading = spine.bone.rotation * Vector3.forward;
-    }
-
-    /// <summary>
-    /// Levels the spine with terrain along axis
-    /// </summary>
-    /// <param name="axis">Axis to level along</param>
-    private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-
-        Vector3 point1 = spine.bone.position + axis * length / 2f + Vector3.up * 20;
-        Vector3 point2 = spine.bone.position - axis * length / 2f + Vector3.up * 20;
-
-        int layerMask = 1 << 8;
-        RaycastHit hit1;
-        RaycastHit hit2;
-        Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
-        Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
-        point1 = spine.bone.position + currentAxis * length / 2f;
-        point2 = spine.bone.position - currentAxis * length / 2f;
-        Vector3 a = hit1.point - hit2.point;
-        Vector3 b = point1 - point2;
-
-        float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
-        Vector3 normal = Vector3.Cross(a, b);
-        if (angle > 0.01f) {
-            spine.bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
-            if (!checkConstraints(spine)) {
-                spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Does the physics for gravity
-    /// </summary>
-    private void doGravity() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        RaycastHit hit;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
-            Vector3[] groundLine = new Vector3[2] { spine.bone.position, hit.point };
-
-            float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
-            float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
-            float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
-            if (distFromStance <= stanceHeight) {
-                grounded = true;
-                float sign = Mathf.Sign(dist2ground - stanceHeight);
-                if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
-                    gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
-                } else {
-                    gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;                    
-                }
-            } else {
-                grounded = false;
-                gravity += Physics.gravity * Time.deltaTime;
-            }
-        } else {
-            grounded = false;
-            gravity += Physics.gravity * Time.deltaTime;
-        }
-    }
 
     /// <summary>
     /// Makes the animal do a walking animation
@@ -173,7 +98,7 @@ public abstract class LandAnimal : Animal {
         Vector3 subTarget = target;
         subTarget.y -= jointLength / 2f;
         for (int i = 0; i < leg.Count - 1; i++) {
-            ccd(leg.GetRange(i, 2), target, ikSpeed / 4f);
+            ccdPartial(leg.GetRange(i, 2), target, ikSpeed / 4f);
         }
 
         RaycastHit hit;
@@ -184,7 +109,7 @@ public abstract class LandAnimal : Animal {
 
             target = hit.point;
             target.y += heightOffset;
-            if (ccd(leg, target, ikSpeed)) {
+            if (ccdPartial(leg, target, ikSpeed)) {
                 return true;
             }
         }

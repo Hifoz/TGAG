@@ -2,37 +2,41 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// The skeleton of a LandAnimal
+/// Class for skeletons used by air animals
 /// </summary>
-public class LandAnimalSkeleton : AnimalSkeleton {
+public class AirAnimalSkeleton : AnimalSkeleton {
 
     /// <summary>
     /// Constructor that does the mainThread skeleton generation, and binds skeleton to the passed transform
     /// </summary>
     /// <param name="root">Transform to bind skeleton to</param>
-    public LandAnimalSkeleton(Transform root) {
+    public AirAnimalSkeleton(Transform root) {
         bodyParametersRange = new MixedDictionary<BodyParameter>(new Dictionary<BodyParameter, object>() {
                 { BodyParameter.SCALE, new Range<float>(0.5f, 1.0f) },
 
                 { BodyParameter.HEAD_SIZE, new Range<float>(2f, 4f) },
                 { BodyParameter.HEAD_RADIUS, new Range<float>(0.5f, 1.0f) },
 
-                { BodyParameter.NECK_LENGTH, new Range<float>(4, 5) },
-                { BodyParameter.NECK_RADIUS, new Range<float>(0.5f, 1.5f) },
+                { BodyParameter.NECK_LENGTH, new Range<float>(3, 4) },
+                { BodyParameter.NECK_RADIUS, new Range<float>(0.5f, 0.8f) },
 
-                { BodyParameter.SPINE_LENGTH, new Range<float>(4, 7) },
-                { BodyParameter.SPINE_RADIUS, new Range<float>(1.0f, 1.5f) },
+                { BodyParameter.SPINE_LENGTH, new Range<float>(5, 10) },
+                { BodyParameter.SPINE_RADIUS, new Range<float>(0.5f, 1.0f) },
 
-                { BodyParameter.LEG_PAIRS, new Range<int>(2, 4) },
+                { BodyParameter.LEG_PAIRS, new Range<int>(1, 1) }, //The only supported number of legpairs is 1
                 { BodyParameter.LEG_JOINTS, new Range<int>(2, 3) },
-                { BodyParameter.LEG_LENGTH, new Range<float>(5, 10) },
+                { BodyParameter.LEG_LENGTH, new Range<float>(4, 7) },
                 //LEG_JOINT_LENGTH is calculated from LEG_JOINTS and LEG_LENGTH
                 { BodyParameter.LEG_RADIUS, new Range<float>(0.5f, 0.7f) },
 
-                { BodyParameter.TAIL_JOINTS, new Range<int>(2, 5) },
-                { BodyParameter.TAIL_LENGTH, new Range<float>(3, 12) },
+                { BodyParameter.TAIL_JOINTS, new Range<int>(2, 4) },
+                { BodyParameter.TAIL_LENGTH, new Range<float>(5, 10) },
                 //TAIL_JOINT_LENGTH is calculated from TAIL_JOINTS and TAIL_LENGTH
-                { BodyParameter.TAIL_RADIUS, new Range<float>(0.5f, 1.5f) }
+                { BodyParameter.TAIL_RADIUS, new Range<float>(0.5f, 0.8f) },
+
+                { BodyParameter.WING_LENGTH, new Range<float>(10f, 20f) },
+                { BodyParameter.WING_JOINTS, new Range<int>(2, 2) }, //The only supported number of wingjonts is 2
+                { BodyParameter.WING_RADIUS, new Range<float>(0.5f, 0.75f) }
             }
         );
 
@@ -52,6 +56,16 @@ public class LandAnimalSkeleton : AnimalSkeleton {
     }
 
     /// <summary>
+    /// Gets the main bones in a wing
+    /// </summary>
+    /// <param name="rightWing">bool rightWing</param>
+    /// <returns>The bones</returns>
+    public List<Bone> getWing(bool rightWing) {
+        BodyPart bodyPart = (rightWing) ? BodyPart.RIGHT_WING : BodyPart.LEFT_WING;
+        return skeletonBones[bodyPart].GetRange(0, bodyParameters.Get<int>(BodyParameter.WING_JOINTS) + 1);
+    }
+
+    /// <summary>
     /// Generates the bodyparamaters for the skeleton,
     /// they are stored in the bodyParameters dictionary
     /// </summary>
@@ -64,6 +78,10 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         bodyParameters.Add(
             BodyParameter.TAIL_JOINT_LENGTH,
             bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH) / bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS)
+        );
+        bodyParameters.Add(
+            BodyParameter.WING_JOINT_LENGTH,
+            bodyParameters.Get<float>(BodyParameter.WING_LENGTH) / bodyParameters.Get<int>(BodyParameter.WING_JOINTS)
         );
     }
 
@@ -84,7 +102,7 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         //NECK
         LineSegment neckLine = new LineSegment(
             spineLine.a,
-            spineLine.a + new Vector3(0, 0.5f, 0.5f).normalized * bodyParameters.Get<float>(BodyParameter.NECK_LENGTH),
+            spineLine.a + new Vector3(0, 0, 1.0f).normalized * bodyParameters.Get<float>(BodyParameter.NECK_LENGTH),
             bodyParameters.Get<float>(BodyParameter.NECK_RADIUS)
         );
         addSkeletonLine(neckLine, BodyPart.NECK);
@@ -95,22 +113,22 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         LineSegment tailLine;
         tailLine = new LineSegment(
             spineLine.b,
-            spineLine.b + new Vector3(0, 0.5f, -0.5f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH),
+            spineLine.b + new Vector3(0, 0, -1.0f).normalized * bodyParameters.Get<float>(BodyParameter.TAIL_LENGTH),
             bodyParameters.Get<float>(BodyParameter.TAIL_RADIUS)
         );
         addSkeletonLine(tailLine, BodyPart.TAIL);
         //LEGS
-        int legPairs = bodyParameters.Get<int>(BodyParameter.LEG_PAIRS);
         float legLength = bodyParameters.Get<float>(BodyParameter.LEG_LENGTH);
         float legRadius = bodyParameters.Get<float>(BodyParameter.LEG_RADIUS);
-        float spineLength = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
-        for (int i = 0; i < legPairs; i++) {
-            Vector3 offset = -Vector3.forward * spineLength * ((float)i / (legPairs - 1)) + spineLine.a;
-            LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
-            LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
-            addSkeletonLine(right, BodyPart.RIGHT_LEGS);
-            addSkeletonLine(left, BodyPart.LEFT_LEGS);
-        }
+        LineSegment right = new LineSegment(spineLine.b, spineLine.b + new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius);
+        LineSegment left = new LineSegment(spineLine.b, spineLine.b + new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius);
+        addSkeletonLine(right, BodyPart.RIGHT_LEGS);
+        addSkeletonLine(left, BodyPart.LEFT_LEGS);
+        //WINGS
+        List<LineSegment> rightWing = createWing(spineLine, true);
+        List<LineSegment> leftWing = createWing(spineLine, false);
+        addSkeletonLines(rightWing, BodyPart.RIGHT_WING);
+        addSkeletonLines(leftWing, BodyPart.LEFT_WING);
     }
 
     /// <summary>
@@ -124,13 +142,36 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         for (int i = -1; i <= 1; i += 2) {
             for (int j = -1; j <= 1; j += 2) {
                 Vector3 nose = new Vector3(0, 0, headSize) + neckEnd;
-                Vector3 midHead = new Vector3(i, j, 1) * headSize / 2f + neckEnd;
+                Vector3 midHead = new Vector3(i, j * 0.5f, 1) * headSize / 2f + neckEnd;
                 float radius = bodyParameters.Get<float>(BodyParameter.HEAD_RADIUS);
                 head.Add(new LineSegment(neckEnd, midHead, radius));
                 head.Add(new LineSegment(midHead, nose, radius));
             }
         }
         return head;
+    }
+
+    /// <summary>
+    /// Creates a wing for the air animal
+    /// </summary>
+    /// <param name="spine">The spine of the animal</param>
+    /// <param name="rightWing">Is this a right wing?</param>
+    /// <returns>The lines in the wing</returns>
+    private List<LineSegment> createWing(LineSegment spine, bool rightWing) {
+        List<LineSegment> wing = new List<LineSegment>();
+        float xDir = (rightWing) ? 1 : -1;
+        Vector3 spineCenter = Vector3.Lerp(spine.a, spine.b, 0.5f);
+        float radius = bodyParameters.Get<float>(BodyParameter.WING_RADIUS);
+        float len = bodyParameters.Get<float>(BodyParameter.WING_LENGTH);
+
+        LineSegment centerBone = new LineSegment(spineCenter, spineCenter + new Vector3(xDir, 0, 0) * len, radius);
+        wing.Add(centerBone);
+        float[] t = new float[] { 0.1f, 0.3f, 0.7f, 0.9f };
+        for (int i = 0; i < 4; i++) {
+            Vector3 spineCenterOffset = Vector3.Lerp(spine.a, spine.b, t[i]);
+            wing.Add(new LineSegment(spineCenterOffset, centerBone.b, radius));
+        }
+        return wing;
     }
 
     /// <summary>
@@ -156,6 +197,33 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         for (int i = 0; i < legPairs; i++) {
             createAndBindBones(skeletonLines[BodyPart.RIGHT_LEGS][i], spineBone.bone, legJointCount, string.Format("Right Leg {0}", i), BodyPart.RIGHT_LEGS);
             createAndBindBones(skeletonLines[BodyPart.LEFT_LEGS][i], spineBone.bone, legJointCount, string.Format("Left Leg {0}", i), BodyPart.LEFT_LEGS);
+        }
+        //WINGS
+        createAndBindWing(BodyPart.RIGHT_WING, spineBone, "Right Wing");
+        createAndBindWing(BodyPart.LEFT_WING, spineBone, "Left Wing");
+    }
+
+    /// <summary>
+    /// Creates and binds the bones for a wing
+    /// </summary>
+    /// <param name="bodyPart">Bodypart for the wing</param>
+    /// <param name="spineBone">Spine bone of the skeleton</param>
+    /// <param name="name">Name for the wing</param>
+    private void createAndBindWing(BodyPart bodyPart, Bone spineBone, string name) {
+        if (bodyPart != BodyPart.RIGHT_WING && bodyPart != BodyPart.LEFT_WING) {
+            throw new System.Exception("createAndBindWing ERROR! Bodypart is not a wing! you provided: " + bodyPart.ToString());
+        }
+
+        int wingJointCount = bodyParameters.Get<int>(BodyParameter.WING_JOINTS);
+
+        List<LineSegment> wing = skeletonLines[bodyPart];
+        List<Bone> wingBones = createAndBindBones(wing[0], spineBone.bone, wingJointCount, name, bodyPart);
+        for (int i = 1; i < wing.Count; i++) {
+            LineSegment boneLine = wing[i];
+            LineSegment subBone = new LineSegment(boneLine.a, Vector3.Lerp(boneLine.a, boneLine.b, 0.5f));
+            createAndBindBone(subBone.a, wingBones[0].bone, subBone, name, bodyPart);
+            subBone = new LineSegment(subBone.b, boneLine.b);
+            createAndBindBone(subBone.a, wingBones[1].bone, subBone, name, bodyPart);
         }
     }
 }

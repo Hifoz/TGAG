@@ -104,18 +104,40 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <param name="other">Animal to become</param>
     private void becomeOtherAnimal(GameObject other) {
-        LandAnimalPlayer myAnimal = GetComponent<LandAnimalPlayer>();
+        Animal myAnimal = GetComponent<Animal>();
         AnimalSkeleton mySkeleton = myAnimal.getSkeleton();
 
-        LandAnimalNPC otherAnimal = other.GetComponent<LandAnimalNPC>();
+        Animal otherAnimal = other.GetComponent<Animal>();
         AnimalSkeleton otherSkeleton = otherAnimal.getSkeleton();
 
-        LandAnimalNPC thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
-        thisAnimal.setSkeleton(mySkeleton);
-        thisAnimal.takeOverPlayer();
+        float mySpeed = myAnimal.getSpeed();
+        float otherSpeed = otherAnimal.getSpeed();
 
-        other.AddComponent<LandAnimalPlayer>().setSkeleton(otherSkeleton);
+        Animal thisAnimal = null;
+        if (GetComponent<LandAnimal>() != null) {
+            thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
+        } else if (GetComponent<AirAnimal>() != null) {
+            thisAnimal = gameObject.AddComponent<AirAnimalNPC>();
+        }      
+        
+        if (thisAnimal != null) {
+            thisAnimal.setSkeleton(mySkeleton);
+            thisAnimal.takeOverPlayer();
+            thisAnimal.setSpeed(mySpeed);
+        }
+
+        Animal myNewAnimal = null;
+        if (other.GetComponent<LandAnimal>() != null) {
+            myNewAnimal = other.AddComponent<LandAnimalPlayer>();
+        } else if (other.GetComponent<AirAnimal>() != null) {            
+            myNewAnimal = other.AddComponent<AirAnimalPlayer>();
+        }
         other.AddComponent<Player>().transferPlayer(magicTrail, animals);
+
+        if (myNewAnimal != null) {
+            myNewAnimal.setSkeleton(otherSkeleton);
+            myNewAnimal.setSpeed(otherSpeed);
+        }
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 
