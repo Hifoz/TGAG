@@ -7,7 +7,6 @@ using System.Linq;
 /**
  * Implementation of Poisson Dsic Sampling
  * Inspired by https://bl.ocks.org/mbostock/19168c663618b7f07158
- *             http://gregschlom.com/devlog/2014/06/29/Poisson-disc-sampling-Unity.html
  *             http://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf
  */
 class PoissonDiscSampler {
@@ -59,8 +58,12 @@ class PoissonDiscSampler {
 
         rng = new System.Random(seed);
 
-        activeList = new List<Vector2Int>(preExistingPoints);
+        activeList = new List<Vector2Int>(0);
         grid = new bool[width, height];
+
+        foreach (Vector2Int point in preExistingPoints) {
+            addSample(point);
+        }
     }
 
 
@@ -85,7 +88,7 @@ class PoissonDiscSampler {
      * 
      * 
      * ------- or -------
-     * using System.Linq; // Needed for ToList() function
+     * using System.Linq; // Needed for ToList() functionality
      * ...
      * Vector2[] samplesAsList = sampler.sample().ToList();
      * // Do stuff with samplesAsList
@@ -94,9 +97,9 @@ class PoissonDiscSampler {
      */
 
     /// <summary>
-    /// Returns a lazy sequence for use in foreach loops.
+    /// Returns an enumerable for use in foreach loops.
     /// </summary>
-    /// <returns>Lazy sequence for </returns>
+    /// <returns>enumarabale with samples</returns>
     public IEnumerable<Vector2Int> sample() {
         if(activeList.Count == 0) {
             yield return addSample(new Vector2Int(rng.Next(1, width), rng.Next(1, height)));

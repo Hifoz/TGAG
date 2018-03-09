@@ -48,8 +48,7 @@ class WaterMeshDataGenerator : MeshDataGenerator {
     }
 
     protected bool checkIfWaterVoxel(Vector3Int voxelPos) {
-        if (pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER)
-            return true;
-        return false;
+        return pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER;
+
     }
 }

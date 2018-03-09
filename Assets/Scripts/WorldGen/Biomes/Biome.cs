@@ -43,26 +43,14 @@ public class Biome {
     public readonly float treeVoxelSize = 0;
     public readonly float treeLeafThickness = 0;
     public readonly int grammarRecursionDepth = 0;
-    private float treeThickness;
+    private readonly float treeThickness;
 
 
     /// <summary>
     /// Generate a new biome based on a list of biomes.
     /// </summary>
-    /// <param name="biomes">Each pair should contain a biome, some value to calculate its weight(usually distance from some sample pos to the BiomePoint)</param>
+    /// <param name="biomes">Each pair should contain a biomeand its weight</param>
     public Biome(List<Pair<Biome, float>> biomes) {
-        // Calculate weights for all biomes:
-
-        float distSum = 0;
-        foreach (Pair<Biome, float> p in biomes) {
-            distSum += p.second;
-        }
-        foreach (Pair<Biome, float> p in biomes) {
-            p.second = p.second / distSum; // Change the float part of the pairs into a weight instead of the distance
-        }
-
-
-
         // Weighted averaging of members:
         foreach(Pair<Biome, float> b in biomes) {
             snowHeight += (int)(b.first.snowHeight * b.second);

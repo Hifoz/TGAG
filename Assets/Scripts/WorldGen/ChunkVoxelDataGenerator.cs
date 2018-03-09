@@ -16,7 +16,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
     public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
-        return (pos.y < height || biome.Structure3DRate * 0.75f > calc3DStructure(pos, biome, height) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
+        return (pos.y < height || biome.Structure3DRate > calc3DStructure(pos, biome, height) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
     }
 
     /// <summary>
@@ -27,6 +27,9 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
     public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<Biome, float>> biomes) {
+        if (biomes.Count == 1)
+            return posContainsVoxel(pos, height, biomes[0].first);
+
         float structure = 0;
         float unstructure = 0;
         float structureRate = 0;
@@ -38,6 +41,7 @@ public static class ChunkVoxelDataGenerator {
             structureRate += biomes[i].first.Structure3DRate * biomes[i].second;
             unstructureRate += biomes[i].first.Unstructure3DRate * biomes[i].second;
         }
+
         return (pos.y < height || structureRate > structure) && unstructureRate < unstructure;
     }
 
@@ -68,7 +72,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z], biomemap[x, z]))
+                    if (posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z], biomemap[x, z]))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
@@ -77,7 +81,7 @@ public static class ChunkVoxelDataGenerator {
                 }
             }
         }
-
+        
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
@@ -101,7 +105,7 @@ public static class ChunkVoxelDataGenerator {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Calculate snow height:
-        float snowHeight = SimplexNoise.Simplex2D(new Vector2(pos.x, pos.z), 0.008f) * 2;
+        float snowHeight = 0;
         foreach(Pair<Biome, float> p in biomes) {
             snowHeight += p.first.snowHeight * p.second;
         }
@@ -156,10 +160,8 @@ public static class ChunkVoxelDataGenerator {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, biome.frequency3D) +
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
-        float noise01 = (noise + 1f) / 2f;
-        noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
-
-        return noise01;
+        float noise01 = (noise + 1f) * 0.5f;
+        return Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
     }
 
     /// <summary>
@@ -172,8 +174,7 @@ public static class ChunkVoxelDataGenerator {
         float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) + 
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
-        float noise01 = (noise + 1f) / 2f;
-        noise01 = Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
-        return noise01;
+        float noise01 = (noise + 1f)  * 0.5f;
+        return Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
     }
 }
