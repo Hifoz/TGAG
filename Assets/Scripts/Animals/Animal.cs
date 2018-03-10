@@ -428,13 +428,14 @@ public abstract class Animal : MonoBehaviour {
         transform.position = pos;
         roamCenter = pos;
         roamCenter.y = 0;
+        desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
 
         RaycastHit hit;
         int layerMask = 1 << 8;
         if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, ChunkConfig.chunkHeight + 20f, layerMask)) {
             Vector3 groundTarget = hit.point + Vector3.up * 10;
             transform.position = groundTarget;
-            desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+            
             return true;
         }
         return false;

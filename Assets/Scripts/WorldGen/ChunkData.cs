@@ -12,6 +12,8 @@ public class ChunkData {
     public List<GameObject> waterChunk = new List<GameObject>();
     public GameObject[] trees;
 
+    private bool collidersEnabled = false;
+
     public ChunkData(Vector3 pos) {
         this.pos = pos;
     }
@@ -19,4 +21,14 @@ public class ChunkData {
     public ChunkData() {
         
     }
+
+    /// <summary>
+    /// Enables colliders for objects in chunk
+    /// </summary>
+    public void tryEnableColliders() {
+        if (!collidersEnabled) {
+            collidersEnabled = true;
+            //DO SHIT
+        }
+    } 
 }

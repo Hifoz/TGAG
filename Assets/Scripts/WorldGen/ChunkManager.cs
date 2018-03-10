@@ -157,21 +157,18 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void handleAnimals() {
         if (landAnimalPrefab) {
-            float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-            float lower = -maxDistance + LandAnimalNPC.roamDistance;
-            float upper = -lower;
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
-                if (animal.activeSelf && Vector3.Distance(animal.transform.position, player.position) > maxDistance) {
-                    float x = Random.Range(lower, upper);
-                    float z = Random.Range(lower, upper);
-                    float y = ChunkConfig.chunkHeight + 10;
-                    animal.transform.position = new Vector3(x, y, z) + player.transform.position;
-                    AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animal, animal.GetComponent<Animal>().GetType());                  
-                    animalSkeleton.index = i;                
-                    orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
-                    orderedAnimals.Add(i);
-                    animal.SetActive(false);
+                if (animal.activeSelf && isAnimalTooFarAway(animal.transform.position)) {
+                    Vector3 spawnPos = calculateValidSpawnPosition();
+                    if (spawnPos != Vector3.down) {
+                        animal.transform.position = spawnPos;
+                        AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animal, animal.GetComponent<Animal>().GetType());
+                        animalSkeleton.index = i;
+                        orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
+                        orderedAnimals.Add(i);
+                        animal.SetActive(false);
+                    }
                 }
             }
         }
@@ -194,11 +191,9 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void updateChunkGrid() {
         for (int i = 0; i < activeChunks.Count; i++) {
-            Vector3 chunkPos = (activeChunks[i].pos - offset - getPlayerPos()) / ChunkConfig.chunkSize;
-            int ix = Mathf.FloorToInt(chunkPos.x);
-            int iz = Mathf.FloorToInt(chunkPos.z);
-            if (checkBounds(ix, iz)) {
-                chunkGrid[ix, iz] = activeChunks[i];
+            Vector3Int chunkPos = wolrd2ChunkPos(activeChunks[i].pos);
+            if (checkBounds(chunkPos.x, chunkPos.z)) {
+                chunkGrid[chunkPos.x, chunkPos.z] = activeChunks[i];
             } else {
                 GameObject chunk = activeChunks[i].chunkParent;
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
@@ -228,7 +223,7 @@ public class ChunkManager : MonoBehaviour {
     private void orderNewChunks() {
         for (int x = 0; x < ChunkConfig.chunkCount; x++) {
             for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset + getPlayerPos();
+                Vector3 chunkPos = chunkPos2world(new Vector3(x, 0, z));
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     orders.Add(new Order(chunkPos, Task.CHUNK));
                     pendingChunks.Add(chunkPos);
@@ -326,26 +321,33 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {        
         GameObject animal = animals[animalSkeleton.index];
-        StartCoroutine(spawnAnimal(animal, animalSkeleton)); //For the cases where the animal is not above a chunk  
+        spawnAnimal(animal, animalSkeleton);
         orderedAnimals.Remove(animalSkeleton.index);
     }
 
     /// <summary>
-    /// Spawn animal until successfull
+    /// Answers the question in the function name,
+    /// despawn animals that are too far away
     /// </summary>
-    /// <param name="animal">Animal to spawn</param>
-    /// <returns></returns>
-    private IEnumerator spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
+    /// <param name="pos">pos to check</param>
+    /// <returns>bool true false</returns>
+    private bool isAnimalTooFarAway(Vector3 pos) {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
         float lower = -maxDistance + LandAnimalNPC.roamDistance;
         float upper = -lower;
-        while (!animal.GetComponent<Animal>().Spawn(animal.transform.position)) {  
-            float x = Random.Range(lower, upper);
-            float z = Random.Range(lower, upper);
-            float y = ChunkConfig.chunkHeight + 10;
-            animal.transform.position = new Vector3(x, y, z) + player.transform.position;
-            yield return 0;
+        return Vector3.Distance(pos, player.position) > maxDistance;
+    }
+
+    /// <summary>
+    /// Spawn animal
+    /// </summary>
+    /// <param name="animal">Animal to spawn</param>
+    /// <returns></returns>
+    private void spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
+        if (isAnimalTooFarAway(animal.transform.position)) {
+            animal.transform.position = calculateValidSpawnPosition();
         }
+        animal.GetComponent<Animal>().Spawn(animal.transform.position);
         animal.SetActive(true);
         animal.GetComponent<Animal>().setSkeleton(skeleton);
     }
@@ -360,6 +362,44 @@ public class ChunkManager : MonoBehaviour {
         x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
         z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
         return new Vector3(x, 0, z);
+    }
+
+    /// <summary>
+    /// Calculates the cunkPos (Index in chunkgrid) from world pos
+    /// </summary>
+    /// <param name="worldPos">Worldpos to convert</param>
+    /// <returns>chunkpos</returns>
+    private Vector3Int wolrd2ChunkPos(Vector3 worldPos) {
+        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / ChunkConfig.chunkSize;
+        return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
+    } 
+
+    /// <summary>
+    /// Calculates worldpos from chunkpos (ChunkGrid index)
+    /// </summary>
+    /// <param name="chunkPos">Chunkpos to convert</param>
+    /// <returns>Wolrd pos</returns>
+    private Vector3 chunkPos2world(Vector3 chunkPos) {
+        Vector3 world = chunkPos * ChunkConfig.chunkSize + offset + getPlayerPos();
+        return world;
+    }
+
+    /// <summary>
+    /// Calculates a valid spawn position for animals
+    /// </summary>
+    /// <returns>Vector3 pos, Vector3.down for when no pos can be calculated</returns>
+    private Vector3 calculateValidSpawnPosition() {
+        if (activeChunks.Count < 1) {
+            return Vector3.down;
+        }
+
+        Vector3 pos = activeChunks[Random.Range(0, activeChunks.Count)].pos + player.position;
+        pos += new Vector3(
+            Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2),
+            ChunkConfig.chunkHeight + 10,
+            Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2)
+        );
+        return pos;
     }
 
     /// <summary>
