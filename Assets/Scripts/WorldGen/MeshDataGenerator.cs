@@ -34,7 +34,6 @@ public class MeshDataGenerator {
     /// Generates a mesh from MeshData.
     /// </summary>
     /// <param name="md">MeshData</param>
-    /// <returns>Mesh</returns>
     public static void applyMeshData(MeshFilter meshFilter, MeshData md) {
         Mesh mesh = meshFilter.mesh;
         if (mesh == null) {
@@ -55,7 +54,6 @@ public class MeshDataGenerator {
     /// Generates a mesh from MeshData.
     /// </summary>
     /// <param name="md">MeshData</param>
-    /// <returns>Mesh</returns>
     public static void applyMeshData(MeshCollider meshCollider, MeshData md) {
         Mesh mesh = meshCollider.sharedMesh;
         if (mesh == null) {
@@ -69,6 +67,23 @@ public class MeshDataGenerator {
         mesh.colors = md.colors;
         mesh.uv = md.uvs;
         meshCollider.sharedMesh = mesh;
+    }
+
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// This overload can cause memory leaks, you need to delete the mesh when you are done with it (or reuse)
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    /// <returns>Mesh</returns>
+    public static Mesh applyMeshData(MeshData md) {
+        Mesh mesh = new Mesh();
+        mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        return mesh;
     }
 
     /// <summary>

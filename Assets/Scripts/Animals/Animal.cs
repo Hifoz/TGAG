@@ -435,7 +435,6 @@ public abstract class Animal : MonoBehaviour {
         if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, ChunkConfig.chunkHeight + 40f, layerMask)) {
             Vector3 groundTarget = hit.point + Vector3.up * 10;
             transform.position = groundTarget;
-            Debug.Log("NO GROUND!");
             return true;
         }
         return false;

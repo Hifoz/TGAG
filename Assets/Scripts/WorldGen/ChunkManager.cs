@@ -135,6 +135,12 @@ public class ChunkManager : MonoBehaviour {
                 Destroy(tree);
             }
 
+            foreach (var treeCollider in activeChunks[0].treeColliders) {
+                if (treeCollider != null) {
+                    Destroy(treeCollider);
+                }
+            }
+
             activeChunks.RemoveAt(0);
         }
 
@@ -156,6 +162,7 @@ public class ChunkManager : MonoBehaviour {
     /// Handles spawning of animals.
     /// </summary>
     private void handleAnimals() {
+        enableColliders(player.position);
         if (landAnimalPrefab) {
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
@@ -169,9 +176,26 @@ public class ChunkManager : MonoBehaviour {
                         orderedAnimals.Add(i);
                         animal.SetActive(false);
                     }
+                } else {
+                    enableColliders(animal.transform.position);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Enables colliders in the area
+    /// </summary>
+    /// <param name="worldPos">Position to use</param>
+    private void enableColliders(Vector3 worldPos) {
+        Vector3Int index = wolrd2ChunkPos(worldPos);
+        for (int x = index.x - 1; x <= index.x + 1; x++) {
+            for (int z = index.z - 1; z <= index.z + 1; z++) {
+                if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
+                    chunkGrid[x, z].tryEnableColliders();
+                }
+            }
+        }        
     }
 
     /// <summary>
@@ -208,7 +232,13 @@ public class ChunkManager : MonoBehaviour {
                 Destroy(chunk);
 
                 foreach(var tree in activeChunks[i].trees) {
-                    treePool.returnObject(tree);
+                    treePool.returnObject(tree);                    
+                }
+
+                foreach (var treeCollider in activeChunks[i].treeColliders) {
+                    if (treeCollider != null) {
+                        Destroy(treeCollider);
+                    }
                 }
 
                 activeChunks.RemoveAt(i);
@@ -276,9 +306,9 @@ public class ChunkManager : MonoBehaviour {
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
             MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
-            subChunk.GetComponent<MeshCollider>().sharedMesh = subChunk.GetComponent<MeshFilter>().mesh;
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
+            subChunk.GetComponent<MeshCollider>().enabled = false;
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
@@ -291,9 +321,9 @@ public class ChunkManager : MonoBehaviour {
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
-            waterChunk.GetComponent<MeshCollider>().sharedMesh = waterChunk.GetComponent<MeshFilter>().mesh;
             waterChunk.GetComponent<MeshCollider>().convex = true;
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
+            waterChunk.GetComponent<MeshCollider>().enabled = false;
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
@@ -301,16 +331,18 @@ public class ChunkManager : MonoBehaviour {
         }
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
+        Mesh[] treeColliders = new Mesh[chunkMeshData.trees.Length];
         for (int i = 0; i < trees.Length; i++) {
             GameObject tree = treePool.getObject();
             tree.transform.position = chunkMeshData.treePositions[i];
             MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
-            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshCollider>(), chunkMeshData.treeTrunks[i]);
+            treeColliders[i] = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
             tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
-
+            tree.GetComponent<MeshCollider>().enabled = false;
             trees[i] = tree;
         }
         cd.trees = trees;
+        cd.treeColliders = treeColliders;
 
         activeChunks.Add(cd);
     }
