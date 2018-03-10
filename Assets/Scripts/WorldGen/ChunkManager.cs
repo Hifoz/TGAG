@@ -159,7 +159,7 @@ public class ChunkManager : MonoBehaviour {
         if (landAnimalPrefab) {
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
-                if (animal.activeSelf && isAnimalTooFarAway(animal.transform.position)) {
+                if (!orderedAnimals.Contains(i) && isAnimalTooFarAway(animal.transform.position)) {
                     Vector3 spawnPos = calculateValidSpawnPosition();
                     if (spawnPos != Vector3.down) {
                         animal.transform.position = spawnPos;
@@ -333,8 +333,6 @@ public class ChunkManager : MonoBehaviour {
     /// <returns>bool true false</returns>
     private bool isAnimalTooFarAway(Vector3 pos) {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-        float lower = -maxDistance + LandAnimalNPC.roamDistance;
-        float upper = -lower;
         return Vector3.Distance(pos, player.position) > maxDistance;
     }
 
@@ -344,7 +342,8 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="animal">Animal to spawn</param>
     /// <returns></returns>
     private void spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
-        if (isAnimalTooFarAway(animal.transform.position)) {
+        Vector3Int chunkPos = wolrd2ChunkPos(animal.transform.position);
+        if (isAnimalTooFarAway(animal.transform.position) || (checkBounds(chunkPos.x, chunkPos.z) && chunkGrid[chunkPos.x, chunkPos.z] == null)) {
             animal.transform.position = calculateValidSpawnPosition();
         }
         animal.GetComponent<Animal>().Spawn(animal.transform.position);
@@ -392,8 +391,7 @@ public class ChunkManager : MonoBehaviour {
         if (activeChunks.Count < 1) {
             return Vector3.down;
         }
-
-        Vector3 pos = activeChunks[Random.Range(0, activeChunks.Count)].pos + player.position;
+        Vector3 pos = activeChunks[Random.Range(0, activeChunks.Count)].pos;
         pos += new Vector3(
             Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2),
             ChunkConfig.chunkHeight + 10,
