@@ -49,7 +49,7 @@ public class Biome {
     /// <summary>
     /// Generate a new biome based on a list of biomes.
     /// </summary>
-    /// <param name="biomes">Each pair should contain a biomeand its weight</param>
+    /// <param name="biomes">Each pair should contain a biome and its weight</param>
     public Biome(List<Pair<Biome, float>> biomes) {
         // Weighted averaging of members:
         foreach(Pair<Biome, float> b in biomes) {

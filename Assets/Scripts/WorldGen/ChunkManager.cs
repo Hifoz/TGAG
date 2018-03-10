@@ -401,8 +401,8 @@ public class ChunkManager : MonoBehaviour {
 
 
     public void generateBiomeBeacon(Vector2Int pos) {
-        GameObject o = Instantiate(biomeBeacon);
-        o.transform.position = new Vector3(pos.x, 200, pos.y);
+        //GameObject o = Instantiate(biomeBeacon);
+        //o.transform.position = new Vector3(pos.x, 200, pos.y);
     }
 
 

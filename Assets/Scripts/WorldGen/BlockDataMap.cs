@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Container for a blockmap
@@ -32,7 +33,7 @@ public class BlockDataMap {
     /// <param name="z">z of 3d index</param>
     /// <returns>1d index</returns>
     public int index1D(int x, int y, int z) {
-        return x + (y + z * sizeY) * sizeX;
+        return Mathf.Clamp(x, 0, sizeX) + (Mathf.Clamp(y, 0, sizeY) + Mathf.Clamp(z, 0, sizeZ) * sizeY) * sizeX;
     }
 
     /// <summary>

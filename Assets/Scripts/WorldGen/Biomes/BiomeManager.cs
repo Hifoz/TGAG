@@ -93,6 +93,10 @@ public class BiomeManager {
         return inRangeBiomes;
     }
 
+    public Biome getBiome(int x, int z) {
+        return new Biome(getInRangeBiomes(new Vector2Int(x, z)));
+    }
+
     /// <summary>
     /// Gets the biome that is closest to a position
     /// </summary>
