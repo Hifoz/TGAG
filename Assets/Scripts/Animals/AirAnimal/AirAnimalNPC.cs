@@ -70,6 +70,10 @@ public class AirAnimalNPC : AirAnimal {
         rb.velocity = velocity + gravity;
     }
 
+    /// <summary>
+    /// Tries to ascend
+    /// </summary>
+    /// <returns>success flag</returns>
     private bool tryAscend() {
         if (!isAscending) {
             StartCoroutine(ascend());
@@ -77,6 +81,10 @@ public class AirAnimalNPC : AirAnimal {
         return !isAscending;
     }
 
+    /// <summary>
+    /// Makes the NPC fly straight up
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator ascend() {
         isAscending = true;
         Vector3 originalHeading = desiredHeading;

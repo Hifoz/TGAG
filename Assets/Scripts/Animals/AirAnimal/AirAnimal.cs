@@ -6,19 +6,11 @@ using System.Collections;
 /// Super class for all air animals
 /// </summary>
 public abstract class AirAnimal : Animal {
+    //Animation stuff
     protected AirAnimalSkeleton airSkeleton;
 
-    protected const float walkSpeed = 5f;
-    protected const float flySpeed = 30f;
-    protected const float glideDrag = 0.25f;
-
     private const float animSpeedScalingAir = 0.05f;
-    private const float animSpeedScalingGround = 0.5f;
-
-    protected bool isLaunching = false;
-
-    private bool correctingSpine = false;
-    private bool spineIsCorrrect = true;
+    private const float animSpeedScalingGround = 0.5f;    
 
     private bool ragDollLegs = true;
 
@@ -26,7 +18,15 @@ public abstract class AirAnimal : Animal {
     private AnimalAnimation glidingAnimation;
     private AnimalAnimation walkingAnimation;
 
-    override protected abstract void move();
+    //Physics stuff
+    protected const float walkSpeed = 5f;
+    protected const float flySpeed = 30f;
+    protected const float glideDrag = 0.25f;
+
+    protected bool isLaunching = false;
+
+    private bool correctingSpine = false;
+    private bool spineIsCorrrect = true;
 
     private void Update() {
         if (skeleton != null) {
@@ -37,6 +37,15 @@ public abstract class AirAnimal : Animal {
             handleAnimations();
         }
     }
+
+    //    _____       _     _ _         __                  _   _                 
+    //   |  __ \     | |   | (_)       / _|                | | (_)                
+    //   | |__) |   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/ | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |   | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                            
+    //                                                                            
 
     /// <summary>
     /// sets the skeleton, and applies the new mesh.
@@ -53,6 +62,27 @@ public abstract class AirAnimal : Animal {
 
         generateAnimations();
     }
+
+
+    //    _   _                               _     _ _         __                  _   _                 
+    //   | \ | |                             | |   | (_)       / _|                | | (_)                
+    //   |  \| | ___  _ __ ______ _ __  _   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   | . ` |/ _ \| '_ \______| '_ \| | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |\  | (_) | | | |     | |_) | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_| \_|\___/|_| |_|     | .__/ \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                           | |                                                                      
+    //                           |_|                                                                      
+
+    override protected abstract void move();
+
+    //                   _                 _   _                __                  _   _                 
+    //       /\         (_)               | | (_)              / _|                | | (_)                
+    //      /  \   _ __  _ _ __ ___   __ _| |_ _  ___  _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //     / /\ \ | '_ \| | '_ ` _ \ / _` | __| |/ _ \| '_ \  |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //    / ____ \| | | | | | | | | | (_| | |_| | (_) | | | | | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   /_/    \_\_| |_|_|_| |_| |_|\__,_|\__|_|\___/|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                                                    
+    //                                                                                                    
 
     /// <summary>
     /// Generates animations for the AirAnimal
@@ -212,6 +242,29 @@ public abstract class AirAnimal : Animal {
         groundLimb(leftleg, 1f);
     }
 
+
+    /// <summary>
+    /// Sets the legs to ragdoll
+    /// </summary>
+    private void makeLegsRagDoll() {
+        List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
+        LineSegment rightLegsLine = skeleton.getLines(BodyPart.RIGHT_LEGS)[0];
+        StartCoroutine(ragdollLimb(rightLegs, rightLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
+
+        List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
+        LineSegment leftLegsLine = skeleton.getLines(BodyPart.LEFT_LEGS)[0];
+        StartCoroutine(ragdollLimb(leftLegs, leftLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
+    }
+
+    //    _____  _               _             __                  _   _                 
+    //   |  __ \| |             (_)           / _|                | | (_)                
+    //   | |__) | |__  _   _ ___ _  ___ ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/| '_ \| | | / __| |/ __/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                  __/ |                                                            
+    //                 |___/                                                             
+
     /// <summary>
     /// Function for calculating speed and heading
     /// </summary>
@@ -313,16 +366,4 @@ public abstract class AirAnimal : Animal {
         isLaunching = false;
     }
 
-    /// <summary>
-    /// Sets the legs to ragdoll
-    /// </summary>
-    private void makeLegsRagDoll() {
-        List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
-        LineSegment rightLegsLine = skeleton.getLines(BodyPart.RIGHT_LEGS)[0];
-        StartCoroutine(ragdollLimb(rightLegs, rightLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
-
-        List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
-        LineSegment leftLegsLine = skeleton.getLines(BodyPart.LEFT_LEGS)[0];
-        StartCoroutine(ragdollLimb(leftLegs, leftLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
-    }
 }
