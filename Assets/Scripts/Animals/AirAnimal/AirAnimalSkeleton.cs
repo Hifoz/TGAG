@@ -187,7 +187,7 @@ public class AirAnimalSkeleton : AnimalSkeleton {
         Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
         neckBoneBase.minAngles = new Vector3(-90, -90, -90);
         neckBoneBase.maxAngles = new Vector3(90, 90, 90);
-        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, neckBoneBase.bone, "Neck", BodyPart.NECK);
+        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, neckBoneBase.bone, skeletonLines[BodyPart.HEAD], "Neck", BodyPart.NECK);
         //TAIL
         int tailJointCount = bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS);
         createAndBindBones(skeletonLines[BodyPart.TAIL][0], spineBone.bone, tailJointCount, "Tail", BodyPart.TAIL);

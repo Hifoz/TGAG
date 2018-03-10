@@ -55,24 +55,24 @@ public abstract class AnimalSkeleton {
         public int indexOfBone; //This is a reference to the index of the bone that this skinning bone belongs to
         public LineSegment boneLine; //line of bone to use for skinning
     }
-
-    public int index; // Index of animal in ChunkManager
-    
+    //Misc members
+    public int index; // Index of animal in ChunkManager    
     protected static ThreadSafeRng rng = new ThreadSafeRng();
 
+    //Skeleton related members
     protected MixedDictionary<BodyParameter> bodyParametersRange;
     protected Transform rootBone;
     protected MixedDictionary<BodyParameter> bodyParameters = new MixedDictionary<BodyParameter>();
     protected Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
     protected Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
 
+    //Mesh related member variables
     private Vector3 lowerBounds;
     private Vector3 upperBounds;
     private MeshData meshData;
     private List<Matrix4x4> bindPoses = new List<Matrix4x4>();
     private List<BoneWeight> weights;
     private List<SkinningBone> skinningBones = new List<SkinningBone>();
-
     private const float pointMapBoundsModifier = 1.5f; //Number for expanding the size of pointmap, needed to get the egdes of animals meshified
     private const float voxelSize = 0.5f;
 

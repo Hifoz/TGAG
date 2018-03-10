@@ -6,9 +6,17 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Rigidbody))]
 public abstract class Animal : MonoBehaviour {
 
+    //Animation stuff
     protected const float ikSpeed = 10f;
     protected const float ikTolerance = 0.05f;
 
+    protected AnimalSkeleton skeleton;
+    protected delegate bool ragDollCondition();
+
+    protected AnimalAnimation currentAnimation;
+    protected bool animationInTransition = false;
+
+    //Physics stuff
     protected Vector3 desiredHeading = Vector3.zero;
     protected Vector3 heading = Vector3.zero;
     protected Vector3 spineHeading = Vector3.forward;
@@ -23,22 +31,24 @@ public abstract class Animal : MonoBehaviour {
     protected bool grounded = false;
     protected Vector3 gravity = Physics.gravity;
 
-    protected AnimalSkeleton skeleton;
-    protected delegate bool ragDollCondition();
-
     protected Rigidbody rb;
 
+    //NPC stuff
     protected Vector3 roamCenter;
 
-    protected AnimalAnimation currentAnimation;
-    protected bool animationInTransition = false;
 
     virtual protected void Start() {
         rb = GetComponent<Rigidbody>();
     }
 
-    protected abstract void move();
-    protected abstract void calculateSpeedAndHeading();
+    //    _____       _     _ _         __                  _   _                 
+    //   |  __ \     | |   | (_)       / _|                | | (_)                
+    //   | |__) |   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/ | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |   | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                            
+    //                                                                            
 
     /// <summary>
     /// Gets the underlying skeleton
@@ -84,6 +94,15 @@ public abstract class Animal : MonoBehaviour {
         this.speed = speed;
     }
 
+    //    _   _                               _     _ _         __                  _   _                 
+    //   | \ | |                             | |   | (_)       / _|                | | (_)                
+    //   |  \| | ___  _ __ ______ _ __  _   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   | . ` |/ _ \| '_ \______| '_ \| | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |\  | (_) | | | |     | |_) | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_| \_|\___/|_| |_|     | .__/ \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                           | |                                                                      
+    //                           |_|                                                                      
+
     /// <summary>
     /// Gets the speed of the animal
     /// </summary>
@@ -91,6 +110,18 @@ public abstract class Animal : MonoBehaviour {
     public float getSpeed() {
         return speed;
     }
+
+    protected abstract void move();
+    protected abstract void calculateSpeedAndHeading();
+
+    //                   _                 _   _                __                  _   _                 
+    //       /\         (_)               | | (_)              / _|                | | (_)                
+    //      /  \   _ __  _ _ __ ___   __ _| |_ _  ___  _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //     / /\ \ | '_ \| | '_ ` _ \ / _` | __| |/ _ \| '_ \  |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //    / ____ \| | | | | | | | | | (_| | |_| | (_) | | | | | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   /_/    \_\_| |_|_|_| |_| |_|\__,_|\__|_|\___/|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                                                    
+    //                                                                                                    
 
     /// <summary>
     /// Courutine for "ragdolling" a limb while condition is true.
@@ -287,6 +318,15 @@ public abstract class Animal : MonoBehaviour {
         animationInTransition = false;
     }
 
+    //    _____  _               _             __                  _   _                 
+    //   |  __ \| |             (_)           / _|                | | (_)                
+    //   | |__) | |__  _   _ ___ _  ___ ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/| '_ \| | | / __| |/ __/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                  __/ |                                                            
+    //                 |___/                                                             
+
     /// <summary>
     /// Does the physics for gravity
     /// </summary>
@@ -370,6 +410,15 @@ public abstract class Animal : MonoBehaviour {
             }
         }
     }
+
+    //    _   _ _____   _____    __                  _   _                 
+    //   | \ | |  __ \ / ____|  / _|                | | (_)                
+    //   |  \| | |__) | |      | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   | . ` |  ___/| |      |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |\  | |    | |____  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_| \_|_|     \_____| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                     
+    //                                                                     
 
     /// <summary>
     /// Spawns the animal at position
