@@ -3,12 +3,16 @@ using System.Collections.Generic;
 
 
 public abstract class LandAnimal : Animal {
+    //Animation stuff
+    bool ragDolling = false;
+    AnimalAnimation walkingAnimation;
+    LandAnimalSkeleton landSkeleton;
+    private float speedAnimScaling;
+
+    //Physics stuff
     protected const float walkSpeed = 5f;
     protected const float runSpeed = walkSpeed * 4f;
 
-    private float timer = 0;
-
-    bool ragDolling = false;
 
     // Update is called once per frame
     void Update() {
@@ -18,6 +22,7 @@ public abstract class LandAnimal : Animal {
             levelSpine();
             doGravity();
             handleRagdoll();
+            handleAnimations();
         }
     }
 
@@ -29,27 +34,108 @@ public abstract class LandAnimal : Animal {
         List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
         LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
         StartCoroutine(ragdollLimb(tail, tailLine, () => { return true; }, false, 4f, transform));
+        landSkeleton = (LandAnimalSkeleton)skeleton;
+
+        generateAnimations();
     }
 
     override protected abstract void move();
+
+    //                   _                 _   _                __                  _   _                 
+    //       /\         (_)               | | (_)              / _|                | | (_)                
+    //      /  \   _ __  _ _ __ ___   __ _| |_ _  ___  _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //     / /\ \ | '_ \| | '_ ` _ \ / _` | __| |/ _ \| '_ \  |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //    / ____ \| | | | | | | | | | (_| | |_| | (_) | | | | | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   /_/    \_\_| |_|_|_| |_| |_|\__,_|\__|_|\___/|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                                                    
+    //                           
+
+    /// <summary>
+    /// Generates the walking animation for land animals
+    /// </summary>
+    private void generateAnimations() {
+        //Getting relevant bones
+        int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
+        List<Bone> neckBones = skeleton.getBones(BodyPart.NECK); 
+
+        walkingAnimation = new AnimalAnimation();
+        int walkingAnimationFrameCount = 4;
+
+        Vector3[] legJoint1Frames = new Vector3[] { new Vector3(0, -45, 45), new Vector3(0, 0, 45), new Vector3(0, 45, 45), new Vector3(0, 0, 75) };
+        Vector3[] legJoint2Frames = new Vector3[] { new Vector3(0, 0, -90), new Vector3(0, 0, -90), new Vector3(0, 0, -90), new Vector3(0, 0, -45) };
+        for (int i = 0; i < legPairs; i++) {
+            List<Bone> rightleg = landSkeleton.getLeg(true, i);
+            List<Bone> leftleg = landSkeleton.getLeg(false, i);
+
+            BoneKeyFrames leg1_1 = new BoneKeyFrames(rightleg[0], walkingAnimationFrameCount, 2);
+            BoneKeyFrames leg1_2 = new BoneKeyFrames(rightleg[1], walkingAnimationFrameCount, 2);
+            BoneKeyFrames leg2_1 = new BoneKeyFrames(leftleg[0], walkingAnimationFrameCount, 2);
+            BoneKeyFrames leg2_2 = new BoneKeyFrames(leftleg[1], walkingAnimationFrameCount, 2);
+
+            leg1_1.setRotations(legJoint1Frames);
+            leg1_2.setRotations(legJoint2Frames);
+            leg2_1.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint1Frames, -1), 2));
+            leg2_2.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint2Frames, -1), 2));
+
+            walkingAnimation.add(leg1_1);
+            walkingAnimation.add(leg1_2);
+            walkingAnimation.add(leg2_1);
+            walkingAnimation.add(leg2_2);
+
+            legJoint1Frames = Utils.shiftArray(legJoint1Frames, 2);
+            legJoint2Frames = Utils.shiftArray(legJoint2Frames, 2);
+        }
+        BoneKeyFrames neckBase = new BoneKeyFrames(neckBones[0], walkingAnimationFrameCount, 4);
+        BoneKeyFrames neckTop = new BoneKeyFrames(neckBones[1], walkingAnimationFrameCount, 4);
+
+        neckBase.setRotations(new Vector3[] { new Vector3(20, -5, 10), new Vector3(0, 0, 0), new Vector3(20, 5, -10), new Vector3(0, 0, 0) });
+        neckTop.setRotations(Utils.multVectorArray(neckBase.Rotations, -1));
+
+        walkingAnimation.add(neckBase);
+        walkingAnimation.add(neckTop);
+
+        speedAnimScaling =  7f / (skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / skeleton.getBodyParameter<float>(BodyParameter.SCALE));
+        currentAnimation = walkingAnimation;
+    }
+
+    /// <summary>
+    /// Handles animation logic for animal
+    /// </summary>
+    private void handleAnimations() {
+        if (!ragDolling) {
+            currentAnimation.animate(speed * speedAnimScaling);
+            int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
+            for (int i = 0; i < legPairs; i++) {
+                groundLimb(landSkeleton.getLeg(true, i), 0.5f);
+                groundLimb(landSkeleton.getLeg(true, i), 0.5f);
+            }
+        }
+    }
 
     /// <summary>
     /// Function for handling ragdoll effects when free falling
     /// </summary>
     private void handleRagdoll() {
         if (grounded) {
-            walk();
-            timer += (Time.deltaTime * speed / 2f) / skeleton.getBodyParameter<float>(BodyParameter.SCALE);
             ragDolling = false;
         } else if (!grounded && !ragDolling) {
             ragDolling = true;
             for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
-                StartCoroutine(ragdollLimb(((LandAnimalSkeleton)skeleton).getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], () => { return !grounded; }));
-                StartCoroutine(ragdollLimb(((LandAnimalSkeleton)skeleton).getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], () => { return !grounded; }));
+                StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], () => { return !grounded; }, true));
+                StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], () => { return !grounded; }, true));
             }
             StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], () => { return !grounded; }, true));
         }
     }
+
+    //    _____  _               _             __                  _   _                 
+    //   |  __ \| |             (_)           / _|                | | (_)                
+    //   | |__) | |__  _   _ ___ _  ___ ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/| '_ \| | | / __| |/ __/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                  __/ |                                                            
+    //                 |___/                        
 
     /// <summary>
     /// Function for calculating speed and heading
@@ -65,58 +151,7 @@ public abstract class LandAnimal : Animal {
                 speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
             }
         }
-    }    
-
-    /// <summary>
-    /// Makes the animal do a walking animation
-    /// </summary>
-    private void walk() {
-        int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
-        for(int i = 0; i < legPairs; i++) {
-            walkLeg(((LandAnimalSkeleton)skeleton).getLeg(true, i), -1, Mathf.PI * i);
-            walkLeg(((LandAnimalSkeleton)skeleton).getLeg(false, i), 1, Mathf.PI * (i + 1));            
-        }
-    }
-
-    /// <summary>
-    /// Uses IK to make the leg walk.
-    /// </summary>
-    /// <param name="leg">List<Bone> leg</param>
-    /// <param name="sign">int sign, used to get a correct offset for IK target</param>
-    /// <param name="radOffset">Walk animation offset in radians</param>
-    private bool walkLeg(List<Bone> leg, int sign, float radOffset) {
-        float legLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH);
-        float jointLength = skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH);
-        Transform spine = skeleton.getBones(BodyPart.SPINE)[0].bone;
-
-        Vector3 target = leg[0].bone.position + sign * spine.right * legLength / 4f; //Offset to the right
-        target += heading * Mathf.Cos(timer + radOffset) * legLength / 4f;  //Forward/Backward motion
-        float rightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Right/Left motion
-        rightOffset = (rightOffset > 0) ? rightOffset : 0;
-        target += sign * spine.right * rightOffset;
-
-        Vector3 subTarget = target;
-        subTarget.y -= jointLength / 2f;
-        for (int i = 0; i < leg.Count - 1; i++) {
-            ccdPartial(leg.GetRange(i, 2), target, ikSpeed / 4f);
-        }
-
-        RaycastHit hit;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(target, spine.rotation * Vector3.down), out hit, 50f, layerMask)) {
-            float heightOffset = (Mathf.Sin(timer + Mathf.PI + radOffset)) * legLength / 8f; //Up/Down motion
-            heightOffset = (heightOffset > 0) ? heightOffset : 0;
-
-            target = hit.point;
-            target.y += heightOffset;
-            if (ccdPartial(leg, target, ikSpeed)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    
+    }     
 
     private void OnCollisionEnter(Collision collision) {
         gravity = Vector3.zero;

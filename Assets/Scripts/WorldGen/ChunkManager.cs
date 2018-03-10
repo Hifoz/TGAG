@@ -105,9 +105,9 @@ public class ChunkManager : MonoBehaviour {
         GameObject playerObj = player.gameObject;
         if (player.tag == "Player") { //To account for dummy players
             Camera.main.GetComponent<CameraController>().cameraHeight = 7.5f;
-            AnimalSkeleton playerSkeleton = new AirAnimalSkeleton(playerObj.transform);
+            AnimalSkeleton playerSkeleton = new LandAnimalSkeleton(playerObj.transform);
             playerSkeleton.generateInThread();
-            playerObj.GetComponent<AirAnimalPlayer>().setSkeleton(playerSkeleton);
+            playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
             playerObj.GetComponent<Player>().initPlayer(animals);
         }
     }

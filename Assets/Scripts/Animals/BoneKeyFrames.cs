@@ -187,6 +187,7 @@ public class BoneKeyFrames {
         frameTimeData.thisFrame = (int)frameTimeData.frame;
         frameTimeData.nextFrame = (frameTimeData.thisFrame + 1) % frameCount;
         frameTimeData.timeModifier = speed / (frameCount * frameTimes[frameTimeData.thisFrame]);
+        frameTimeData.timeModifier /= animTime;
         return frameTimeData;
     }
 }

@@ -72,7 +72,6 @@ public class LandAnimalSkeleton : AnimalSkeleton {
     /// </summary>
     override protected void makeSkeletonLines() {
         generateBodyParams();
-        //generateBodyParamsDebug(true, true);
         //SPINE
         float spineLen = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
         LineSegment spineLine = new LineSegment(
@@ -106,8 +105,8 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         float spineLength = bodyParameters.Get<float>(BodyParameter.SPINE_LENGTH);
         for (int i = 0; i < legPairs; i++) {
             Vector3 offset = -Vector3.forward * spineLength * ((float)i / (legPairs - 1)) + spineLine.a;
-            LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
-            LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
+            LineSegment right = new LineSegment(new Vector3(0, 0, 0), new Vector3(0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
+            LineSegment left = new LineSegment(new Vector3(0, 0, 0), new Vector3(-0.5f, -0.5f, 0).normalized * legLength, legRadius) + offset;
             addSkeletonLine(right, BodyPart.RIGHT_LEGS);
             addSkeletonLine(left, BodyPart.LEFT_LEGS);
         }
@@ -146,7 +145,7 @@ public class LandAnimalSkeleton : AnimalSkeleton {
         Bone neckBoneBase = createAndBindBone(skeletonLines[BodyPart.NECK][0].a, spineBone.bone, skeletonLines[BodyPart.NECK][0], "Neck", BodyPart.NECK);
         neckBoneBase.minAngles = new Vector3(-90, -90, -90);
         neckBoneBase.maxAngles = new Vector3(90, 90, 90);
-        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, neckBoneBase.bone, "Neck", BodyPart.NECK);
+        Bone neckBone = createAndBindBone(skeletonLines[BodyPart.NECK][0].b, neckBoneBase.bone, skeletonLines[BodyPart.HEAD], "Neck", BodyPart.NECK);
         //TAIL
         int tailJointCount = bodyParameters.Get<int>(BodyParameter.TAIL_JOINTS);
         createAndBindBones(skeletonLines[BodyPart.TAIL][0], spineBone.bone, tailJointCount, "Tail", BodyPart.TAIL);

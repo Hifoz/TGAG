@@ -8,6 +8,10 @@ public class LandAnimalNPC : LandAnimal {
     override protected void Start() {
         base.Start();
         desiredSpeed = walkSpeed;
+
+        //LandAnimalSkeleton skeleton = new LandAnimalSkeleton(transform);
+        //skeleton.generateInThread();
+        //setSkeleton(skeleton);
     }
 
     /// <summary>
