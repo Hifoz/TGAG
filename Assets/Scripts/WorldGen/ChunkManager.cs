@@ -167,16 +167,8 @@ public class ChunkManager : MonoBehaviour {
                     float z = Random.Range(lower, upper);
                     float y = ChunkConfig.chunkHeight + 10;
                     animal.transform.position = new Vector3(x, y, z) + player.transform.position;
-                    AnimalSkeleton animalSkeleton;
-                    if (animal.GetComponent<LandAnimal>() != null) {
-                        animalSkeleton = new LandAnimalSkeleton(animal.transform);
-                        animalSkeleton.index = i;
-                    } else if (animal.GetComponent<AirAnimal>() != null) {
-                        animalSkeleton = new AirAnimalSkeleton(animal.transform);
-                        animalSkeleton.index = i;
-                    } else {
-                        throw new System.Exception("ChunkManager, handleAnimals error! The provided animal has no supported animal component!");
-                    }                    
+                    AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animal, animal.GetComponent<Animal>().GetType());                  
+                    animalSkeleton.index = i;                
                     orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
                     orderedAnimals.Add(i);
                     animal.SetActive(false);

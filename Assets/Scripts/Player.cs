@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 
 public class Player : MonoBehaviour {
@@ -113,31 +114,15 @@ public class Player : MonoBehaviour {
         float mySpeed = myAnimal.getSpeed();
         float otherSpeed = otherAnimal.getSpeed();
 
-        Animal thisAnimal = null;
-        if (GetComponent<LandAnimal>() != null) {
-            thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
-        } else if (GetComponent<AirAnimal>() != null) {
-            thisAnimal = gameObject.AddComponent<AirAnimalNPC>();
-        }      
-        
-        if (thisAnimal != null) {
-            thisAnimal.setSkeleton(mySkeleton);
-            thisAnimal.takeOverPlayer();
-            thisAnimal.setSpeed(mySpeed);
-        }
+        Animal thisAnimal = AnimalUtils.addAnimalComponentNPC(gameObject, myAnimal.GetType());
+        thisAnimal.setSkeleton(mySkeleton);
+        thisAnimal.takeOverPlayer();
+        thisAnimal.setSpeed(mySpeed);
 
-        Animal myNewAnimal = null;
-        if (other.GetComponent<LandAnimal>() != null) {
-            myNewAnimal = other.AddComponent<LandAnimalPlayer>();
-        } else if (other.GetComponent<AirAnimal>() != null) {            
-            myNewAnimal = other.AddComponent<AirAnimalPlayer>();
-        }
+        Animal myNewAnimal = AnimalUtils.addAnimalComponentPlayer(other, otherAnimal.GetType());
         other.AddComponent<Player>().transferPlayer(magicTrail, animals);
-
-        if (myNewAnimal != null) {
-            myNewAnimal.setSkeleton(otherSkeleton);
-            myNewAnimal.setSpeed(otherSpeed);
-        }
+        myNewAnimal.setSkeleton(otherSkeleton);
+        myNewAnimal.setSpeed(otherSpeed);      
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 
