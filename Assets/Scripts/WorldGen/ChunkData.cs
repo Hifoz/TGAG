@@ -11,6 +11,9 @@ public class ChunkData {
     public List<GameObject> terrainChunk = new List<GameObject>();
     public List<GameObject> waterChunk = new List<GameObject>();
     public GameObject[] trees;
+    public Mesh[] treeColliders;
+
+    private bool collidersEnabled = false;
 
     public ChunkData(Vector3 pos) {
         this.pos = pos;
@@ -19,4 +22,34 @@ public class ChunkData {
     public ChunkData() {
         
     }
+
+    /// <summary>
+    /// Enables colliders for objects in chunk
+    /// </summary>
+    public void tryEnableColliders() {
+        if (!collidersEnabled) {
+            collidersEnabled = true;
+
+            for (int i = 0; i < terrainChunk.Count; i++) {
+                GameObject chunk = terrainChunk[i];
+                MeshCollider collider = chunk.GetComponent<MeshCollider>();
+                collider.enabled = true;
+                collider.sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
+            }
+
+            for (int i = 0; i < waterChunk.Count; i++) {
+                GameObject chunk = waterChunk[i];
+                MeshCollider collider = chunk.GetComponent<MeshCollider>();
+                collider.enabled = true;
+                collider.sharedMesh = chunk.GetComponent<MeshFilter>().mesh;
+            }
+
+            for (int i = 0; i < trees.Length; i++) {
+                MeshCollider collider = trees[i].GetComponent<MeshCollider>();
+                collider.enabled = true;
+                collider.sharedMesh = treeColliders[i];
+                treeColliders[i] = null;
+            }
+        }
+    } 
 }
