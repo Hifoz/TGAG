@@ -11,7 +11,8 @@ public enum BodyPart {
     NECK,
     SPINE,
     RIGHT_LEGS, LEFT_LEGS,
-    TAIL
+    TAIL,
+    RIGHT_WING, LEFT_WING
 }
 
 /// <summary>
@@ -23,7 +24,8 @@ public enum BodyParameter {
     NECK_LENGTH, NECK_RADIUS,
     SPINE_LENGTH, SPINE_RADIUS,
     LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH, LEG_RADIUS,
-    TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH, TAIL_RADIUS 
+    TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH, TAIL_RADIUS,
+    WING_LENGTH, WING_JOINTS, WING_JOINT_LENGTH, WING_RADIUS
 }
 
 /// <summary>
@@ -53,24 +55,24 @@ public abstract class AnimalSkeleton {
         public int indexOfBone; //This is a reference to the index of the bone that this skinning bone belongs to
         public LineSegment boneLine; //line of bone to use for skinning
     }
-
-    public int index; // Index of animal in ChunkManager
-    
+    //Misc members
+    public int index; // Index of animal in ChunkManager    
     protected static ThreadSafeRng rng = new ThreadSafeRng();
 
+    //Skeleton related members
     protected MixedDictionary<BodyParameter> bodyParametersRange;
     protected Transform rootBone;
     protected MixedDictionary<BodyParameter> bodyParameters = new MixedDictionary<BodyParameter>();
     protected Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
     protected Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
 
+    //Mesh related member variables
     private Vector3 lowerBounds;
     private Vector3 upperBounds;
     private MeshData meshData;
     private List<Matrix4x4> bindPoses = new List<Matrix4x4>();
     private List<BoneWeight> weights;
     private List<SkinningBone> skinningBones = new List<SkinningBone>();
-
     private const float pointMapBoundsModifier = 1.5f; //Number for expanding the size of pointmap, needed to get the egdes of animals meshified
     private const float voxelSize = 0.5f;
 
@@ -261,14 +263,19 @@ public abstract class AnimalSkeleton {
     /// <param name="jointCount">Number of joints in bone</param>
     /// <param name="name">Name of bone</param>
     /// <param name="bodyPart">Bodypart of bone</param>
-    protected void createAndBindBones(LineSegment line, Transform parent, int jointCount, string name, BodyPart bodyPart) {
+    /// <returns>List<Bone> bones</returns>
+    protected List<Bone> createAndBindBones(LineSegment line, Transform parent, int jointCount, string name, BodyPart bodyPart) {
+        List<Bone> bones = new List<Bone>();
         float jointLength = line.length / jointCount;
         for(int i = 0; i < jointCount; i++) {
             LineSegment skinningBone = new LineSegment(line.a + line.direction * jointLength * i, line.a + line.direction * jointLength * (i + 1));
-            parent = createAndBindBone(skinningBone.a, parent, skinningBone, name, bodyPart).bone;
+            Bone bone = createAndBindBone(skinningBone.a, parent, skinningBone, name, bodyPart);
+            parent = bone.bone;
+            bones.Add(bone);
         }
         //add Foot
         createAndBindBone(line.b, parent, name + " effector", bodyPart);
+        return bones;
     }
 
     /// <summary>

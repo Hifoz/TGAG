@@ -3,46 +3,15 @@ using System.Collections;
 
 public class LandAnimalNPC : LandAnimal {
 
-    public const float roamDistance = 40;
-    private Vector3 roamCenter;
+    public const float roamDistance = 50;
 
     override protected void Start() {
         base.Start();
         desiredSpeed = walkSpeed;
-    }
 
-    /// <summary>
-    /// Spawns the animal at position
-    /// </summary>
-    /// <param name="pos">Vector3 pos</param>
-    public bool Spawn(Vector3 pos) {
-        transform.position = pos;
-        roamCenter = pos;
-        roamCenter.y = 0;
-
-        RaycastHit hit;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, ChunkConfig.chunkHeight + 20f, layerMask)) {
-            Vector3 groundTarget = hit.point + Vector3.up * 10;
-            transform.position = groundTarget;
-            desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-            return true;
-        }
-        return false;        
-    }
-
-    /// <summary>
-    /// Function for when this animal used to be a player
-    /// </summary>
-    public void takeOverPlayer() {
-        roamCenter = transform.position + new Vector3(Random.Range(2f, 5f), 100, Random.Range(2f, 5f));
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(roamCenter, Vector3.down), out hit)) {
-            roamCenter = hit.point;    
-        }
-
-        desiredHeading = transform.rotation * Vector3.forward;
-        desiredHeading.y = 0;
+        //LandAnimalSkeleton skeleton = new LandAnimalSkeleton(transform);
+        //skeleton.generateInThread();
+        //setSkeleton(skeleton);
     }
 
     /// <summary>

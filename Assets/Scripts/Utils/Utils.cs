@@ -14,13 +14,51 @@ public static class Utils {
     }
 
     /// <summary>
-    /// Modulos a value (Because % operator isn't proper modulo, but remainder, so it doesn't work properly on negative numbers)
+    /// Returns the fraction of the float
     /// </summary>
-    /// <param name="v"></param>
-    /// <param name="m"></param>
-    /// <returns></returns>
-    public static int mod(int v, int m) {
-        int r = v % m;
-        return r < 0 ? r + m : r;
+    /// <param name="number">Number to get fraction from</param>
+    /// <returns>float fraction</returns>
+    public static float frac(float number) {
+        return number - Mathf.Floor(number);
+    }
+
+    /// <summary>
+    /// Multiplies the provided array of Vector3 by number (element wise multiplication)
+    /// </summary>
+    /// <param name="source">Vector3[]</param>
+    /// <param name="number">float</param>
+    /// <returns>resulting Vector3[] Array</returns>
+    public static Vector3[] multVectorArray(Vector3[] source, float number) {
+        Vector3[] result = new Vector3[source.Length];
+        for(int i = 0; i < result.Length; i++) {
+            result[i] = source[i] * number;
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Shifts the array by a factor of "shift" (provided int)
+    /// </summary>
+    /// <typeparam name="T">Type of array</typeparam>
+    /// <param name="array">Array to shift</param>
+    /// <param name="shift">How many indexes to shift by</param>
+    /// <returns>Resulting array</returns>
+    public static T[] shiftArray<T>(T[] array, int shift) {
+        T[] result = new T[array.Length];
+        for(int i = 0; i < result.Length; i++) {
+            result[i] = array[mod(i + shift, array.Length)];
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Source: https://stackoverflow.com/questions/1082917/mod-of-negative-number-is-melting-my-brain
+    /// A mathematically correct modulo operation, that does not return negatives.
+    /// </summary>
+    /// <param name="x">number to modulate</param>
+    /// <param name="m">modulus number</param>
+    /// <returns>mod(x, m)</returns>
+    public static int mod(int x, int m) {
+        return (x % m + m) % m;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 
 public class Player : MonoBehaviour {
@@ -104,18 +105,24 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <param name="other">Animal to become</param>
     private void becomeOtherAnimal(GameObject other) {
-        LandAnimalPlayer myAnimal = GetComponent<LandAnimalPlayer>();
+        Animal myAnimal = GetComponent<Animal>();
         AnimalSkeleton mySkeleton = myAnimal.getSkeleton();
 
-        LandAnimalNPC otherAnimal = other.GetComponent<LandAnimalNPC>();
+        Animal otherAnimal = other.GetComponent<Animal>();
         AnimalSkeleton otherSkeleton = otherAnimal.getSkeleton();
 
-        LandAnimalNPC thisAnimal = gameObject.AddComponent<LandAnimalNPC>();
+        float mySpeed = myAnimal.getSpeed();
+        float otherSpeed = otherAnimal.getSpeed();
+
+        Animal thisAnimal = AnimalUtils.addAnimalComponentNPC(gameObject, myAnimal.GetType());
         thisAnimal.setSkeleton(mySkeleton);
         thisAnimal.takeOverPlayer();
+        thisAnimal.setSpeed(mySpeed);
 
-        other.AddComponent<LandAnimalPlayer>().setSkeleton(otherSkeleton);
+        Animal myNewAnimal = AnimalUtils.addAnimalComponentPlayer(other, otherAnimal.GetType());
         other.AddComponent<Player>().transferPlayer(magicTrail, animals);
+        myNewAnimal.setSkeleton(otherSkeleton);
+        myNewAnimal.setSpeed(otherSpeed);      
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 
