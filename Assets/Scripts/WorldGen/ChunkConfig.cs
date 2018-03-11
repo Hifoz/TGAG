@@ -9,7 +9,7 @@ public static class ChunkConfig {
     //General
     public static int seed = 1337;
     public static int chunkSize = 20;
-    public static int chunkCount = 80;
+    public static int chunkCount = 40;
     public static int chunkHeight = 200;
     public static int waterHeight = 18;
     public static int snowHeight = 90;

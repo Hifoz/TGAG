@@ -30,7 +30,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     void Start() {
         Settings.load();
-        biomeManager = new BiomeManager(null);
+        biomeManager = new BiomeManager();
         ChunkConfig.chunkCount = 20;
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
     }

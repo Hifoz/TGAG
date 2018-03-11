@@ -14,15 +14,9 @@ using UnityEngine;
  *      Could also affect the texture type, so different foliage types can have different leaves and tree textures?
  * 
  * Ideas for other biome modifiers:
- * - Skybox-changes?
- * - Different rules for CVDG.decideBlockType() based on chunk
- * 
- * 
- * 
- * 
- * 
- * IMPORTANT TO DO:
- *  - CVDT.findGroundLevel() currently only using first biome on position
+ * - Skybox
+ * - decideBlockType()
+ * - Trees
  * 
  */
 

@@ -19,15 +19,17 @@ public class BiomeManager {
 
     private System.Random rng;
 
-
-    public BiomeManager(ChunkManager chunkManager) {
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public BiomeManager() {
         rng = new System.Random(ChunkConfig.seed);
 
         // Initialize biomes
         biomes.Add(new BasicBiome());
         biomes.Add(new BasicBiome2());
         biomes.Add(new BasicBiome3());
-        
+
 
         // Initialize biome points
         biomeGrid = new Pair<Biome, Vector2Int>[gridWidth, gridHeight];
@@ -35,11 +37,7 @@ public class BiomeManager {
         Vector2Int offset = new Vector2Int(gridWidth/2, gridHeight/2);
         foreach (Vector2Int sample in poissonSampler.sample()) {
             biomeGrid[sample.x, sample.y] = new Pair<Biome, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * gridScale);
-
-            if(chunkManager != null)
-                chunkManager.generateBiomeBeacon((sample - offset) * gridScale);
         }
-
     }
 
 

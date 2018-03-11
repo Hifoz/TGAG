@@ -45,7 +45,6 @@ public class ChunkManager : MonoBehaviour {
 
     // Biome
     private BiomeManager biomeManager;
-    public GameObject biomeBeacon;
 
 
     /// <summary>
@@ -53,7 +52,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     void Start () {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
-        biomeManager = new BiomeManager(this);
+        biomeManager = new BiomeManager();
         Reset();
         //StartCoroutine(debugRoutine());
     }
@@ -396,15 +395,4 @@ public class ChunkManager : MonoBehaviour {
     private void OnApplicationQuit() {
         stopThreads();
     }
-
-
-
-
-    public void generateBiomeBeacon(Vector2Int pos) {
-        //GameObject o = Instantiate(biomeBeacon);
-        //o.transform.position = new Vector3(pos.x, 200, pos.y);
-    }
-
-
-
 }

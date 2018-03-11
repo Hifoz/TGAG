@@ -62,9 +62,6 @@ public static class ChunkVoxelDataGenerator {
             for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
                 heightmap[x, z] = (int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z]);
-                //for (int i = 0; i < biomemap[x, z].Count; i++) {
-                //    heightmap[x, z] += (int)(calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z][i].first) * biomemap[x, z][i].second);
-                //}
             }
         }
 
@@ -82,28 +79,6 @@ public static class ChunkVoxelDataGenerator {
                 }
             }
         }
-
-        //for (int x = 1; x < ChunkConfig.chunkSize + 1; x++) {
-        //    for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
-        //        for (int z = 1; z < ChunkConfig.chunkSize + 1; z++) {
-        //            int count = 0;
-        //            if (data.mapdata[data.index1D(x + 1, y, z)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x - 1, y, z)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x + 1, y, z + 1)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x,     y, z + 1)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x - 1, y, z + 1)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x + 1, y, z - 1)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x,     y, z - 1)].blockType == BlockData.BlockType.DIRT) count++;
-        //            if (data.mapdata[data.index1D(x - 1, y, z - 1)].blockType == BlockData.BlockType.DIRT) count++;
-
-        //            if (data.mapdata[data.index1D(x, y, z)].blockType == BlockData.BlockType.DIRT && count <= 3)
-        //                data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.NONE;
-        //            else if (data.mapdata[data.index1D(x, y, z)].blockType == BlockData.BlockType.NONE && count >= 5)
-        //                data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.DIRT;
-        //        }
-        //    }
-        //}
-
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
@@ -155,6 +130,7 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
+    [Obsolete("This method is now obsolete, use calcHeight(Vector3, List<Pair<Biome, float>>) to calculate the terrain 2d heightmap")]
     public static float calcHeight(Vector3 pos, Biome biome) {
         pos = new Vector3(pos.x, pos.z, 0);
         float finalNoise = 0;
@@ -180,11 +156,13 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
     public static float calcHeight(Vector3 pos, List<Pair<Biome, float>> biomes) {
+        // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it would be nice if this was not the case, so one could have differing octave counts and stuff
+        //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
         pos = new Vector3(pos.x, pos.z, 0);
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
-        for (int octave = 0; octave < 6; octave++) {
+        for (int octave = 0; octave < ChunkConfig.octaves2D; octave++) {
             Vector3 samplePos = pos + new Vector3(1, 1, 0) * ChunkConfig.seed * octaveStrength;
             float noise = 0;
             for (int b = 0; b < biomes.Count; b++) {
@@ -196,7 +174,7 @@ public static class ChunkVoxelDataGenerator {
             octaveStrength = octaveStrength / 2;
         }
         finalNoise = finalNoise / noiseScaler;
-        finalNoise = Mathf.Pow(finalNoise, 3);
+        finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent2D);
         return finalNoise * ChunkConfig.chunkHeight;
     }
 
