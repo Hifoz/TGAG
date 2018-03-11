@@ -303,7 +303,6 @@ float4 getTexel(int type, int modType, float3 pos, float3 posEye, half4 halfWhit
 				}
 				else {
 					float4 modVal = sampleTexelValue(modType, pos, pos + float3(x * sampleDistance, y * sampleDistance, z * sampleDistance), sampleDistance, halfWhite);
-					float4 val;
 					texelTotal.rgb += lerp(modVal, baseVal, 1 - modVal.a).rgb;
 					texelTotal.a += min(modVal.a + baseVal.a, 1);
 				}

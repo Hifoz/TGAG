@@ -541,6 +541,7 @@ MonoBehaviour:
     type: 2}
   airAnimalPrefab: {fileID: 1263446260787308, guid: 70d74767b31c04843b941187b0032569,
     type: 2}
+  biomeBeacon: {fileID: 1212521721}
 --- !u!4 &988479787
 Transform:
   m_ObjectHideFlags: 0

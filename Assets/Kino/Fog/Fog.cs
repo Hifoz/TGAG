@@ -61,9 +61,9 @@ namespace Kino
         #endregion
 
         #region Private Properties
-
+#pragma warning disable 0649 // Because this warnign showing is annoying
         [SerializeField] Shader _shader;
-
+#pragma warning restore 0649
         Material _material;
 
         #endregion

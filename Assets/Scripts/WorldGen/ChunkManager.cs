@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,24 +27,33 @@ public class ChunkManager : MonoBehaviour {
     public GameObject airAnimalPrefab;
     private Vector3 offset;
 
+    // Chunks
     private List<ChunkData> activeChunks = new List<ChunkData>();
     private ChunkData[,] chunkGrid;
     private GameObjectPool chunkPool;
     private GameObjectPool treePool;
 
+    // Thread communication
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
+
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
+    // Animals
     private GameObject[] animals = new GameObject[20]; //Might want to pool animals in the future too, but for now they're just at a fixed size of 20
     private HashSet<int> orderedAnimals = new HashSet<int>();
+
+    // Biomes
+    private BiomeManager biomeManager;
+
 
     /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start () {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
+        biomeManager = new BiomeManager();
         Reset();
         //StartCoroutine(debugRoutine());
     }
@@ -54,8 +64,9 @@ public class ChunkManager : MonoBehaviour {
         updateChunkGrid();
         orderNewChunks();
         consumeThreadResults();
-        handleAnimals();        
+        handleAnimals();
     }
+
 
     //    __  __       _          __                  _   _                 
     //   |  \/  |     (_)        / _|                | | (_)                
@@ -66,7 +77,7 @@ public class ChunkManager : MonoBehaviour {
     //                                                                      
     //                                                                      
 
-   
+
     /// <summary>
     /// Handles spawning of animals.
     /// </summary>
@@ -92,7 +103,7 @@ public class ChunkManager : MonoBehaviour {
                     }
                     if (animal.activeSelf) {
                         enableColliders(animal.transform.position);
-                    }                    
+                    }
                 }
             }
         }
@@ -350,11 +361,11 @@ public class ChunkManager : MonoBehaviour {
         if (activeChunks.Count < 1) {
             return Vector3.down;
         }
-        Vector3 pos = activeChunks[Random.Range(0, activeChunks.Count)].pos;
+        Vector3 pos = activeChunks[UnityEngine.Random.Range(0, activeChunks.Count)].pos;
         pos += new Vector3(
-            Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2),
+            UnityEngine.Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2),
             ChunkConfig.chunkHeight + 10,
-            Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2)
+            UnityEngine.Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2)
         );
         return pos;
     }
@@ -413,7 +424,7 @@ public class ChunkManager : MonoBehaviour {
         results = new LockingQueue<Result>(); //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
         CVDT = new ChunkVoxelDataThread[threadCount];
         for (int i = 0; i < threadCount; i++) {
-            CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
+            CVDT[i] = new ChunkVoxelDataThread(orders, results, i, biomeManager);
         }
 
         chunkPool = new GameObjectPool(chunkPrefab, transform, "chunk", false);
@@ -421,7 +432,7 @@ public class ChunkManager : MonoBehaviour {
 
         if (landAnimalPrefab != null) {
             for (int i = 0; i < animals.Length; i++) {                
-                animals[i] = Instantiate((Random.Range(0, 2) == 0) ? landAnimalPrefab : airAnimalPrefab);
+                animals[i] = Instantiate((UnityEngine.Random.Range(0, 2) == 0) ? landAnimalPrefab : airAnimalPrefab);
                 animals[i].transform.position = new Vector3(9999, 9999, 9999);
                 animals[i].SetActive(false);
             }

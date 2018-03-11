@@ -1,8 +1,9 @@
 ﻿/// <summary>
 /// Simple pair class
 /// </summary>
-/// <typeparam name="T">Type of pair</typeparam>
-public class Pair<T> {
+/// <typeparam name="T">Type of first value</typeparam>
+/// <typeparam name="T">Type of second value</typeparam>
+public class Pair<T, U> {
 
     /// <summary>
     /// Empty constructor
@@ -16,11 +17,11 @@ public class Pair<T> {
     /// </summary>
     /// <param name="first">First item</param>
     /// <param name="second">Second item</param>
-    public Pair(T first, T second) {
+    public Pair(T first, U second) {
         this.first = first;
         this.second = second;
     }
 
     public T first;
-    public T second;
+    public U second;
 }

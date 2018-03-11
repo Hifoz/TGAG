@@ -475,6 +475,7 @@ public abstract class AnimalSkeleton {
                 scale = bodyParameters.Get<float>(BodyParameter.SCALE);
             }
 
+
             if (pair.Value.GetType().Equals(typeof(Range<float>))) {
                 Range<float> range = (Range<float>)pair.Value;
                 if (maxFloat) {
@@ -483,6 +484,7 @@ public abstract class AnimalSkeleton {
                     bodyParameters.Add(pair.Key, rng.randomFloat(range.Min, range.Min) * scale);
                 }
             }
+
 
             if (pair.Value.GetType().Equals(typeof(Range<int>))) {
                 Range<int> range = (Range<int>)pair.Value;

@@ -20,6 +20,8 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     private GameObject[] animals = new GameObject[20];
     private HashSet<int> orderedAnimals = new HashSet<int>();
 
+    private BiomeManager biomeManager;
+
     bool terrainFlag = true;
     bool animalsFlag = true;
 
@@ -28,6 +30,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     void Start() {
         Settings.load();
+        biomeManager = new BiomeManager();
         ChunkConfig.chunkCount = 20;
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
     }
@@ -105,7 +108,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             currentThreads = run;
             CVDT = new ChunkVoxelDataThread[run];
             for (int i = 0; i < run; i++) {
-                CVDT[i] = new ChunkVoxelDataThread(orders, results, i);
+                CVDT[i] = new ChunkVoxelDataThread(orders, results, i, biomeManager);
             }
             stopwatch.Start();
 

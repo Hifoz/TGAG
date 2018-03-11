@@ -10,47 +10,67 @@ using UnityEngine;
 public static class ChunkVoxelDataGenerator {
 
     /// <summary>
-    /// Determines if there is a voxel at the given location.
-    /// </summary>
-    /// <param name="pos">The position to investigate</param>
-    /// <returns>bool contains voxel</returns>
-    [Obsolete("Use posContainsVoxel(Vector3 pos, int height) instead. (You will have to pre-calculate the 2d height for this).")]
-    public static bool posContainsVoxel(Vector3 pos) {
-        return (pos.y < calcHeight(pos) || calc3DStructure(pos, -1)) && calc3DUnstructure(pos, -1);
-    }
-
-    /// <summary>
     /// Determines if there is a voxel at the given location, with a precalculated 2d height.
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
-    public static bool posContainsVoxel(Vector3 pos, int height) {
-        return (pos.y < height || calc3DStructure(pos, height)) && calc3DUnstructure(pos, height);
+    public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
+        return (pos.y < height || biome.Structure3DRate > calc3DStructure(pos, biome, height) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
     }
+
+    /// <summary>
+    /// Determines if there is a voxel at a given location, using all biomes covering the sample position.
+    /// </summary>
+    /// <param name="pos">sample position</param>
+    /// <param name="heights">height from all biomes covering the sample position</param>
+    /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
+    /// <returns></returns>
+    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<Biome, float>> biomes) {
+        if (biomes.Count == 1)
+            return posContainsVoxel(pos, height, biomes[0].first);
+
+        float structure = 0;
+        float unstructure = 0;
+        float structureRate = 0;
+        float unstructureRate = 0;
+
+        for (int i = 0; i < biomes.Count; i++) {
+            structure += calc3DStructure(pos, biomes[i].first, height) * biomes[i].second;
+            unstructure += calc3DUnstructure(pos, biomes[i].first, height) * biomes[i].second;
+            structureRate += biomes[i].first.Structure3DRate * biomes[i].second;
+            unstructureRate += biomes[i].first.Unstructure3DRate * biomes[i].second;
+        }
+
+        return (pos.y < height || structureRate > structure) && unstructureRate < unstructure;
+    }
+
 
     /// <summary>
     /// A function that creates voxel data for a chunk using simplex noise.
     /// </summary>
     /// <param name="pos">The position of the chunk in world space</param>
     /// <returns>Voxel data for the chunk</returns>
-    public static BlockDataMap getChunkVoxelData(Vector3 pos) {
+    public static BlockDataMap getChunkVoxelData(Vector3 pos, BiomeManager biomeManager) {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
-        // Pre-calculate 2d heightmap:
+        // Pre-calculate 2d heightmap and biomemap:
+        List<Pair<Biome, float>>[,] biomemap = new List<Pair<Biome, float>>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
         int[,] heightmap = new int[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
-                int height = (int)calcHeight(new Vector3(x, 0, z) + pos);
-                heightmap[x, z] = height;
+                biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
+                heightmap[x, z] = (int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z]);
             }
         }
 
+        // Calculate 3d noise and apply 2d and 3d noise
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     int i = data.index1D(x, y, z);
-                    if(posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z]))
+                    if (posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z], biomemap[x, z]))
                         data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
                     else if (y < ChunkConfig.waterHeight)
                         data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
@@ -64,7 +84,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
-                        decideBlockType(data, new Vector3Int(x, y, z));
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z]); // TODO make this use biomes in some way?
                 }
             }
         }
@@ -73,13 +93,21 @@ public static class ChunkVoxelDataGenerator {
     }
 
 
+
     /// <summary>
     /// Used to decide what type of block goes on a position
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockDataMap data, Vector3Int pos) {
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<Biome, float>> biomes) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
+
+        // Calculate snow height:
+        float snowHeight = 0;
+        foreach(Pair<Biome, float> p in biomes) {
+            snowHeight += p.first.snowHeight * p.second;
+        }
+
 
         // Add block type here:
         if (pos.y < ChunkConfig.waterHeight)
@@ -87,7 +115,7 @@ public static class ChunkVoxelDataGenerator {
 
         // Add modifier type:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
-            if (pos.y > ChunkConfig.snowHeight - SimplexNoise.Simplex2D(new Vector2(pos.x, pos.z), 0.002f)) {
+            if (pos.y > snowHeight) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;
             } else if (data.mapdata[pos1d].blockType == BlockData.BlockType.DIRT) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.GRASS;
@@ -102,14 +130,44 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
-    public static float calcHeight(Vector3 pos) {
+    [Obsolete("This method is now obsolete, use calcHeight(Vector3, List<Pair<Biome, float>>) to calculate the terrain 2d heightmap")]
+    public static float calcHeight(Vector3 pos, Biome biome) {
+        pos = new Vector3(pos.x, pos.z, 0);
+        float finalNoise = 0;
+        float noiseScaler = 0;
+        float octaveStrength = 1;
+        for (int octave = 0; octave < biome.octaves2D; octave++) {
+            Vector3 samplePos = pos + new Vector3(1, 1, 0) * ChunkConfig.seed * octaveStrength;
+            float noise = SimplexNoise.Simplex2D(samplePos, biome.frequency2D / octaveStrength);
+            float noise01 = (noise + 1f) / 2f;
+            finalNoise += noise01 * octaveStrength;
+            noiseScaler += octaveStrength;
+            octaveStrength = octaveStrength / 2;
+        }
+        finalNoise = finalNoise / noiseScaler;
+        finalNoise = Mathf.Pow(finalNoise, biome.noiseExponent2D);
+        return finalNoise * ChunkConfig.chunkHeight;
+    }
+
+
+    /// <summary>
+    /// Calculates the height of the chunk at the position
+    /// </summary>
+    /// <param name="pos">position of voxel</param>
+    /// <returns>float height</returns>
+    public static float calcHeight(Vector3 pos, List<Pair<Biome, float>> biomes) {
+        // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it would be nice if this was not the case, so one could have differing octave counts and stuff
+        //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
         pos = new Vector3(pos.x, pos.z, 0);
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
         for (int octave = 0; octave < ChunkConfig.octaves2D; octave++) {
             Vector3 samplePos = pos + new Vector3(1, 1, 0) * ChunkConfig.seed * octaveStrength;
-            float noise = SimplexNoise.Simplex2D(samplePos, ChunkConfig.frequency2D / octaveStrength);
+            float noise = 0;
+            for (int b = 0; b < biomes.Count; b++) {
+                noise += SimplexNoise.Simplex2D(samplePos, biomes[b].first.frequency2D / octaveStrength) * biomes[b].second;
+            }
             float noise01 = (noise + 1f) / 2f;
             finalNoise += noise01 * octaveStrength;
             noiseScaler += octaveStrength;
@@ -117,7 +175,7 @@ public static class ChunkVoxelDataGenerator {
         }
         finalNoise = finalNoise / noiseScaler;
         finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent2D);
-        return  finalNoise * ChunkConfig.chunkHeight;
+        return finalNoise * ChunkConfig.chunkHeight;
     }
 
     /// <summary>
@@ -126,14 +184,12 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DStructure(Vector3 pos, int height) {
-        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+    private static float calc3DStructure(Vector3 pos, Biome biome, int height) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, biome.frequency3D) +
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
-        float noise01 = (noise + 1f) / 2f;
-        noise01 = Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
-
-        return ChunkConfig.Structure3DRate * 0.75f > noise01;
+        float noise01 = (noise + 1f) * 0.5f;
+        return Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
     }
 
     /// <summary>
@@ -142,12 +198,11 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static bool calc3DUnstructure(Vector3 pos, int height) {
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D) + 
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, ChunkConfig.frequency3D);
+    private static float calc3DUnstructure(Vector3 pos, Biome biome, int height) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) + 
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
-        float noise01 = (noise + 1f) / 2f;
-        noise01 = Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
-        return ChunkConfig.Unstructure3DRate < noise01;
+        float noise01 = (noise + 1f)  * 0.5f;
+        return Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
     }
 }
