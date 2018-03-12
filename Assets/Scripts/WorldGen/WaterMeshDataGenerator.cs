@@ -20,12 +20,6 @@ class WaterMeshDataGenerator : MeshDataGenerator {
 
         MDG.pointmap = pointmap;
 
-
-        for (int i = 0; i < (int)FaceDirection.COUNT; i++)
-            MDG.dmd[i] = new MeshDataSection();
-
-
-
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
@@ -34,17 +28,6 @@ class WaterMeshDataGenerator : MeshDataGenerator {
                 }
             }
         }
-
-
-        foreach (MeshDataSection d in MDG.dmd) {
-            MDG.vertices.AddRange(d.vertices);
-            MDG.normals.AddRange(d.normals);
-            MDG.triangles.AddRange(d.triangles);
-            MDG.colors.AddRange(d.colors);
-            MDG.uvs.AddRange(d.uvs);
-        }
-
-
 
         MeshData meshData = new MeshData();
         meshData.vertices = MDG.vertices.ToArray();
