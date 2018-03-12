@@ -5,15 +5,30 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
+/// Helper class to store the mesh data for a single direction before TFM
+/// </summary>
+public class MeshDataSection {
+    public List<Vector3> vertices = new List<Vector3>();
+    public List<Vector3> normals = new List<Vector3>();
+    public List<int> triangles = new List<int>();
+    public List<Color> colors = new List<Color>();
+    public List<Vector2> uvs = new List<Vector2>();
+}
+
+
+
+/// <summary>
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
+    public MeshDataSection[] dmd = new MeshDataSection[(int)FaceDirection.COUNT];
 
     protected List<Vector3> vertices = new List<Vector3>();
     protected List<Vector3> normals = new List<Vector3>();
     protected List<int> triangles = new List<int>();
     protected List<Color> colors = new List<Color>();
     protected List<Vector2> uvs = new List<Vector2>();
+
     protected Vector2 animalData; //This vector will populate the animal UV, contains data used for noise seed and animal skin type.
     protected BlockDataMap pointmap;
 
@@ -22,12 +37,15 @@ public class MeshDataGenerator {
     private static ThreadSafeRng rng = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
 
     public enum FaceDirection {
-        xp, xm, yp, ym, zp, zm
+        xp, xm, yp, ym, zp, zm, COUNT
     }
     public enum MeshDataType {
         TERRAIN, ANIMAL
     }
     protected MeshDataType meshDataType;
+
+
+    #region mesh building
 
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
@@ -86,6 +104,10 @@ public class MeshDataGenerator {
         return mesh;
     }
 
+    #endregion
+
+    #region meshdata generation
+
     /// <summary>
     /// Generates all data needed for a mesh of cubes
     /// </summary>
@@ -98,6 +120,11 @@ public class MeshDataGenerator {
         MDG.offset = offset;
 
         MDG.pointmap = pointmap;
+
+        for (int i = 0; i < (int)FaceDirection.COUNT; i++)
+            MDG.dmd[i] = new MeshDataSection();
+
+
 
         if (meshDataType == MeshDataType.ANIMAL) {
             //X = frequency, Y = seed
@@ -114,6 +141,20 @@ public class MeshDataGenerator {
             }
         }
 
+
+        // Recombine the separated directions into one set of meshdata
+        int vertOffset = 0;
+        foreach(MeshDataSection d in MDG.dmd) {
+            MDG.vertices.AddRange(d.vertices);
+            MDG.normals.AddRange(d.normals);
+            foreach(int tri in d.triangles)
+                MDG.triangles.Add(tri + vertOffset);
+            MDG.colors.AddRange(d.colors);
+            MDG.uvs.AddRange(d.uvs);
+
+
+            vertOffset += d.vertices.Count;
+        }
 
         MeshData meshData = new MeshData();
         meshData.vertices = MDG.vertices.ToArray();
@@ -159,64 +200,65 @@ public class MeshDataGenerator {
     /// <param name="pointPos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
     protected void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData, float voxelSize) {
-        int vertIndex = vertices.Count;
+        int vertIndex = dmd[(int)dir].vertices.Count;
 
         float delta = voxelSize / 2f;
         pointPos = (pointPos - offset) * voxelSize;
 
+
         Vector3 normalDir = Vector3.zero;
         switch (dir) {
             case FaceDirection.xp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(delta, -delta, -delta),
+                dmd[(int)dir].vertices.AddRange(new Vector3[]{pointPos + new Vector3(delta, -delta, -delta),
                                                 pointPos + new Vector3(delta,  delta, -delta),
                                                 pointPos + new Vector3(delta, -delta,  delta),
                                                 pointPos + new Vector3(delta,  delta,  delta)});
                 normalDir = new Vector3(1, 0, 0);
                 break;
             case FaceDirection.xm:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
+                dmd[(int)dir].vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
                                                 pointPos + new Vector3(-delta, -delta,  delta),
                                                 pointPos + new Vector3(-delta,  delta, -delta),
                                                 pointPos + new Vector3(-delta,  delta,  delta)});
                 normalDir = new Vector3(-1, 0, 0);
                 break;
             case FaceDirection.yp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, delta, -delta),
+                dmd[(int)dir].vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, delta, -delta),
                                                 pointPos + new Vector3(-delta, delta,  delta),
                                                 pointPos + new Vector3(delta,  delta, -delta),
                                                 pointPos + new Vector3(delta,  delta,  delta)});
                 normalDir = new Vector3(0, 1, 0);
                 break;
             case FaceDirection.ym:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
+                dmd[(int)dir].vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
                                                 pointPos + new Vector3(delta,  -delta, -delta),
                                                 pointPos + new Vector3(-delta, -delta,  delta),
                                                 pointPos + new Vector3(delta,  -delta,  delta)});
                 normalDir = new Vector3(0, -1, 0);
                 break;
             case FaceDirection.zp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, delta),
+                dmd[(int)dir].vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, delta),
                                                 pointPos + new Vector3(delta,  -delta, delta),
                                                 pointPos + new Vector3(-delta,  delta, delta),
                                                 pointPos + new Vector3(delta,   delta, delta)});
                 normalDir = new Vector3(0, 0, 1);
                 break;
             case FaceDirection.zm:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
+                dmd[(int)dir].vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
                                                 pointPos + new Vector3(-delta,  delta, -delta),
                                                 pointPos + new Vector3(delta,  -delta, -delta),
                                                 pointPos + new Vector3(delta,   delta, -delta)});
                 normalDir = new Vector3(0, 0, -1);
                 break;
         }
-        normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
+        dmd[(int)dir].normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
 
-        triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
-        triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
+        dmd[(int)dir].triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
+        dmd[(int)dir].triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
         
         if (meshDataType == MeshDataType.ANIMAL) {
-            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
+            addSliceData(dmd[(int)dir].vertices.GetRange(dmd[(int)dir].vertices.Count - 4, 4), dir);
         } else {
             addTextureCoordinates(blockData, dir);
             addSliceData(blockData, dir);
@@ -252,23 +294,23 @@ public class MeshDataGenerator {
         }
 
         for (int i = 0; i < 4; i++)
-            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
+            dmd[(int)faceDir].colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
     }
 
     /// <summary>
     /// Encodes colors as unique positions used for noise calculations in animal shader
     /// </summary>
     /// <param name="verticies">Verticies to encode into colors</param>
-    protected void addSliceData(List<Vector3> verts) {
+    protected void addSliceData(List<Vector3> verts, FaceDirection dir) {
         Vector3 scalingVector = new Vector3(pointmap.GetLength(0), pointmap.GetLength(1), pointmap.GetLength(2));
         foreach (Vector3 vert in verts) {
-            colors.Add(new Color(
+            dmd[(int)dir].colors.Add(new Color(
                     vert.x / scalingVector.x,
                     vert.y / scalingVector.y,
                     vert.z / scalingVector.z
                 )
             );
-            uvs.Add(animalData);
+            dmd[(int)dir].uvs.Add(animalData);
         }
     }
 
@@ -311,9 +353,10 @@ public class MeshDataGenerator {
         }
 
         for (int i = 0; i < 4; i++) {
-            uvs.Add(coords[rotations[rotation, i]]);
+            dmd[(int)faceDir].uvs.Add(coords[rotations[rotation, i]]);
         }
 
     }
 
+    #endregion
 }

@@ -19,6 +19,8 @@ public class BiomeManager {
 
     private System.Random rng;
 
+    #region public functions
+
     /// <summary>
     /// Constructor
     /// </summary>
@@ -106,6 +108,18 @@ public class BiomeManager {
 
 
     /// <summary>
+    /// Loads biomes from a folder
+    /// </summary>
+    /// <param name="folderpath">path to folder containing biome files</param>
+    public void loadFromFile(String folderpath) {
+        throw new NotImplementedException("BiomeManager.loadFromFile(...) not yet implemented.");
+    }
+
+    #endregion
+
+    #region private functions
+    
+    /// <summary>
     /// Gets the distance from closest biome point
     /// </summary>
     /// <param name="pos">position to test</param>
@@ -134,12 +148,7 @@ public class BiomeManager {
     }
 
 
+    #endregion
 
-    /// <summary>
-    /// Loads biomes from a folder
-    /// </summary>
-    /// <param name="folderpath">path to folder containing biome files</param>
-    public void loadFromFile(String folderpath) {
-        throw new NotImplementedException("BiomeManager.loadFromFile(...) not yet implemented.");
-    }
+
 }

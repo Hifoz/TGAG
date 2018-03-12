@@ -5,7 +5,10 @@ using UnityEngine;
 
 
 class PoissonDiscSamplerTest : MonoBehaviour {
+#pragma warning disable 649
     public GameObject testObject;
+#pragma warning restore 649
+
     PoissonDiscSampler sampler;
 
 
@@ -29,13 +32,5 @@ class PoissonDiscSamplerTest : MonoBehaviour {
 
         sw.done("w=100, h=100, r=5; result:" + count + " spheres.");
     }
-
-
-    /*
-     * Results from testing:
-     * w=1000, h=1000, r=5: 27663 points in 3600ms
-     * 
-     * 
-     */
 
 }
