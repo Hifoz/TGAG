@@ -25,7 +25,7 @@ public class MeshDataGenerator {
         xp, xm, yp, ym, zp, zm
     }
     public enum MeshDataType {
-        TERRAIN, ANIMAL
+        TERRAIN, WATER, ANIMAL
     }
     protected MeshDataType meshDataType;
 
@@ -100,8 +100,8 @@ public class MeshDataGenerator {
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
     public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
-        if(meshDataType == MeshDataType.TERRAIN) {
-            GreedyMeshGenerator gmg = new GreedyMeshGenerator(pointmap);
+        if(meshDataType == MeshDataType.TERRAIN || meshDataType == MeshDataType.WATER) { // Using new greedy mesh date generation for terrain and water
+            GreedyMeshGenerator gmg = new GreedyMeshGenerator(pointmap, meshDataType: meshDataType);
             return gmg.generateMeshData();
         }
 

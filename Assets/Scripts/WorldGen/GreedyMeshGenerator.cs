@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+
 class VoxelFace {
     public BlockData data;
     public int dir;
     public bool isFlipped;
+    public bool nodraw = false;
 
     public VoxelFace(BlockData data, int dir, bool isFlipped = false) {
         this.data = data;
@@ -20,8 +22,9 @@ class VoxelFace {
         xp, xm, yp, ym, zp, zm
     }
 
-    internal bool equals(VoxelFace other) {
-        return data.equals(other.data) && isFlipped == other.isFlipped;
+    public bool equals(VoxelFace other) {
+        if (other == null) return false;
+        return data.equals(other.data) && isFlipped == other.isFlipped && nodraw == other.nodraw;
     }
 }
 
@@ -40,9 +43,12 @@ class GreedyMeshGenerator {
     List<Color> colors = new List<Color>();
     List<Vector2> uvs = new List<Vector2>();
 
+    MeshDataGenerator.MeshDataType meshDataType;
 
-    public GreedyMeshGenerator(BlockDataMap blockData, float voxelSize = 1f, Vector3 offset = default(Vector3)) {
+
+    public GreedyMeshGenerator(BlockDataMap blockData, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN) {
         this.blockData = blockData;
+        this.meshDataType = meshDataType;
 
     }
 
@@ -72,23 +78,31 @@ class GreedyMeshGenerator {
                     for (x[u] = 0; x[u] < blockData.GetLength(u); x[u]++, n++) {
                         BlockData a = x[d] >= 0 ? blockData.mapdata[blockData.index1D(x[0], x[1], x[2])] : new BlockData(BlockData.BlockType.NONE);
                         BlockData b = x[d] < blockData.GetLength(d) - 1 ? blockData.mapdata[blockData.index1D(x[0] + q[0], x[1] + q[1], x[2] + q[2])] : new BlockData(BlockData.BlockType.NONE);
-                        if (checkIfSolidVoxel(a) == checkIfSolidVoxel(b)){ // Empty if both are solid blocks or neither are solid blocks
+                        if (checkVoxel(a) == checkVoxel(b)){
                             mask[n] = new VoxelFace(BlockData.Empty, d);
-                        } else if(!a.equals(BlockData.Empty)) { // If a is the only solid one, go with a
+                        } else if(checkVoxel(a)) {
                             mask[n] = new VoxelFace(a, d, false);  
-                        } else {                                // Otherwise b is only solid one, so go with b
+                        } else {
                             mask[n] = new VoxelFace(b, d, true);
                         }
+
+                        // Make the outside blocks nodraw:
+                        if (x[v] < 1 || x[v] >= blockData.GetLength(v) - 1) mask[n].nodraw = true;
+                        if (x[u] < 1 || x[u] >= blockData.GetLength(u) - 1) mask[n].nodraw = true;
+                        if (x[d] < 1 || x[d] >= blockData.GetLength(d) - 1) mask[n].nodraw = true;
+
+
                     }
                 }
 
                 x[d]++;
                 n = 0;
+                
                 // Generating the actual mesh data from the mask:
                 for (int j = 0; j < blockData.GetLength(v); j++) {
                     for (int i = 0; i < blockData.GetLength(u);) {
                         VoxelFace c = mask[n];
-                        if (c != null && !c.data.equals(BlockData.Empty)) {
+                        if (c != null && !c.data.equals(BlockData.Empty) && !c.nodraw) {
                             for (w = 1; i + w < blockData.GetLength(u) && c.equals(mask[n + w]); w++) { }; // Calculate width of face
 
                             bool done = false;
@@ -118,9 +132,7 @@ class GreedyMeshGenerator {
                                     new Vector3(x[0] + du[0],         x[1] + du[1],         x[2] + du[2]),
                                     new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
                                     new Vector3(x[0]         + dv[0], x[1]         + dv[1], x[2]         + dv[2]),
-                                    w,
-                                    h,
-                                    mask[n]);
+                                    w, h, mask[n]);
 
 
                             // Clear mask:
@@ -156,10 +168,10 @@ class GreedyMeshGenerator {
     /// <summary>
     /// Add a new face
     /// </summary>
-    /// <param name="v0"></param>
-    /// <param name="v1"></param>
-    /// <param name="v2"></param>
-    /// <param name="v3"></param>
+    /// <param name="v0">vertex 0</param>
+    /// <param name="v1">vertex 1</param>
+    /// <param name="v2">vertex 2</param>
+    /// <param name="v3">vertex 3</param>
     /// <param name="width">width of face</param>
     /// <param name="height">height of face</param>
     /// <param name="voxel">the VoxelFace containing the blockdata and direction</param>
@@ -253,11 +265,19 @@ class GreedyMeshGenerator {
 
 
     /// <summary>
-    /// Checks if a voxels is fully opaque
+    /// Checks the block type
     /// </summary>
     /// <param name="voxelPos">position of voxel</param>
-    /// <returns>Whether the voxel is opaque</returns>
-    protected bool checkIfSolidVoxel(BlockData data) {
-        return !(data.blockType == BlockData.BlockType.NONE || data.blockType == BlockData.BlockType.WATER);
+    /// <returns>
+    ///     If meshDataType == TERRAIN: Whether the voxel is opaque.
+    ///     If meshDataType == WATER: Whether the voxel is something other than water.
+    /// </returns>
+    protected bool checkVoxel(BlockData data) {
+        switch (meshDataType) {
+            case MeshDataGenerator.MeshDataType.WATER:
+                return data.blockType == BlockData.BlockType.WATER;
+            default: // MeshDataType.TERRAIN
+                return !(data.blockType == BlockData.BlockType.NONE || data.blockType == BlockData.BlockType.WATER);
+        }
     }
 }
