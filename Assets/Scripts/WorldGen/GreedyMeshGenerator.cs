@@ -64,7 +64,7 @@ class GreedyMeshGenerator {
             VoxelFace[] mask = new VoxelFace[blockData.GetLength(u) * blockData.GetLength(v)];
 
             // Go through all "slices" in dimension d
-            for (x[d] = 0; x[d] < blockData.GetLength(d) - 1;) {
+            for (x[d] = -1; x[d] < blockData.GetLength(d);) {
                 int n = 0;
 
                 // Calculate mask:
@@ -104,21 +104,14 @@ class GreedyMeshGenerator {
                                 }
                             }
 
-                            if (c.dir == 1)
-                                c.isFlipped = !c.isFlipped;
 
                             // Find orientation of triangles
                             x[u] = i;
                             x[v] = j;
                             int[] dv = new int[] { 0, 0, 0 };
                             int[] du = new int[] { 0, 0, 0 };
-                            if(!c.isFlipped) {
-                                dv[v] = w;
-                                du[u] = h;
-                            } else {
-                                dv[u] = w;
-                                du[v] = h;
-                            }
+                            dv[v] = h;
+                            du[u] = w;
                             
                             // Add vertex data and other face data
                             addFace(new Vector3(x[0],                 x[1],                 x[2]),
@@ -173,7 +166,11 @@ class GreedyMeshGenerator {
     private void addFace(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, int width, int height, VoxelFace voxel) {
         int vertIndex = vertices.Count;
 
-        vertices.AddRange(new Vector3[] { v1, v2, v3, v4 });
+        if(!voxel.isFlipped)
+            vertices.AddRange(new Vector3[] { v1, v2, v3, v4 });
+        else
+            vertices.AddRange(new Vector3[] { v3, v2, v1, v4 });
+
 
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex, vertIndex + 2, vertIndex + 3 });
