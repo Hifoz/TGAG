@@ -112,7 +112,7 @@ class GreedyMeshGenerator {
                             int[] du = new int[] { 0, 0, 0 };
                             dv[v] = h;
                             du[u] = w;
-                            
+
                             // Add vertex data and other face data
                             addFace(new Vector3(x[0],                 x[1],                 x[2]),
                                     new Vector3(x[0] + du[0],         x[1] + du[1],         x[2] + du[2]),
@@ -156,20 +156,20 @@ class GreedyMeshGenerator {
     /// <summary>
     /// Add a new face
     /// </summary>
+    /// <param name="v0"></param>
     /// <param name="v1"></param>
     /// <param name="v2"></param>
     /// <param name="v3"></param>
-    /// <param name="v4"></param>
     /// <param name="width">width of face</param>
     /// <param name="height">height of face</param>
     /// <param name="voxel">the VoxelFace containing the blockdata and direction</param>
-    private void addFace(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, int width, int height, VoxelFace voxel) {
+    private void addFace(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, int width, int height, VoxelFace voxel) {
         int vertIndex = vertices.Count;
 
         if(!voxel.isFlipped)
-            vertices.AddRange(new Vector3[] { v1, v2, v3, v4 });
+            vertices.AddRange(new Vector3[] { v0, v1, v2, v3 });
         else
-            vertices.AddRange(new Vector3[] { v3, v2, v1, v4 });
+            vertices.AddRange(new Vector3[] { v2, v1, v0, v3 });
 
 
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
@@ -180,7 +180,7 @@ class GreedyMeshGenerator {
         normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
 
 
-        addTextureCoordinates(width, height, voxel.isFlipped);
+        addTextureCoordinates(width, height, voxel);
         addTextureTypeData(voxel);
 
     }
@@ -191,14 +191,31 @@ class GreedyMeshGenerator {
     /// <param name="width"></param>
     /// <param name="height"></param>
     /// <param name="isFlipped"></param>
-    private void addTextureCoordinates(int width, int height, bool isFlipped) {
+    private void addTextureCoordinates(int width, int height, VoxelFace voxel) {
         Vector2[] coords = new Vector2[] {
-            new Vector2(0, 0), new Vector2(0, width),
-            new Vector2(height, 0), new Vector2(height, width)
+            new Vector2(0, 0), new Vector2(0, 1),
+            new Vector2(1, 0), new Vector2(1, 1)
         };
-        // TODO make it rotate the coords if flipped
 
-        uvs.AddRange(coords);
+
+        int[,] rotations = new int[,] {
+            { 1, 3, 2, 0 }, //xm, ym
+            { 0, 1, 3, 2 }, // xp, yp
+            { 2, 0, 1, 3 }, // zp
+            { 3, 2, 0, 1 }  // zm
+        };
+
+        int rotation = 0;
+        if (voxel.dir == 2)
+            rotation = 3;
+
+        if (!voxel.isFlipped)
+            rotation += (voxel.dir == 2 ? -1 : 1);
+
+        for (int i = 0; i < 4; i++) {
+            uvs.Add(coords[rotations[rotation%rotations.Length, i]]);
+        }
+
     }
 
 
