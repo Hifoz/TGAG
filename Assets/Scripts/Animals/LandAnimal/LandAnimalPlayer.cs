@@ -14,7 +14,9 @@ public class LandAnimalPlayer : LandAnimal {
 
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             desiredHeading = Camera.main.transform.forward;
-            desiredHeading.y = 0;
+            if (!inWater) {
+                desiredHeading.y = 0;
+            }
             desiredHeading.Normalize();
         }
 
@@ -43,7 +45,7 @@ public class LandAnimalPlayer : LandAnimal {
         }
 
         Vector3 velocity;
-        if (grounded) {
+        if (grounded || inWater) {
            velocity = spineHeading.normalized * speed;
         } else {
             velocity = heading.normalized * speed;

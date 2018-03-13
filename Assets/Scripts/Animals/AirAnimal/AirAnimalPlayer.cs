@@ -16,7 +16,11 @@ public class AirAnimalPlayer : AirAnimal {
         
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             desiredHeading = Camera.main.transform.forward;
+            if (grounded) {
+                desiredHeading.y = 0;
+            }
             desiredHeading.Normalize();
+
 
             right = Camera.main.transform.rotation * Vector3.right;
             up = Camera.main.transform.rotation * Vector3.up;
@@ -39,7 +43,7 @@ public class AirAnimalPlayer : AirAnimal {
 
 
         if (Input.GetKey(KeyCode.Space)) {
-            if (grounded) {
+            if (grounded || inWater) {
                 tryLaunch();
             } else if (!grounded) {
                 finalHeading += Quaternion.AngleAxis(-45, right) * desiredHeading;
@@ -66,6 +70,7 @@ public class AirAnimalPlayer : AirAnimal {
         }
         rb.velocity = velocity + gravity;
         transform.LookAt(transform.position + heading);
+        Debug.Log(inWater);
     }
 
     /// <summary>

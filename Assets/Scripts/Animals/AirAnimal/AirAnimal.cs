@@ -376,6 +376,6 @@ public abstract class AirAnimal : Animal {
     private void OnCollisionEnter(Collision collision) {
         gravity = Vector3.zero;
         isLaunching = false;
+        //desiredHeading = -desiredHeading;
     }
-
 }

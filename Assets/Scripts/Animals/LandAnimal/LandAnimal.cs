@@ -19,7 +19,9 @@ public abstract class LandAnimal : Animal {
         if (skeleton != null) {
             calculateSpeedAndHeading();
             move();
-            levelSpine();
+            if (!inWater) {
+                levelSpine();
+            }
             doGravity();
             handleRagdoll();
             handleAnimations();
@@ -116,9 +118,9 @@ public abstract class LandAnimal : Animal {
     /// Function for handling ragdoll effects when free falling
     /// </summary>
     private void handleRagdoll() {
-        if (grounded) {
+        if (grounded || inWater) {
             ragDolling = false;
-        } else if (!grounded && !ragDolling) {
+        } else if (!grounded && !ragDolling && !inWater) {
             ragDolling = true;
             for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
                 StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], () => { return !grounded; }, true));
@@ -155,5 +157,6 @@ public abstract class LandAnimal : Animal {
 
     private void OnCollisionEnter(Collision collision) {
         gravity = Vector3.zero;
+        //desiredHeading = -desiredHeading;
     }
 }

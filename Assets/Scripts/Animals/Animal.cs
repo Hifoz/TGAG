@@ -28,6 +28,7 @@ public abstract class Animal : MonoBehaviour {
 
     private const float levelSpeed = 3f;
 
+    protected bool inWater = false;
     protected bool grounded = false;
     protected Vector3 gravity = Physics.gravity;
 
@@ -331,13 +332,18 @@ public abstract class Animal : MonoBehaviour {
     /// Does the physics for gravity
     /// </summary>
     protected void doGravity() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        RaycastHit hit;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
-            groundedGravity(hit, spine);
+        if (!inWater) {
+            Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+            RaycastHit hit;
+            int layerMask = 1 << 8;
+            if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
+                groundedGravity(hit, spine);
+            } else {
+                notGroundedGravity();
+            }
         } else {
-            notGroundedGravity();
+            gravity = Vector3.zero;
+            grounded = false;
         }
     }
 
@@ -408,6 +414,18 @@ public abstract class Animal : MonoBehaviour {
             if (!checkConstraints(spine)) {
                 spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
             }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.name == "waterSubChunk") {
+            inWater = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if (other.name == "waterSubChunk") {
+            inWater = false;
         }
     }
 
