@@ -83,7 +83,7 @@ public class ChunkManager : MonoBehaviour {
     /// </summary>
     private void handleAnimals() {
         enableColliders(player.position);
-        if (landAnimalPrefab) {
+        if (landAnimalPrefab && activeChunks.Count > 100) { //Dont bother with animals before theres 100 chunks in the world
             for (int i = 0; i < animals.Length; i++) {
                 GameObject animal = animals[i];
                 if (!orderedAnimals.Contains(i) && isAnimalTooFarAway(animal.transform.position)) {

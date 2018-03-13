@@ -149,6 +149,8 @@ public abstract class LandAnimal : Animal {
         if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
             if (grounded) {
                 speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+            } else if (inWater) {
+                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.5f;
             } else {
                 speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
             }
@@ -157,6 +159,6 @@ public abstract class LandAnimal : Animal {
 
     private void OnCollisionEnter(Collision collision) {
         gravity = Vector3.zero;
-        //desiredHeading = -desiredHeading;
+        desiredHeading = -desiredHeading;
     }
 }

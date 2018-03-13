@@ -28,6 +28,8 @@ public class LandAnimalNPC : LandAnimal {
         transform.LookAt(transform.position + heading);
         if (grounded) {
             rb.velocity = spineHeading * speed + gravity;
+        } else if (inWater) {
+            rb.velocity = heading * speed + gravity;
         } else {
             rb.velocity = gravity;
         }

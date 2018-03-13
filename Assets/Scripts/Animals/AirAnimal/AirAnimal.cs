@@ -25,9 +25,6 @@ public abstract class AirAnimal : Animal {
 
     protected bool isLaunching = false;
 
-    private bool correctingSpine = false;
-    private bool spineIsCorrrect = true;
-
     private void Update() {
         if (skeleton != null) {
             move();
@@ -287,7 +284,7 @@ public abstract class AirAnimal : Animal {
         if (desiredSpeed - speed > 0.2f) { //Acceleration           
             speed += Time.deltaTime * acceleration;            
         } else if (speed - desiredSpeed > 0.2f) { //Deceleration
-            if (!grounded) {
+            if (!grounded && !inWater) {
                 speed -= Time.deltaTime * acceleration * glideDrag;
             } else {
                 speed -= Time.deltaTime * acceleration;
@@ -334,48 +331,9 @@ public abstract class AirAnimal : Animal {
         isLaunching = false;
     }
 
-    /// <summary>
-    /// Levels the spine with the ground
-    /// </summary>
-    protected override void levelSpine() {
-        if (grounded) {
-            base.levelSpine();
-            spineIsCorrrect = false;
-        } else if (!grounded && !spineIsCorrrect) {            
-            spineIsCorrrect = tryCorrectSpine();
-        }
-    }
-
-    /// <summary>
-    /// Tries to correct the spine
-    /// </summary>
-    /// <returns>Success flag</returns>
-    private bool tryCorrectSpine() {
-        if (!correctingSpine) {
-            StartCoroutine(correctSpine());
-        }
-        return !correctingSpine;
-    }
-
-    /// <summary>
-    /// Corrects the spine (returning it to zero rotation)
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator correctSpine() {
-        correctingSpine = true;
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        Quaternion originalRot = spine.bone.localRotation;
-        for (float t = 0; t <= 1f; t += Time.deltaTime) {
-            spine.bone.localRotation = Quaternion.Lerp(originalRot, Quaternion.identity, t);
-            yield return 0;
-        }
-        spine.bone.localRotation = Quaternion.identity;
-        correctingSpine = false;
-    }
-
     private void OnCollisionEnter(Collision collision) {
         gravity = Vector3.zero;
         isLaunching = false;
-        //desiredHeading = -desiredHeading;
+        desiredHeading = -desiredHeading;
     }
 }

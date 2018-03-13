@@ -28,6 +28,10 @@ public abstract class Animal : MonoBehaviour {
 
     private const float levelSpeed = 3f;
 
+    private bool correctingSpine = false;
+    private bool spineIsCorrrect = true;
+
+    private int inWaterInt = 0;
     protected bool inWater = false;
     protected bool grounded = false;
     protected Vector3 gravity = Physics.gravity;
@@ -381,10 +385,15 @@ public abstract class Animal : MonoBehaviour {
     /// Tries to level the spine with the ground
     /// </summary>
     virtual protected void levelSpine() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
-        levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
-        spineHeading = spine.bone.rotation * Vector3.forward;
+        if (grounded) {
+            Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+            levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
+            levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
+            spineHeading = spine.bone.rotation * Vector3.forward;
+            spineIsCorrrect = false;
+        } else if (!grounded && !spineIsCorrrect) {
+            spineIsCorrrect = tryCorrectSpine();
+        }
     }
 
     /// <summary>
@@ -417,15 +426,44 @@ public abstract class Animal : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Tries to correct the spine
+    /// </summary>
+    /// <returns>Success flag</returns>
+    private bool tryCorrectSpine() {
+        if (!correctingSpine) {
+            StartCoroutine(correctSpine());
+        }
+        return !correctingSpine;
+    }
+
+    /// <summary>
+    /// Corrects the spine (returning it to zero rotation)
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator correctSpine() {
+        correctingSpine = true;
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        Quaternion originalRot = spine.bone.localRotation;
+        for (float t = 0; t <= 1f; t += Time.deltaTime) {
+            spine.bone.localRotation = Quaternion.Lerp(originalRot, Quaternion.identity, t);
+            yield return 0;
+        }
+        spine.bone.localRotation = Quaternion.identity;
+        correctingSpine = false;
+    }
+
     private void OnTriggerEnter(Collider other) {
         if (other.name == "waterSubChunk") {
-            inWater = true;
+            inWaterInt++;
+            inWater = inWaterInt > 0;
         }
     }
 
     private void OnTriggerExit(Collider other) {
-        if (other.name == "waterSubChunk") {
-            inWater = false;
+        if (other.name == "waterSubChunk") {            
+            inWaterInt--;
+            inWater = inWaterInt > 0;
         }
     }
 

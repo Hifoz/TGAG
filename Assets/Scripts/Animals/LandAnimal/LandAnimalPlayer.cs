@@ -5,6 +5,11 @@ using System.Collections.Generic;
 public class LandAnimalPlayer : LandAnimal {
     bool jumping = false;
 
+    protected override void Start() {
+        base.Start();
+        StartCoroutine(slowFallStartHack());
+    }
+
     /// <summary>
     /// Function for that lets the player control the animal
     /// </summary>
@@ -45,20 +50,21 @@ public class LandAnimalPlayer : LandAnimal {
         }
 
         Vector3 velocity;
-        if (grounded || inWater) {
+        if (grounded) {
            velocity = spineHeading.normalized * speed;
         } else {
             velocity = heading.normalized * speed;
         }
         rb.velocity = velocity + gravity;
-        transform.LookAt(transform.position + heading);        
+        transform.LookAt(transform.position + heading);
+        Debug.Log(inWater);
     }
 
     /// <summary>
     /// Sets speed based on input
     /// </summary>
     private void setSpeed() {
-        if (!grounded) {
+        if (!grounded && !inWater) {
             desiredSpeed = 0;
         } else {
             if (Input.GetKey(KeyCode.LeftShift)) {
@@ -79,5 +85,13 @@ public class LandAnimalPlayer : LandAnimal {
     private void OnCollisionEnter(Collision collision) {
         gravity = Vector3.zero;
         jumping = false;
+    }
+
+    private IEnumerator slowFallStartHack() {
+        float time = 4f;
+        for (float t = 0; t < time; t += Time.deltaTime) {
+            gravity = Physics.gravity * 0.5f;
+            yield return 0;
+        }
     }
 }

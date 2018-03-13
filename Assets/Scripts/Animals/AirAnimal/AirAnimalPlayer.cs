@@ -77,7 +77,7 @@ public class AirAnimalPlayer : AirAnimal {
     /// Sets speed based on input
     /// </summary>
     private void setSpeed() {
-        if (grounded) {
+        if (grounded || inWater) {
             desiredSpeed = walkSpeed;
         } else {
             desiredSpeed = flySpeed;
