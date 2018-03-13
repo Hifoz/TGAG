@@ -6,6 +6,9 @@ using System.Collections;
 /// Super class for all air animals
 /// </summary>
 public abstract class AirAnimal : Animal {
+    //Coroutine flags
+    protected bool flagLaunching = false;
+
     //Animation stuff
     protected AirAnimalSkeleton airSkeleton;
 
@@ -22,8 +25,6 @@ public abstract class AirAnimal : Animal {
     protected const float walkSpeed = 5f;
     protected const float flySpeed = 30f;
     protected const float glideDrag = 0.25f;
-
-    protected bool isLaunching = false;
 
     private void Update() {
         if (skeleton != null) {
@@ -58,6 +59,8 @@ public abstract class AirAnimal : Animal {
         makeLegsRagDoll();
 
         generateAnimations();
+
+        flagLaunching = false;
     }
 
 
@@ -207,7 +210,7 @@ public abstract class AirAnimal : Animal {
     /// Handles the animation logic
     /// </summary>
     private void handleAnimations() {
-        if (!animationInTransition) {
+        if (!flagAnimationTransition) {
             currentAnimation.animate(speed * ((grounded) ? animSpeedScalingGround : animSpeedScalingAir));
             if (currentAnimation == walkingAnimation) {
                 groundLegsAndWings();
@@ -281,6 +284,9 @@ public abstract class AirAnimal : Animal {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
+        if (inWater) {
+            preventDownardMovement();
+        }
         if (desiredSpeed - speed > 0.2f) { //Acceleration           
             speed += Time.deltaTime * acceleration;            
         } else if (speed - desiredSpeed > 0.2f) { //Deceleration
@@ -309,10 +315,10 @@ public abstract class AirAnimal : Animal {
     /// </summary>
     /// <returns>Success flag</returns>
     protected bool tryLaunch() {
-        if (!isLaunching) {
+        if (!flagLaunching) {
             StartCoroutine(launch());
         }
-        return !isLaunching;
+        return !flagLaunching;
     }
 
     /// <summary>
@@ -320,20 +326,29 @@ public abstract class AirAnimal : Animal {
     /// </summary>
     /// <returns></returns>
     private IEnumerator launch() {
-        isLaunching = true;
+        flagLaunching = true;
         acceleration = acceleration * 4;
         gravity -= Physics.gravity * 2f;
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
             grounded = false;
+            inWater = false;
             yield return 0;
         }
         acceleration = acceleration / 4;
-        isLaunching = false;
+        flagLaunching = false;
     }
 
-    private void OnCollisionEnter(Collision collision) {
-        gravity = Vector3.zero;
-        isLaunching = false;
-        desiredHeading = -desiredHeading;
+    override protected void OnCollisionEnter(Collision collision) {
+        base.OnCollisionEnter(collision);
+        flagLaunching = false;
     }
+
+    //    __  __ _            ______                _   _                 
+    //   |  \/  (_)          |  ____|              | | (_)                
+    //   | \  / |_ ___  ___  | |__ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   | |\/| | / __|/ __| |  __| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |  | | \__ \ (__  | |  | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|  |_|_|___/\___| |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                    
+    //                                                                    
 }

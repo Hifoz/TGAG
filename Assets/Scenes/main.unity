@@ -137,7 +137,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 27318558}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -896.6903, y: 504, z: -12}
+  m_LocalPosition: {x: -1080.007, y: 504, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 546177072}
@@ -541,7 +541,6 @@ MonoBehaviour:
     type: 2}
   airAnimalPrefab: {fileID: 1263446260787308, guid: 70d74767b31c04843b941187b0032569,
     type: 2}
-  biomeBeacon: {fileID: 1212521721}
 --- !u!4 &988479787
 Transform:
   m_ObjectHideFlags: 0
@@ -833,8 +832,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 637, y: 339, z: 0}
-  m_LocalScale: {x: 0.62777776, y: 0.62777776, z: 0.62777776}
+  m_LocalPosition: {x: 634.5, y: 286, z: 0}
+  m_LocalScale: {x: 0.52962965, y: 0.52962965, z: 0.52962965}
   m_Children:
   - {fileID: 1043064330}
   - {fileID: 143669589}
@@ -968,6 +967,11 @@ Prefab:
         type: 2}
       propertyPath: m_UseGravity
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 54430949831116082, guid: b5903303425d2534087cb390327fa505,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114874013804140952, guid: b5903303425d2534087cb390327fa505, type: 2}

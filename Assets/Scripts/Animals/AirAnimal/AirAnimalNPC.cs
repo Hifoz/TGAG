@@ -20,6 +20,7 @@ public class AirAnimalNPC : AirAnimal {
         } else {
             desiredSpeed = walkSpeed;
         }
+        isPlayer = false;
     }
 
     /// <summary>
@@ -38,15 +39,15 @@ public class AirAnimalNPC : AirAnimal {
             }
         }
                 
-        if (grounded) {
+        if (grounded || inWater) {
             desiredSpeed = walkSpeed;
         } else {
             desiredSpeed = flySpeed;
         }
         
-        if (grounded && flying) {
+        if ((grounded || inWater) && flying) {
             tryAscend();
-        } else if (!grounded && !flying) {
+        } else if (!(grounded || inWater) && !flying) {
             timer = 0;
             desiredSpeed = 0;
         }
@@ -62,7 +63,7 @@ public class AirAnimalNPC : AirAnimal {
         }
         transform.LookAt(transform.position + heading);
         Vector3 velocity;
-        if (grounded) {
+        if (grounded || inWater) {
             velocity = spineHeading.normalized * speed;
         } else {
             velocity = heading.normalized * speed;

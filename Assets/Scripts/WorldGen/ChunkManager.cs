@@ -230,7 +230,7 @@ public class ChunkManager : MonoBehaviour {
 
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
             GameObject waterChunk = chunkPool.getObject();
-            waterChunk.layer = 0;
+            waterChunk.layer = 4;
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);

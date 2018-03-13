@@ -17,14 +17,12 @@ public abstract class LandAnimal : Animal {
     // Update is called once per frame
     void Update() {
         if (skeleton != null) {
-            calculateSpeedAndHeading();
+            calculateSpeedAndHeading();           
             move();
-            if (!inWater) {
-                levelSpine();
-            }
+            levelSpine();
             doGravity();
             handleRagdoll();
-            handleAnimations();
+            handleAnimations();          
         }
     }
 
@@ -146,6 +144,9 @@ public abstract class LandAnimal : Animal {
         if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
             heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
+        if (inWater) {
+            preventDownardMovement();
+        }
         if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
             if (grounded) {
                 speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
@@ -156,9 +157,4 @@ public abstract class LandAnimal : Animal {
             }
         }
     }     
-
-    private void OnCollisionEnter(Collision collision) {
-        gravity = Vector3.zero;
-        desiredHeading = -desiredHeading;
-    }
 }

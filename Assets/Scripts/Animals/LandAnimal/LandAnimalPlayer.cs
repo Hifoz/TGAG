@@ -7,21 +7,19 @@ public class LandAnimalPlayer : LandAnimal {
 
     protected override void Start() {
         base.Start();
-        StartCoroutine(slowFallStartHack());
+        isPlayer = true;
     }
 
     /// <summary>
     /// Function for that lets the player control the animal
     /// </summary>
-    override protected void move() {        
-        
+    override protected void move() {
+        Debug.Log(grounded);
         desiredSpeed = 0;
 
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             desiredHeading = Camera.main.transform.forward;
-            if (!inWater) {
-                desiredHeading.y = 0;
-            }
+            desiredHeading.y = 0;
             desiredHeading.Normalize();
         }
 
@@ -50,14 +48,13 @@ public class LandAnimalPlayer : LandAnimal {
         }
 
         Vector3 velocity;
-        if (grounded) {
+        if (grounded || inWater) {
            velocity = spineHeading.normalized * speed;
         } else {
             velocity = heading.normalized * speed;
         }
         rb.velocity = velocity + gravity;
         transform.LookAt(transform.position + heading);
-        Debug.Log(inWater);
     }
 
     /// <summary>
@@ -82,16 +79,9 @@ public class LandAnimalPlayer : LandAnimal {
         jumping = false;
     }
 
-    private void OnCollisionEnter(Collision collision) {
+    override protected void OnCollisionEnter(Collision collision) {
+        base.OnCollisionEnter(collision);
         gravity = Vector3.zero;
         jumping = false;
-    }
-
-    private IEnumerator slowFallStartHack() {
-        float time = 4f;
-        for (float t = 0; t < time; t += Time.deltaTime) {
-            gravity = Physics.gravity * 0.5f;
-            yield return 0;
-        }
     }
 }

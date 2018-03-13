@@ -5,6 +5,11 @@ using System.Collections.Generic;
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
 public abstract class Animal : MonoBehaviour {
+    protected bool isPlayer = false;
+
+    //Coroutine flags
+    private bool flagSpineCorrecting = false;
+    protected bool flagAnimationTransition = false;
 
     //Animation stuff
     protected const float ikSpeed = 10f;
@@ -14,7 +19,6 @@ public abstract class Animal : MonoBehaviour {
     protected delegate bool ragDollCondition();
 
     protected AnimalAnimation currentAnimation;
-    protected bool animationInTransition = false;
 
     //Physics stuff
     protected Vector3 desiredHeading = Vector3.zero;
@@ -27,11 +31,8 @@ public abstract class Animal : MonoBehaviour {
     protected float acceleration = 5f;
 
     private const float levelSpeed = 3f;
+    private bool spineIsCorrect = true;
 
-    private bool correctingSpine = false;
-    private bool spineIsCorrrect = true;
-
-    private int inWaterInt = 0;
     protected bool inWater = false;
     protected bool grounded = false;
     protected Vector3 gravity = Physics.gravity;
@@ -87,8 +88,10 @@ public abstract class Animal : MonoBehaviour {
         }
         GetComponent<SkinnedMeshRenderer>().bones = bones;
 
-        animationInTransition = false;
         currentAnimation = null;
+        inWater = false;
+        flagSpineCorrecting = false;
+        flagAnimationTransition = false;
     }
 
     /// <summary>
@@ -99,6 +102,14 @@ public abstract class Animal : MonoBehaviour {
         this.speed = speed;
     }
 
+    /// <summary>
+    /// Gets the speed of the animal
+    /// </summary>
+    /// <returns>float speed</returns>
+    public float getSpeed() {
+        return speed;
+    }
+
     //    _   _                               _     _ _         __                  _   _                 
     //   | \ | |                             | |   | (_)       / _|                | | (_)                
     //   |  \| | ___  _ __ ______ _ __  _   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -107,14 +118,6 @@ public abstract class Animal : MonoBehaviour {
     //   |_| \_|\___/|_| |_|     | .__/ \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                           | |                                                                      
     //                           |_|                                                                      
-
-    /// <summary>
-    /// Gets the speed of the animal
-    /// </summary>
-    /// <returns>float speed</returns>
-    public float getSpeed() {
-        return speed;
-    }
 
     protected abstract void move();
     protected abstract void calculateSpeedAndHeading();
@@ -178,7 +181,7 @@ public abstract class Animal : MonoBehaviour {
             for (int i = 0; i < rotations.Length; i++) {
                 limb[i].bone.localRotation = Quaternion.identity;
             }
-        }
+        }        
     }
 
     /// <summary>
@@ -297,10 +300,10 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="transitionTime">Time to spend on transition</param>
     /// <returns>Success flag</returns>
     protected bool tryAnimationTransition(AnimalAnimation next, float speedScaling = 1f, float nextSpeedScaling = 1f, float transitionTime = 1f) {
-        if (!animationInTransition) {
+        if (!flagAnimationTransition) {
             StartCoroutine(transistionAnimation(next, speedScaling, nextSpeedScaling, transitionTime));
         }
-        return !animationInTransition;
+        return !flagAnimationTransition;
     }
 
     /// <summary>
@@ -311,16 +314,16 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="transitionTime">Time to spend on transition</param>
     /// <returns></returns>
     private IEnumerator transistionAnimation(AnimalAnimation next, float speedScaling, float nextSpeedScaling, float transitionTime) {
-        animationInTransition = true;
+        flagAnimationTransition = true;
         for (float t = 0; t <= 1f; t += Time.deltaTime / transitionTime) {
-            if (!animationInTransition) {
+            if (!flagAnimationTransition) {
                 break;
             }
             currentAnimation.animateLerp(next, t, speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
             yield return 0;
         }
         currentAnimation = next;
-        animationInTransition = false;
+        flagAnimationTransition = false;
     }
 
     //    _____  _               _             __                  _   _                 
@@ -336,19 +339,14 @@ public abstract class Animal : MonoBehaviour {
     /// Does the physics for gravity
     /// </summary>
     protected void doGravity() {
-        if (!inWater) {
-            Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-            RaycastHit hit;
-            int layerMask = 1 << 8;
-            if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
-                groundedGravity(hit, spine);
-            } else {
-                notGroundedGravity();
-            }
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        RaycastHit hit;
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
+            groundedGravity(hit, spine);
         } else {
-            gravity = Vector3.zero;
-            grounded = false;
-        }
+            notGroundedGravity();
+        }       
     }
 
     /// <summary>
@@ -382,24 +380,34 @@ public abstract class Animal : MonoBehaviour {
     }
 
     /// <summary>
+    /// Gravity calculation for when you are in water
+    /// </summary>
+    /// <param name="hit">Point where raycast hit</param>
+    virtual protected void waterGravity(RaycastHit hit) {
+
+    }
+
+    /// <summary>
     /// Tries to level the spine with the ground
     /// </summary>
     virtual protected void levelSpine() {
-        if (grounded) {
-            Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
+        if (grounded || inWater) {            
             levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
             levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
-            spineHeading = spine.bone.rotation * Vector3.forward;
-            spineIsCorrrect = false;
-        } else if (!grounded && !spineIsCorrrect) {
-            spineIsCorrrect = tryCorrectSpine();
+            spineIsCorrect = false;
+        } else if (!(grounded || inWater) && !spineIsCorrect) {
+            spineIsCorrect = tryCorrectSpine();
         }
+        spineHeading = spine.bone.rotation * Vector3.forward;
     }
 
     /// <summary>
     /// Levels the spine with terrain along axis
     /// </summary>
     /// <param name="axis">Axis to level along</param>
+    /// <param name="currentAxis">Current state of axis</param>
+    /// <param name="length">Length to check with</param>
     private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
 
@@ -431,10 +439,10 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <returns>Success flag</returns>
     private bool tryCorrectSpine() {
-        if (!correctingSpine) {
+        if (!flagSpineCorrecting) {
             StartCoroutine(correctSpine());
         }
-        return !correctingSpine;
+        return !flagSpineCorrecting;
     }
 
     /// <summary>
@@ -442,7 +450,7 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <returns></returns>
     private IEnumerator correctSpine() {
-        correctingSpine = true;
+        flagSpineCorrecting = true;
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         Quaternion originalRot = spine.bone.localRotation;
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
@@ -450,22 +458,28 @@ public abstract class Animal : MonoBehaviour {
             yield return 0;
         }
         spine.bone.localRotation = Quaternion.identity;
-        correctingSpine = false;
+        flagSpineCorrecting = false;
     }
 
-    private void OnTriggerEnter(Collider other) {
-        if (other.name == "waterSubChunk") {
-            inWaterInt++;
-            inWater = inWaterInt > 0;
+    /// <summary>
+    /// Calling this function removes negative y from headings
+    /// </summary>
+    protected void preventDownardMovement() {
+        if (heading.y < 0) {
+            heading.y = 0;
+            heading.Normalize();
+        }
+        if (spineHeading.y < 0) {
+            spineHeading.y = 0;
+            spineHeading.Normalize();
         }
     }
 
-    private void OnTriggerExit(Collider other) {
-        if (other.name == "waterSubChunk") {            
-            inWaterInt--;
-            inWater = inWaterInt > 0;
+    virtual protected void OnCollisionEnter(Collision collision) {
+        if (!isPlayer) {
+            avoidObstacle();
         }
-    }
+    }    
 
     //    _   _ _____   _____    __                  _   _                 
     //   | \ | |  __ \ / ____|  / _|                | | (_)                
@@ -480,20 +494,13 @@ public abstract class Animal : MonoBehaviour {
     /// Spawns the animal at position
     /// </summary>
     /// <param name="pos">Vector3 pos</param>
-    public bool Spawn(Vector3 pos) {
+    public void Spawn(Vector3 pos) {
         transform.position = pos;
         roamCenter = pos;
         roamCenter.y = 0;
         desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-
-        RaycastHit hit;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, ChunkConfig.chunkHeight + 40f, layerMask)) {
-            Vector3 groundTarget = hit.point + Vector3.up * 10;
-            transform.position = groundTarget;
-            return true;
-        }
-        return false;
+        grounded = false;
+        inWater = false;
     }
 
     /// <summary>
@@ -509,5 +516,17 @@ public abstract class Animal : MonoBehaviour {
 
         desiredHeading = transform.rotation * Vector3.forward;
         desiredHeading.y = 0;
+
+        isPlayer = false;
+    }
+
+    /// <summary>
+    /// Tries to avoid obstacle
+    /// </summary>
+    private void avoidObstacle() {
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(transform.position, desiredHeading), 10f, layerMask)) {
+            desiredHeading = -desiredHeading;
+        }
     }
 }

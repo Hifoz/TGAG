@@ -8,7 +8,7 @@ public class LandAnimalNPC : LandAnimal {
     override protected void Start() {
         base.Start();
         desiredSpeed = walkSpeed;
-
+        isPlayer = false;
         //LandAnimalSkeleton skeleton = new LandAnimalSkeleton(transform);
         //skeleton.generateInThread();
         //setSkeleton(skeleton);
@@ -26,10 +26,8 @@ public class LandAnimalNPC : LandAnimal {
             desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * desiredHeading;
         }
         transform.LookAt(transform.position + heading);
-        if (grounded) {
+        if (grounded || inWater) {
             rb.velocity = spineHeading * speed + gravity;
-        } else if (inWater) {
-            rb.velocity = heading * speed + gravity;
         } else {
             rb.velocity = gravity;
         }

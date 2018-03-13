@@ -8,6 +8,11 @@ public class AirAnimalPlayer : AirAnimal {
     Vector3 right = Vector3.right;
     Vector3 up = Vector3.up;
 
+    protected override void Start() {
+        base.Start();
+        isPlayer = true;
+    }
+
     /// <summary>
     /// Function for that lets the player control the animal
     /// </summary>
@@ -16,7 +21,7 @@ public class AirAnimalPlayer : AirAnimal {
         
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             desiredHeading = Camera.main.transform.forward;
-            if (grounded) {
+            if (grounded || inWater) {
                 desiredHeading.y = 0;
             }
             desiredHeading.Normalize();
@@ -50,7 +55,7 @@ public class AirAnimalPlayer : AirAnimal {
             }                
         }
 
-        if (!grounded) {
+        if (!grounded || !inWater) {
             if (Input.GetKey(KeyCode.C)) {
                 finalHeading += Quaternion.AngleAxis(45, right) * desiredHeading;
             }
@@ -63,14 +68,13 @@ public class AirAnimalPlayer : AirAnimal {
         }
 
         Vector3 velocity;
-        if (grounded) {
+        if (grounded || inWater) {
             velocity = spineHeading.normalized * speed;
         } else {
             velocity = heading.normalized * speed;
         }
         rb.velocity = velocity + gravity;
         transform.LookAt(transform.position + heading);
-        Debug.Log(inWater);
     }
 
     /// <summary>
