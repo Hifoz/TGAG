@@ -1,7 +1,9 @@
 ﻿using System;
 
-public abstract class WaterAnimal : Animal {
+public class WaterAnimal : Animal {
 
-    override protected abstract void move();
 
+    protected override void calculateSpeedAndHeading() {
+        throw new NotImplementedException();
+    }
 }

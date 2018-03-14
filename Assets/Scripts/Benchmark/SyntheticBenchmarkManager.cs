@@ -180,15 +180,17 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     private void orderAnimals() {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-        float lower = -maxDistance + LandAnimalNPC.roamDistance;
-        float upper = -lower;
         for (int i = 0; i < animals.Length; i++) {
             animals[i] = Instantiate(animalPrefab);
+            Animal animal = animals[i].GetComponent<Animal>();
+            animal.setAnimalBrain(new LandAnimalBrainNPC());
+            float lower = -maxDistance + ((AnimalBrainNPC)animal.getAnimalBrain()).roamDist;
+            float upper = -lower;
             float x = UnityEngine.Random.Range(lower, upper);
             float z = UnityEngine.Random.Range(lower, upper);
             float y = ChunkConfig.chunkHeight + 10;
             animals[i].transform.position = new Vector3(x, y, z);
-            animals[i].GetComponent<LandAnimalNPC>().enabled = false;
+            animal.enabled = false;
 
             AnimalSkeleton animalSkeleton = new LandAnimalSkeleton(animals[i].transform);
             animalSkeleton.index = i;
@@ -285,10 +287,10 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
         GameObject animal = animals[animalSkeleton.index];
-        LandAnimalNPC LandAnimalNPC = animal.GetComponent<LandAnimalNPC>();
-        LandAnimalNPC.enabled = true;
-        animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
-        LandAnimalNPC.enabled = false;
+        Animal animalBody = animal.GetComponent<Animal>();
+        animalBody.enabled = true;
+        animalBody.setSkeleton(animalSkeleton);
+        animalBody.enabled = false;
         orderedAnimals.Remove(animalSkeleton.index);
     }
 

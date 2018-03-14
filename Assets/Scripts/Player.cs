@@ -106,28 +106,16 @@ public class Player : MonoBehaviour {
     /// <param name="other">Animal to become</param>
     private void becomeOtherAnimal(GameObject other) {
         Animal myAnimal = GetComponent<Animal>();
-        AnimalSkeleton mySkeleton = myAnimal.getSkeleton();
-
         Animal otherAnimal = other.GetComponent<Animal>();
-        AnimalSkeleton otherSkeleton = otherAnimal.getSkeleton();
 
-        float mySpeed = myAnimal.getSpeed();
-        float otherSpeed = otherAnimal.getSpeed();
+        AnimalUtils.addAnimalBrainPlayer(otherAnimal);
+        AnimalBrainNPC otherBrain = (AnimalBrainNPC)AnimalUtils.addAnimalBrainNPC(myAnimal);
+        otherBrain.takeOverPlayer();
 
-        Animal thisAnimal = AnimalUtils.addAnimalComponentNPC(gameObject, myAnimal.GetType());
-        thisAnimal.setSkeleton(mySkeleton);
-        thisAnimal.takeOverPlayer();
-        thisAnimal.setSpeed(mySpeed);
-
-        Animal myNewAnimal = AnimalUtils.addAnimalComponentPlayer(other, otherAnimal.GetType());
         other.AddComponent<Player>().transferPlayer(magicTrail, animals);
-        myNewAnimal.setSkeleton(otherSkeleton);
-        myNewAnimal.setSpeed(otherSpeed);      
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 
-        Destroy(otherAnimal);
-        Destroy(myAnimal);
         Destroy(GetComponent<Player>());
     }    
 }

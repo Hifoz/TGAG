@@ -92,6 +92,7 @@ public class ChunkManager : MonoBehaviour {
                         animal.SetActive(true);
                         animal.transform.position = spawnPos;
                         AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animal, animal.GetComponent<Animal>().GetType());
+                        AnimalUtils.addAnimalBrainNPC(animal.GetComponent<Animal>());
                         animalSkeleton.index = i;
                         orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
                         orderedAnimals.Add(i);
@@ -443,7 +444,8 @@ public class ChunkManager : MonoBehaviour {
             Camera.main.GetComponent<CameraController>().cameraHeight = 7.5f;
             AnimalSkeleton playerSkeleton = new LandAnimalSkeleton(playerObj.transform);
             playerSkeleton.generateInThread();
-            playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
+            playerObj.GetComponent<LandAnimal>().setSkeleton(playerSkeleton);
+            AnimalUtils.addAnimalBrainPlayer(playerObj.GetComponent<Animal>());
             playerObj.GetComponent<Player>().initPlayer(animals);
         }
     }

@@ -5,9 +5,10 @@ using System.Collections;
 /// <summary>
 /// Super class for all air animals
 /// </summary>
-public abstract class AirAnimal : Animal {
+public class AirAnimal : Animal {
     //Coroutine flags
     protected bool flagLaunching = false;
+    private bool flagAscending = false;
 
     //Animation stuff
     protected AirAnimalSkeleton airSkeleton;
@@ -22,13 +23,11 @@ public abstract class AirAnimal : Animal {
     private AnimalAnimation walkingAnimation;
 
     //Physics stuff
-    protected const float walkSpeed = 5f;
-    protected const float flySpeed = 30f;
     protected const float glideDrag = 0.25f;
 
     private void Update() {
         if (skeleton != null) {
-            move();
+            brain.move();
             calculateSpeedAndHeading();
             doGravity();
             levelSpine();
@@ -63,17 +62,11 @@ public abstract class AirAnimal : Animal {
         flagLaunching = false;
     }
 
-
-    //    _   _                               _     _ _         __                  _   _                 
-    //   | \ | |                             | |   | (_)       / _|                | | (_)                
-    //   |  \| | ___  _ __ ______ _ __  _   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-    //   | . ` |/ _ \| '_ \______| '_ \| | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-    //   | |\  | (_) | | | |     | |_) | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
-    //   |_| \_|\___/|_| |_|     | .__/ \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-    //                           | |                                                                      
-    //                           |_|                                                                      
-
-    override protected abstract void move();
+    public override void setAnimalBrain(AnimalBrain brain) {
+        base.setAnimalBrain(brain);
+        brain.addAction("launch", tryLaunch);
+        brain.addAction("ascend", tryAscend);
+    }
 
     //                   _                 _   _                __                  _   _                 
     //       /\         (_)               | | (_)              / _|                | | (_)                
@@ -211,29 +204,29 @@ public abstract class AirAnimal : Animal {
     /// </summary>
     private void handleAnimations() {
         if (!flagAnimationTransition) {
-            currentAnimation.animate(speed * ((grounded) ? animSpeedScalingGround : animSpeedScalingAir));
+            currentAnimation.animate(state.speed * ((state.grounded) ? animSpeedScalingGround : animSpeedScalingAir));
             if (currentAnimation == walkingAnimation) {
                 groundLegsAndWings();
             }
         }
 
-        if (grounded) {
+        if (state.grounded) {
             if (currentAnimation != walkingAnimation) {
                 tryAnimationTransition(walkingAnimation, animSpeedScalingAir, animSpeedScalingGround, 0.5f);
             }
         } else {
             float transistionTime = (currentAnimation == walkingAnimation) ? 0.5f : 0.5f;
             float nextSpeedScaling = (currentAnimation == walkingAnimation) ? animSpeedScalingGround : animSpeedScalingAir;
-            if (desiredSpeed == 0 && currentAnimation != glidingAnimation) {                
+            if (state.desiredSpeed == 0 && currentAnimation != glidingAnimation) {                
                 tryAnimationTransition(glidingAnimation, animSpeedScalingAir, nextSpeedScaling, transistionTime);
-            } else if (desiredSpeed != 0 && currentAnimation != flappingAnimation) {
+            } else if (state.desiredSpeed != 0 && currentAnimation != flappingAnimation) {
                 tryAnimationTransition(flappingAnimation, animSpeedScalingAir, nextSpeedScaling, transistionTime);
             }
         }
 
-        if (ragDollLegs && grounded) {
+        if (ragDollLegs && state.grounded) {
             ragDollLegs = false;
-        } else if (!ragDollLegs && !grounded) {
+        } else if (!ragDollLegs && !state.grounded) {
             ragDollLegs = true;
             makeLegsRagDoll();
         }
@@ -281,19 +274,19 @@ public abstract class AirAnimal : Animal {
     /// Function for calculating speed and heading
     /// </summary>
     override protected void calculateSpeedAndHeading() {
-        if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
-            heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        if (Vector3.Angle(state.heading, state.desiredHeading) > 0.1f) {
+            state.heading = Vector3.RotateTowards(state.heading, state.desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
-        if (inWater) {
+        if (state.inWater) {
             preventDownardMovement();
         }
-        if (desiredSpeed - speed > 0.2f) { //Acceleration           
-            speed += Time.deltaTime * acceleration;            
-        } else if (speed - desiredSpeed > 0.2f) { //Deceleration
-            if (!grounded && !inWater) {
-                speed -= Time.deltaTime * acceleration * glideDrag;
+        if (state.desiredSpeed - state.speed > 0.2f) { //Acceleration           
+            state.speed += Time.deltaTime * acceleration;            
+        } else if (state.speed - state.desiredSpeed > 0.2f) { //Deceleration
+            if (!state.grounded && !state.inWater) {
+                state.speed -= Time.deltaTime * acceleration * glideDrag;
             } else {
-                speed -= Time.deltaTime * acceleration;
+                state.speed -= Time.deltaTime * acceleration;
             }
         }
     }
@@ -302,11 +295,11 @@ public abstract class AirAnimal : Animal {
     /// Gravity calculations for when you are not grounded
     /// </summary>
     override protected void notGroundedGravity() {
-        grounded = false;
-        if (speed <= flySpeed / 2) {
-            gravity += Physics.gravity * Time.deltaTime * (1 - speed / (flySpeed / 2f));
+        state.grounded = false;
+        if (state.speed <= brain.fastSpeed / 2) {
+            state.gravity += Physics.gravity * Time.deltaTime * (1 - state.speed / (brain.fastSpeed / 2f));
         } else {
-            gravity = Vector3.zero;
+            state.gravity = Vector3.zero;
         }
     }
 
@@ -328,27 +321,46 @@ public abstract class AirAnimal : Animal {
     private IEnumerator launch() {
         flagLaunching = true;
         acceleration = acceleration * 4;
-        gravity -= Physics.gravity * 2f;
+        state.gravity -= Physics.gravity * 2f;
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
-            grounded = false;
-            inWater = false;
+            state.grounded = false;
+            state.inWater = false;
             yield return 0;
         }
         acceleration = acceleration / 4;
         flagLaunching = false;
     }
 
+    /// <summary>
+    /// Tries to ascend
+    /// </summary>
+    /// <returns>success flag</returns>
+    private bool tryAscend() {
+        if (!flagAscending) {
+            StartCoroutine(ascend());
+        }
+        return !flagAscending;
+    }
+
+    /// <summary>
+    /// Makes the NPC fly straight up
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator ascend() {
+        flagAscending = true;
+        Vector3 originalHeading = state.desiredHeading;
+
+        tryLaunch();
+        for (float t = 0; t <= 1f; t += Time.deltaTime / 2f) {
+            state.desiredHeading = Vector3.up;
+            yield return 0;
+        }
+        state.desiredHeading = originalHeading;
+        flagAscending = false;
+    }
+
     override protected void OnCollisionEnter(Collision collision) {
         base.OnCollisionEnter(collision);
         flagLaunching = false;
-    }
-
-    //    __  __ _            ______                _   _                 
-    //   |  \/  (_)          |  ____|              | | (_)                
-    //   | \  / |_ ___  ___  | |__ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-    //   | |\/| | / __|/ __| |  __| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-    //   | |  | | \__ \ (__  | |  | |_| | | | | (__| |_| | (_) | | | \__ \
-    //   |_|  |_|_|___/\___| |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-    //                                                                    
-    //                                                                    
+    }                                                                
 }

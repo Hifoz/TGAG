@@ -5,7 +5,9 @@ using System.Collections.Generic;
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
 public abstract class Animal : MonoBehaviour {
-    protected bool isPlayer = false;
+    protected AnimalSkeleton skeleton;
+    protected AnimalBrain brain;
+    protected AnimalState state = new AnimalState();
 
     //Coroutine flags
     private bool flagSpineCorrecting = false;
@@ -14,38 +16,22 @@ public abstract class Animal : MonoBehaviour {
     //Animation stuff
     protected const float ikSpeed = 10f;
     protected const float ikTolerance = 0.05f;
-
-    protected AnimalSkeleton skeleton;
     protected delegate bool ragDollCondition();
-
     protected AnimalAnimation currentAnimation;
 
     //Physics stuff
-    protected Vector3 desiredHeading = Vector3.zero;
-    protected Vector3 heading = Vector3.zero;
-    protected Vector3 spineHeading = Vector3.forward;
     protected float headingChangeRate = 5f;
-
-    protected float desiredSpeed = 0;
-    protected float speed = 0;
     protected float acceleration = 5f;
-
     private const float levelSpeed = 3f;
-    private bool spineIsCorrect = true;
-
     private int inWaterInt = 0;
-    protected bool inWater = false;
-    protected bool grounded = false;
-    protected Vector3 gravity = Physics.gravity;
 
-    protected Rigidbody rb;
 
-    //NPC stuff
-    protected Vector3 roamCenter;
-
+    virtual protected void Awake() {
+        state.rb = GetComponent<Rigidbody>();
+        state.transform = transform;
+    }
 
     virtual protected void Start() {
-        rb = GetComponent<Rigidbody>();
     }
 
     //    _____       _     _ _         __                  _   _                 
@@ -90,25 +76,46 @@ public abstract class Animal : MonoBehaviour {
         GetComponent<SkinnedMeshRenderer>().bones = bones;
 
         currentAnimation = null;
-        inWater = false;
+        state.inWater = false;
         flagSpineCorrecting = false;
         flagAnimationTransition = false;
     }
 
     /// <summary>
-    /// Sets the speed of the animal
+    /// Gets the animalbrain
     /// </summary>
-    /// <param name="speed">Value to use</param>
-    public void setSpeed(float speed) {
-        this.speed = speed;
+    /// <returns>The brain</returns>
+    public AnimalBrain getAnimalBrain() {
+        return brain;
     }
 
     /// <summary>
-    /// Gets the speed of the animal
+    /// Sets the animal brain
     /// </summary>
-    /// <returns>float speed</returns>
-    public float getSpeed() {
-        return speed;
+    /// <param name="brain">The brain to use</param>
+    virtual public void setAnimalBrain(AnimalBrain brain) {
+        this.brain = brain;
+        this.brain.state = state;
+    }
+
+    /// <summary>
+    /// Gets the AnimalState
+    /// </summary>
+    /// <returns></returns>
+    public AnimalState getState() {
+        return state;
+    }
+
+    /// <summary>
+    /// Sets the AnimalState
+    /// </summary>
+    /// <param name="state"></param>
+    public void setState(AnimalState state) {
+        this.state = state;
+    }
+
+    public void Spawn(Vector3 pos) {
+        brain.Spawn(pos);
     }
 
     //    _   _                               _     _ _         __                  _   _                 
@@ -120,7 +127,6 @@ public abstract class Animal : MonoBehaviour {
     //                           | |                                                                      
     //                           |_|                                                                      
 
-    protected abstract void move();
     protected abstract void calculateSpeedAndHeading();
 
     //                   _                 _   _                __                  _   _                 
@@ -320,7 +326,7 @@ public abstract class Animal : MonoBehaviour {
             if (!flagAnimationTransition) {
                 break;
             }
-            currentAnimation.animateLerp(next, t, speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
+            currentAnimation.animateLerp(next, t, state.speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
             yield return 0;
         }
         currentAnimation = next;
@@ -345,10 +351,11 @@ public abstract class Animal : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
             float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
-            if (hit.distance < stanceHeight) {
-                inWater = false;
+            if (hit.distance <= stanceHeight) {
+                state.inWater = false;
+                state.grounded = true;
             }
-            if (inWater) {
+            if (state.inWater) {
                 waterGravity();
             } else {
                 groundedGravity(hit, spine, stanceHeight);
@@ -362,9 +369,9 @@ public abstract class Animal : MonoBehaviour {
     /// Gravity calculations for when you are not grounded
     /// </summary>
     virtual protected void notGroundedGravity() {
-        grounded = false;
-        inWater = false;
-        gravity += Physics.gravity * Time.deltaTime;
+        state.grounded = false;
+        state.inWater = false;
+        state.gravity += Physics.gravity * Time.deltaTime;
     }
 
     /// <summary>
@@ -377,12 +384,12 @@ public abstract class Animal : MonoBehaviour {
         float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
         float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
         if (distFromStance <= stanceHeight) {
-            grounded = true;
+            state.grounded = true;
             float sign = Mathf.Sign(dist2ground - stanceHeight);
-            if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
-                gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+            if (distFromStance > stanceHeight / 16f && state.gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+                state.gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
             } else {
-                gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
+                state.gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
             }
         } else {
             notGroundedGravity();
@@ -394,8 +401,8 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <param name="hit">Point where raycast hit</param>
     virtual protected void waterGravity() {
-        grounded = false;
-        gravity = Vector3.zero;
+        state.grounded = false;
+        state.gravity = Vector3.zero;
     }
 
     /// <summary>
@@ -403,14 +410,13 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     virtual protected void levelSpine() {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        if (grounded) {            
+        if (state.grounded) {            
             levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
             levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
-            spineIsCorrect = false;
-        } else if (grounded && !spineIsCorrect) {
-            spineIsCorrect = tryCorrectSpine();
+        } else if (!spineIsCorrect) {
+            tryCorrectSpine();
         }
-        spineHeading = spine.bone.rotation * Vector3.forward;
+        state.spineHeading = spine.bone.rotation * Vector3.forward;
     }
 
     /// <summary>
@@ -445,6 +451,8 @@ public abstract class Animal : MonoBehaviour {
         }
     }
 
+    private bool spineIsCorrect { get { return skeleton.getBones(BodyPart.SPINE)[0].bone.localRotation == Quaternion.identity; } }
+
     /// <summary>
     /// Tries to correct the spine
     /// </summary>
@@ -476,82 +484,31 @@ public abstract class Animal : MonoBehaviour {
     /// Calling this function removes negative y from headings
     /// </summary>
     protected void preventDownardMovement() {
-        if (heading.y < 0) {
-            heading.y = 0;
-            heading.Normalize();
+        if (state.heading.y < 0) {
+            state.heading.y = 0;
+            state.heading.Normalize();
         }
-        if (spineHeading.y < 0) {
-            spineHeading.y = 0;
-            spineHeading.Normalize();
+        if (state.spineHeading.y < 0) {
+            state.spineHeading.y = 0;
+            state.spineHeading.Normalize();
         }
     }
 
     private void OnTriggerEnter(Collider other) {
         if (other.name == "waterSubChunk") {
             inWaterInt++;
-            inWater = inWaterInt > 0;
+            state.inWater = inWaterInt > 0;
         }
     }
 
     private void OnTriggerExit(Collider other) {
         if (other.name == "waterSubChunk") {
             inWaterInt--;
-            inWater = inWaterInt > 0;
+            state.inWater = inWaterInt > 0;
         }
     }
 
     virtual protected void OnCollisionEnter(Collision collision) {
-        if (!isPlayer) {
-            avoidObstacle();
-        }
+        brain.OnCollisionEnter();
     }    
-
-    //    _   _ _____   _____    __                  _   _                 
-    //   | \ | |  __ \ / ____|  / _|                | | (_)                
-    //   |  \| | |__) | |      | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-    //   | . ` |  ___/| |      |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-    //   | |\  | |    | |____  | | | |_| | | | | (__| |_| | (_) | | | \__ \
-    //   |_| \_|_|     \_____| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-    //                                                                     
-    //                                                                     
-
-    /// <summary>
-    /// Spawns the animal at position
-    /// </summary>
-    /// <param name="pos">Vector3 pos</param>
-    public void Spawn(Vector3 pos) {
-        transform.position = pos;
-        roamCenter = pos;
-        roamCenter.y = 0;
-        desiredHeading = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        grounded = false;
-        inWater = false;
-    }
-
-    /// <summary>
-    /// Function for when this animal used to be a player
-    /// </summary>
-    public void takeOverPlayer() {
-        roamCenter = transform.position + new Vector3(Random.Range(2f, 5f), 100, Random.Range(2f, 5f));
-        roamCenter.y = 0;
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(roamCenter, Vector3.down), out hit)) {
-            roamCenter = hit.point;
-        }
-
-        desiredHeading = transform.rotation * Vector3.forward;
-        desiredHeading.y = 0;
-
-        isPlayer = false;
-    }
-
-    /// <summary>
-    /// Tries to avoid obstacle
-    /// </summary>
-    private void avoidObstacle() {
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(transform.position, desiredHeading), 10f, layerMask)) {
-            desiredHeading = -desiredHeading;
-        }
-    }
 }
