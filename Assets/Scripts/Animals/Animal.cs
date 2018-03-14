@@ -33,6 +33,7 @@ public abstract class Animal : MonoBehaviour {
     private const float levelSpeed = 3f;
     private bool spineIsCorrect = true;
 
+    private int inWaterInt = 0;
     protected bool inWater = false;
     protected bool grounded = false;
     protected Vector3 gravity = Physics.gravity;
@@ -339,14 +340,22 @@ public abstract class Animal : MonoBehaviour {
     /// Does the physics for gravity
     /// </summary>
     protected void doGravity() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        RaycastHit hit;
+        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];            
         int layerMask = 1 << 8;
+        RaycastHit hit;
         if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
-            groundedGravity(hit, spine);
+            float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
+            if (hit.distance < stanceHeight) {
+                inWater = false;
+            }
+            if (inWater) {
+                waterGravity();
+            } else {
+                groundedGravity(hit, spine, stanceHeight);
+            }
         } else {
             notGroundedGravity();
-        }       
+        }
     }
 
     /// <summary>
@@ -354,6 +363,7 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     virtual protected void notGroundedGravity() {
         grounded = false;
+        inWater = false;
         gravity += Physics.gravity * Time.deltaTime;
     }
 
@@ -362,8 +372,8 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <param name="hit">Point where raycast hit the ground</param>
     /// <param name="spine">Spine of animal</param>
-    virtual protected void groundedGravity(RaycastHit hit, Bone spine) {
-        float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
+    /// <param name="stanceHeight">The height of the stance</param>
+    virtual protected void groundedGravity(RaycastHit hit, Bone spine, float stanceHeight) {
         float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
         float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
         if (distFromStance <= stanceHeight) {
@@ -383,8 +393,9 @@ public abstract class Animal : MonoBehaviour {
     /// Gravity calculation for when you are in water
     /// </summary>
     /// <param name="hit">Point where raycast hit</param>
-    virtual protected void waterGravity(RaycastHit hit) {
-
+    virtual protected void waterGravity() {
+        grounded = false;
+        gravity = Vector3.zero;
     }
 
     /// <summary>
@@ -392,11 +403,11 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     virtual protected void levelSpine() {
         Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        if (grounded || inWater) {            
+        if (grounded) {            
             levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
             levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
             spineIsCorrect = false;
-        } else if (!(grounded || inWater) && !spineIsCorrect) {
+        } else if (grounded && !spineIsCorrect) {
             spineIsCorrect = tryCorrectSpine();
         }
         spineHeading = spine.bone.rotation * Vector3.forward;
@@ -472,6 +483,20 @@ public abstract class Animal : MonoBehaviour {
         if (spineHeading.y < 0) {
             spineHeading.y = 0;
             spineHeading.Normalize();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.name == "waterSubChunk") {
+            inWaterInt++;
+            inWater = inWaterInt > 0;
+        }
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if (other.name == "waterSubChunk") {
+            inWaterInt--;
+            inWater = inWaterInt > 0;
         }
     }
 
