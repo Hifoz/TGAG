@@ -116,10 +116,7 @@ public class MeshDataGenerator {
     public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), 
                                               MeshDataType meshDataType = MeshDataType.TERRAIN) {
         if(mode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
-            MeshDataExtras extras = new MeshDataExtras {
-                animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f))
-            };
-            GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType, extras);
+            GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType);
             return gmg.generateMeshData();
         }
 

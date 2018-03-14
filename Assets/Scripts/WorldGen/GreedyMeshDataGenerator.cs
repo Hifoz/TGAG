@@ -16,12 +16,6 @@ class VoxelFace {
         this.isFlipped = isFlipped;
     }
 
-
-
-    public enum FaceDirection {
-        xp, xm, yp, ym, zp, zm
-    }
-
     public bool equals(VoxelFace other) {
         if (other == null) return false;
         return data.equals(other.data) && isFlipped == other.isFlipped && nodraw == other.nodraw;
@@ -44,12 +38,10 @@ class GreedyMeshDataGenerator {
     List<Color> colors = new List<Color>();
     List<Vector2> uvs = new List<Vector2>();
 
-    // Could these three also be moved into the MeshDataExtras? (Or voxelSize and offset at least?)
     MeshDataGenerator.MeshDataType meshDataType;
     float voxelSize; // Is there any good reason for why voxelSize and offset is done on the meshdata 
     Vector3 offset;  //   and not just by moving and scaling the GO the mesh is attached to?
 
-    MeshDataExtras extras;
 
     /// <summary>
     /// Constructor for the greedy mesh data generator.
@@ -60,22 +52,10 @@ class GreedyMeshDataGenerator {
     /// <param name="meshDataType">The type of the meshdata</param>
     /// <param name="extras">An object containing any extra/optional data that can be used in generation of the mesh</param>
     public GreedyMeshDataGenerator(BlockDataMap blockData, float voxelSize = 1f, Vector3 offset = default(Vector3), 
-                                   MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN, 
-                                   MeshDataExtras extras = null) {
+                                   MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN) {
         this.blockData = blockData;
         this.meshDataType = meshDataType;
         this.voxelSize = voxelSize;
-
-        if(this.meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
-            if (extras == null) {
-                throw new UnassignedReferenceException("You need to include a MeshDataExtras object for \"extras\" " +
-                                                       "parameter if you want to make MeshData of type \"ANIMAL\"");
-            } else if (extras.animalData.Equals(Vector2.negativeInfinity)) {
-                throw new ArgumentException("\"extras.animalData\" can not be Vector2.negativeInfinity if you want" +
-                                            " to make MeshData of type \"ANIMAL\". Did you forget to set the value?");
-            }
-            this.extras = extras;
-        }
     }
 
 
@@ -88,8 +68,8 @@ class GreedyMeshDataGenerator {
         for(int d = 0; d < 3; d++) {
             int u = (d+1) % 3; // u and v are the other two dimensions, kinda like the "local" x and y in this dimension d
             int v = (d+2) % 3;
-            int[] x = new int[] { 0, 0, 0 }; // Contains the position of the voxel in xyz space
-            int[] q = new int[] { 0, 0, 0 }; // Offset for second voxel to check
+            Vector3Int x = Vector3Int.zero; // Contains the position of the voxel in xyz space
+            Vector3Int q = Vector3Int.zero; // Offset for second voxel to check
             int w = 0;
             int h = 0;
             int k = 0;
@@ -110,15 +90,16 @@ class GreedyMeshDataGenerator {
                         if (checkVoxel(a) == checkVoxel(b)){
                             mask[n] = new VoxelFace(BlockData.Empty, d);
                         } else if(checkVoxel(a)) {
-                            mask[n] = new VoxelFace(a, d, false);  
+                            mask[n] = new VoxelFace(a, d, false);
                         } else {
                             mask[n] = new VoxelFace(b, d, true);
                         }
 
                         // Make the outside blocks nodraw:
-                        if (x[v] < 1 || x[v] >= blockData.GetLength(v) - 1) mask[n].nodraw = true;
-                        if (x[u] < 1 || x[u] >= blockData.GetLength(u) - 1) mask[n].nodraw = true;
-                        if (x[d] < 1 || x[d] >= blockData.GetLength(d) - 1) mask[n].nodraw = true;
+                        if (x[v] < 1 || x[v] >= blockData.GetLength(v) - 1 ||
+                            x[u] < 1 || x[u] >= blockData.GetLength(u) - 1 ||
+                            x[d] < 1 || x[d] >= blockData.GetLength(d) - 1)
+                            mask[n].nodraw = true;
 
 
                     }
@@ -151,8 +132,8 @@ class GreedyMeshDataGenerator {
                             // Find orientation of triangles
                             x[u] = i;
                             x[v] = j;
-                            int[] dv = new int[] { 0, 0, 0 };
-                            int[] du = new int[] { 0, 0, 0 };
+                            Vector3Int dv = Vector3Int.zero;
+                            Vector3Int du = Vector3Int.zero;
                             dv[v] = h;
                             du[u] = w;
 
@@ -164,7 +145,7 @@ class GreedyMeshDataGenerator {
                                 new Vector3(x[0]         + dv[0], x[1]         + dv[1], x[2]         + dv[2])
                             };
 
-                            addFace(verts, w, h, mask[n]);
+                            addFace(verts, w, h, c);
 
 
                             // Clear mask:
@@ -200,10 +181,7 @@ class GreedyMeshDataGenerator {
     /// <summary>
     /// Add a new face
     /// </summary>
-    /// <param name="v0">vertex 0</param>
-    /// <param name="v1">vertex 1</param>
-    /// <param name="v2">vertex 2</param>
-    /// <param name="v3">vertex 3</param>
+    /// <param name="verts">The 4 vertices of the face</param>
     /// <param name="width">width of face</param>
     /// <param name="height">height of face</param>
     /// <param name="voxel">the VoxelFace containing the blockdata and direction</param>
@@ -214,11 +192,11 @@ class GreedyMeshDataGenerator {
             verts[i] = (verts[i] - offset) * voxelSize;
         }
 
-        if(!voxel.isFlipped)
+        if (!voxel.isFlipped) {
             vertices.AddRange(new Vector3[] { verts[0], verts[1], verts[2], verts[3] });
-        else
+        } else {
             vertices.AddRange(new Vector3[] { verts[2], verts[1], verts[0], verts[3] });
-
+        }
 
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex, vertIndex + 2, vertIndex + 3 });
@@ -227,29 +205,10 @@ class GreedyMeshDataGenerator {
         normalDir[voxel.dir] = voxel.isFlipped ? -1 : 1;
         normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
 
-
-        if(meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
-            addAnimalTextureData(vertices.GetRange(vertIndex, 4));
-        } else {
-            addTextureCoordinates(width, height, voxel);
-            addTextureTypeData(voxel);
-        }
+        addTextureCoordinates(width, height, voxel);
+        addTextureTypeData(voxel);
 
 
-    }
-
-    /// <summary>
-    /// Encodes colors as unique positions used for noise calculations in animal shader
-    /// </summary>
-    /// <param name="verts">Verticies to encode into colors</param>
-    private void addAnimalTextureData(List<Vector3> verts) {
-        Vector3 scalingVector = new Vector3(blockData.GetLength(0), blockData.GetLength(1), blockData.GetLength(2));
-        foreach (Vector3 v in verts) {
-            colors.Add(new Color(v.x / scalingVector.x,
-                                 v.y / scalingVector.y,
-                                 v.z / scalingVector.z));
-            uvs.Add(extras.animalData);
-        }
     }
 
     /// <summary>
@@ -259,6 +218,7 @@ class GreedyMeshDataGenerator {
     /// <param name="height"></param>
     /// <param name="isFlipped"></param>
     private void addTextureCoordinates(int width, int height, VoxelFace voxel) {
+        // NB! coordinates are stretched, not repeating
         Vector2[] coords = new Vector2[] {
             new Vector2(0, 0), new Vector2(0, 1),
             new Vector2(1, 0), new Vector2(1, 1)
@@ -280,7 +240,7 @@ class GreedyMeshDataGenerator {
             rotation += (voxel.dir == 2 ? -1 : 1);
 
         for (int i = 0; i < 4; i++) {
-            uvs.Add(coords[rotations[rotation%rotations.Length, i]]);
+            uvs.Add(coords[rotations[rotation%4, i]]);
         }
 
     }
