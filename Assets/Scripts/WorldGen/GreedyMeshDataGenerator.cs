@@ -29,12 +29,13 @@ class VoxelFace {
 }
 
 
+
 /// <summary>
 /// Implementation of greedy meshing.
 /// Based on javascript implementation by Mikola Lysenko
 /// https://github.com/mikolalysenko/mikolalysenko.github.com/blob/gh-pages/MinecraftMeshes2/js/greedy_tri.js
 /// </summary>
-class GreedyMeshGenerator {
+class GreedyMeshDataGenerator {
     BlockDataMap blockData;
 
     List<Vector3> vertices = new List<Vector3>();
@@ -43,17 +44,45 @@ class GreedyMeshGenerator {
     List<Color> colors = new List<Color>();
     List<Vector2> uvs = new List<Vector2>();
 
+    // Could these three also be moved into the MeshDataExtras? (Or voxelSize and offset at least?)
     MeshDataGenerator.MeshDataType meshDataType;
+    float voxelSize; // Is there any good reason for why voxelSize and offset is done on the meshdata 
+    Vector3 offset;  //   and not just by moving and scaling the GO the mesh is attached to?
 
+    MeshDataExtras extras;
 
-    public GreedyMeshGenerator(BlockDataMap blockData, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN) {
+    /// <summary>
+    /// Constructor for the greedy mesh data generator.
+    /// </summary>
+    /// <param name="blockData">The BlockDataMap containing the pointdata to create the meshdata from</param>
+    /// <param name="voxelSize">size of the voxels</param>
+    /// <param name="offset"></param>
+    /// <param name="meshDataType">The type of the meshdata</param>
+    /// <param name="extras">An object containing any extra/optional data that can be used in generation of the mesh</param>
+    public GreedyMeshDataGenerator(BlockDataMap blockData, float voxelSize = 1f, Vector3 offset = default(Vector3), 
+                                   MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN, 
+                                   MeshDataExtras extras = null) {
         this.blockData = blockData;
         this.meshDataType = meshDataType;
+        this.voxelSize = voxelSize;
 
+        if(this.meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
+            if (extras == null) {
+                throw new UnassignedReferenceException("You need to include a MeshDataExtras object for \"extras\" " +
+                                                       "parameter if you want to make MeshData of type \"ANIMAL\"");
+            } else if (extras.animalData.Equals(Vector2.negativeInfinity)) {
+                throw new ArgumentException("\"extras.animalData\" can not be Vector2.negativeInfinity if you want" +
+                                            " to make MeshData of type \"ANIMAL\". Did you forget to set the value?");
+            }
+            this.extras = extras;
+        }
     }
 
 
-
+    /// <summary>
+    /// Generates the meshdata
+    /// </summary>
+    /// <returns></returns>
     public MeshData[] generateMeshData() {
         // Go over the it in the three dimensions
         for(int d = 0; d < 3; d++) {
@@ -128,11 +157,14 @@ class GreedyMeshGenerator {
                             du[u] = w;
 
                             // Add vertex data and other face data
-                            addFace(new Vector3(x[0],                 x[1],                 x[2]),
-                                    new Vector3(x[0] + du[0],         x[1] + du[1],         x[2] + du[2]),
-                                    new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
-                                    new Vector3(x[0]         + dv[0], x[1]         + dv[1], x[2]         + dv[2]),
-                                    w, h, mask[n]);
+                            Vector3[] verts = new Vector3[]{
+                                new Vector3(x[0],                 x[1],                 x[2]),
+                                new Vector3(x[0] + du[0],         x[1] + du[1],         x[2] + du[2]),
+                                new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
+                                new Vector3(x[0]         + dv[0], x[1]         + dv[1], x[2]         + dv[2])
+                            };
+
+                            addFace(verts, w, h, mask[n]);
 
 
                             // Clear mask:
@@ -175,13 +207,17 @@ class GreedyMeshGenerator {
     /// <param name="width">width of face</param>
     /// <param name="height">height of face</param>
     /// <param name="voxel">the VoxelFace containing the blockdata and direction</param>
-    private void addFace(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, int width, int height, VoxelFace voxel) {
+    private void addFace(Vector3[] verts, int width, int height, VoxelFace voxel) {
         int vertIndex = vertices.Count;
 
+        for(int i = 0; i < verts.Length; i++) {
+            verts[i] = (verts[i] - offset) * voxelSize;
+        }
+
         if(!voxel.isFlipped)
-            vertices.AddRange(new Vector3[] { v0, v1, v2, v3 });
+            vertices.AddRange(new Vector3[] { verts[0], verts[1], verts[2], verts[3] });
         else
-            vertices.AddRange(new Vector3[] { v2, v1, v0, v3 });
+            vertices.AddRange(new Vector3[] { verts[2], verts[1], verts[0], verts[3] });
 
 
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
@@ -192,9 +228,28 @@ class GreedyMeshGenerator {
         normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
 
 
-        addTextureCoordinates(width, height, voxel);
-        addTextureTypeData(voxel);
+        if(meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
+            addAnimalTextureData(vertices.GetRange(vertIndex, 4));
+        } else {
+            addTextureCoordinates(width, height, voxel);
+            addTextureTypeData(voxel);
+        }
 
+
+    }
+
+    /// <summary>
+    /// Encodes colors as unique positions used for noise calculations in animal shader
+    /// </summary>
+    /// <param name="verts">Verticies to encode into colors</param>
+    private void addAnimalTextureData(List<Vector3> verts) {
+        Vector3 scalingVector = new Vector3(blockData.GetLength(0), blockData.GetLength(1), blockData.GetLength(2));
+        foreach (Vector3 v in verts) {
+            colors.Add(new Color(v.x / scalingVector.x,
+                                 v.y / scalingVector.y,
+                                 v.z / scalingVector.z));
+            uvs.Add(extras.animalData);
+        }
     }
 
     /// <summary>

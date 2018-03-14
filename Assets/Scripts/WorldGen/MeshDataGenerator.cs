@@ -4,10 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
+/// <summary>
+/// Contains any extra/optional data that can be used to generate a mesh.
+/// </summary>
+public class MeshDataExtras {
+    public Vector2 animalData = Vector2.negativeInfinity; // Used for populating the uvs if meshDataType == ANIMAL
+}
+
+
 /// <summary>
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
+    public static GeneratorMode mode = GeneratorMode.GREEDY;
+    protected MeshDataType meshDataType;
 
     protected List<Vector3> vertices = new List<Vector3>();
     protected List<Vector3> normals = new List<Vector3>();
@@ -27,7 +38,10 @@ public class MeshDataGenerator {
     public enum MeshDataType {
         TERRAIN, WATER, ANIMAL
     }
-    protected MeshDataType meshDataType;
+    public enum GeneratorMode {
+        CULL, GREEDY
+    };
+
 
 
     #region mesh building
@@ -99,12 +113,17 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
-    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
-        if(meshDataType == MeshDataType.TERRAIN || meshDataType == MeshDataType.WATER) { // Using new greedy mesh date generation for terrain and water
-            GreedyMeshGenerator gmg = new GreedyMeshGenerator(pointmap, meshDataType: meshDataType);
+    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), 
+                                              MeshDataType meshDataType = MeshDataType.TERRAIN) {
+        if(mode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
+            MeshDataExtras extras = new MeshDataExtras {
+                animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f))
+            };
+            GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType, extras);
             return gmg.generateMeshData();
         }
 
+        // TODO : Move meshdata generation code in this class into a CullingMeshDataGenerator class.
 
         MeshDataGenerator MDG = new MeshDataGenerator();
         MDG.meshDataType = meshDataType;
@@ -120,7 +139,8 @@ public class MeshDataGenerator {
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
             for (int y = 0; y < pointmap.GetLength(1); y++) {
                 for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
-                    if (pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) {
+                    if ((meshDataType != MeshDataType.WATER && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) ||
+                        (meshDataType == MeshDataType.WATER && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER)) {
                         MDG.GenerateCube(new Vector3Int(x, y, z), pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
                     }
                 }
@@ -144,24 +164,30 @@ public class MeshDataGenerator {
     /// <param name="cubePos">point position of the cube</param>
     /// <param name="blockData">data on the block</param>
     private void GenerateCube(Vector3Int cubePos, BlockData blockData, float voxelSize) {
-        if (cubePos.x != pointmap.GetLength(0) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xp, cubePos, blockData, voxelSize);
-        if (cubePos.y == pointmap.GetLength(1) - 1 || checkIfSolidVoxel(cubePos + new Vector3Int(0, 1, 0)) == false) GenerateCubeFace(FaceDirection.yp, cubePos, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
-        if (cubePos.z != pointmap.GetLength(2) - 1 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, 1)) == false) GenerateCubeFace(FaceDirection.zp, cubePos, blockData, voxelSize);
-        if (cubePos.x != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos, blockData, voxelSize);
-        if (cubePos.y != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos, blockData, voxelSize);
-        if (cubePos.z != 0 && checkIfSolidVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos, blockData, voxelSize);
+        if (cubePos.x != pointmap.GetLength(0) - 1 && checkVoxel(cubePos + new Vector3Int(1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xp, cubePos, blockData, voxelSize);
+        if (cubePos.y == pointmap.GetLength(1) - 1 || checkVoxel(cubePos + new Vector3Int(0, 1, 0)) == false) GenerateCubeFace(FaceDirection.yp, cubePos, blockData, voxelSize); // Obs. On Y up we also want a face even if it is the outermost layer
+        if (cubePos.z != pointmap.GetLength(2) - 1 && checkVoxel(cubePos + new Vector3Int(0, 0, 1)) == false) GenerateCubeFace(FaceDirection.zp, cubePos, blockData, voxelSize);
+        if (cubePos.x != 0 && checkVoxel(cubePos + new Vector3Int(-1, 0, 0)) == false) GenerateCubeFace(FaceDirection.xm, cubePos, blockData, voxelSize);
+        if (cubePos.y != 0 && checkVoxel(cubePos + new Vector3Int(0, -1, 0)) == false) GenerateCubeFace(FaceDirection.ym, cubePos, blockData, voxelSize);
+        if (cubePos.z != 0 && checkVoxel(cubePos + new Vector3Int(0, 0, -1)) == false) GenerateCubeFace(FaceDirection.zm, cubePos, blockData, voxelSize);
     }
 
     /// <summary>
-    /// Checks if a voxels is fully opaque
+    /// Checks the block type
     /// </summary>
     /// <param name="voxelPos">position of voxel</param>
-    /// <returns>Whether the voxel is opaque</returns>
-    protected bool checkIfSolidVoxel(Vector3Int voxelPos) {
-        if (pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.NONE ||
-            pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER)
-            return false;
-        return true;
+    /// <returns>
+    ///     If meshDataType == TERRAIN: Whether the voxel is opaque.
+    ///     If meshDataType == WATER: Whether the voxel is something other than water.
+    /// </returns>
+    protected bool checkVoxel(Vector3Int voxelPos) {
+        switch(meshDataType) {
+            case MeshDataType.WATER:
+                return pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER;
+            default: // MeshDataType.TERRAIN
+                return !(pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.NONE || 
+                         pointmap.mapdata[pointmap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER);
+        }
     }
 
 
