@@ -14,7 +14,7 @@ public class LandAnimal : Animal {
     private float speedAnimScaling;
 
     // Update is called once per frame
-    void Update() {
+    override protected void Update() {
         if (skeleton != null) {
             calculateSpeedAndHeading();           
             brain.move();

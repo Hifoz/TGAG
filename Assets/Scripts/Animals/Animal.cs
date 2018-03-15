@@ -35,6 +35,8 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void Start() {
     }
 
+    protected abstract void Update();
+
     //    _____       _     _ _         __                  _   _                 
     //   |  __ \     | |   | (_)       / _|                | | (_)                
     //   | |__) |   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -350,8 +352,6 @@ public abstract class Animal : MonoBehaviour {
     /// Does the physics for gravity
     /// </summary>
     protected void doGravity() {
-        debug(string.Format("grounded {0}, inWater {1}", state.grounded, state.inWater));
-
         int layerMaskWater = 1 << 4;
         RaycastHit hitWater;
         int layerMaskGround = 1 << 8;
@@ -457,7 +457,6 @@ public abstract class Animal : MonoBehaviour {
             levelSpineWithAxis(transform.forward, spineBone.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
             levelSpineWithAxis(transform.right, spineBone.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
         } else if (!spineIsCorrect) {
-            debug("Correcting spine!");
             tryCorrectSpine();
         }
         state.spineHeading = spineBone.bone.rotation * Vector3.forward;

@@ -22,7 +22,7 @@ public enum BodyParameter {
     SCALE = 0,
     HEAD_SIZE, HEAD_RADIUS, //Radius is the thichness of the lines
     NECK_LENGTH, NECK_RADIUS,
-    SPINE_LENGTH, SPINE_RADIUS,
+    SPINE_LENGTH, SPINE_JOINTS, SPINE_JOINT_LENGTH, SPINE_RADIUS,
     LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH, LEG_RADIUS,
     TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH, TAIL_RADIUS,
     WING_LENGTH, WING_JOINTS, WING_JOINT_LENGTH, WING_RADIUS
@@ -338,7 +338,7 @@ public abstract class AnimalSkeleton {
     /// <summary>
     /// Adds colliders to the skeleton
     /// </summary>
-    private void createColliders() {
+    virtual protected void createColliders() {
         Bone spine = skeletonBones[BodyPart.SPINE][0];
         BoxCollider col = spine.bone.gameObject.AddComponent<BoxCollider>();
         Vector3 size = col.size;

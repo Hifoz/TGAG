@@ -25,7 +25,7 @@ public class AirAnimal : Animal {
     //Physics stuff
     protected const float glideDrag = 0.25f;
 
-    private void Update() {
+    override protected void Update() {
         if (skeleton != null) {
             brain.move();
             calculateSpeedAndHeading();
