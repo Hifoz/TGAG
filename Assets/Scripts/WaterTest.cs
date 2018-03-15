@@ -11,12 +11,20 @@ public class WaterTest : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         RaycastHit hit;
-        int layerMask = 1 << 4;
-        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, 200f, layerMask)) {            
-            Debug.DrawLine(transform.position, hit.point, Color.red);            
+        int layerMask = 1 << 4 | 1 << 8;
+        if (Physics.Raycast(new Ray(transform.position, Vector3.down), out hit, 200f, layerMask)) {
+            if (hit.transform.gameObject.layer == 4) {
+                Debug.DrawLine(transform.position, hit.point, Color.red);
+            } else {
+                Debug.DrawLine(transform.position, hit.point, Color.green);
+            }
         }
         if (Physics.Raycast(new Ray(transform.position, Vector3.up), out hit, 200f, layerMask)) {
-            Debug.DrawLine(transform.position, hit.point, Color.red);
+            if (hit.transform.gameObject.layer == 4) {
+                Debug.DrawLine(transform.position, hit.point, Color.red);
+            } else {
+                Debug.DrawLine(transform.position, hit.point, Color.green);
+            }
         }
     }
 }

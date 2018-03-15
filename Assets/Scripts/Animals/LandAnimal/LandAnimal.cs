@@ -122,11 +122,12 @@ public class LandAnimal : Animal {
             ragDolling = false;
         } else if (!state.grounded && !ragDolling && !state.inWater) {
             ragDolling = true;
+            ragDollCondition condition = () => { return (!state.grounded && !state.inWater); };
             for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
-                StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], () => { return !state.grounded; }, true));
-                StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], () => { return !state.grounded; }, true));
+                StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], condition, true));
+                StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], condition, true));
             }
-            StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], () => { return !state.grounded; }, true));
+            StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], condition, true));
         }
     }
 

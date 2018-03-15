@@ -18,6 +18,7 @@ public abstract class Animal : MonoBehaviour {
     protected const float ikTolerance = 0.05f;
     protected delegate bool ragDollCondition();
     protected AnimalAnimation currentAnimation;
+    protected Bone spineBone;
 
     //Physics stuff
     protected float headingChangeRate = 5f;
@@ -75,6 +76,8 @@ public abstract class Animal : MonoBehaviour {
         }
         GetComponent<SkinnedMeshRenderer>().bones = bones;
 
+        spineBone = skeleton.getBones(BodyPart.SPINE)[0];
+
         currentAnimation = null;
         state.inWater = false;
         flagSpineCorrecting = false;
@@ -128,6 +131,7 @@ public abstract class Animal : MonoBehaviour {
     //                           |_|                                                                      
 
     protected abstract void calculateSpeedAndHeading();
+    private bool spineIsCorrect { get { return spineBone.bone.localRotation == Quaternion.identity; } }
 
     //                   _                 _   _                __                  _   _                 
     //       /\         (_)               | | (_)              / _|                | | (_)                
@@ -153,7 +157,7 @@ public abstract class Animal : MonoBehaviour {
         Vector3[] currentPositions = new Vector3[limb.Count - 1];
 
         if (referenceTransform == null) {
-            referenceTransform = skeleton.getBones(BodyPart.SPINE)[0].bone;
+            referenceTransform = spineBone.bone;
         }
 
         for (int i = 0; i < currentPositions.Length; i++) {
@@ -346,20 +350,41 @@ public abstract class Animal : MonoBehaviour {
     /// Does the physics for gravity
     /// </summary>
     protected void doGravity() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];            
-        int layerMask = 1 << 8;
-        RaycastHit hit;
-        if (Physics.Raycast(new Ray(spine.bone.position, -spine.bone.up), out hit, 200f, layerMask)) {
-            float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
-            if (hit.distance <= stanceHeight) {
-                state.inWater = false;
-                state.grounded = true;
-            }
-            if (state.inWater) {
-                waterGravity();
-            } else {
-                groundedGravity(hit, spine, stanceHeight);
-            }
+        debug(string.Format("grounded {0}, inWater {1}", state.grounded, state.inWater));
+
+        int layerMaskWater = 1 << 4;
+        RaycastHit hitWater;
+        int layerMaskGround = 1 << 8;
+        RaycastHit hitGround;
+
+        bool flagHitGround = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround);
+        bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 2f, layerMaskWater);
+
+        float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
+        
+        //Calculate water state
+        if (!state.inWater && flagHitWater) {
+            state.inWater = true;
+        } else if (inWaterInt == 0 && state.inWater && !flagHitWater) {
+            state.inWater = false;
+        }
+
+        bool canStand = false;
+        bool onWaterSurface = false;
+
+        if (flagHitGround) {
+            canStand = hitGround.distance <= stanceHeight;
+        }
+        if (flagHitWater) {
+            onWaterSurface = true;
+        }
+
+        if (canStand || !state.inWater) {
+            groundedGravity(hitGround, spineBone, stanceHeight);
+        } else if (onWaterSurface) {
+            waterSurfaceGravity(hitWater);
+        } else if (state.inWater) {
+            waterGravity();
         } else {
             notGroundedGravity();
         }
@@ -402,21 +427,40 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="hit">Point where raycast hit</param>
     virtual protected void waterGravity() {
         state.grounded = false;
-        state.gravity = Vector3.zero;
+        state.gravity = -Physics.gravity;
+        if (!spineIsCorrect) {            
+            tryCorrectSpine();
+        }
+    }
+
+    /// <summary>
+    /// Gravity calculations for water surface
+    /// </summary>
+    virtual protected void waterSurfaceGravity(RaycastHit hit) {
+        state.grounded = false;
+        
+        if (hit.distance > 0.5f) {
+            state.gravity = Physics.gravity;
+        } else {
+            state.gravity = Vector3.zero;
+        }
+        if (!spineIsCorrect) {
+            tryCorrectSpine();
+        }
     }
 
     /// <summary>
     /// Tries to level the spine with the ground
     /// </summary>
     virtual protected void levelSpine() {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
         if (state.grounded) {            
-            levelSpineWithAxis(transform.forward, spine.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
-            levelSpineWithAxis(transform.right, spine.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
+            levelSpineWithAxis(transform.forward, spineBone.bone.forward, skeleton.getBodyParameter<float>(BodyParameter.SPINE_LENGTH));
+            levelSpineWithAxis(transform.right, spineBone.bone.right, skeleton.getBodyParameter<float>(BodyParameter.LEG_JOINT_LENGTH));
         } else if (!spineIsCorrect) {
+            debug("Correcting spine!");
             tryCorrectSpine();
         }
-        state.spineHeading = spine.bone.rotation * Vector3.forward;
+        state.spineHeading = spineBone.bone.rotation * Vector3.forward;
     }
 
     /// <summary>
@@ -426,32 +470,28 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="currentAxis">Current state of axis</param>
     /// <param name="length">Length to check with</param>
     private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-
-        Vector3 point1 = spine.bone.position + axis * length / 2f + Vector3.up * 20;
-        Vector3 point2 = spine.bone.position - axis * length / 2f + Vector3.up * 20;
+        Vector3 point1 = spineBone.bone.position + axis * length / 2f + Vector3.up * 20;
+        Vector3 point2 = spineBone.bone.position - axis * length / 2f + Vector3.up * 20;
 
         int layerMask = 1 << 8;
         RaycastHit hit1;
         RaycastHit hit2;
         Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
         Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
-        point1 = spine.bone.position + currentAxis * length / 2f;
-        point2 = spine.bone.position - currentAxis * length / 2f;
+        point1 = spineBone.bone.position + currentAxis * length / 2f;
+        point2 = spineBone.bone.position - currentAxis * length / 2f;
         Vector3 a = hit1.point - hit2.point;
         Vector3 b = point1 - point2;
 
         float angle = Mathf.Acos(Vector3.Dot(a, b) / (a.magnitude * b.magnitude));
         Vector3 normal = Vector3.Cross(a, b);
         if (angle > 0.01f) {
-            spine.bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
-            if (!checkConstraints(spine)) {
-                spine.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spine.bone.rotation;
+            spineBone.bone.rotation = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spineBone.bone.rotation;
+            if (!checkConstraints(spineBone)) {
+                spineBone.bone.rotation = Quaternion.AngleAxis(-angle * Mathf.Rad2Deg * levelSpeed * Time.deltaTime, -normal) * spineBone.bone.rotation;
             }
         }
     }
-
-    private bool spineIsCorrect { get { return skeleton.getBones(BodyPart.SPINE)[0].bone.localRotation == Quaternion.identity; } }
 
     /// <summary>
     /// Tries to correct the spine
@@ -470,13 +510,12 @@ public abstract class Animal : MonoBehaviour {
     /// <returns></returns>
     private IEnumerator correctSpine() {
         flagSpineCorrecting = true;
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        Quaternion originalRot = spine.bone.localRotation;
+        Quaternion originalRot = spineBone.bone.localRotation;
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
-            spine.bone.localRotation = Quaternion.Lerp(originalRot, Quaternion.identity, t);
+            spineBone.bone.localRotation = Quaternion.Lerp(originalRot, Quaternion.identity, t);
             yield return 0;
         }
-        spine.bone.localRotation = Quaternion.identity;
+        spineBone.bone.localRotation = Quaternion.identity;
         flagSpineCorrecting = false;
     }
 
@@ -511,4 +550,11 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void OnCollisionEnter(Collision collision) {
         brain.OnCollisionEnter();
     }    
+
+    ///DEBUG FUNCTION
+    private void debug(string message) {
+        if (brain != null && brain.GetType().BaseType.Equals(typeof(AnimalBrainPlayer))) {
+            Debug.Log(message);
+        }
+    }
 }

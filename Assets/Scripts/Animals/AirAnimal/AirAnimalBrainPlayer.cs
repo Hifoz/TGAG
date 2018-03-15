@@ -16,15 +16,15 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
         state.desiredSpeed = 0;
 
         if (!Input.GetKey(KeyCode.LeftAlt)) {
+            right = Camera.main.transform.rotation * Vector3.right;
+            up = Camera.main.transform.rotation * Vector3.up;
+
             state.desiredHeading = Camera.main.transform.forward;
             if (state.grounded || state.inWater) {
                 state.desiredHeading.y = 0;
+                up = Vector3.up;
             }
-            state.desiredHeading.Normalize();
-
-
-            right = Camera.main.transform.rotation * Vector3.right;
-            up = Camera.main.transform.rotation * Vector3.up;
+            state.desiredHeading.Normalize();          
         }
 
         Vector3 finalHeading = Vector3.zero;
@@ -51,7 +51,7 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
             }
         }
 
-        if (!state.grounded || !state.inWater) {
+        if (!state.grounded && !state.inWater) {
             if (Input.GetKey(KeyCode.C)) {
                 finalHeading += Quaternion.AngleAxis(45, right) * state.desiredHeading;
             }

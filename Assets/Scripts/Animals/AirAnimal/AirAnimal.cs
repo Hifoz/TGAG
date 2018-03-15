@@ -110,7 +110,6 @@ public class AirAnimal : Animal {
     /// <param name="wingRot2">Keyframes for wing rotations 2</param>
     /// <returns></returns>
     private AnimalAnimation generateFlyingAnimation(Vector3[] spinePos, Vector3[] wingRot1, Vector3[] wingRot2) {
-        Bone spineBone = skeleton.getBones(BodyPart.SPINE)[0];
         List<Bone> neckBones = skeleton.getBones(BodyPart.NECK);
         List<Bone> rightWing = airSkeleton.getWing(true);
         List<Bone> leftWing = airSkeleton.getWing(false);
@@ -283,10 +282,10 @@ public class AirAnimal : Animal {
         if (state.desiredSpeed - state.speed > 0.2f) { //Acceleration           
             state.speed += Time.deltaTime * acceleration;            
         } else if (state.speed - state.desiredSpeed > 0.2f) { //Deceleration
-            if (!state.grounded && !state.inWater) {
-                state.speed -= Time.deltaTime * acceleration * glideDrag;
+            if (state.grounded || state.inWater) {
+                state.speed -= Time.deltaTime * acceleration;       
             } else {
-                state.speed -= Time.deltaTime * acceleration;
+                state.speed -= Time.deltaTime * acceleration * glideDrag;
             }
         }
     }
