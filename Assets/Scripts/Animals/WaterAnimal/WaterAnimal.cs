@@ -8,18 +8,29 @@ public class WaterAnimal : Animal {
 
     private AnimalAnimation swimAnimation;
 
+    private const float speedAnimScaling = 0.2f;
+
     override protected void Start() {
         base.Start();
 
         WaterAnimalSkeleton s = new WaterAnimalSkeleton(transform);
         s.generateInThread();
         setSkeleton(s);
+        setAnimalBrain(new WaterAnimalBrainNPC());
+        brain.Spawn(transform.position);
     }
 
     override protected void Update() {
         if (skeleton != null) {
-            currentAnimation.animate();
+            calculateSpeedAndHeading();
+            brain.move();
+            doGravity();
+            handleAnimations();
         }
+    }
+
+    private void handleAnimations() {
+        currentAnimation.animate(speedAnimScaling * state.speed);
     }
 
     /// <summary>
@@ -33,6 +44,25 @@ public class WaterAnimal : Animal {
         if (Mathf.Abs(state.desiredSpeed - state.speed) > 0.2f) {
             state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration;
         }
+    }
+
+    /// <summary>
+    /// Does the physics for gravity
+    /// </summary>
+    override protected void doGravity() {
+        if (state.inWater) {
+            waterGravity();
+        } else {
+            notGroundedGravity();
+        }
+    }
+
+    /// <summary>
+    /// Calulates gravity when in water
+    /// </summary>
+    protected override void waterGravity() {
+        state.grounded = false;
+        state.gravity = Vector3.zero;
     }
 
     /// <summary>

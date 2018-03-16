@@ -351,7 +351,7 @@ public abstract class Animal : MonoBehaviour {
     /// <summary>
     /// Does the physics for gravity
     /// </summary>
-    protected void doGravity() {
+    virtual protected void doGravity() {
         int layerMaskWater = 1 << 4;
         RaycastHit hitWater;
         int layerMaskGround = 1 << 8;
