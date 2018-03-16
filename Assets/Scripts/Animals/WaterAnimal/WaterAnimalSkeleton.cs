@@ -51,10 +51,6 @@ public class WaterAnimalSkeleton : AnimalSkeleton {
         for (int i = 0; i < spineJoints; i++) {
             LineSegment bone = new LineSegment(root + spineDir * i * spineJointLen, root + spineDir * (i + 1) * spineJointLen, spineRadius);
             float radius = Mathf.Lerp(spineRadius, spineRadius / 2f, ((bone.a - root).magnitude / spineLen));
-            //Debug.Log((bone.a - root).magnitude);
-            //Debug.Log(((bone.a - root).magnitude / bone.length));
-            //Debug.Log(1 - ((bone.a - root).magnitude / bone.length));
-            Debug.Log(1 - ((bone.a - root).magnitude / spineLen));
             bone.radius = radius;
             addSkeletonLine(bone, BodyPart.SPINE);
         }
