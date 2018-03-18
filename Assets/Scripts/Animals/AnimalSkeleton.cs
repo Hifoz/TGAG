@@ -56,7 +56,6 @@ public abstract class AnimalSkeleton {
         public LineSegment boneLine; //line of bone to use for skinning
     }
     //Misc members
-    public int index; // Index of animal in ChunkManager    
     protected static ThreadSafeRng rng = new ThreadSafeRng();
 
     //Skeleton related members
@@ -83,7 +82,15 @@ public abstract class AnimalSkeleton {
     //   | |   | |_| | |_) | | | (__  | |  | |  __/ |_| | | | (_) | (_| \__ \
     //   |_|    \__,_|_.__/|_|_|\___| |_|  |_|\___|\__|_| |_|\___/ \__,_|___/
     //                                                                       
-    //                                                                       
+    //      
+    
+    /// <summary>
+    /// Gets the gameobject that owns this skeleton
+    /// </summary>
+    /// <returns>owner</returns>
+    public GameObject getOwner() {
+        return rootBone.gameObject;
+    }
 
     /// <summary>
     /// Gets the specified bones.

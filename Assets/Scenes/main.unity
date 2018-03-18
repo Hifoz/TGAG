@@ -624,6 +624,8 @@ MonoBehaviour:
     type: 2}
   airAnimalPrefab: {fileID: 1263446260787308, guid: 70d74767b31c04843b941187b0032569,
     type: 2}
+  waterAnimalPrefab: {fileID: 1162195383910464, guid: af550f6cfee173545a3424f00e543179,
+    type: 2}
 --- !u!4 &988479787
 Transform:
   m_ObjectHideFlags: 0

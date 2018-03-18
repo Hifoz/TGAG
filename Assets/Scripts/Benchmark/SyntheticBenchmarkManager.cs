@@ -18,7 +18,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     private GameObject[] animals = new GameObject[20];
-    private HashSet<int> orderedAnimals = new HashSet<int>();
+    private HashSet<GameObject> orderedAnimals = new HashSet<GameObject>();
 
     private BiomeManager biomeManager;
 
@@ -193,9 +193,8 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             animal.enabled = false;
 
             AnimalSkeleton animalSkeleton = new LandAnimalSkeleton(animals[i].transform);
-            animalSkeleton.index = i;
             orders.Add(new Order(animals[i].transform.position, animalSkeleton, Task.ANIMAL));
-            orderedAnimals.Add(i);
+            orderedAnimals.Add(animals[i]);
         }
     }
 
@@ -286,12 +285,12 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
-        GameObject animal = animals[animalSkeleton.index];
+        GameObject animal = animalSkeleton.getOwner();
         Animal animalBody = animal.GetComponent<Animal>();
         animalBody.enabled = true;
         animalBody.setSkeleton(animalSkeleton);
         animalBody.enabled = false;
-        orderedAnimals.Remove(animalSkeleton.index);
+        orderedAnimals.Remove(animal);
     }
 
     /// <summary>
