@@ -52,4 +52,12 @@ public class BlockDataMap {
         }
     }
 
+    /// <summary>
+    /// Checks that a position is within the bounds of the map
+    /// </summary>
+    /// <param name="v">position</param>
+    /// <returns>whether position is within bounds</returns>
+    public bool checkBounds(Vector3Int v) {
+        return v.x >= 0 && v.y >= 0 && v.z >= 0 && v.x < sizeX && v.y < sizeY && v.z < sizeZ;
+    }
 }

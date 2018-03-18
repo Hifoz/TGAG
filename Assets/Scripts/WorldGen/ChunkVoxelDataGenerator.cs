@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
@@ -16,7 +17,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
     public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
-        return (pos.y < height || biome.Structure3DRate > calc3DStructure(pos, biome, height) ) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
+        return (pos.y < height || biome.Structure3DRate > calc3DStructure(pos, biome, height)) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
     }
 
     /// <summary>
@@ -62,20 +63,67 @@ public static class ChunkVoxelDataGenerator {
             for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
                 heightmap[x, z] = (int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z]);
+                // Initialize the blockdata map with heightmap data
+                for (int y = 0; y < heightmap[x, z]; y++) {
+                    data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.DIRT;
+                }
             }
         }
 
-        // Calculate 3d noise and apply 2d and 3d noise
-        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
-            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
-                for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
-                    int i = data.index1D(x, y, z);
-                    if (posContainsVoxel(pos + new Vector3(x, y, z), heightmap[x, z], biomemap[x, z]))
-                        data.mapdata[i] = new BlockData(BlockData.BlockType.DIRT);
-                    else if (y < ChunkConfig.waterHeight)
-                        data.mapdata[i] = new BlockData(BlockData.BlockType.WATER);
-                    else
-                        data.mapdata[i] = new BlockData(BlockData.BlockType.NONE);
+
+        Queue<Vector3Int> active = new Queue<Vector3Int>();
+        //List<Vector3Int> done = new List<Vector3Int>();
+        Dictionary<Vector3Int, bool> done = new Dictionary<Vector3Int, bool>();
+
+        // Add all voxels at heightmap positions (Except the edge ones, as they are added in next loop)
+        for (int x = 1; x < ChunkConfig.chunkSize + 1; x++) {
+            for (int z = 1; z < ChunkConfig.chunkSize + 1; z++) {
+                active.Enqueue(new Vector3Int(x, heightmap[x, z], z));
+                done.Add(new Vector3Int(x, heightmap[x, z], z), true);
+            }
+        }
+        // Add voxels on the sides
+        /*for(int w = 0; w < ChunkConfig.chunkSize + 1; w++) {
+            for(int y = 0; y < ChunkConfig.chunkHeight; y++) {
+                active.Enqueue(new Vector3Int(0, y, w));
+                active.Enqueue(new Vector3Int(ChunkConfig.chunkSize, y, w));
+                active.Enqueue(new Vector3Int(w, y, 0));
+                active.Enqueue(new Vector3Int(w, y, ChunkConfig.chunkSize));
+                done.Add(new Vector3Int(0, y, w), true);
+                done.Add(new Vector3Int(ChunkConfig.chunkSize, y, w), true);
+                done.Add(new Vector3Int(w, y, 0), true);
+                done.Add(new Vector3Int(w, y, ChunkConfig.chunkSize), true);
+            }
+        }*/
+
+
+        Vector3Int voxel;
+        Vector3Int[] offsets = new Vector3Int[] {
+            new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0),
+            new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0),
+            new Vector3Int(0, 0, 1), new Vector3Int(0, 0, -1)
+        };
+
+        while (active.Any()) {
+            voxel = active.Dequeue();
+            int height = heightmap[voxel.x, voxel.z];
+            bool containsVoxel = posContainsVoxel(pos + voxel, height, biomemap[voxel.x, voxel.z]);
+            // Could it be more efficient to check the blockdatatype and only set if not the same as before?
+            if (containsVoxel) {
+                data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.DIRT;
+            } else if (voxel.y > ChunkConfig.waterHeight) {
+                data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.NONE;
+            } else {
+                data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.WATER;
+            }
+            // Try and add neightbours if block contains voxel above height 
+            //  or if block does not contain voxel under height
+            if ((voxel.y > height) ^ !containsVoxel) {
+                foreach (Vector3Int o in offsets) {
+                    if (data.checkBounds(voxel + o) && !done.ContainsKey(voxel + o)) {
+                        active.Enqueue(voxel + o);
+                        done.Add(voxel + o, true);
+                    }
                 }
             }
         }
@@ -104,7 +152,7 @@ public static class ChunkVoxelDataGenerator {
 
         // Calculate snow height:
         float snowHeight = 0;
-        foreach(Pair<Biome, float> p in biomes) {
+        foreach (Pair<Biome, float> p in biomes) {
             snowHeight += p.first.snowHeight * p.second;
         }
 
@@ -199,10 +247,10 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
     private static float calc3DUnstructure(Vector3 pos, Biome biome, int height) {
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) + 
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) +
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
-        float noise01 = (noise + 1f)  * 0.5f;
+        float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
     }
 }
