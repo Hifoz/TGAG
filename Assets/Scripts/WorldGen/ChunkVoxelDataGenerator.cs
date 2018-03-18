@@ -70,16 +70,18 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-
         Queue<Vector3Int> active = new Queue<Vector3Int>();
-        //List<Vector3Int> done = new List<Vector3Int>();
-        Dictionary<Vector3Int, bool> done = new Dictionary<Vector3Int, bool>();
+        //Dictionary<Vector3Int, bool> done = new Dictionary<Vector3Int, bool>();
+        bool[,,] done2 = new bool[ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2];
 
-        // Add all voxels at heightmap positions (Except the edge ones, as they are added in next loop)
-        for (int x = 1; x < ChunkConfig.chunkSize + 1; x++) {
+
+
+            // Add all voxels at heightmap positions (Except the edge ones, as they are added in next loop)
+            for (int x = 1; x < ChunkConfig.chunkSize + 1; x++) {
             for (int z = 1; z < ChunkConfig.chunkSize + 1; z++) {
                 active.Enqueue(new Vector3Int(x, heightmap[x, z], z));
-                done.Add(new Vector3Int(x, heightmap[x, z], z), true);
+                //done.Add(new Vector3Int(x, heightmap[x, z], z), true);
+                done2[x, heightmap[x, z], z] = true;
             }
         }
 
@@ -87,18 +89,22 @@ public static class ChunkVoxelDataGenerator {
         for (int w = 0; w < ChunkConfig.chunkSize + 2; w++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 active.Enqueue(new Vector3Int(w, y, 0));
-                done.Add(      new Vector3Int(w, y, 0), true);
+                //done.Add(      new Vector3Int(w, y, 0), true);
+                done2[w, y, 0] = true;
                 active.Enqueue(new Vector3Int(w, y, ChunkConfig.chunkSize + 1));
-                done.Add(      new Vector3Int(w, y, ChunkConfig.chunkSize + 1), true);
+                //done.Add(      new Vector3Int(w, y, ChunkConfig.chunkSize + 1), true);
+                done2[w, y, ChunkConfig.chunkSize + 1] = true;
             }
         }
         // Add voxels on the z-sides
         for (int w = 1; w < ChunkConfig.chunkSize + 1; w++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 active.Enqueue(new Vector3Int(0, y, w));
-                done.Add(      new Vector3Int(0, y, w), true);
+                //done.Add(      new Vector3Int(0, y, w), true);
+                done2[0, y, w] = true;
                 active.Enqueue(new Vector3Int(ChunkConfig.chunkSize + 1, y, w));
-                done.Add(      new Vector3Int(ChunkConfig.chunkSize + 1, y, w), true);
+                //done.Add(      new Vector3Int(ChunkConfig.chunkSize + 1, y, w), true);
+                done2[ChunkConfig.chunkSize + 1, y, w] = true;
             }
         }
 
@@ -109,7 +115,6 @@ public static class ChunkVoxelDataGenerator {
             new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0),
             new Vector3Int(0, 0, 1), new Vector3Int(0, 0, -1)
         };
-
         while (active.Any()) {
             voxel = active.Dequeue();
             int height = heightmap[voxel.x, voxel.z];
@@ -124,14 +129,14 @@ public static class ChunkVoxelDataGenerator {
             //  or if block does not contain voxel under height
             if ((voxel.y > height) ^ !containsVoxel) {
                 foreach (Vector3Int o in offsets) {
-                    if (data.checkBounds(voxel + o) && !done.ContainsKey(voxel + o)) {
+                    if (data.checkBounds(voxel + o) && !done2[voxel.x + o.x, voxel.y + o.y, voxel.z + o.z]/*!done.ContainsKey(voxel + o)*/) {
                         active.Enqueue(voxel + o);
-                        done.Add(voxel + o, true);
+                        //done.Add(voxel + o, true);
+                        done2[voxel.x + o.x, voxel.y + o.y, voxel.z + o.z] = true;
                     }
                 }
             }
         }
-        Debug.Log(done.Count);
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
