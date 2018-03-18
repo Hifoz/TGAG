@@ -82,19 +82,25 @@ public static class ChunkVoxelDataGenerator {
                 done.Add(new Vector3Int(x, heightmap[x, z], z), true);
             }
         }
-        // Add voxels on the sides
-        /*for(int w = 0; w < ChunkConfig.chunkSize + 1; w++) {
-            for(int y = 0; y < ChunkConfig.chunkHeight; y++) {
-                active.Enqueue(new Vector3Int(0, y, w));
-                active.Enqueue(new Vector3Int(ChunkConfig.chunkSize, y, w));
+
+        // Add voxels on the x-sides
+        for (int w = 0; w < ChunkConfig.chunkSize + 2; w++) {
+            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 active.Enqueue(new Vector3Int(w, y, 0));
-                active.Enqueue(new Vector3Int(w, y, ChunkConfig.chunkSize));
-                done.Add(new Vector3Int(0, y, w), true);
-                done.Add(new Vector3Int(ChunkConfig.chunkSize, y, w), true);
-                done.Add(new Vector3Int(w, y, 0), true);
-                done.Add(new Vector3Int(w, y, ChunkConfig.chunkSize), true);
+                done.Add(      new Vector3Int(w, y, 0), true);
+                active.Enqueue(new Vector3Int(w, y, ChunkConfig.chunkSize + 1));
+                done.Add(      new Vector3Int(w, y, ChunkConfig.chunkSize + 1), true);
             }
-        }*/
+        }
+        // Add voxels on the z-sides
+        for (int w = 1; w < ChunkConfig.chunkSize + 1; w++) {
+            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
+                active.Enqueue(new Vector3Int(0, y, w));
+                done.Add(      new Vector3Int(0, y, w), true);
+                active.Enqueue(new Vector3Int(ChunkConfig.chunkSize + 1, y, w));
+                done.Add(      new Vector3Int(ChunkConfig.chunkSize + 1, y, w), true);
+            }
+        }
 
 
         Vector3Int voxel;
@@ -111,10 +117,8 @@ public static class ChunkVoxelDataGenerator {
             // Could it be more efficient to check the blockdatatype and only set if not the same as before?
             if (containsVoxel) {
                 data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.DIRT;
-            } else if (voxel.y > ChunkConfig.waterHeight) {
-                data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.NONE;
             } else {
-                data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.WATER;
+                data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = BlockData.BlockType.NONE;
             }
             // Try and add neightbours if block contains voxel above height 
             //  or if block does not contain voxel under height
@@ -127,12 +131,15 @@ public static class ChunkVoxelDataGenerator {
                 }
             }
         }
+        Debug.Log(done.Count);
 
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
-                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
+                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE)
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z]); // TODO make this use biomes in some way?
+                    else if (y < ChunkConfig.waterHeight)
+                        data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WATER;
                 }
             }
         }
