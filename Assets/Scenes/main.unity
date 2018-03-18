@@ -182,48 +182,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 27318558}
---- !u!1001 &138666192
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4585693363381646, guid: af550f6cfee173545a3424f00e543179, type: 2}
-      propertyPath: m_RootOrder
-      value: 9
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: af550f6cfee173545a3424f00e543179, type: 2}
-  m_IsPrefabParent: 0
 --- !u!1 &143669588
 GameObject:
   m_ObjectHideFlags: 0
@@ -1115,7 +1073,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1315024354}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ec19ce45adafd94394a7c5934375e89, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d0826150418aa54c9b271369f409b26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1520587347

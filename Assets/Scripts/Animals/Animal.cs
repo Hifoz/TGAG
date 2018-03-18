@@ -532,14 +532,14 @@ public abstract class Animal : MonoBehaviour {
         }
     }
 
-    private void OnTriggerEnter(Collider other) {
+    virtual protected void OnTriggerEnter(Collider other) {
         if (other.name == "waterSubChunk") {
             inWaterInt++;
             state.inWater = inWaterInt > 0;
         }
     }
 
-    private void OnTriggerExit(Collider other) {
+    virtual protected void OnTriggerExit(Collider other) {
         if (other.name == "waterSubChunk") {
             inWaterInt--;
             state.inWater = inWaterInt > 0;
@@ -551,7 +551,7 @@ public abstract class Animal : MonoBehaviour {
     }    
 
     ///DEBUG FUNCTION
-    private void debug(string message) {
+    protected void debug(string message) {
         if (brain != null && brain.GetType().BaseType.Equals(typeof(AnimalBrainPlayer))) {
             Debug.Log(message);
         }

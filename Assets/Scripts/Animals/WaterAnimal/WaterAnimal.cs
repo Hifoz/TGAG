@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
-using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class WaterAnimal : Animal {
+    private bool flagFlapBackToWater = false;
 
     private WaterAnimalSkeleton waterSkeleton;
 
@@ -10,14 +11,10 @@ public class WaterAnimal : Animal {
 
     private const float speedAnimScaling = 0.2f;
 
+    private Vector3 waterExitPoint = Vector3.zero;
+
     override protected void Start() {
         base.Start();
-
-        WaterAnimalSkeleton s = new WaterAnimalSkeleton(transform);
-        s.generateInThread();
-        setSkeleton(s);
-        setAnimalBrain(new WaterAnimalBrainNPC());
-        brain.Spawn(transform.position);
     }
 
     override protected void Update() {
@@ -50,8 +47,27 @@ public class WaterAnimal : Animal {
     /// Does the physics for gravity
     /// </summary>
     override protected void doGravity() {
+        if (!state.inWater) {
+            int layerMaskGround = 1 << 8;
+            RaycastHit hitGround;
+
+            if (Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround)) {
+                if (hitGround.distance < 1f) {
+                    state.grounded = true;
+                } else {
+                    state.grounded = false;
+                }
+            } else {
+                state.grounded = false;
+            }
+        }
+
+
         if (state.inWater) {
             waterGravity();
+        } else if (state.grounded) {
+            state.gravity = Vector3.zero;
+            tryFlapBackIntoWater();
         } else {
             notGroundedGravity();
         }
@@ -73,6 +89,7 @@ public class WaterAnimal : Animal {
         waterSkeleton = (WaterAnimalSkeleton)skeleton;
 
         generateAnimations();
+        flagFlapBackToWater = false;
     }
    
 
@@ -80,6 +97,9 @@ public class WaterAnimal : Animal {
         base.setAnimalBrain(brain);
     }
 
+    /// <summary>
+    /// Generatges animations for the fish
+    /// </summary>
     private void generateAnimations() {
         //Getting relevant bones
         List<Bone> spine = skeleton.getBones(BodyPart.SPINE);
@@ -104,5 +124,46 @@ public class WaterAnimal : Animal {
             spineFrames2 = Utils.multVectorArray(spineFrames2, -1);
         }
         currentAnimation = swimAnimation;
+    }
+   
+    /// <summary>
+    /// Tries to flap back to water
+    /// </summary>
+    /// <returns>success flag</returns>
+    private bool tryFlapBackIntoWater() {
+        if (!flagFlapBackToWater) {
+            StartCoroutine(flapBackToWater());
+        }
+        return !flagFlapBackToWater;
+    }
+
+    /// <summary>
+    /// Makes the fish flap back into water
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator flapBackToWater() {
+        flagFlapBackToWater = true;
+
+        const float speed = 100;
+
+        Vector3 currentPos = transform.position;
+        Vector3 halfwayControlPoint = Vector3.Lerp(currentPos, waterExitPoint, 0.5f) + Vector3.up * 100f;
+
+        float totalDist = (halfwayControlPoint - currentPos).magnitude + (waterExitPoint - halfwayControlPoint).magnitude;
+        float delta = speed / totalDist;
+
+        for (float t = 0; t < 1f; t += Time.deltaTime * delta) { // Spline lerp
+            Vector3 first = Vector3.Lerp(currentPos, halfwayControlPoint, t);
+            Vector3 second = Vector3.Lerp(halfwayControlPoint, waterExitPoint, t);
+            transform.position = Vector3.Lerp(first, second, t);
+            yield return 0;
+        }
+
+        flagFlapBackToWater = false;
+    }
+
+    override protected void OnTriggerExit(Collider other) {
+        base.OnTriggerExit(other);
+        waterExitPoint = transform.position;
     }
 }
