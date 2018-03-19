@@ -55,7 +55,7 @@ public static class ChunkVoxelDataGenerator {
     public static BlockDataMap getChunkVoxelData(Vector3 pos, BiomeManager biomeManager) {
         BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
 
-        
+
         /*
          * Pre-calculate 2d heightmap and biomemap:
          */
@@ -182,30 +182,6 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-    }
-
-    /// <summary>
-    /// Calculates the height of the chunk at the position
-    /// </summary>
-    /// <param name="pos">position of voxel</param>
-    /// <returns>float height</returns>
-    [Obsolete("This method is now obsolete, use calcHeight(Vector3, List<Pair<Biome, float>>) to calculate the terrain 2d heightmap")]
-    public static float calcHeight(Vector3 pos, Biome biome) {
-        pos = new Vector3(pos.x, pos.z, 0);
-        float finalNoise = 0;
-        float noiseScaler = 0;
-        float octaveStrength = 1;
-        for (int octave = 0; octave < biome.octaves2D; octave++) {
-            Vector3 samplePos = pos + new Vector3(1, 1, 0) * ChunkConfig.seed * octaveStrength;
-            float noise = SimplexNoise.Simplex2D(samplePos, biome.frequency2D / octaveStrength);
-            float noise01 = (noise + 1f) / 2f;
-            finalNoise += noise01 * octaveStrength;
-            noiseScaler += octaveStrength;
-            octaveStrength = octaveStrength / 2;
-        }
-        finalNoise = finalNoise / noiseScaler;
-        finalNoise = Mathf.Pow(finalNoise, biome.noiseExponent2D);
-        return finalNoise * ChunkConfig.chunkHeight;
     }
 
 
