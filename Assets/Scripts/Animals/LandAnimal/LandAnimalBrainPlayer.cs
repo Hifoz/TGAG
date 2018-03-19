@@ -42,15 +42,6 @@ public class LandAnimalBrainPlayer : AnimalBrainPlayer {
             state.desiredHeading = finalHeading;
             setSpeed();
         }
-
-        Vector3 velocity;
-        if (state.grounded || state.inWater) {
-            velocity = state.spineHeading.normalized * state.speed;
-        } else {
-            velocity = state.heading.normalized * state.speed;
-        }
-        state.rb.velocity = velocity + state.gravity;
-        state.transform.LookAt(state.transform.position + state.heading);
     }
 
     /// <summary>

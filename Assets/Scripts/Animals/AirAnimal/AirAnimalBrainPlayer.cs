@@ -41,8 +41,7 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
         if (Input.GetKey(KeyCode.D)) {
             finalHeading += Quaternion.AngleAxis(90, up) * state.desiredHeading;
         }
-
-
+        
         if (Input.GetKey(KeyCode.Space)) {
             if (state.grounded || state.inWater) {
                 actions["launch"]();
@@ -57,20 +56,10 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
             }
         }
 
-
         if (finalHeading != Vector3.zero) {
             state.desiredHeading = finalHeading;
             setSpeed();
-        }
-
-        Vector3 velocity;
-        if (state.grounded || state.inWater) {
-            velocity = state.spineHeading.normalized * state.speed;
-        } else {
-            velocity = state.heading.normalized * state.speed;
-        }
-        state.rb.velocity = velocity + state.gravity;
-        state.transform.LookAt(state.transform.position + state.heading);
+        }       
     }
 
     /// <summary>

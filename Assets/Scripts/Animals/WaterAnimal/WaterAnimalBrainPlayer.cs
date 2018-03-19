@@ -48,11 +48,7 @@ public class WaterAnimalBrainPlayer : AnimalBrainPlayer {
         if (finalHeading != Vector3.zero) {
             state.desiredHeading = finalHeading;
             setSpeed();
-        }
-
-        Vector3 velocity = state.heading.normalized * state.speed;      
-        state.rb.velocity = velocity + state.gravity;
-        state.transform.LookAt(state.transform.position + state.heading);
+        }       
     }
 
     /// <summary>

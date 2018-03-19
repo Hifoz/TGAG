@@ -5,8 +5,8 @@ public class WaterAnimalBrainNPC : AnimalBrainNPC {
 
     override public float roamDist { get { return 50f; } }
 
-    override public float slowSpeed { get { return 5f; } }
-    override public float fastSpeed { get { return 20f; } }
+    override public float slowSpeed { get { return 10f; } }
+    override public float fastSpeed { get { return 40f; } }
 
     /// <summary>
     /// Moves the animal in world space
@@ -19,13 +19,6 @@ public class WaterAnimalBrainNPC : AnimalBrainNPC {
         if (dist > roamDist && Vector3.Angle(toCenter, state.desiredHeading) > 90) {
             state.desiredHeading = -state.desiredHeading;
             state.desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * state.desiredHeading;
-        }
-
-        state.transform.LookAt(state.transform.position + state.heading);
-        if (state.inWater) {
-            state.rb.velocity = state.heading * state.speed + state.gravity;
-        } else {
-            state.rb.velocity = state.gravity;
-        }
+        }        
     }
 }

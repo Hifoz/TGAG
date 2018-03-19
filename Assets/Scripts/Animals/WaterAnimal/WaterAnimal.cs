@@ -3,14 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class WaterAnimal : Animal {
+    //Coroutine flags
     private bool flagFlapBackToWater = false;
 
+    //Animation stuff
     private WaterAnimalSkeleton waterSkeleton;
-
     private AnimalAnimation swimAnimation;
-
     private const float speedAnimScaling = 0.2f;
 
+    //Physics stuff
     private Vector3 waterExitPoint = Vector3.zero;
 
     override protected void Start() {
@@ -26,9 +27,88 @@ public class WaterAnimal : Animal {
         }
     }
 
+    //    _____       _     _ _         __                  _   _                 
+    //   |  __ \     | |   | (_)       / _|                | | (_)                
+    //   | |__) |   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/ | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |   | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                            
+    //                            
+
+    /// <summary>
+    /// sets the skeleton, and applies the new mesh.
+    /// </summary>
+    override public void setSkeleton(AnimalSkeleton skeleton) {
+        base.setSkeleton(skeleton);
+        waterSkeleton = (WaterAnimalSkeleton)skeleton;
+
+        generateAnimations();
+        flagFlapBackToWater = false;
+    }
+
+    /// <summary>
+    /// Sets the brain of the animal
+    /// </summary>
+    /// <param name="brain"></param>
+    public override void setAnimalBrain(AnimalBrain brain) {
+        base.setAnimalBrain(brain);
+    }
+
+
+    //                   _                 _   _                __                  _   _                 
+    //       /\         (_)               | | (_)              / _|                | | (_)                
+    //      /  \   _ __  _ _ __ ___   __ _| |_ _  ___  _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //     / /\ \ | '_ \| | '_ ` _ \ / _` | __| |/ _ \| '_ \  |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //    / ____ \| | | | | | | | | | (_| | |_| | (_) | | | | | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   /_/    \_\_| |_|_|_| |_| |_|\__,_|\__|_|\___/|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                                                    
+    //                                                                                               
+
+    /// <summary>
+    /// Handles animations
+    /// </summary>
     private void handleAnimations() {
         currentAnimation.animate(speedAnimScaling * state.speed);
     }
+
+    /// <summary>
+    /// Generatges animations for the fish
+    /// </summary>
+    private void generateAnimations() {
+        //Getting relevant bones
+        List<Bone> spine = skeleton.getBones(BodyPart.SPINE);
+        Bone firstSpine = spine[1];
+        spine = spine.GetRange(2, spine.Count - 2);
+
+        swimAnimation = new AnimalAnimation();
+        int swimAnimationFrameCount = 2;
+
+        Vector3[] spineFrames1 = new Vector3[] { new Vector3(0, -45, 0), new Vector3(0, 45, 0) };
+        Vector3[] spineFrames2 = Utils.multVectorArray(spineFrames1, -2);
+
+        BoneKeyFrames boneKeyFrames = new BoneKeyFrames(firstSpine, swimAnimationFrameCount);
+        boneKeyFrames.setRotations(spineFrames1);
+        swimAnimation.add(boneKeyFrames);
+
+        foreach (Bone bone in spine) {
+            boneKeyFrames = new BoneKeyFrames(bone, swimAnimationFrameCount);
+            boneKeyFrames.setRotations(spineFrames2);
+            swimAnimation.add(boneKeyFrames);
+
+            spineFrames2 = Utils.multVectorArray(spineFrames2, -1);
+        }
+        currentAnimation = swimAnimation;
+    }
+
+    //    _____  _               _             __                  _   _                 
+    //   |  __ \| |             (_)           / _|                | | (_)                
+    //   | |__) | |__  _   _ ___ _  ___ ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   |  ___/| '_ \| | | / __| |/ __/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                  __/ |                                                            
+    //                 |___/                                                
 
     /// <summary>
     /// Function for calculating speed and heading
@@ -66,7 +146,7 @@ public class WaterAnimal : Animal {
         if (state.inWater) {
             waterGravity();
         } else if (state.grounded) {
-            state.gravity = Vector3.zero;
+            gravity = Vector3.zero;
             tryFlapBackIntoWater();
         } else {
             notGroundedGravity();
@@ -78,53 +158,17 @@ public class WaterAnimal : Animal {
     /// </summary>
     protected override void waterGravity() {
         state.grounded = false;
-        state.gravity = Vector3.zero;
-    }
+        gravity = Vector3.zero;
+    }   
 
     /// <summary>
-    /// sets the skeleton, and applies the new mesh.
+    /// Does velocity calculations
     /// </summary>
-    override public void setSkeleton(AnimalSkeleton skeleton) {
-        base.setSkeleton(skeleton);
-        waterSkeleton = (WaterAnimalSkeleton)skeleton;
-
-        generateAnimations();
-        flagFlapBackToWater = false;
-    }
-   
-
-    public override void setAnimalBrain(AnimalBrain brain) {
-        base.setAnimalBrain(brain);
-    }
-
-    /// <summary>
-    /// Generatges animations for the fish
-    /// </summary>
-    private void generateAnimations() {
-        //Getting relevant bones
-        List<Bone> spine = skeleton.getBones(BodyPart.SPINE);
-        Bone firstSpine = spine[1];
-        spine = spine.GetRange(2, spine.Count - 2);
-
-        swimAnimation = new AnimalAnimation();
-        int swimAnimationFrameCount = 2;
-
-        Vector3[] spineFrames1 = new Vector3[] { new Vector3(0, -45, 0), new Vector3(0, 45, 0) };
-        Vector3[] spineFrames2 = Utils.multVectorArray(spineFrames1, -2);
-
-        BoneKeyFrames boneKeyFrames = new BoneKeyFrames(firstSpine, swimAnimationFrameCount);
-        boneKeyFrames.setRotations(spineFrames1);
-        swimAnimation.add(boneKeyFrames);
-
-        foreach (Bone bone in spine) {
-            boneKeyFrames = new BoneKeyFrames(bone, swimAnimationFrameCount);
-            boneKeyFrames.setRotations(spineFrames2);
-            swimAnimation.add(boneKeyFrames);
-
-            spineFrames2 = Utils.multVectorArray(spineFrames2, -1);
-        }
-        currentAnimation = swimAnimation;
-    }
+    override protected void calcVelocity() {
+        Vector3 velocity = state.heading.normalized * state.speed;
+        rb.velocity = velocity + gravity;
+        transform.LookAt(state.transform.position + state.heading);
+    }   
    
     /// <summary>
     /// Tries to flap back to water
