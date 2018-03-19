@@ -81,11 +81,11 @@ public class GameObjectPool {
             foreach (GameObject obj in active) {
                 MonoBehaviour.Destroy(obj);
             }
+            active.Clear();
         }
         foreach (GameObject obj in inactive) {
             MonoBehaviour.Destroy(obj);
-        }
-        active.Clear();
+        }        
         inactive.Clear();
     }
 }
