@@ -18,7 +18,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     private GameObject[] animals = new GameObject[20];
-    private HashSet<int> orderedAnimals = new HashSet<int>();
+    private HashSet<GameObject> orderedAnimals = new HashSet<GameObject>();
 
     private BiomeManager biomeManager;
 
@@ -180,20 +180,21 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     private void orderAnimals() {
         float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-        float lower = -maxDistance + LandAnimalNPC.roamDistance;
-        float upper = -lower;
         for (int i = 0; i < animals.Length; i++) {
             animals[i] = Instantiate(animalPrefab);
+            Animal animal = animals[i].GetComponent<Animal>();
+            animal.setAnimalBrain(new LandAnimalBrainNPC());
+            float lower = -maxDistance + ((AnimalBrainNPC)animal.getAnimalBrain()).roamDist;
+            float upper = -lower;
             float x = UnityEngine.Random.Range(lower, upper);
             float z = UnityEngine.Random.Range(lower, upper);
             float y = ChunkConfig.chunkHeight + 10;
             animals[i].transform.position = new Vector3(x, y, z);
-            animals[i].GetComponent<LandAnimalNPC>().enabled = false;
+            animal.enabled = false;
 
             AnimalSkeleton animalSkeleton = new LandAnimalSkeleton(animals[i].transform);
-            animalSkeleton.index = i;
             orders.Add(new Order(animals[i].transform.position, animalSkeleton, Task.ANIMAL));
-            orderedAnimals.Add(i);
+            orderedAnimals.Add(animals[i]);
         }
     }
 
@@ -284,12 +285,12 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
     private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
-        GameObject animal = animals[animalSkeleton.index];
-        LandAnimalNPC LandAnimalNPC = animal.GetComponent<LandAnimalNPC>();
-        LandAnimalNPC.enabled = true;
-        animal.GetComponent<LandAnimalNPC>().setSkeleton(animalSkeleton);
-        LandAnimalNPC.enabled = false;
-        orderedAnimals.Remove(animalSkeleton.index);
+        GameObject animal = animalSkeleton.getOwner();
+        Animal animalBody = animal.GetComponent<Animal>();
+        animalBody.enabled = true;
+        animalBody.setSkeleton(animalSkeleton);
+        animalBody.enabled = false;
+        orderedAnimals.Remove(animal);
     }
 
     /// <summary>

@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System;
+using System.Collections.Generic;
 using System.Collections;
 
 public class Player : MonoBehaviour {
@@ -11,7 +11,7 @@ public class Player : MonoBehaviour {
     public GameObject magicTrailPrefab;
 
     private GameObject magicTrail;
-    private GameObject[] animals;
+    private GameObjectPool[] animalPool;
 
     private Rigidbody rb;
 
@@ -43,8 +43,8 @@ public class Player : MonoBehaviour {
     /// Sets the animals list for the player
     /// </summary>
     /// <param name="animals">Animals</param>
-    public void initPlayer(GameObject[] animals) {
-        this.animals = animals;
+    public void initPlayer(GameObjectPool[] animals) {
+        this.animalPool = animals;
     }
 
     /// <summary>
@@ -52,9 +52,9 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <param name="magicTrail">The magic trail</param>
     /// <param name="animals">The list of all animals</param>
-    public void transferPlayer(GameObject magicTrail, GameObject[] animals) {
+    public void transferPlayer(GameObject magicTrail, GameObjectPool[] animals) {
         this.magicTrail = magicTrail;
-        this.animals = animals;
+        this.animalPool = animals;
     }
 
     /// <summary>
@@ -66,19 +66,26 @@ public class Player : MonoBehaviour {
 
         float bestAngle = 9999;
         int bestIndex = -1;
-        for (int i = 0; i < animals.Length; i++) {
-            if (animals[i].activeSelf) {
-                float angle = Vector3.Angle(Camera.main.transform.forward, animals[i].transform.position - Camera.main.transform.position);
-                if (angle < bestAngle && Vector3.Distance(transform.position, animals[i].transform.position) < maxDist) {
-                    bestAngle = angle;
-                    bestIndex = i;
+        int bestPool = -1;
+
+        for (int pool = 0; pool < animalPool.Length; pool++) {
+            List<GameObject> animals = animalPool[pool].activeList;
+            for (int i = 0; i < animals.Count; i++) {
+                if (animals[i].activeSelf) {
+                    float angle = Vector3.Angle(Camera.main.transform.forward, animals[i].transform.position - Camera.main.transform.position);
+                    if (angle < bestAngle && Vector3.Distance(transform.position, animals[i].transform.position) < maxDist) {
+                        bestAngle = angle;
+                        bestIndex = i;
+                        bestPool = pool;
+                    }
                 }
             }
         }
+
         if (bestIndex != -1 && bestAngle < maxAngle) {
             if (!magicTrail.activeSelf) {
-                StartCoroutine(moveMagicTrail(animals[bestIndex]));
-                animals[bestIndex] = gameObject;
+                StartCoroutine(moveMagicTrail(animalPool[bestPool].activeList[bestIndex]));
+                animalPool[bestPool].activeList[bestIndex] = gameObject;
             }
         }
     }
@@ -106,28 +113,16 @@ public class Player : MonoBehaviour {
     /// <param name="other">Animal to become</param>
     private void becomeOtherAnimal(GameObject other) {
         Animal myAnimal = GetComponent<Animal>();
-        AnimalSkeleton mySkeleton = myAnimal.getSkeleton();
-
         Animal otherAnimal = other.GetComponent<Animal>();
-        AnimalSkeleton otherSkeleton = otherAnimal.getSkeleton();
 
-        float mySpeed = myAnimal.getSpeed();
-        float otherSpeed = otherAnimal.getSpeed();
+        AnimalUtils.addAnimalBrainPlayer(otherAnimal);
+        AnimalBrainNPC otherBrain = (AnimalBrainNPC)AnimalUtils.addAnimalBrainNPC(myAnimal);
+        otherBrain.takeOverPlayer();
 
-        Animal thisAnimal = AnimalUtils.addAnimalComponentNPC(gameObject, myAnimal.GetType());
-        thisAnimal.setSkeleton(mySkeleton);
-        thisAnimal.takeOverPlayer();
-        thisAnimal.setSpeed(mySpeed);
-
-        Animal myNewAnimal = AnimalUtils.addAnimalComponentPlayer(other, otherAnimal.GetType());
-        other.AddComponent<Player>().transferPlayer(magicTrail, animals);
-        myNewAnimal.setSkeleton(otherSkeleton);
-        myNewAnimal.setSpeed(otherSpeed);      
+        other.AddComponent<Player>().transferPlayer(magicTrail, animalPool);
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 
-        Destroy(otherAnimal);
-        Destroy(myAnimal);
         Destroy(GetComponent<Player>());
     }    
 }
