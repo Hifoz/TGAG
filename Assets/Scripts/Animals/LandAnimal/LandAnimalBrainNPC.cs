@@ -20,11 +20,5 @@ public class LandAnimalBrainNPC : AnimalBrainNPC {
             state.desiredHeading = -state.desiredHeading;
             state.desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * state.desiredHeading;
         }
-        state.transform.LookAt(state.transform.position + state.heading);
-        if (state.grounded || state.inWater) {
-            state.rb.velocity = state.spineHeading * state.speed + state.gravity;
-        } else {
-            state.rb.velocity = state.gravity;
-        }
     }
 }

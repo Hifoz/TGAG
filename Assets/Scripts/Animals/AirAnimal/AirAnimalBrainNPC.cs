@@ -62,15 +62,7 @@ public class AirAnimalBrainNPC : AnimalBrainNPC {
                 state.desiredHeading = -state.desiredHeading;
                 state.desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * state.desiredHeading;
             }
-        }
-        state.transform.LookAt(state.transform.position + state.heading);
-        Vector3 velocity;
-        if (state.grounded || state.inWater) {
-            velocity = state.spineHeading.normalized * state.speed;
-        } else {
-            velocity = state.heading.normalized * state.speed;
-        }
-        state.rb.velocity = velocity + state.gravity;
+        }        
     }
 
     

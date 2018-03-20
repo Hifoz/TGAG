@@ -24,11 +24,13 @@ public abstract class Animal : MonoBehaviour {
     protected float headingChangeRate = 5f;
     protected float acceleration = 5f;
     private const float levelSpeed = 3f;
-    private int inWaterInt = 0;
+    protected int inWaterInt = 0; //Used to compute if you are in water, incremented by colliding with water
+    protected Rigidbody rb;
+    protected Vector3 gravity;
 
 
     virtual protected void Awake() {
-        state.rb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
         state.transform = transform;
     }
 
@@ -82,6 +84,7 @@ public abstract class Animal : MonoBehaviour {
 
         currentAnimation = null;
         state.inWater = false;
+        inWaterInt = 0;
         flagSpineCorrecting = false;
         flagAnimationTransition = false;
     }
@@ -133,6 +136,7 @@ public abstract class Animal : MonoBehaviour {
     //                           |_|                                                                      
 
     protected abstract void calculateSpeedAndHeading();
+    protected abstract void calcVelocity();
     private bool spineIsCorrect { get { return spineBone.bone.localRotation == Quaternion.identity; } }
 
     //                   _                 _   _                __                  _   _                 
@@ -396,7 +400,7 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void notGroundedGravity() {
         state.grounded = false;
         state.inWater = false;
-        state.gravity += Physics.gravity * Time.deltaTime;
+        gravity += Physics.gravity * Time.deltaTime;
     }
 
     /// <summary>
@@ -411,10 +415,10 @@ public abstract class Animal : MonoBehaviour {
         if (distFromStance <= stanceHeight) {
             state.grounded = true;
             float sign = Mathf.Sign(dist2ground - stanceHeight);
-            if (distFromStance > stanceHeight / 16f && state.gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
-                state.gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+            if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+                gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
             } else {
-                state.gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
+                gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
             }
         } else {
             notGroundedGravity();
@@ -427,7 +431,7 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="hit">Point where raycast hit</param>
     virtual protected void waterGravity() {
         state.grounded = false;
-        state.gravity = -Physics.gravity;
+        gravity = -Physics.gravity;
         if (!spineIsCorrect) {            
             tryCorrectSpine();
         }
@@ -440,9 +444,9 @@ public abstract class Animal : MonoBehaviour {
         state.grounded = false;
         
         if (hit.distance > 0.5f) {
-            state.gravity = Physics.gravity;
+            gravity = Physics.gravity;
         } else {
-            state.gravity = Vector3.zero;
+            gravity = Vector3.zero;
         }
         if (!spineIsCorrect) {
             tryCorrectSpine();
@@ -548,12 +552,33 @@ public abstract class Animal : MonoBehaviour {
 
     virtual protected void OnCollisionEnter(Collision collision) {
         brain.OnCollisionEnter();
-    }    
+    }
 
-    ///DEBUG FUNCTION
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
     protected void debug(string message) {
         if (brain != null && brain.GetType().BaseType.Equals(typeof(AnimalBrainPlayer))) {
             Debug.Log(message);
         }
+    }
+
+    /// <summary>
+    /// Generates a string of debug info
+    /// </summary>
+    /// <returns></returns>
+    public string getDebugString() {
+        string s = "";
+        s += "Grounded: " + state.grounded.ToString() + "\n";
+        s += "InWater: " + state.inWater.ToString() + "\n";
+        s += "InWaterInt: " + inWaterInt + "\n\n";
+
+        s += "Desired speed: " + state.desiredSpeed + "\n";
+        s += "Desired heading: " + state.desiredHeading + "\n\n";
+
+        s += "Animation in transition: " + flagAnimationTransition.ToString();
+        return s;
     }
 }
