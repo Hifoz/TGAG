@@ -215,10 +215,7 @@ public class ChunkVoxelDataThread {
         int iter = 0;
         
         List<Pair<Biome, float>> biomes = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z));
-        float height = 0;
-        foreach (Pair<Biome, float> p in biomes) {
-            height += ChunkVoxelDataGenerator.calcHeight(pos, p.first) * p.second;
-        }
+        float height = ChunkVoxelDataGenerator.calcHeight(pos, biomes);
 
         pos.y = (int)height;
         bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes);
