@@ -552,12 +552,33 @@ public abstract class Animal : MonoBehaviour {
 
     virtual protected void OnCollisionEnter(Collision collision) {
         brain.OnCollisionEnter();
-    }    
+    }
 
-    ///DEBUG FUNCTION
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
+    //DEBUG FUNCTIONS
     protected void debug(string message) {
         if (brain != null && brain.GetType().BaseType.Equals(typeof(AnimalBrainPlayer))) {
             Debug.Log(message);
         }
+    }
+
+    /// <summary>
+    /// Generates a string of debug info
+    /// </summary>
+    /// <returns></returns>
+    public string getDebugString() {
+        string s = "";
+        s += "Grounded: " + state.grounded.ToString() + "\n";
+        s += "InWater: " + state.inWater.ToString() + "\n";
+        s += "InWaterInt: " + inWaterInt + "\n\n";
+
+        s += "Desired speed: " + state.desiredSpeed + "\n";
+        s += "Desired heading: " + state.desiredHeading + "\n\n";
+
+        s += "Animation in transition: " + flagAnimationTransition.ToString();
+        return s;
     }
 }

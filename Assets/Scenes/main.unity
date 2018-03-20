@@ -1192,7 +1192,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.78431374}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -1341,6 +1341,8 @@ MonoBehaviour:
   menu: {fileID: 1043064329}
   chunkManagerDebug: {fileID: 1087241527}
   chunkManagerDebugText: {fileID: 1481660124}
+  animalDebugger: {fileID: 1018347282815964, guid: 9b280393c243cd34eb1822fd9a52bf48,
+    type: 2}
 --- !u!4 &1174243102 stripped
 Transform:
   m_PrefabParentObject: {fileID: 4038317340153104, guid: b5903303425d2534087cb390327fa505,

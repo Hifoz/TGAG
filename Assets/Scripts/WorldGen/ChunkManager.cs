@@ -622,6 +622,10 @@ public class ChunkManager : MonoBehaviour {
         return s;
     }
 
+    public GameObjectPool[] getAnimals() {
+        return animalPools;
+    }
+
     private void OnDestroy() {
         stopThreads();
     }
