@@ -1,4 +1,7 @@
-﻿class BasicBiome3 : Biome {
+﻿/// <summary>
+/// Mountainous biome
+/// </summary>
+class BasicBiome3 : Biome {
     public BasicBiome3() :
         base(
             //General

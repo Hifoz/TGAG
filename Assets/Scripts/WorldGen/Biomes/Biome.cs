@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-
 /*
  * WIP:
  * 
@@ -20,6 +16,9 @@ using UnityEngine;
  * 
  */
 
+/// <summary>
+/// Base class for biomes
+/// </summary>
 public class Biome {
     //General
     public readonly int minGroundHeight = 0;

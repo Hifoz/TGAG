@@ -1,4 +1,7 @@
-﻿class BasicBiome : Biome {
+﻿/// <summary>
+/// This biome has the same settings we were using pre-biomes
+/// </summary>
+class BasicBiome : Biome {
     public BasicBiome() :
         base(
             //General

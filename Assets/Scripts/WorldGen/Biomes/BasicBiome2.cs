@@ -1,4 +1,7 @@
-﻿class BasicBiome2 : Biome {
+﻿/// <summary>
+/// Lowlands w/ larger lakes
+/// </summary>
+class BasicBiome2 : Biome {
     public BasicBiome2() :
         base(
             //General
