@@ -7,7 +7,6 @@ public class WaterAnimal : Animal {
     private bool flagFlapBackToWater = false;
 
     //Animation stuff
-    private WaterAnimalSkeleton waterSkeleton;
     private AnimalAnimation swimAnimation;
     private const float speedAnimScaling = 0.2f;
 
@@ -42,7 +41,6 @@ public class WaterAnimal : Animal {
     /// </summary>
     override public void setSkeleton(AnimalSkeleton skeleton) {
         base.setSkeleton(skeleton);
-        waterSkeleton = (WaterAnimalSkeleton)skeleton;
 
         generateAnimations();
         flagFlapBackToWater = false;

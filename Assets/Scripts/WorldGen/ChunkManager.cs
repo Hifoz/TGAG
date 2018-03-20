@@ -42,7 +42,6 @@ public class ChunkManager : MonoBehaviour {
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     // Animals
-    private int nextAnimalID = 0;
     private GameObjectPool[] animalPools = new GameObjectPool[3];
     //Indexes for the various pools
     private const int LAND_ANIMAL_POOL = 0;
@@ -60,7 +59,6 @@ public class ChunkManager : MonoBehaviour {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         biomeManager = new BiomeManager();
         Reset();
-        //StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame
@@ -352,7 +350,6 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="animal">Animal to spawn</param>
     /// <returns></returns>
     private void spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
-        Vector3Int chunkPos = wolrd2ChunkPos(animal.transform.position);
         animal.GetComponent<Animal>().Spawn(animal.transform.position);
         animal.SetActive(true);
         animal.GetComponent<Animal>().setSkeleton(skeleton);
@@ -535,29 +532,6 @@ public class ChunkManager : MonoBehaviour {
         }
     }
 
-    //    __  __ _             __                  _   _                 
-    //   |  \/  (_)           / _|                | | (_)                
-    //   | \  / |_ ___  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-    //   | |\/| | / __|/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-    //   | |  | | \__ \ (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
-    //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-    //                                                                   
-    //                                                                   
-
-    /// <summary>
-    /// Prints debug info
-    /// </summary>
-    /// <returns></returns>
-    IEnumerator debugRoutine() {
-        while (true) {
-            yield return new WaitForSeconds(0.5f);
-            Debug.Log("====================================================================");
-            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Inactive Chunks: " + chunkPool.inactiveStack.Count);
-            Debug.Log("Inactive trees: " + treePool.inactiveStack.Count);
-            Debug.Log("Ordered animals: " + orderedAnimals.Count);
-        }
-    }
-
 
     /// <summary>
     /// Stops all of the ChunkVoxelDataThreads.
@@ -569,6 +543,26 @@ public class ChunkManager : MonoBehaviour {
                 thread.stop();
             }
         }
+    }
+
+    //    __  __ _             __                  _   _                 
+    //   |  \/  (_)           / _|                | | (_)                
+    //   | \  / |_ ___  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   | |\/| | / __|/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |  | | \__ \ (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                   
+    //                                                                   
+
+    public string getDebugString() {
+        string s = "";
+        s += "Generated chunks: " + stats.generatedChunks + "\n";
+        s += "Ordered chunks: " + pendingChunks.Count + "\n";
+        s += "Cancelled chunks: " + stats.cancelledChunks + "\n\n";
+
+        s += "Generated animals: " + stats.generatedAnimals + "\n";
+        s += "Ordered animals: " + orderedAnimals.Count + "\n";
+        return s;
     }
 
     private void OnDestroy() {
