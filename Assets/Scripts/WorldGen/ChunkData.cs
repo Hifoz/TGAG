@@ -26,7 +26,7 @@ public class ChunkData {
     /// <summary>
     /// Enables colliders for objects in chunk
     /// </summary>
-    public void tryEnableColliders() {
+    public bool tryEnableColliders() {
         if (!collidersEnabled) {
             collidersEnabled = true;
 
@@ -50,6 +50,8 @@ public class ChunkData {
                 collider.sharedMesh = treeColliders[i];
                 treeColliders[i] = null;
             }
+            return true;
         }
+        return false;
     } 
 }

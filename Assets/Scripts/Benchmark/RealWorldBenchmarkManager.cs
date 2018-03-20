@@ -106,7 +106,11 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
             stopwatch.Reset();
             string result = String.Format(
                 "Average fps: {0} | Generated chunks: {1} | Generated animals: {2} | Cancelled chunks: {3} | Threads: {4}",
-                (frameCount / time).ToString("N2"), stats.generatedChunks, stats.generatedAnimals, stats.cancelledChunks, run
+                (frameCount / time).ToString("N2"),
+                stats.aggregateValues[ChunkManagerStatsType.GENERATED_CHUNKS],
+                stats.aggregateValues[ChunkManagerStatsType.GENERATED_ANIMALS],
+                stats.aggregateValues[ChunkManagerStatsType.CANCELLED_CHUNKS],
+                run
             );
             UnityEngine.Debug.Log(result);
             file.WriteLine(String.Format(result));

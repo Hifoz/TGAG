@@ -4,12 +4,56 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
+/// The different kind of stats for the chunk manager
+/// </summary>
+public enum ChunkManagerStatsType {
+    GENERATED_CHUNKS = 0,
+    GENERATED_ANIMALS,
+    CANCELLED_CHUNKS,
+    ENABLED_COLLIDERS,
+    OBJECTS_ENABLED,
+    OBJECTS_DISABLED
+}
+
+/// <summary>
 /// Struct that contains statistics about what the ChunkManager does
 /// </summary>
-public struct ChunkManagerStats {
-    public int generatedChunks;
-    public int generatedAnimals;
-    public int cancelledChunks;
+public class ChunkManagerStats {
+    public Dictionary<ChunkManagerStatsType, int> aggregateValues;
+    public Dictionary<ChunkManagerStatsType, int> lastSecondValues;
+
+    /// <summary>
+    /// Initializes the dictionaries
+    /// </summary>
+    public ChunkManagerStats() {
+        aggregateValues = new Dictionary<ChunkManagerStatsType, int>();
+        lastSecondValues = new Dictionary<ChunkManagerStatsType, int>();
+        foreach (ChunkManagerStatsType type in Enum.GetValues(typeof(ChunkManagerStatsType))) {
+            aggregateValues.Add(type, 0);
+            lastSecondValues.Add(type, 0);
+        }        
+    }
+
+    /// <summary>
+    /// Calculates the per second values
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator calculatePerSecondStats() {
+        Dictionary<ChunkManagerStatsType, int> oldAggregates = new Dictionary<ChunkManagerStatsType, int>();
+        foreach (ChunkManagerStatsType type in Enum.GetValues(typeof(ChunkManagerStatsType))) {
+            oldAggregates.Add(type, 0);
+        }
+
+        while (true) {
+            foreach(KeyValuePair<ChunkManagerStatsType, int> stats in aggregateValues) {
+                oldAggregates[stats.Key] = stats.Value;
+            }
+            yield return new WaitForSecondsRealtime(1);
+            foreach (KeyValuePair<ChunkManagerStatsType, int> stats in aggregateValues) {
+                lastSecondValues[stats.Key] = stats.Value - oldAggregates[stats.Key];
+            }
+        }
+    }
 }
 
 /// <summary>
@@ -18,7 +62,7 @@ public struct ChunkManagerStats {
 /// </summary>
 public class ChunkManager : MonoBehaviour {
 
-    public ChunkManagerStats stats = new ChunkManagerStats();
+    public ChunkManagerStats stats;
     public Transform player;
     public TextureManager textureManager;
     public GameObject chunkPrefab;
@@ -38,12 +82,10 @@ public class ChunkManager : MonoBehaviour {
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
-
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     // Animals
     private GameObjectPool[] animalPools = new GameObjectPool[3];
-    //Indexes for the various pools
     private const int LAND_ANIMAL_POOL = 0;
     private const int AIR_ANIMAL_POOL = 1;
     private const int WATER_ANIMAL_POOL = 2;
@@ -185,15 +227,15 @@ public class ChunkManager : MonoBehaviour {
                 case Task.CHUNK:
                     ChunkData cd = launchOrderedChunk(result.chunkVoxelData);
                     StartCoroutine(orderAnimals(cd));
-                    stats.generatedChunks++;
+                    stats.aggregateValues[ChunkManagerStatsType.GENERATED_CHUNKS]++;
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
-                    stats.generatedAnimals++;
+                    stats.aggregateValues[ChunkManagerStatsType.GENERATED_ANIMALS]++;
                     break;
                 case Task.CANCEL:
                     pendingChunks.Remove(result.chunkVoxelData.chunkPos);
-                    stats.cancelledChunks++;
+                    stats.aggregateValues[ChunkManagerStatsType.CANCELLED_CHUNKS]++;
                     break;
             }
             consumed++;
@@ -364,7 +406,9 @@ public class ChunkManager : MonoBehaviour {
         for (int x = index.x - 1; x <= index.x + 1; x++) {
             for (int z = index.z - 1; z <= index.z + 1; z++) {
                 if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
-                    chunkGrid[x, z].tryEnableColliders();
+                    if(chunkGrid[x, z].tryEnableColliders()) {
+                        stats.aggregateValues[ChunkManagerStatsType.ENABLED_COLLIDERS]++;
+                    }
                 }
             }
         }
@@ -413,9 +457,15 @@ public class ChunkManager : MonoBehaviour {
         Vector3 cam2chunk = pos - camPos;
         cam2chunk.y = Camera.main.transform.forward.y;
         if (cam2chunk.magnitude > ChunkConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
-            obj.SetActive(false);
+            if (obj.activeSelf) {
+                obj.SetActive(false);
+                stats.aggregateValues[ChunkManagerStatsType.OBJECTS_DISABLED]++;
+            }
         } else {
-            obj.SetActive(true);
+            if (!obj.activeSelf) {
+                obj.SetActive(true);
+                stats.aggregateValues[ChunkManagerStatsType.OBJECTS_ENABLED]++;
+            }
         }
     }
 
@@ -445,6 +495,9 @@ public class ChunkManager : MonoBehaviour {
     public void Reset(int threadCount = 0) {
         Settings.load();
         clear();
+
+        stats = new ChunkManagerStats();
+        StartCoroutine(stats.calculatePerSecondStats());
 
         offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
         chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
@@ -552,16 +605,20 @@ public class ChunkManager : MonoBehaviour {
     //   | |  | | \__ \ (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
     //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                                                                   
-    //                                                                   
+    //         
 
+    /// <summary>
+    /// Produces a string that contains debug data
+    /// </summary>
+    /// <returns></returns>
     public string getDebugString() {
         string s = "";
-        s += "Generated chunks: " + stats.generatedChunks + "\n";
-        s += "Ordered chunks: " + pendingChunks.Count + "\n";
-        s += "Cancelled chunks: " + stats.cancelledChunks + "\n\n";
+        foreach(KeyValuePair<ChunkManagerStatsType, int> stat in stats.aggregateValues) {
+            s += string.Format("{0}: {1}\n{0}_LAST_SECOND: {2}\n\n", stat.Key.ToString(), stat.Value, stats.lastSecondValues[stat.Key]);
+        }
 
-        s += "Generated animals: " + stats.generatedAnimals + "\n";
-        s += "Ordered animals: " + orderedAnimals.Count + "\n";
+        s += "ORDERED_CHUNKS: " + pendingChunks.Count + "\n";
+        s += "ORDERED_ANIMALS: " + orderedAnimals.Count + "\n";
         return s;
     }
 
