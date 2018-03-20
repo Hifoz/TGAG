@@ -24,7 +24,7 @@ public abstract class Animal : MonoBehaviour {
     protected float headingChangeRate = 5f;
     protected float acceleration = 5f;
     private const float levelSpeed = 3f;
-    private int inWaterInt = 0;
+    protected int inWaterInt = 0; //Used to compute if you are in water, incremented by colliding with water
     protected Rigidbody rb;
     protected Vector3 gravity;
 
@@ -84,6 +84,7 @@ public abstract class Animal : MonoBehaviour {
 
         currentAnimation = null;
         state.inWater = false;
+        inWaterInt = 0;
         flagSpineCorrecting = false;
         flagAnimationTransition = false;
     }

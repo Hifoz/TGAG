@@ -22,6 +22,7 @@ public class WaterAnimal : Animal {
         if (skeleton != null) {
             calculateSpeedAndHeading();
             brain.move();
+            calcVelocity();
             doGravity();
             handleAnimations();
         }
@@ -131,7 +132,9 @@ public class WaterAnimal : Animal {
             int layerMaskGround = 1 << 8;
             RaycastHit hitGround;
 
-            if (Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround)) {
+            bool flagHitGround = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround);
+
+            if (flagHitGround) {
                 if (hitGround.distance < 1f) {
                     state.grounded = true;
                 } else {
@@ -140,6 +143,14 @@ public class WaterAnimal : Animal {
             } else {
                 state.grounded = false;
             }
+        } else {
+            int layerMaskWater = 1 << 4;
+            RaycastHit hitWater;
+            bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 10f, layerMaskWater);
+            if (flagHitWater && hitWater.distance > 1f) {
+                //state.inWater = false;
+                //inWaterInt = 0;
+            }            
         }
 
 

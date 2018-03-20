@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public static class ChunkConfig {
     //General
-    public static int seed = 1337; //161 for watery start
+    public static int seed = 161;// 1337; //161 for watery start
     public static int chunkSize = 20;
     public static int chunkCount = 40;
     public static int chunkHeight = 200;

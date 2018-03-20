@@ -63,6 +63,10 @@ public class AirAnimal : Animal {
         flagLaunching = false;
     }
 
+    /// <summary>
+    /// Sets the animal brain, and sets up actions for the brain
+    /// </summary>
+    /// <param name="brain"></param>
     public override void setAnimalBrain(AnimalBrain brain) {
         base.setAnimalBrain(brain);
         brain.addAction("launch", tryLaunch);
