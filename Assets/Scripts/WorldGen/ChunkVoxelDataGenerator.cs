@@ -17,7 +17,12 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
     public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
-        return (pos.y < height || biome.Structure3DRate > calc3DStructure(pos, biome, height)) && biome.Unstructure3DRate < calc3DUnstructure(pos, biome, height);
+        if (pos.y < biome.minGroundHeight)
+            return true;
+        else if (pos.y > biome.maxGroundHeight)
+            return false;
+        else
+            return (pos.y < height || biome.structure3DRate > calc3DStructure(pos, biome, height)) && biome.unstructure3DRate < calc3DUnstructure(pos, biome, height);
     }
 
     /// <summary>
@@ -35,12 +40,24 @@ public static class ChunkVoxelDataGenerator {
         float unstructure = 0;
         float structureRate = 0;
         float unstructureRate = 0;
+        float minH = 0;
+        float maxH = 0;
+
+        for (int i = 0; i < biomes.Count; i++) {
+            minH += biomes[i].first.minGroundHeight * biomes[i].second;
+            maxH += biomes[i].first.maxGroundHeight * biomes[i].second;
+        }
+
+        if (pos.y < minH)
+            return true;
+        else if (pos.y > maxH)
+            return false;
 
         for (int i = 0; i < biomes.Count; i++) {
             structure += calc3DStructure(pos, biomes[i].first, height) * biomes[i].second;
             unstructure += calc3DUnstructure(pos, biomes[i].first, height) * biomes[i].second;
-            structureRate += biomes[i].first.Structure3DRate * biomes[i].second;
-            unstructureRate += biomes[i].first.Unstructure3DRate * biomes[i].second;
+            structureRate += biomes[i].first.structure3DRate * biomes[i].second;
+            unstructureRate += biomes[i].first.unstructure3DRate * biomes[i].second;
         }
 
         return (pos.y < height || structureRate > structure) && unstructureRate < unstructure;
@@ -210,7 +227,22 @@ public static class ChunkVoxelDataGenerator {
         }
         finalNoise = finalNoise / noiseScaler;
         finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent2D);
-        return finalNoise * ChunkConfig.chunkHeight;
+
+
+        float minH = biomes[0].first.minGroundHeight;
+        float maxH = biomes[0].first.maxGroundHeight;
+
+        if(biomes.Count > 1) {
+            minH *= biomes[0].second;
+            maxH *= biomes[0].second;
+            for(int i = 1; i < biomes.Count; i++) {
+                minH += biomes[i].first.minGroundHeight * biomes[i].second;
+                maxH += biomes[i].first.maxGroundHeight * biomes[i].second;
+            }
+        }
+
+
+        return minH + finalNoise * maxH;
     }
 
     /// <summary>
@@ -224,7 +256,7 @@ public static class ChunkVoxelDataGenerator {
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
         float noise01 = (noise + 1f) * 0.5f;
-        return Mathf.Lerp(noise01, 1, pos.y / ChunkConfig.chunkHeight); //Because you don't want an ugly flat "ceiling" everywhere.
+        return Mathf.Lerp(noise01, 1, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want an ugly flat "ceiling" everywhere.
     }
 
     /// <summary>
@@ -238,6 +270,6 @@ public static class ChunkVoxelDataGenerator {
             SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
         noise *= 0.5f;
         float noise01 = (noise + 1f) * 0.5f;
-        return Mathf.Lerp(1, noise01, pos.y / ChunkConfig.chunkHeight); //Because you don't want the noise to remove the ground creating a void.
+        return Mathf.Lerp(1, noise01, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want the noise to remove the ground creating a void.
     }
 }
