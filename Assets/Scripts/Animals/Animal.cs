@@ -557,6 +557,11 @@ public abstract class Animal : MonoBehaviour {
         brain.OnCollisionEnter();
     }
 
+   virtual protected void OnDisable() {
+        flagSpineCorrecting = false;
+        flagAnimationTransition = false;
+    }
+
     //DEBUG FUNCTIONS
     //DEBUG FUNCTIONS
     //DEBUG FUNCTIONS

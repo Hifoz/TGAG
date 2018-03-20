@@ -9,6 +9,7 @@ public class AirAnimal : Animal {
     //Coroutine flags
     protected bool flagLaunching = false;
     private bool flagAscending = false;
+    private bool flagRagDollTail = false;
 
     //Animation stuff
     protected AirAnimalSkeleton airSkeleton;
@@ -51,10 +52,6 @@ public class AirAnimal : Animal {
     override public void setSkeleton(AnimalSkeleton skeleton) {
         base.setSkeleton(skeleton);
         airSkeleton = (AirAnimalSkeleton)skeleton;
-
-        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
-        LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
-        StartCoroutine(ragdollLimb(tail, tailLine, () => { return true; }, false, 1f, transform));
 
         makeLegsRagDoll();
 
@@ -234,6 +231,14 @@ public class AirAnimal : Animal {
             ragDollLegs = true;
             makeLegsRagDoll();
         }
+
+        if (!flagRagDollTail) {
+            flagRagDollTail = true;
+            flagRagDollTail = true;
+            List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+            LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
+            StartCoroutine(ragdollLimb(tail, tailLine, () => { return flagRagDollTail; }, false, 4f, transform));
+        }
     }
 
     /// <summary>
@@ -380,5 +385,12 @@ public class AirAnimal : Animal {
     override protected void OnCollisionEnter(Collision collision) {
         base.OnCollisionEnter(collision);
         flagLaunching = false;
-    }                                                                
+    }
+
+    override protected void OnDisable() {
+        base.OnDisable();
+        flagRagDollTail = false;
+        flagLaunching = false;
+        flagAscending = false;
+    }
 }

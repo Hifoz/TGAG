@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class LandAnimal : Animal {
     //Coroutine flags
     bool flagJumping = false;
+    private bool flagRagDollTail = false;
 
     //Animation stuff
     bool ragDolling = false;
@@ -30,10 +31,7 @@ public class LandAnimal : Animal {
     /// sets the skeleton, and applies the new mesh.
     /// </summary>
     override public void setSkeleton(AnimalSkeleton skeleton) {
-        base.setSkeleton(skeleton);
-        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
-        LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
-        StartCoroutine(ragdollLimb(tail, tailLine, () => { return true; }, false, 4f, transform));
+        base.setSkeleton(skeleton);        
         landSkeleton = (LandAnimalSkeleton)skeleton;
 
         generateAnimations();
@@ -112,7 +110,7 @@ public class LandAnimal : Animal {
                 groundLimb(landSkeleton.getLeg(true, i), 0.5f);
                 groundLimb(landSkeleton.getLeg(true, i), 0.5f);
             }
-        }
+        }        
     }
 
     /// <summary>
@@ -129,6 +127,13 @@ public class LandAnimal : Animal {
                 StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], condition, true));
             }
             StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], condition, true));
+        }
+
+        if (!flagRagDollTail) {
+            flagRagDollTail = true;
+            List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+            LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
+            StartCoroutine(ragdollLimb(tail, tailLine, () => { return flagRagDollTail; }, false, 4f, transform));
         }
     }
 
@@ -201,6 +206,12 @@ public class LandAnimal : Animal {
     override protected void OnCollisionEnter(Collision collision) {
         base.OnCollisionEnter(collision);
         gravity = Vector3.zero;
+        flagJumping = false;
+    }
+
+    override protected void OnDisable() {
+        base.OnDisable();
+        flagRagDollTail = false;
         flagJumping = false;
     }
 }
