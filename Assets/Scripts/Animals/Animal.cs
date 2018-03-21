@@ -362,25 +362,28 @@ public abstract class Animal : MonoBehaviour {
         RaycastHit hitGround;
 
         bool flagHitGround = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround);
-        bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 2f, layerMaskWater);
+        bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 200f, layerMaskWater);
 
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
-        
-        //Calculate water state
-        if (!state.inWater && flagHitWater) {
-            state.inWater = true;
-        } else if (inWaterInt == 0 && state.inWater && !flagHitWater) {
-            state.inWater = false;
-        }
 
         bool canStand = false;
         bool onWaterSurface = false;
 
+        //Calculate water state
+        if (flagHitWater && hitWater.distance < 2f) {
+            state.inWater = true;
+            onWaterSurface = true;
+        } else {
+            onWaterSurface = false;
+        }
+
+        if (flagHitWater && hitWater.distance > 2f) {
+            state.inWater = false;
+            inWaterInt = 0;
+        }
+
         if (flagHitGround) {
             canStand = hitGround.distance <= stanceHeight;
-        }
-        if (flagHitWater) {
-            onWaterSurface = true;
         }
 
         if (canStand || !state.inWater) {
@@ -552,6 +555,11 @@ public abstract class Animal : MonoBehaviour {
 
     virtual protected void OnCollisionEnter(Collision collision) {
         brain.OnCollisionEnter();
+    }
+
+   virtual protected void OnDisable() {
+        flagSpineCorrecting = false;
+        flagAnimationTransition = false;
     }
 
     //DEBUG FUNCTIONS

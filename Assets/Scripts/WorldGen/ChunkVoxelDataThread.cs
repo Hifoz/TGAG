@@ -135,23 +135,33 @@ public class ChunkVoxelDataThread {
 
         switch (order.task) {
             case Task.CHUNK:
-                Vector3 distFromPlayer = order.position - Player.playerPos.get();
-                if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
-                    result.task = Task.CANCEL;
-                    result.chunkVoxelData = new ChunkVoxelData(order.position);
-                } else {
-                    result.chunkVoxelData = handleChunkOrder(order);
-                }
+                result.chunkVoxelData = handleChunkOrder(order);
                 break;
             case Task.ANIMAL:
                 order.animalSkeleton.generateInThread();
                 result.animalSkeleton = order.animalSkeleton;
+                break;
+            case Task.CANCEL:
+                result.task = Task.CANCEL;
+                result.chunkVoxelData = new ChunkVoxelData(order.position);
                 break;
         }
 
         return result;
     }
 
+    /// <summary>
+    /// Shoudl chunk at position be canceled?
+    /// </summary>
+    /// <param name="pos">Position of chunk</param>
+    /// <returns>bool should cancel</returns>
+    private bool cancelChunk(Vector3 pos) {
+        Vector3 distFromPlayer = pos - Player.playerPos.get();
+        if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
+            return true;
+        }
+        return false;
+    }
 
     /// <summary>
     /// Generates a chunk with trees
@@ -237,6 +247,13 @@ public class ChunkVoxelDataThread {
         int resultIndex = -1;
         float preferredValue = Int32.MaxValue;
         for(int i = 0; i < list.Count; i++) {
+            if (list[i].task == Task.CHUNK) { //Prioritize canceling chunks the most
+                if (cancelChunk(list[i].position)) {
+                    list[i].task = Task.CANCEL;
+                    return i;
+                }
+            }
+
             Vector3 chunkPos = list[i].position;
             Vector3 playerPos = Player.playerPos.get();
             Vector3 playerMoveDir = Player.playerSpeed.get();
