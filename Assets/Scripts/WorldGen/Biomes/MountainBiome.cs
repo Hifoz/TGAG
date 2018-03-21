@@ -1,8 +1,8 @@
 ﻿/// <summary>
 /// Mountainous biome
 /// </summary>
-class BasicBiome3 : Biome {
-    public BasicBiome3() :
+class MountainBiome : BiomeBase {
+    public MountainBiome() :
         base(
             //General
             minGroundHeight: 20,

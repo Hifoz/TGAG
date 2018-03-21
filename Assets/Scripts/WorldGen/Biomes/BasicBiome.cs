@@ -1,7 +1,7 @@
 ﻿/// <summary>
 /// This biome has the same settings we were using pre-biomes
 /// </summary>
-class BasicBiome : Biome {
+class BasicBiome : BiomeBase {
     public BasicBiome() :
         base(
             //General

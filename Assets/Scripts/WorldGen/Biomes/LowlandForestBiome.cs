@@ -2,7 +2,7 @@
 /// <summary>
 /// Lowlands w/ larger lakes and dense forest
 /// </summary>
-class LowlandForestBiome : Biome {
+class LowlandForestBiome : BiomeBase {
     public LowlandForestBiome() :
         base(
             //General

@@ -154,8 +154,8 @@ public class ChunkManager : MonoBehaviour {
     /// Clears all elements in the chunkGrid
     /// </summary>
     private void clearChunkGrid() {
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+        for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
                 chunkGrid[x, z] = null;
             }
         }
@@ -205,8 +205,8 @@ public class ChunkManager : MonoBehaviour {
     /// Orders needed chunks from the ChunkVoxelDataThreads.
     /// </summary>
     private void orderNewChunks() {
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+        for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
                 Vector3 chunkPos = chunkPos2world(new Vector3(x, 0, z));
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     orders.Add(new Order(chunkPos, Task.CHUNK));
@@ -315,17 +315,17 @@ public class ChunkManager : MonoBehaviour {
             yield return new WaitForSeconds(1f); //Give the colliders a frame to initialize
 
             //Calculate spawn position
-            Vector3 spawnPos = cd.pos + Vector3.up * (ChunkConfig.chunkHeight + 10) + new Vector3(ChunkConfig.chunkSize / 2, 0, ChunkConfig.chunkSize / 2);
+            Vector3 spawnPos = cd.pos + Vector3.up * (WorldGenConfig.chunkHeight + 10) + new Vector3(WorldGenConfig.chunkSize / 2, 0, WorldGenConfig.chunkSize / 2);
             
             int layerMaskWater = 1 << 4;
             RaycastHit hitWater;
-            bool water = Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitWater, ChunkConfig.chunkHeight * 1.2f, layerMaskWater);
+            bool water = Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitWater, WorldGenConfig.chunkHeight * 1.2f, layerMaskWater);
             if (water) {
                 spawnPos = hitWater.point;
             } else {
                 int layerMaskGround = 1 << 8;
                 RaycastHit hitGround;
-                if (Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitGround, ChunkConfig.chunkHeight * 1.2f, layerMaskGround)) {
+                if (Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitGround, WorldGenConfig.chunkHeight * 1.2f, layerMaskGround)) {
                     spawnPos = hitGround.point + Vector3.up * 4;
                 } else {
                     Debug.Log("INFO: AnimalOrder, failed to find spawn point for animal, will drop from sky");
@@ -380,8 +380,8 @@ public class ChunkManager : MonoBehaviour {
     private bool isAnimalTooFarAway(Vector3 pos) {
         float xDist = Mathf.Abs(player.position.x - pos.x);
         float zDist = Mathf.Abs(player.position.z - pos.z);
-        bool outOfXBounds = xDist > ChunkConfig.chunkCount / 2 * ChunkConfig.chunkSize;
-        bool outOfZBounds = zDist > ChunkConfig.chunkCount / 2 * ChunkConfig.chunkSize;
+        bool outOfXBounds = xDist > WorldGenConfig.chunkCount / 2 * WorldGenConfig.chunkSize;
+        bool outOfZBounds = zDist > WorldGenConfig.chunkCount / 2 * WorldGenConfig.chunkSize;
         bool outOfYBounds = pos.y < -10;
         return outOfXBounds || outOfZBounds || outOfYBounds; 
     }
@@ -421,8 +421,8 @@ public class ChunkManager : MonoBehaviour {
     private Vector3 getPlayerPos() {
         float x = player.position.x;
         float z = player.position.z;
-        x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
-        z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
+        x = Mathf.Floor(x / WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize;
+        z = Mathf.Floor(z / WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize;
         return new Vector3(x, 0, z);
     }
 
@@ -432,7 +432,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="worldPos">Worldpos to convert</param>
     /// <returns>chunkpos</returns>
     private Vector3Int wolrd2ChunkPos(Vector3 worldPos) {
-        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / ChunkConfig.chunkSize;
+        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / WorldGenConfig.chunkSize;
         return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
     } 
 
@@ -442,7 +442,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="chunkPos">Chunkpos to convert</param>
     /// <returns>Wolrd pos</returns>
     private Vector3 chunkPos2world(Vector3 chunkPos) {
-        Vector3 world = chunkPos * ChunkConfig.chunkSize + offset + getPlayerPos();
+        Vector3 world = chunkPos * WorldGenConfig.chunkSize + offset + getPlayerPos();
         return world;
     }
 
@@ -456,7 +456,7 @@ public class ChunkManager : MonoBehaviour {
         pos.y = camPos.y;
         Vector3 cam2chunk = pos - camPos;
         cam2chunk.y = Camera.main.transform.forward.y;
-        if (cam2chunk.magnitude > ChunkConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
+        if (cam2chunk.magnitude > WorldGenConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
             if (obj.activeSelf) {
                 obj.SetActive(false);
                 stats.aggregateValues[ChunkManagerStatsType.OBJECTS_DISABLED]++;
@@ -476,7 +476,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="y">y index (worldspace z)</param>
     /// <returns>bool in bound</returns>
     private bool checkBounds(int x, int y) {
-        return (x >= 0 && x < ChunkConfig.chunkCount && y >= 0 && y < ChunkConfig.chunkCount);
+        return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
     }
 
     //    ____                  _                          _       __                  _   _                 
@@ -499,8 +499,8 @@ public class ChunkManager : MonoBehaviour {
         stats = new ChunkManagerStats();
         StartCoroutine(stats.calculatePerSecondStats());
 
-        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
-        chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+        offset = new Vector3(-WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize, 0, -WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize);
+        chunkGrid = new ChunkData[WorldGenConfig.chunkCount, WorldGenConfig.chunkCount];
 
         if (threadCount == 0) {
             threadCount = Settings.WorldGenThreads;

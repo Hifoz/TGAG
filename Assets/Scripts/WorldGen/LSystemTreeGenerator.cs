@@ -112,8 +112,8 @@ public static class LSystemTreeGenerator {
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds))[0];
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds))[0];
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, WorldGenConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds))[0];
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, WorldGenConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds))[0];
         return meshData;
     }
     
@@ -126,9 +126,9 @@ public static class LSystemTreeGenerator {
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
         for (int i = 0; i < tree.Count; i++) {
             float dist = tree[i].distance(pos);
-            if (dist < ChunkConfig.treeThickness) {
+            if (dist < WorldGenConfig.treeThickness) {
                 return BlockData.BlockType.WOOD;
-            } else if (tree[i].endLine && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+            } else if (tree[i].endLine && dist < WorldGenConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.LEAF;
             }
         }
@@ -173,14 +173,14 @@ public static class LSystemTreeGenerator {
         tree.upperBounds = new Vector3(-99999, -99999, -99999);
 
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(pos));
-        string word = recurseString(start.ToString(), ChunkConfig.grammarRecursionDepth, rng);
+        string word = recurseString(start.ToString(), WorldGenConfig.grammarRecursionDepth, rng);
 
         Stack<Turtle> states = new Stack<Turtle>();
         Turtle turtle = new Turtle();
         turtle.heading = Vector3.up;
         turtle.pos = Vector3.zero;
         turtle.axis = Axis.X;
-        turtle.lineLen = ChunkConfig.treeLineLength;
+        turtle.lineLen = WorldGenConfig.treeLineLength;
         
         //Make the turtle proccess the word.
         foreach(char c in word) {
@@ -221,7 +221,7 @@ public static class LSystemTreeGenerator {
         lastLine.endLine = true;
         tree.tree[tree.tree.Count - 1] = lastLine;
         //Ready the result and return.
-        float modifier = ((ChunkConfig.treeThickness < ChunkConfig.treeLeafThickness) ? ChunkConfig.treeLeafThickness : ChunkConfig.treeThickness) * boundingBoxModifier;
+        float modifier = ((WorldGenConfig.treeThickness < WorldGenConfig.treeLeafThickness) ? WorldGenConfig.treeLeafThickness : WorldGenConfig.treeThickness) * boundingBoxModifier;
         tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
         tree.upperBounds += Vector3.one * modifier;
         tree.size = (tree.upperBounds - tree.lowerBounds);

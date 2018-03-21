@@ -15,7 +15,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">The position to investigate</param>
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
-    public static bool posContainsVoxel(Vector3 pos, int height, Biome biome) {
+    public static bool posContainsVoxel(Vector3 pos, int height, BiomeBase biome) {
         if (pos.y < biome.minGroundHeight)
             return true;
         else if (pos.y > biome.maxGroundHeight)
@@ -31,7 +31,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="heights">height from all biomes covering the sample position</param>
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
-    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<Biome, float>> biomes) {
+    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes) {
         if (biomes.Count == 1)
             return posContainsVoxel(pos, height, biomes[0].first);
 
@@ -69,18 +69,18 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">The position of the chunk in world space</param>
     /// <returns>Voxel data for the chunk</returns>
     public static BlockDataMap getChunkVoxelData(Vector3 pos, BiomeManager biomeManager) {
-        BlockDataMap data = new BlockDataMap(ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2);
+        BlockDataMap data = new BlockDataMap(WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkHeight, WorldGenConfig.chunkSize + 2);
 
 
         /*
          * Pre-calculate 2d heightmap and biomemap:
          */
 
-        List<Pair<Biome, float>>[,] biomemap = new List<Pair<Biome, float>>[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
-        int[,] heightmap = new int[ChunkConfig.chunkSize + 2, ChunkConfig.chunkSize + 2];
+        List<Pair<BiomeBase, float>>[,] biomemap = new List<Pair<BiomeBase, float>>[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
+        int[,] heightmap = new int[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
 
-        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
-            for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
+        for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
                 heightmap[x, z] = (int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z]);
                 // Initialize the blockdata map with heightmap data
@@ -96,32 +96,32 @@ public static class ChunkVoxelDataGenerator {
          */
 
         Queue<Vector3Int> active = new Queue<Vector3Int>();
-        bool[,,] done = new bool[ChunkConfig.chunkSize + 2, ChunkConfig.chunkHeight, ChunkConfig.chunkSize + 2];
+        bool[,,] done = new bool[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkHeight, WorldGenConfig.chunkSize + 2];
 
         // Add all voxels at heightmap positions (Except the side ones, as they are added in next loop)
-        for (int x = 1; x < ChunkConfig.chunkSize + 1; x++) {
-            for (int z = 1; z < ChunkConfig.chunkSize + 1; z++) {
+        for (int x = 1; x < WorldGenConfig.chunkSize + 1; x++) {
+            for (int z = 1; z < WorldGenConfig.chunkSize + 1; z++) {
                 active.Enqueue(new Vector3Int(x, heightmap[x, z], z));
                 done[x, heightmap[x, z], z] = true;
             }
         }
 
         // Add voxels on the z-sides
-        for (int w = 0; w < ChunkConfig.chunkSize + 2; w++) {
-            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
+        for (int w = 0; w < WorldGenConfig.chunkSize + 2; w++) {
+            for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 active.Enqueue(new Vector3Int(w, y, 0));
                 done[w, y, 0] = true;
-                active.Enqueue(new Vector3Int(w, y, ChunkConfig.chunkSize + 1));
-                done[w, y, ChunkConfig.chunkSize + 1] = true;
+                active.Enqueue(new Vector3Int(w, y, WorldGenConfig.chunkSize + 1));
+                done[w, y, WorldGenConfig.chunkSize + 1] = true;
             }
         }
         // Add voxels on the x-sides
-        for (int w = 1; w < ChunkConfig.chunkSize + 1; w++) {
-            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
+        for (int w = 1; w < WorldGenConfig.chunkSize + 1; w++) {
+            for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 active.Enqueue(new Vector3Int(0, y, w));
                 done[0, y, w] = true;
-                active.Enqueue(new Vector3Int(ChunkConfig.chunkSize + 1, y, w));
-                done[ChunkConfig.chunkSize + 1, y, w] = true;
+                active.Enqueue(new Vector3Int(WorldGenConfig.chunkSize + 1, y, w));
+                done[WorldGenConfig.chunkSize + 1, y, w] = true;
             }
         }
 
@@ -152,14 +152,14 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-        System.Random rng = new System.Random(ChunkConfig.seed);
+        System.Random rng = new System.Random(WorldGenConfig.seed);
         // Set the final block types:
-        for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
-            for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
-                for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
+        for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
+            for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
+                for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE)
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
-                    else if (y < ChunkConfig.waterHeight)
+                    else if (y < WorldGenConfig.waterHeight)
                         data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WATER;
                 }
             }
@@ -175,7 +175,7 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<Biome, float>> biomes, System.Random rng) {
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<BiomeBase, float>> biomes, System.Random rng) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
 
@@ -188,12 +188,12 @@ public static class ChunkVoxelDataGenerator {
             float tot = 0;
 
             // Calculate new weights and new total
-            foreach (Pair<Biome, float> p in biomes) {
+            foreach (Pair<BiomeBase, float> p in biomes) {
                 p.second = Mathf.Pow(p.second * 0.25f, 2f);
                 tot += p.second;
             }
             // Normalize values to new total and find what biome to sample.
-            foreach (Pair<Biome, float> p in biomes) {
+            foreach (Pair<BiomeBase, float> p in biomes) {
                 p.second /= tot;
                 increment += p.second;
                 if (increment >= randVal) {
@@ -205,11 +205,11 @@ public static class ChunkVoxelDataGenerator {
 
         // Calculate snow height.
         float snowHeight = 0;
-        foreach (Pair<Biome, float> p in biomes) {
+        foreach (Pair<BiomeBase, float> p in biomes) {
             snowHeight += p.first.snowHeight * p.second;
         }
         // Add snow on top of blocks:
-        if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
+        if (pos.y == WorldGenConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
             if (pos.y > snowHeight) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;
             }
@@ -222,15 +222,15 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
-    public static float calcHeight(Vector3 pos, List<Pair<Biome, float>> biomes) {
+    public static float calcHeight(Vector3 pos, List<Pair<BiomeBase, float>> biomes) {
         // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it might be nice if this was not the case, so one could have differing octave counts and stuff
         //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
         pos = new Vector3(pos.x, pos.z, 0);
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
-        for (int octave = 0; octave < ChunkConfig.octaves2D; octave++) {
-            Vector3 samplePos = pos + new Vector3(1, 1, 0) * ChunkConfig.seed * octaveStrength;
+        for (int octave = 0; octave < WorldGenConfig.octaves2D; octave++) {
+            Vector3 samplePos = pos + new Vector3(1, 1, 0) * WorldGenConfig.seed * octaveStrength;
             float noise = 0;
             for (int b = 0; b < biomes.Count; b++) {
                 noise += SimplexNoise.Simplex2D(samplePos, biomes[b].first.frequency2D / octaveStrength) * biomes[b].second;
@@ -241,7 +241,7 @@ public static class ChunkVoxelDataGenerator {
             octaveStrength = octaveStrength / 2;
         }
         finalNoise = finalNoise / noiseScaler;
-        finalNoise = Mathf.Pow(finalNoise, ChunkConfig.noiseExponent2D);
+        finalNoise = Mathf.Pow(finalNoise, WorldGenConfig.noiseExponent2D);
 
 
         float minH = biomes[0].first.minGroundHeight;
@@ -266,9 +266,9 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static float calc3DStructure(Vector3 pos, Biome biome, int height) {
-        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * ChunkConfig.seed, biome.frequency3D) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * ChunkConfig.seed, biome.frequency3D);
+    private static float calc3DStructure(Vector3 pos, BiomeBase biome, int height) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * WorldGenConfig.seed, biome.frequency3D) +
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * WorldGenConfig.seed, biome.frequency3D);
         noise *= 0.5f;
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(noise01, 1, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want an ugly flat "ceiling" everywhere.
@@ -280,9 +280,9 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static float calc3DUnstructure(Vector3 pos, Biome biome, int height) {
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * ChunkConfig.seed, biome.frequency3D) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * ChunkConfig.seed, biome.frequency3D);
+    private static float calc3DUnstructure(Vector3 pos, BiomeBase biome, int height) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * WorldGenConfig.seed, biome.frequency3D) +
+            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * WorldGenConfig.seed, biome.frequency3D);
         noise *= 0.5f;
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(1, noise01, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want the noise to remove the ground creating a void.

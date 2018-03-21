@@ -2,7 +2,7 @@
 /// <summary>
 /// Desert biome
 /// </summary>
-class DesertBiome : Biome {
+class DesertBiome : BiomeBase {
     public DesertBiome() :
         base(
             //General
