@@ -31,8 +31,8 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     void Start() {
         Settings.load();
         biomeManager = new BiomeManager();
-        ChunkConfig.chunkCount = 20;
-        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
+        WorldGenConfig.chunkCount = 20;
+        offset = new Vector3(-WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize, 0, -WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
 
         if (terrainFlag) {
             generatedThings += activeChunks.Count;
-            totalThings += ChunkConfig.chunkCount * ChunkConfig.chunkCount;
+            totalThings += WorldGenConfig.chunkCount * WorldGenConfig.chunkCount;
         }
 
         if (animalsFlag) {
@@ -170,7 +170,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     }
 
     private bool benchmakrRunFinished() {
-        bool a = (activeChunks.Count == ChunkConfig.chunkCount * ChunkConfig.chunkCount) || !terrainFlag;
+        bool a = (activeChunks.Count == WorldGenConfig.chunkCount * WorldGenConfig.chunkCount) || !terrainFlag;
         bool b = orderedAnimals.Count == 0 || !animalsFlag;
         return a && b;
     }
@@ -179,7 +179,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// Handles spawning of animals.
     /// </summary>
     private void orderAnimals() {
-        float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
+        float maxDistance = WorldGenConfig.chunkCount * WorldGenConfig.chunkSize / 2;
         for (int i = 0; i < animals.Length; i++) {
             animals[i] = Instantiate(animalPrefab);
             Animal animal = animals[i].GetComponent<Animal>();
@@ -188,7 +188,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             float upper = -lower;
             float x = UnityEngine.Random.Range(lower, upper);
             float z = UnityEngine.Random.Range(lower, upper);
-            float y = ChunkConfig.chunkHeight + 10;
+            float y = WorldGenConfig.chunkHeight + 10;
             animals[i].transform.position = new Vector3(x, y, z);
             animal.enabled = false;
 
@@ -202,9 +202,9 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// Orders needed chunks from the ChunkVoxelDataThreads.
     /// </summary>
     private void orderNewChunks() {
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
-                Vector3 chunkPos = new Vector3(x, 0, z) * ChunkConfig.chunkSize + offset;
+        for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
+                Vector3 chunkPos = new Vector3(x, 0, z) * WorldGenConfig.chunkSize + offset;
                 orders.Add(new Order(chunkPos, Task.CHUNK));
                 pendingChunks.Add(chunkPos);
             }
@@ -300,7 +300,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     /// <param name="y">y index (worldspace z)</param>
     /// <returns>bool in bound</returns>
     private bool checkBounds(int x, int y) {
-        return (x >= 0 && x < ChunkConfig.chunkCount && y >= 0 && y < ChunkConfig.chunkCount);
+        return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
     }
 
     /// <summary>
