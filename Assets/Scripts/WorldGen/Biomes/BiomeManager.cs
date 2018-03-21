@@ -28,8 +28,8 @@ public class BiomeManager {
         // Initialize biomes
         biomes.Add(new BasicBiome());
         biomes.Add(new BasicBiome3());
-        biomes.Add(new DesertBiome());
         biomes.Add(new LowlandForestBiome());
+        biomes.Add(new DesertBiome());
 
 
         // Initialize biome points

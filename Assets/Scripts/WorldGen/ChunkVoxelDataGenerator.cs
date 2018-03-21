@@ -223,7 +223,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">position of voxel</param>
     /// <returns>float height</returns>
     public static float calcHeight(Vector3 pos, List<Pair<Biome, float>> biomes) {
-        // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it would be nice if this was not the case, so one could have differing octave counts and stuff
+        // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it might be nice if this was not the case, so one could have differing octave counts and stuff
         //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
         pos = new Vector3(pos.x, pos.z, 0);
         float finalNoise = 0;
