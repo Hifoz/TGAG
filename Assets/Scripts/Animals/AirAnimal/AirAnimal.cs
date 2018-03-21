@@ -30,6 +30,7 @@ public class AirAnimal : Animal {
             brain.move();
             calculateSpeedAndHeading();
             doGravity();
+            calcVelocity();
             levelSpine();
             handleAnimations();
         }
@@ -62,6 +63,10 @@ public class AirAnimal : Animal {
         flagLaunching = false;
     }
 
+    /// <summary>
+    /// Sets the animal brain, and sets up actions for the brain
+    /// </summary>
+    /// <param name="brain"></param>
     public override void setAnimalBrain(AnimalBrain brain) {
         base.setAnimalBrain(brain);
         brain.addAction("launch", tryLaunch);
@@ -270,6 +275,20 @@ public class AirAnimal : Animal {
     //                 |___/                                                             
 
     /// <summary>
+    /// Does velocity calculations
+    /// </summary>
+    override protected void calcVelocity() {
+        transform.LookAt(state.transform.position + state.heading);
+        Vector3 velocity;
+        if (state.grounded || state.inWater) {
+            velocity = state.spineHeading.normalized * state.speed;
+        } else {
+            velocity = state.heading.normalized * state.speed;
+        }
+        rb.velocity = velocity + gravity;
+    }
+
+    /// <summary>
     /// Function for calculating speed and heading
     /// </summary>
     override protected void calculateSpeedAndHeading() {
@@ -296,9 +315,9 @@ public class AirAnimal : Animal {
     override protected void notGroundedGravity() {
         state.grounded = false;
         if (state.speed <= brain.fastSpeed / 2) {
-            state.gravity += Physics.gravity * Time.deltaTime * (1 - state.speed / (brain.fastSpeed / 2f));
+            gravity += Physics.gravity * Time.deltaTime * (1 - state.speed / (brain.fastSpeed / 2f));
         } else {
-            state.gravity = Vector3.zero;
+            gravity = Vector3.zero;
         }
     }
 
@@ -320,7 +339,7 @@ public class AirAnimal : Animal {
     private IEnumerator launch() {
         flagLaunching = true;
         acceleration = acceleration * 4;
-        state.gravity -= Physics.gravity * 2f;
+        gravity -= Physics.gravity * 2f;
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
             state.grounded = false;
             state.inWater = false;

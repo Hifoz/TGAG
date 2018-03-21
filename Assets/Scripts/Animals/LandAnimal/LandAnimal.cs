@@ -18,10 +18,11 @@ public class LandAnimal : Animal {
         if (skeleton != null) {
             calculateSpeedAndHeading();           
             brain.move();
+            calcVelocity();
             levelSpine();
             doGravity();
             handleRagdoll();
-            handleAnimations();          
+            handleAnimations();
         }
     }
 
@@ -138,7 +139,21 @@ public class LandAnimal : Animal {
     //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
     //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                  __/ |                                                            
-    //                 |___/                        
+    //                 |___/         
+    
+    /// <summary>
+    /// Does velocity calculations
+    /// </summary>
+    override protected void calcVelocity() {
+        Vector3 velocity;
+        if (state.grounded || state.inWater) {
+            velocity = state.spineHeading.normalized * state.speed;
+        } else {
+            velocity = state.heading.normalized * state.speed;
+        }
+        rb.velocity = velocity + gravity;
+        transform.LookAt(state.transform.position + state.heading);
+    }
 
     /// <summary>
     /// Function for calculating speed and heading
@@ -178,14 +193,14 @@ public class LandAnimal : Animal {
     /// <returns></returns>
     private IEnumerator jump() {
         flagJumping = true;
-        state.gravity += -Physics.gravity * 2f;
+        gravity += -Physics.gravity * 2f;
         yield return new WaitForSeconds(1.0f);
         flagJumping = false;
     }
 
     override protected void OnCollisionEnter(Collision collision) {
         base.OnCollisionEnter(collision);
-        state.gravity = Vector3.zero;
+        gravity = Vector3.zero;
         flagJumping = false;
     }
 }

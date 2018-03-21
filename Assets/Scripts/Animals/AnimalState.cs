@@ -15,7 +15,5 @@ public class AnimalState {
     public Vector3 heading = Vector3.zero;
     public Vector3 spineHeading = Vector3.forward;
 
-    public Rigidbody rb;
     public Transform transform;
-    public Vector3 gravity = Physics.gravity;
 }
