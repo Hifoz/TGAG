@@ -1,19 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-class BasicBiome : Biome {
+﻿/// <summary>
+/// This biome has the same settings we were using pre-biomes
+/// </summary>
+class BasicBiome : BiomeBase {
     public BasicBiome() :
         base(
             //General
+            minGroundHeight: 0,
+            maxGroundHeight: 200,
             snowHeight: 90,
             //2D noise settings
             frequency2D: 0.001f,
             noiseExponent2D: 3,
             octaves2D: 6,
             //3D noise settings
-            Structure3DRate: 0.57f,
-            Unstructure3DRate: 0.85f,
+            structure3DRate: 0.57f,
+            unstructure3DRate: 0.85f,
             frequency3D: 0.0075f,
             //Foliage
             maxTreesPerChunk: 1,
