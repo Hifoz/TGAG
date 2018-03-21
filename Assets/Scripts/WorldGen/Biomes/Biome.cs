@@ -1,20 +1,21 @@
 ﻿using System;
+using UnityEngine;
 /*
- * WIP:
- * 
- * All variables are subject to change or move
- * 
- * Trees:
- *      Custom rules for tree generation based on biome? Currently the rules are stored in LSystemTreeGenerator.rules, and the rule to use is rng, one could have a set of rules per biome
- *      Tree related varaibles currently stored in the biome could also be changed.
- *      Could also affect the texture type, so different foliage types can have different leaves and tree textures?
- * 
- * Ideas for other biome modifiers:
- * - Skybox
- * - decideBlockType()
- * - Trees
- * 
- */
+* WIP:
+* 
+* All variables are subject to change or move
+* 
+* Trees:
+*      Custom rules for tree generation based on biome? Currently the rules are stored in LSystemTreeGenerator.rules, and the rule to use is rng, one could have a set of rules per biome
+*      Tree related varaibles currently stored in the biome could also be changed.
+*      Could also affect the texture type, so different foliage types can have different leaves and tree textures?
+* 
+* Ideas for other biome modifiers:
+* - Skybox
+* - decideBlockType()
+* - Trees
+* 
+*/
 
 /// <summary>
 /// Base class for biomes
@@ -52,12 +53,15 @@ public class Biome {
         this.minGroundHeight = minGroundHeight;
         this.maxGroundHeight = maxGroundHeight;
         this.snowHeight = snowHeight;
+
         this.frequency2D = frequency2D;
         this.noiseExponent2D = noiseExponent2D;
         this.octaves2D = octaves2D;
+
         this.structure3DRate = structure3DRate;
         this.unstructure3DRate = unstructure3DRate;
         this.frequency3D = frequency3D;
+
         this.maxTreesPerChunk = maxTreesPerChunk;
         this.treeLineLength = treeLineLength;
         this.treeVoxelSize = treeVoxelSize;
@@ -73,6 +77,28 @@ public class Biome {
     /// <param name="filepath">path to file</param>
     public void loadFromFile(String filepath) {
         throw new NotImplementedException("Biome.loadFromFile(String filepath) not yet implemented.");
+    }
+
+
+    /// <summary>
+    /// Get the blocktype for a block. This is the default settings for blocktype decisions
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="pos"></param>
+    public virtual void getBlockType(BlockDataMap data, Vector3Int pos) {
+        int pos1d = data.index1D(pos.x, pos.y, pos.z);
+
+        // Add block type here:
+        if (pos.y < ChunkConfig.waterHeight)
+            data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
+
+        // Add modifier type:
+        if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
+            if (data.mapdata[pos1d].blockType == BlockData.BlockType.DIRT) {
+                data.mapdata[pos1d].modifier = BlockData.BlockType.GRASS;
+
+            }
+        }
     }
 
 }

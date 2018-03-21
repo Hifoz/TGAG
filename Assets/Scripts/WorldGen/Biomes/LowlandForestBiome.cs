@@ -1,8 +1,9 @@
-﻿/// <summary>
-/// Lowlands w/ larger lakes
+﻿using UnityEngine;
+/// <summary>
+/// Lowlands w/ larger lakes and dense forest
 /// </summary>
-class BasicBiome2 : Biome {
-    public BasicBiome2() :
+class LowlandForestBiome : Biome {
+    public LowlandForestBiome() :
         base(
             //General
             minGroundHeight:0,
@@ -24,6 +25,4 @@ class BasicBiome2 : Biome {
             treeLeafThickness: 3f,
             grammarRecursionDepth: 4
         ) { }
-
-
 }

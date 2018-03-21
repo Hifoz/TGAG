@@ -152,12 +152,13 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
+        System.Random rng = new System.Random(ChunkConfig.seed);
         // Set the final block types:
         for (int x = 0; x < ChunkConfig.chunkSize + 2; x++) {
             for (int y = 0; y < ChunkConfig.chunkHeight; y++) {
                 for (int z = 0; z < ChunkConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE)
-                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z]); // TODO make this use biomes in some way?
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
                     else if (y < ChunkConfig.waterHeight)
                         data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WATER;
                 }
@@ -174,7 +175,7 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<Biome, float>> biomes) {
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<Biome, float>> biomes, System.Random rng) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Calculate snow height:
@@ -184,20 +185,23 @@ public static class ChunkVoxelDataGenerator {
         }
 
 
-        // Add block type here:
-        if (pos.y < ChunkConfig.waterHeight)
-            data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
+        float randVal = (float)rng.NextDouble();
+        float tot = 0;
+        foreach(Pair<Biome, float> p in biomes) { // TODO: Calculate custom falloff on top of the square falloff from getInRangeBiomes()
+            tot += p.second;
+            if (tot >= randVal) {
+                p.first.getBlockType(data, pos);
+                break;
+            }
+        }
+
 
         // Add modifier type:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
             if (pos.y > snowHeight) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;
-            } else if (data.mapdata[pos1d].blockType == BlockData.BlockType.DIRT) {
-                data.mapdata[pos1d].modifier = BlockData.BlockType.GRASS;
-
             }
         }
-
     }
 
 
