@@ -174,8 +174,15 @@ public class ChunkVoxelDataThread {
         result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager));
         result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager));
         //Generate the trees in the chunk
+
+
+        /*
+         * Generate trees:
+         */
+        int maxTrees = biomeManager.getClosestBiome(new Vector2Int((int)order.position.x, (int)order.position.z)).maxTreesPerChunk;
+
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
-        int treeCount = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
+        int treeCount = Mathf.CeilToInt(((float)rng.NextDouble() * maxTrees) - 0.5f);
 
         List<MeshData> trees = new List<MeshData>();
         List<MeshData> treeTrunks = new List<MeshData>();
@@ -187,7 +194,7 @@ public class ChunkVoxelDataThread {
             pos = Utils.floorVector(pos);
             pos = findGroundLevel(pos);
             pos = Utils.floorVector(pos);
-            if(pos.y > ChunkConfig.waterHeight + 3) {
+            if(pos.y > ChunkConfig.waterHeight + 2) {
                 if(!float.IsInfinity(pos.x) && !float.IsInfinity(pos.y) && !float.IsInfinity(pos.z)) { // Don't use Vector3.negativeInfinity to check, apparently it doesn't catch it...
                     MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
                     trees.Add(tree[0]);

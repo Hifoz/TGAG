@@ -41,15 +41,14 @@ public class Biome {
     public readonly float treeThickness = 0;
 
 
-
     // I know this one looks horrible, but it is more compact than than making all members protected and adding public getters, as this is only for use in sub-classes :\
     /// <summary>
     /// A constructor taking in all the parameters. Used by sub-classes as readonly variables can only be set in the constructor of the class it is stored in.
     /// </summary>
     protected Biome(int minGroundHeight, int maxGroundHeight, int snowHeight, float frequency2D, 
-                float noiseExponent2D, int octaves2D, float structure3DRate, float unstructure3DRate, 
-                float frequency3D, int maxTreesPerChunk, float treeLineLength, float treeVoxelSize, 
-                float treeLeafThickness, int grammarRecursionDepth, float treeThickness) {
+                    float noiseExponent2D, int octaves2D, float structure3DRate, float unstructure3DRate, 
+                    float frequency3D, int maxTreesPerChunk, float treeLineLength, float treeVoxelSize, 
+                    float treeLeafThickness, int grammarRecursionDepth, float treeThickness) {
         this.minGroundHeight = minGroundHeight;
         this.maxGroundHeight = maxGroundHeight;
         this.snowHeight = snowHeight;

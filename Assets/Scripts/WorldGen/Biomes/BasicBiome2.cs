@@ -17,7 +17,7 @@ class BasicBiome2 : Biome {
             unstructure3DRate: 0.3f,
             frequency3D: 0.0045f,
             //Foliage
-            maxTreesPerChunk: 1,
+            maxTreesPerChunk: 4,
             treeLineLength: 2.0f,
             treeVoxelSize: 1.0f,
             treeThickness: 0.5f,
