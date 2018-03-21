@@ -178,25 +178,37 @@ public static class ChunkVoxelDataGenerator {
     private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<Biome, float>> biomes, System.Random rng) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
-        // Calculate snow height:
+
+        // Use the biomes to find the block type:
+        if (biomes.Count == 1) {
+            biomes[0].first.getBlockType(data, pos);
+        } else {
+            float increment = 0;
+            float randVal = (float)rng.NextDouble();
+            float tot = 0;
+
+            // Calculate new weights and new total
+            foreach (Pair<Biome, float> p in biomes) {
+                p.second = Mathf.Pow(p.second * 0.25f, 2f);
+                tot += p.second;
+            }
+            // Normalize values to new total and find what biome to sample.
+            foreach (Pair<Biome, float> p in biomes) {
+                p.second /= tot;
+                increment += p.second;
+                if (increment >= randVal) {
+                    p.first.getBlockType(data, pos);
+                    break;
+                }
+            }
+        }
+
+        // Calculate snow height.
         float snowHeight = 0;
         foreach (Pair<Biome, float> p in biomes) {
             snowHeight += p.first.snowHeight * p.second;
         }
-
-
-        float randVal = (float)rng.NextDouble();
-        float tot = 0;
-        foreach(Pair<Biome, float> p in biomes) { // TODO: Calculate custom falloff on top of the square falloff from getInRangeBiomes()
-            tot += p.second;
-            if (tot >= randVal) {
-                p.first.getBlockType(data, pos);
-                break;
-            }
-        }
-
-
-        // Add modifier type:
+        // Add snow on top of blocks:
         if (pos.y == ChunkConfig.chunkHeight - 1 || data.mapdata[data.index1D(pos.x, pos.y + 1, pos.z)].blockType == BlockData.BlockType.NONE) {
             if (pos.y > snowHeight) {
                 data.mapdata[pos1d].modifier = BlockData.BlockType.SNOW;

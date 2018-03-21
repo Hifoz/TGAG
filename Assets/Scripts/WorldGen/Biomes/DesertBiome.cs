@@ -6,11 +6,11 @@ class DesertBiome : Biome {
     public DesertBiome() :
         base(
             //General
-            minGroundHeight:60,
-            maxGroundHeight:140,
+            minGroundHeight:30,
+            maxGroundHeight:160,
             snowHeight: 150,
             //2D noise settings
-            frequency2D: 0.0005f,
+            frequency2D: 0.001f,
             noiseExponent2D: 3,
             octaves2D: 6,
             //3D noise settings
