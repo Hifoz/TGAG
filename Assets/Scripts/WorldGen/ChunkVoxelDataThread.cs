@@ -170,7 +170,6 @@ public class ChunkVoxelDataThread {
     /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData(order.position);
-        
         //Generate the chunk terrain:
         BlockDataMap chunkBlockData = ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager);
         result.meshData = MeshDataGenerator.GenerateMeshData(chunkBlockData);

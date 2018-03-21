@@ -8,7 +8,7 @@ class LowlandForestBiome : BiomeBase {
             //General
             minGroundHeight:0,
             maxGroundHeight:90,
-            snowHeight: 40,
+            snowHeight: 80,
             //2D noise settings
             frequency2D: 0.0005f,
             noiseExponent2D: 3,

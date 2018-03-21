@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -70,8 +69,6 @@ public static class ChunkVoxelDataGenerator {
     /// <returns>Voxel data for the chunk</returns>
     public static BlockDataMap getChunkVoxelData(Vector3 pos, BiomeManager biomeManager) {
         BlockDataMap data = new BlockDataMap(WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkHeight, WorldGenConfig.chunkSize + 2);
-
-
         /*
          * Pre-calculate 2d heightmap and biomemap:
          */
@@ -177,7 +174,6 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">position of block to find type for</param>
     private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<BiomeBase, float>> biomes, System.Random rng) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
-
 
         // Use the biomes to find the block type:
         if (biomes.Count == 1) {
@@ -287,4 +283,7 @@ public static class ChunkVoxelDataGenerator {
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(1, noise01, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want the noise to remove the ground creating a void.
     }
+
+
+
 }

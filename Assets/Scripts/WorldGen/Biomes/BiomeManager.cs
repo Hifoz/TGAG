@@ -49,6 +49,9 @@ public class BiomeManager {
     /// <returns>Biomes for this position and the distance from the sample pos to the biome point</returns>
     public List<Pair<BiomeBase, float>> getInRangeBiomes(Vector2Int pos) {
 
+        pos = modifyPosition(pos);
+
+
         // Find all points in range
         List<Pair<BiomeBase, float>> inRangeBiomes = new List<Pair<BiomeBase, float>>();    // Might want to separate the biome from the weight, because we often just use one of them at the time.
 
@@ -128,6 +131,16 @@ public class BiomeManager {
             }
         }
         return bestBiomePoint;
+    }
+
+
+
+
+    private Vector2Int modifyPosition(Vector2Int vec) {
+        vec.x += (int)(SimplexNoise.Simplex1D(new Vector2(vec.x, vec.y), 0.01f) * 15);
+        vec.y += (int)(SimplexNoise.Simplex1D(new Vector2(vec.y + 1234, vec.x + 4444), 0.01f) * 15);
+
+        return vec;
     }
 
 
