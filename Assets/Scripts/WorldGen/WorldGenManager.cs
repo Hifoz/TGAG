@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// The different kind of stats for the chunk manager
 /// </summary>
-public enum ChunkManagerStatsType {
+public enum WorldGenManagerStatsType {
     GENERATED_CHUNKS = 0,
     GENERATED_ANIMALS,
     CANCELLED_CHUNKS,
@@ -16,19 +16,19 @@ public enum ChunkManagerStatsType {
 }
 
 /// <summary>
-/// Struct that contains statistics about what the ChunkManager does
+/// Struct that contains statistics about what the WorldGenManager does
 /// </summary>
-public class ChunkManagerStats {
-    public Dictionary<ChunkManagerStatsType, int> aggregateValues;
-    public Dictionary<ChunkManagerStatsType, int> lastSecondValues;
+public class WorldGenManagerStats {
+    public Dictionary<WorldGenManagerStatsType, int> aggregateValues;
+    public Dictionary<WorldGenManagerStatsType, int> lastSecondValues;
 
     /// <summary>
     /// Initializes the dictionaries
     /// </summary>
-    public ChunkManagerStats() {
-        aggregateValues = new Dictionary<ChunkManagerStatsType, int>();
-        lastSecondValues = new Dictionary<ChunkManagerStatsType, int>();
-        foreach (ChunkManagerStatsType type in Enum.GetValues(typeof(ChunkManagerStatsType))) {
+    public WorldGenManagerStats() {
+        aggregateValues = new Dictionary<WorldGenManagerStatsType, int>();
+        lastSecondValues = new Dictionary<WorldGenManagerStatsType, int>();
+        foreach (WorldGenManagerStatsType type in Enum.GetValues(typeof(WorldGenManagerStatsType))) {
             aggregateValues.Add(type, 0);
             lastSecondValues.Add(type, 0);
         }        
@@ -39,17 +39,17 @@ public class ChunkManagerStats {
     /// </summary>
     /// <returns></returns>
     public IEnumerator calculatePerSecondStats() {
-        Dictionary<ChunkManagerStatsType, int> oldAggregates = new Dictionary<ChunkManagerStatsType, int>();
-        foreach (ChunkManagerStatsType type in Enum.GetValues(typeof(ChunkManagerStatsType))) {
+        Dictionary<WorldGenManagerStatsType, int> oldAggregates = new Dictionary<WorldGenManagerStatsType, int>();
+        foreach (WorldGenManagerStatsType type in Enum.GetValues(typeof(WorldGenManagerStatsType))) {
             oldAggregates.Add(type, 0);
         }
 
         while (true) {
-            foreach(KeyValuePair<ChunkManagerStatsType, int> stats in aggregateValues) {
+            foreach(KeyValuePair<WorldGenManagerStatsType, int> stats in aggregateValues) {
                 oldAggregates[stats.Key] = stats.Value;
             }
             yield return new WaitForSecondsRealtime(1);
-            foreach (KeyValuePair<ChunkManagerStatsType, int> stats in aggregateValues) {
+            foreach (KeyValuePair<WorldGenManagerStatsType, int> stats in aggregateValues) {
                 lastSecondValues[stats.Key] = stats.Value - oldAggregates[stats.Key];
             }
         }
@@ -60,9 +60,9 @@ public class ChunkManagerStats {
 /// This class is responsible for handling the chunks that makes up the world.
 /// It creates and places chunks into the world, keeping the player at the center of the world.
 /// </summary>
-public class ChunkManager : MonoBehaviour {
+public class WorldGenManager : MonoBehaviour {
 
-    public ChunkManagerStats stats;
+    public WorldGenManagerStats stats;
     public Transform player;
     public TextureManager textureManager;
     public GameObject chunkPrefab;
@@ -227,15 +227,15 @@ public class ChunkManager : MonoBehaviour {
                 case Task.CHUNK:
                     ChunkData cd = launchOrderedChunk(result.chunkVoxelData);
                     StartCoroutine(orderAnimals(cd));
-                    stats.aggregateValues[ChunkManagerStatsType.GENERATED_CHUNKS]++;
+                    stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS]++;
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
-                    stats.aggregateValues[ChunkManagerStatsType.GENERATED_ANIMALS]++;
+                    stats.aggregateValues[WorldGenManagerStatsType.GENERATED_ANIMALS]++;
                     break;
                 case Task.CANCEL:
                     pendingChunks.Remove(result.chunkVoxelData.chunkPos);
-                    stats.aggregateValues[ChunkManagerStatsType.CANCELLED_CHUNKS]++;
+                    stats.aggregateValues[WorldGenManagerStatsType.CANCELLED_CHUNKS]++;
                     break;
             }
             consumed++;
@@ -407,7 +407,7 @@ public class ChunkManager : MonoBehaviour {
             for (int z = index.z - 1; z <= index.z + 1; z++) {
                 if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
                     if(chunkGrid[x, z].tryEnableColliders()) {
-                        stats.aggregateValues[ChunkManagerStatsType.ENABLED_COLLIDERS]++;
+                        stats.aggregateValues[WorldGenManagerStatsType.ENABLED_COLLIDERS]++;
                     }
                 }
             }
@@ -459,12 +459,12 @@ public class ChunkManager : MonoBehaviour {
         if (cam2chunk.magnitude > WorldGenConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
             if (obj.activeSelf) {
                 obj.SetActive(false);
-                stats.aggregateValues[ChunkManagerStatsType.OBJECTS_DISABLED]++;
+                stats.aggregateValues[WorldGenManagerStatsType.OBJECTS_DISABLED]++;
             }
         } else {
             if (!obj.activeSelf) {
                 obj.SetActive(true);
-                stats.aggregateValues[ChunkManagerStatsType.OBJECTS_ENABLED]++;
+                stats.aggregateValues[WorldGenManagerStatsType.OBJECTS_ENABLED]++;
             }
         }
     }
@@ -489,14 +489,14 @@ public class ChunkManager : MonoBehaviour {
     //                                                                                                       
 
     /// <summary>
-    /// Resets the chunkManager, clearing all data and initializing
+    /// Resets the WorldGenManager, clearing all data and initializing
     /// </summary>
     /// <param name="threadCount">Threadcount to use after reset</param>
     public void Reset(int threadCount = 0) {
         Settings.load();
         clear();
 
-        stats = new ChunkManagerStats();
+        stats = new WorldGenManagerStats();
         StartCoroutine(stats.calculatePerSecondStats());
 
         offset = new Vector3(-WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize, 0, -WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize);
@@ -540,7 +540,7 @@ public class ChunkManager : MonoBehaviour {
     }
 
     /// <summary>
-    /// Clears and resets the ChunkManager, used when changing WorldGen settings at runtime.
+    /// Clears and resets the WorldGenManager, used when changing WorldGen settings at runtime.
     /// </summary>
     public void clear() {
         stopThreads();
@@ -613,7 +613,7 @@ public class ChunkManager : MonoBehaviour {
     /// <returns></returns>
     public string getDebugString() {
         string s = "";
-        foreach(KeyValuePair<ChunkManagerStatsType, int> stat in stats.aggregateValues) {
+        foreach(KeyValuePair<WorldGenManagerStatsType, int> stat in stats.aggregateValues) {
             s += string.Format("{0}: {1}\n{0}_LAST_SECOND: {2}\n\n", stat.Key.ToString(), stat.Value, stats.lastSecondValues[stat.Key]);
         }
 

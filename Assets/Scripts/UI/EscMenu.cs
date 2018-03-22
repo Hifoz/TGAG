@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// Script for the esc menu (ingame).
 /// </summary>
 public class EscMenu : MonoBehaviour {
-    public ChunkManager chunkManager;
+    public WorldGenManager chunkManager;
 
     public GameObject menu;
     public GameObject chunkManagerDebug;

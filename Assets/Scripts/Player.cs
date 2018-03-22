@@ -17,7 +17,7 @@ public class Player : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        ChunkManager cm = GameObject.FindObjectOfType<ChunkManager>();
+        WorldGenManager cm = GameObject.FindObjectOfType<WorldGenManager>();
         cm.player = transform;
 
         if (magicTrailPrefab != null) {

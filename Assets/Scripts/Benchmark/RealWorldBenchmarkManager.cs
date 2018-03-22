@@ -7,13 +7,13 @@ using System.IO;
 
 public class RealWorldBenchmarkManager : BenchmarkChunkManager {
 
-    public ChunkManager chunkManager;
+    public WorldGenManager WorldGenManager;
     public Transform dummyPlayer;
 
     private int duration = 60;
 
     private void Start() {
-        chunkManager.gameObject.SetActive(false);
+        WorldGenManager.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -60,10 +60,10 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
 
         file.WriteLine(string.Format("Testing from {0} to {1} threads with a step of {2}. ({3}):", startThreads, endThreads, step, DateTime.Now.ToString()));
         file.WriteLine(string.Format("Duration of each run: {0} seconds", duration));
-        chunkManager.gameObject.SetActive(true);
+        WorldGenManager.gameObject.SetActive(true);
         for (int run = startThreads; run <= endThreads; run += step) {
             UnityEngine.Debug.Log(String.Format("Testing with {0} thread(s)!", run));
-            chunkManager.Reset(run);
+            WorldGenManager.Reset(run);
             currentThreads = run;
 
             double lastSample = 0;
@@ -99,7 +99,7 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
                 frameCount++;
                 yield return 0;
             }
-            ChunkManagerStats stats = chunkManager.stats;
+            WorldGenManagerStats stats = WorldGenManager.stats;
             double time = stopwatch.Elapsed.TotalSeconds;
 
             stopwatch.Stop();
@@ -107,9 +107,9 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
             string result = String.Format(
                 "Average fps: {0} | Generated chunks: {1} | Generated animals: {2} | Cancelled chunks: {3} | Threads: {4}",
                 (frameCount / time).ToString("N2"),
-                stats.aggregateValues[ChunkManagerStatsType.GENERATED_CHUNKS],
-                stats.aggregateValues[ChunkManagerStatsType.GENERATED_ANIMALS],
-                stats.aggregateValues[ChunkManagerStatsType.CANCELLED_CHUNKS],
+                stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS],
+                stats.aggregateValues[WorldGenManagerStatsType.GENERATED_ANIMALS],
+                stats.aggregateValues[WorldGenManagerStatsType.CANCELLED_CHUNKS],
                 run
             );
             UnityEngine.Debug.Log(result);
