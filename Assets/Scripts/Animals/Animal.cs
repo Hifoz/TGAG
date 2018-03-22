@@ -383,6 +383,10 @@ public abstract class Animal : MonoBehaviour {
             onWaterSurface = false;           
         }       
 
+        if (inWaterInt == 0 && !onWaterSurface && state.inWater) {
+            state.inWater = false;
+        }
+
         if (flagHitGround) {
             canStand = hitGround.distance <= stanceHeight;
         }
