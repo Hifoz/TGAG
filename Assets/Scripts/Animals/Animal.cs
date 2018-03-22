@@ -370,17 +370,18 @@ public abstract class Animal : MonoBehaviour {
         bool onWaterSurface = false;
 
         //Calculate water state
-        if (flagHitWater && hitWater.distance < 2f) {
-            state.inWater = true;
-            onWaterSurface = true;
+        if (flagHitWater) {
+            if (hitWater.distance < 2f) {
+                state.inWater = true;
+                onWaterSurface = true;
+            } else {
+                state.inWater = false;
+                inWaterInt = 0;
+                onWaterSurface = false;
+            }
         } else {
-            onWaterSurface = false;
-        }
-
-        if (flagHitWater && hitWater.distance > 2f) {
-            state.inWater = false;
-            inWaterInt = 0;
-        }
+            onWaterSurface = false;           
+        }       
 
         if (flagHitGround) {
             canStand = hitGround.distance <= stanceHeight;
@@ -584,7 +585,9 @@ public abstract class Animal : MonoBehaviour {
         s += "InWaterInt: " + inWaterInt + "\n\n";
 
         s += "Desired speed: " + state.desiredSpeed + "\n";
-        s += "Desired heading: " + state.desiredHeading + "\n\n";
+        s += "Desired heading: " + state.desiredHeading + "\n";
+        s += "Position: " + transform.position + "\n";
+        s += "Distance from center: " + transform.position.magnitude + "\n\n";
 
         s += "Animation in transition: " + flagAnimationTransition.ToString();
         return s;

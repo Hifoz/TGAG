@@ -141,16 +141,7 @@ public class WaterAnimal : Animal {
             } else {
                 state.grounded = false;
             }
-        } else {
-            int layerMaskWater = 1 << 4;
-            RaycastHit hitWater;
-            bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 10f, layerMaskWater);
-            if (flagHitWater && hitWater.distance > 1f) {
-                //state.inWater = false;
-                //inWaterInt = 0;
-            }            
-        }
-
+        } 
 
         if (state.inWater) {
             waterGravity();
@@ -198,7 +189,7 @@ public class WaterAnimal : Animal {
         flagFlapBackToWater = true;
 
         const float speed = 100;
-
+        state.desiredHeading = -state.desiredHeading;
         Vector3 currentPos = transform.position;
         Vector3 halfwayControlPoint = Vector3.Lerp(currentPos, waterExitPoint, 0.5f) + Vector3.up * 100f;
 
