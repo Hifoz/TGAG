@@ -101,7 +101,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
         file.WriteLine(string.Format("Testing from {0} to {1} threads with a step of {2}. ({3}):", startThreads, endThreads, step, DateTime.Now.ToString()));
         file.WriteLine(string.Format("Terrain: {0}", (terrain) ? "Enabled" : "Disabled"));
         file.WriteLine(string.Format("Animals: {0}", (animals) ? "Enabled" : "Disabled"));
-
+        file.WriteLine("[");
         for (int run = startThreads; run <= endThreads; run += step) {
             Debug.Log(string.Format("Testing with {0} thread(s)!", run));
             clear();
@@ -138,6 +138,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             Debug.Log(result);
             file.WriteLine(string.Format(result));
         }
+        file.WriteLine("]");
         file.Close();
         Debug.Log("DONE TESTING!");
         inProgress = false;

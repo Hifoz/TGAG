@@ -92,7 +92,7 @@ public static class ChunkVoxelDataGenerator {
          * Calculate the 3d voxel map:
          */
 
-        Queue<Vector3Int> active = new Queue<Vector3Int>();
+        ArrayQueue<Vector3Int> active = new ArrayQueue<Vector3Int>(data.mapdata.Length);
         bool[,,] done = new bool[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkHeight, WorldGenConfig.chunkSize + 2];
 
         // Add all voxels at heightmap positions (Except the side ones, as they are added in next loop)
