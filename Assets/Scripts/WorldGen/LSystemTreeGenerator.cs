@@ -78,7 +78,8 @@ public static class LSystemTreeGenerator {
     /// </summary>
     /// <param name="pos">Position of the tree</param>
     /// <returns>Meshdata</returns>
-    public static MeshData[] generateMeshData(Vector3 pos) {
+    public static MeshData[] generateMeshData(Vector3 pos, BlockDataMap chunk, BiomeManager biomeManager) {
+        PremissiveBlockDataMap chunkMap = new PremissiveBlockDataMap(chunk, biomeManager);
 
         List<LineSegment> tree = GenerateLSystemTree(pos);
 
@@ -87,24 +88,26 @@ public static class LSystemTreeGenerator {
 
         BlockDataMap pointMap = new BlockDataMap(bounds.sizeI.x, bounds.sizeI.y, bounds.sizeI.z);
         BlockDataMap pointMapTrunk = new BlockDataMap(bounds.sizeI.x, bounds.sizeI.y, bounds.sizeI.z);
-        //Debug.Log("(" + pointMap.GetLength(0) + "," + pointMap.GetLength(1) + "," + pointMap.GetLength(2) + ")");
-        for (int x = 0; x < pointMap.GetLength(0); x++) {
-            for (int y = 0; y < pointMap.GetLength(1); y++) {
-                for (int z = 0; z < pointMap.GetLength(2); z++) {
-                    int i = pointMap.index1D(x, y, z);
-                    Vector3 samplePos = new Vector3(x, y, z) + bounds.lowerBounds;
-                    samplePos = Utils.floorVector(samplePos);
-                    pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos, tree), BlockData.BlockType.NONE);
-                    pointMapTrunk.mapdata[i] = pointMap.mapdata[i];
-                    if (pointMap.mapdata[i].blockType == BlockData.BlockType.LEAF) {
-                        pointMapTrunk.mapdata[i] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+        Vector3 flooredLowerBounds = Utils.floorVector(bounds.lowerBounds);
+        for (int x = 1; x < pointMap.GetLength(0) - 1; x++) {
+            for (int y = 1; y < pointMap.GetLength(1) - 1; y++) {
+                for (int z = 1; z < pointMap.GetLength(2) - 1; z++) {
+                    Vector3 samplePos = new Vector3(x, y, z) + flooredLowerBounds;
+                    Vector3Int chunkIndex = Utils.floorVectorToInt(pos + samplePos);
+                    if (chunkMap.indexEmpty(chunkIndex)) {
+                        int i = pointMap.index1D(x, y, z);
+                        pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos, tree), BlockData.BlockType.NONE);
+                        pointMapTrunk.mapdata[i] = pointMap.mapdata[i];
+                        if (pointMap.mapdata[i].blockType == BlockData.BlockType.LEAF) {
+                            pointMapTrunk.mapdata[i] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+                        }
                     }
                 }
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, WorldGenConfig.treeVoxelSize, -Utils.floorVector(bounds.lowerBounds))[0];
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, WorldGenConfig.treeVoxelSize, -Utils.floorVector(bounds.lowerBounds))[0];
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, WorldGenConfig.treeVoxelSize, -flooredLowerBounds)[0];
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, WorldGenConfig.treeVoxelSize, -flooredLowerBounds)[0];
         return meshData;
     }
     
