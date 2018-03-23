@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// For animating the colors on the text of a button
+/// For animating the colors on the text of a button.
 /// </summary>
 [RequireComponent(typeof(Button))]
 public class ButtonText : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler {
@@ -34,6 +34,14 @@ public class ButtonText : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             }
         }
         interactableDelay = btn.interactable;
+    }
+
+    private void OnEnable() {
+        if (btn.interactable) {
+            txt.color = baseColor * normalColor * btn.colors.colorMultiplier;
+        } else {
+            txt.color = baseColor * disabledColor * btn.colors.colorMultiplier;
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData) {

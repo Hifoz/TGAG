@@ -1,28 +1,64 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// Class controlling main menu UI
 /// </summary>
 public class MainMenuUI : MonoBehaviour {
 
-    public GameObject MainMenu;
-    public GameObject OptionsMenu;
+    public GameObject mainButtons;
 
-	// Use this for initialization
-	void Start () {
-		
-	}
+    public GameObject playButtons;
+    public GameObject playPanel;
+
+    public GameObject optionsButtons;
+    public GameObject optionsPanel;
+
+
+
+    // Use this for initialization
+    void Start () {
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
-		
+
 	}
+
+    /// <summary>
+    /// When the user clicks "play" on the main menu
+    /// </summary>
+    public void onPlay() {
+        playPanel.SetActive(true);
+        playButtons.SetActive(true);
+        mainButtons.SetActive(false);
+    }
+
+    /// <summary>
+    /// When the player clicks "back" in the play sub-menu
+    /// </summary>
+    public void onBack() {
+        GameObject.Find("seedInputField").GetComponent<InputField>().text = "";
+        playPanel.SetActive(false);
+        playButtons.SetActive(false);
+        mainButtons.SetActive(true);
+    }
+
 
     /// <summary>
     /// Launches the game.
     /// </summary>
-    public void LaunchGame() {
+    public void startGame() {
+        string seed = GameObject.Find("seedInputField").GetComponent<InputField>().text;
+        if(seed.Trim() == "") {
+            System.Random rng = new System.Random(System.DateTime.UtcNow.Millisecond); // Use c# epoch time as rng seed
+            WorldGenConfig.seed = rng.Next(0, int.MaxValue);
+        } else {
+            WorldGenConfig.seed = int.Parse(seed);
+        }
+
         SceneManager.LoadScene("main");
     }
 
@@ -40,19 +76,11 @@ public class MainMenuUI : MonoBehaviour {
         SceneManager.LoadScene("RealWorldBenchmark");
     }
 
-    /// <summary>
-    /// Enables the options menu.
-    /// </summary>
-    public void EnterOptions() {
-        MainMenu.SetActive(false);
-        OptionsMenu.SetActive(true);
-    }
 
     /// <summary>
-    /// Enables the main menu.
+    /// Quits the game
     /// </summary>
-    public void EnterMainMenu() {
-        MainMenu.SetActive(true);
-        OptionsMenu.SetActive(false);
+    public void ExitGame() {
+        Application.Quit();
     }
 }
