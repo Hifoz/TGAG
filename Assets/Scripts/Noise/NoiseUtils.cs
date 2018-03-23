@@ -26,6 +26,4 @@ public static class NoiseUtils {
     private static float frac(float x) {
         return x - Mathf.Floor(x);
     }
-
-
 }

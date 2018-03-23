@@ -187,17 +187,14 @@ public class ChunkVoxelDataThread {
         List<Vector3> treePositions = new List<Vector3>();
 
         for (int i = 0; i < treeCount; i++) {
-            Vector3 pos = new Vector3((float)rng.NextDouble() * WorldGenConfig.chunkSize, 0, (float)rng.NextDouble() * WorldGenConfig.chunkSize);
-            pos += order.position;
-            pos = Utils.floorVector(pos);
-            pos = findGroundLevel(pos);
-            pos = Utils.floorVector(pos);
-            if(pos.y > WorldGenConfig.waterHeight + 2) {
-                if(!float.IsInfinity(pos.x) && !float.IsInfinity(pos.y) && !float.IsInfinity(pos.z)) { // Don't use Vector3.negativeInfinity to check, apparently it doesn't catch it...
-                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
+            Vector3 localPos = new Vector3((float)rng.NextDouble() * WorldGenConfig.chunkSize, 0, (float)rng.NextDouble() * WorldGenConfig.chunkSize);
+            localPos = findGroundLevel(Utils.floorVectorToInt(localPos), chunkBlockData);
+            if (localPos.y > WorldGenConfig.waterHeight + 2) {
+                if(localPos != Vector3.down) {
+                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, chunkBlockData, biomeManager);
                     trees.Add(tree[0]);
                     treeTrunks.Add(tree[1]);
-                    treePositions.Add(pos);
+                    treePositions.Add(localPos + order.position);
                 } else {
                     i--; //Try again
                 }
@@ -206,7 +203,6 @@ public class ChunkVoxelDataThread {
         result.trees = trees.ToArray();
         result.treeTrunks = treeTrunks.ToArray();
         result.treePositions = treePositions.ToArray();
-
         return result;
     }
 
@@ -215,32 +211,25 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="pos">Vector3 position to investigate</param>
     /// <returns>Vector3 ground level position</returns>
-    private Vector3 findGroundLevel(Vector3 pos) {
-        const int maxIter = 100;
-        int iter = 0;
-        
-        List<Pair<BiomeBase, float>> biomes = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z));
-        float height = ChunkVoxelDataGenerator.calcHeight(pos, biomes);
-
-        pos.y = (int)height;
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes); // TODO: Could it be more performant to just take in the BlockDataMap and check against that instead of re-calculating?
+    private Vector3 findGroundLevel(Vector3Int localPos, BlockDataMap data) {
+        int halfLength = data.GetLength(1) / 2;
+        localPos.y = halfLength;
+        bool lastVoxel = data.mapdata[data.index1D(localPos)].blockType != BlockData.BlockType.NONE;
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
-        while (iter < maxIter) {
-            pos.y += dir;
+        for (int i = 0; i < halfLength; i++) { 
+            localPos.y += dir;
             lastVoxel = currentVoxel;
-
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes);
+            currentVoxel = data.mapdata[data.index1D(localPos)].blockType != BlockData.BlockType.NONE;
             if (lastVoxel != currentVoxel) {
-                if (!lastVoxel) { //Put the tree in an empty voxel
-                    pos.y -= dir;
+                if (lastVoxel) { //Put the tree in an empty voxel
+                    localPos.y -= dir;
                 }
-                return pos;
+                return localPos;
             }
-            iter++;
         }
-        return Vector3.negativeInfinity;
+        return Vector3.down;
     }
 
     /// <summary>
