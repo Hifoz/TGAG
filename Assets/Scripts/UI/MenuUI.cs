@@ -22,7 +22,12 @@ public class MenuUI : MonoBehaviour {
         mainButtons.SetActive(true);
         if (SceneManager.GetActiveScene().name == "main") {
             GetComponent<Canvas>().enabled = false;
+            Time.timeScale = 1;
         }
+    }
+
+    private void OnDestroy() {
+        Time.timeScale = 1;
     }
 
     // Update is called once per frame
