@@ -13,10 +13,6 @@ public class LandAnimalBrainPlayer : AnimalBrainPlayer {
     override public void move() {
         state.desiredSpeed = 0;
 
-        if (MenuUI.isEnabled) { // Ignore input while in menu
-            return;
-        }
-
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             state.desiredHeading = Camera.main.transform.forward;
             state.desiredHeading.y = 0;

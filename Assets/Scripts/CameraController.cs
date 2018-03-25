@@ -33,10 +33,8 @@ public class CameraController : MonoBehaviour {
             toggleMouse();
         }
 
-        if (!MenuUI.isEnabled) { // Ignore input if in menu
-            yaw += Input.GetAxis("Mouse X");
-            pitch = Mathf.Clamp(pitch - Input.GetAxis("Mouse Y"), -80, 80);
-        }
+        yaw += Input.GetAxis("Mouse X");
+        pitch = Mathf.Clamp(pitch - Input.GetAxis("Mouse Y"), -80, 80);
 
         rotation = Vector3.SmoothDamp(rotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, 0);
 
