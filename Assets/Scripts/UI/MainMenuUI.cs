@@ -18,34 +18,22 @@ public class MainMenuUI : MonoBehaviour {
 
 
     // Use this for initialization
-    void Start () {
-
+    void Start() {
+        mainButtons.SetActive(true);
+        if (SceneManager.GetActiveScene().name == "main") {
+            GetComponent<Canvas>().enabled = false;
+        }
     }
-	
-	// Update is called once per frame
-	void Update () {
 
+    // Update is called once per frame
+    void Update () {
+        if(SceneManager.GetActiveScene().name == "main") {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                GetComponent<Canvas>().enabled = !GetComponent<Canvas>().enabled;
+        }
 	}
 
-    /// <summary>
-    /// When the user clicks "play" on the main menu
-    /// </summary>
-    public void onPlay() {
-        playPanel.SetActive(true);
-        playButtons.SetActive(true);
-        mainButtons.SetActive(false);
-    }
-
-    /// <summary>
-    /// When the player clicks "back" in the play sub-menu
-    /// </summary>
-    public void onBack() {
-        GameObject.Find("seedInputField").GetComponent<InputField>().text = "";
-        playPanel.SetActive(false);
-        playButtons.SetActive(false);
-        mainButtons.SetActive(true);
-    }
-
+    #region shared
     /// <summary>
     /// When user clicks "options in main menu
     /// </summary>
@@ -72,7 +60,34 @@ public class MainMenuUI : MonoBehaviour {
         closeSettings();
     }
 
+    /// <summary>
+    /// Quits the game
+    /// </summary>
+    public void ExitGame() {
+        Application.Quit();
+    }
+    #endregion
 
+    #region main menu only
+
+    /// <summary>
+    /// When the user clicks "play" on the main menu
+    /// </summary>
+    public void onPlay() {
+        playPanel.SetActive(true);
+        playButtons.SetActive(true);
+        mainButtons.SetActive(false);
+    }
+
+    /// <summary>
+    /// When the player clicks "back" in the play sub-menu
+    /// </summary>
+    public void onBack() {
+        GameObject.Find("seedInputField").GetComponent<InputField>().text = "";
+        playPanel.SetActive(false);
+        playButtons.SetActive(false);
+        mainButtons.SetActive(true);
+    }
 
     /// <summary>
     /// Launches the game.
@@ -103,11 +118,19 @@ public class MainMenuUI : MonoBehaviour {
         SceneManager.LoadScene("RealWorldBenchmark");
     }
 
+    #endregion
 
-    /// <summary>
-    /// Quits the game
-    /// </summary>
-    public void ExitGame() {
-        Application.Quit();
+    #region ingame only
+
+    public void onResume() {
+        GetComponent<Canvas>().enabled = false;
     }
+
+    public void returnToMain() {
+        SceneManager.LoadScene("MainMenu");
+    }
+
+
+    #endregion
+
 }

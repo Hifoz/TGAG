@@ -19,9 +19,12 @@ public class ButtonText : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     Button btn;
     bool interactableDelay;
 
-    void Start() {
+    void Awake() {
         txt = GetComponentInChildren<Text>();
         btn = gameObject.GetComponent<Button>();
+    }
+
+    void Start() {
         interactableDelay = btn.interactable;
     }
 
