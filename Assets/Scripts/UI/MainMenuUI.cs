@@ -46,6 +46,33 @@ public class MainMenuUI : MonoBehaviour {
         mainButtons.SetActive(true);
     }
 
+    /// <summary>
+    /// When user clicks "options in main menu
+    /// </summary>
+    public void openSettings() {
+        optionsPanel.SetActive(true);
+        optionsButtons.SetActive(true);
+        mainButtons.SetActive(false);
+    }
+
+    /// <summary>
+    /// When the player clicks wants to close options sub-menu
+    /// </summary>
+    public void closeSettings() {
+        optionsPanel.SetActive(false);
+        optionsButtons.SetActive(false);
+        mainButtons.SetActive(true);
+    }
+    
+    /// <summary>
+    /// When the player clicks "apply" in options sub-menu
+    /// </summary>
+    public void closeAndSave() {
+        optionsPanel.GetComponent<SettingsUI>().save();
+        closeSettings();
+    }
+
+
 
     /// <summary>
     /// Launches the game.
