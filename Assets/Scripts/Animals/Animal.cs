@@ -590,7 +590,7 @@ public abstract class Animal : MonoBehaviour {
 
         s += "Desired speed: " + state.desiredSpeed + "\n";
         s += "Desired heading: " + state.desiredHeading + "\n";
-        s += "Position: " + transform.position + "\n";
+        s += "Position: " + transform.position + "\n\n";
 
         s += "Animation in transition: " + flagAnimationTransition.ToString();
         return s;

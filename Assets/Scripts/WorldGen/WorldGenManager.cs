@@ -86,7 +86,7 @@ public class WorldGenManager : MonoBehaviour {
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
-    private HashSet<Vector3Int> pendingChunks = new HashSet<Vector3Int>(); //Chunks that are currently worked on my CVDT
+    private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     // Animals
     private GameObjectPool[] animalPools = new GameObjectPool[3];
@@ -212,10 +212,9 @@ public class WorldGenManager : MonoBehaviour {
         for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
             for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
                 Vector3 chunkPos = chunkPos2world(new Vector3(x, 0, z)) + worldOffset;
-                Vector3Int chunkHash = Utils.floorVectorToInt(chunkPos);
-                if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkHash)) {
+                if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     orders.Add(new Order(chunkPos, Task.CHUNK));
-                    pendingChunks.Add(chunkHash);
+                    pendingChunks.Add(chunkPos);
                     stats.aggregateValues[WorldGenManagerStatsType.ORDERED_CHUNKS]++;
                 }
             }
@@ -240,7 +239,7 @@ public class WorldGenManager : MonoBehaviour {
                     stats.aggregateValues[WorldGenManagerStatsType.GENERATED_ANIMALS]++;
                     break;
                 case Task.CANCEL:
-                    pendingChunks.Remove(Utils.floorVectorToInt(result.chunkVoxelData.chunkPos));
+                    pendingChunks.Remove(result.chunkVoxelData.chunkPos);
                     stats.aggregateValues[WorldGenManagerStatsType.CANCELLED_CHUNKS]++;
                     break;
             }
@@ -252,7 +251,7 @@ public class WorldGenManager : MonoBehaviour {
     /// Deploys ordered chunks from the ChunkVoxelDataThreads.
     /// </summary>
     private ChunkData launchOrderedChunk(ChunkVoxelData chunkMeshData) {
-        pendingChunks.Remove(Utils.floorVectorToInt(chunkMeshData.chunkPos));
+        pendingChunks.Remove(chunkMeshData.chunkPos);
         chunkMeshData.chunkPos -= worldOffset;
         ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
 
@@ -382,6 +381,7 @@ public class WorldGenManager : MonoBehaviour {
             foreach (ChunkData chunk in activeChunks) {
                 chunk.chunkParent.transform.position -= offset;
                 chunk.pos -= offset;
+                chunk.disableColliders();
             }
 
             foreach (GameObjectPool pool in animalPools) {

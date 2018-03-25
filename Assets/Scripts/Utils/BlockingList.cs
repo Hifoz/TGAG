@@ -94,11 +94,4 @@ public class BlockingList<T> {
             return invalidCount;
         }
     }
-
-    public delegate void Update<T>(List<T> list);
-    public void updateList(Update<T> update) {
-        lock (list) {
-            update(list);
-        }
-    }
 }

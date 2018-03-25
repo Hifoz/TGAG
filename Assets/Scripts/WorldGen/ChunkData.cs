@@ -54,4 +54,28 @@ public class ChunkData {
         }
         return false;
     } 
+
+    /// <summary>
+    /// Disables colliders
+    /// </summary>
+    public void disableColliders() {
+        collidersEnabled = false;
+
+        for (int i = 0; i < terrainChunk.Count; i++) {
+            GameObject chunk = terrainChunk[i];
+            MeshCollider collider = chunk.GetComponent<MeshCollider>();
+            collider.enabled = false;
+        }
+
+        for (int i = 0; i < waterChunk.Count; i++) {
+            GameObject chunk = waterChunk[i];
+            MeshCollider collider = chunk.GetComponent<MeshCollider>();
+            collider.enabled = false;
+        }
+
+        for (int i = 0; i < trees.Length; i++) {
+            MeshCollider collider = trees[i].GetComponent<MeshCollider>();
+            collider.enabled = false;
+        }
+    }
 }
