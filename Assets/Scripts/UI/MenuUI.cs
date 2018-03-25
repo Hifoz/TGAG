@@ -31,8 +31,12 @@ public class MenuUI : MonoBehaviour {
     void Update () {
         if(SceneManager.GetActiveScene().name == "main") {
             if (Input.GetKeyDown(KeyCode.Escape)) {
-                isEnabled = !isEnabled;
-                GetComponent<Canvas>().enabled = isEnabled;
+                if (isEnabled) {
+                    onResume();
+                } else {
+                    isEnabled = true;
+                    GetComponent<Canvas>().enabled = true;
+                }
             }
         }
 	}
@@ -130,7 +134,10 @@ public class MenuUI : MonoBehaviour {
     /// Used to leave the menu and resume playing
     /// </summary>
     public void onResume() {
+        closeSettings();
+        isEnabled = false;
         GetComponent<Canvas>().enabled = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     /// <summary>
