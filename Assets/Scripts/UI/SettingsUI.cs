@@ -5,15 +5,15 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-/*
- * Generates and manages the setting menu.
- * To add new settings and/or sections, add these in the generateMenu() function.
- */
+ /// <summary>
+ /// Generates and manages the setting menu.
+ /// To add new settings and/or sections, add these in the generateMenu() function.
+ /// </summary>
 public class SettingsUI : MonoBehaviour {
 
     public Font settingsFont;
 
-    private int optionHeight = -50; // value must be negative, as we are working downwards instead of upwards, which unity ui does
+    private int optionHeight = -50; // value must be negative, as we are working downwards instead of upwards, which is what Uinty's UI does
 
     private Dictionary<string, Slider> _sliders = new Dictionary<string, Slider>();
     private Dictionary<string, Dropdown> _dropdowns = new Dictionary<string, Dropdown>();
@@ -34,7 +34,9 @@ public class SettingsUI : MonoBehaviour {
         load();
     }
 
-    // Save changes to PlayerPrefs
+    /// <summary>
+    /// Save changes to PlayerPrefs
+    /// </summary>
     public void save() {
         Debug.Log("Saving settings.");
 
@@ -49,7 +51,9 @@ public class SettingsUI : MonoBehaviour {
         executeSettings();
     }
 
-    // Load settings from PlayerPrefs
+    /// <summary>
+    /// Load settings from PlayerPrefs
+    /// </summary>
     public void load() {
         foreach (KeyValuePair<string, InputField> entry in _inputFields)
             entry.Value.text = PlayerPrefs.GetString(entry.Key, entry.Value.text);
@@ -59,7 +63,9 @@ public class SettingsUI : MonoBehaviour {
             entry.Value.value = PlayerPrefs.GetInt(entry.Key, entry.Value.value);
     }
 
-    // Run functions attached to the setting (eg. change resolution to what is set by the resolution setting, or ) 
+    /// <summary>
+    /// Run functions attached to the setting (eg. change resolution to what is set by the resolution setting, or ) 
+    /// </summary>
     private void executeSettings() {
         foreach (KeyValuePair<string, Func<object>> entry in _settingExcecutions) {
             if (entry.Value != null)
@@ -67,16 +73,18 @@ public class SettingsUI : MonoBehaviour {
         }
     }
 
-    // Set up the content of the settings menu here
+    /// <summary>
+    /// Used to set up the content of the settings menu
+    /// </summary>
     private void generateMenu() {
-        GameObject panel = this.gameObject; // Yep
+        GameObject panel = this.gameObject;
 
 
         // DEV TOOLS:
         GameObject devTools = addSection("Dev tools", panel);
 
         GameObject maxChunkLaunch = addTextOption("MaxChunkLaunchesPerUpdate", 
-            devTools, 
+            parent: devTools, 
             func: delegate {
                 if (PlayerPrefs.GetFloat("MaxChunkLaunchesPerUpdate", Settings.MaxChunkLaunchesPerUpdate) < 1) // If the value was set to less than 1, set it back to 1
                     PlayerPrefs.SetFloat("MaxChunkLaunchesPerUpdate", 1);
@@ -88,15 +96,15 @@ public class SettingsUI : MonoBehaviour {
         maxChunkLaunch.GetComponent<InputField>().contentType = InputField.ContentType.IntegerNumber;
 
         GameObject threadCount = addSliderOption("WorldGenThreads", 
-            devTools, 
-            1, Environment.ProcessorCount, 
-            delegate {
+            parent: devTools, 
+            minval: 1, 
+            maxval: Environment.ProcessorCount, 
+            isInt: true,
+            func: delegate {
                 Settings.WorldGenThreads = (int)PlayerPrefs.GetFloat("WorldGenThreads", Settings.WorldGenThreads);
                 return null;
             }
         );
-        threadCount.GetComponent<Slider>().wholeNumbers = true;
-
 
 
         // VIDEO SETTINGS:
@@ -134,7 +142,12 @@ public class SettingsUI : MonoBehaviour {
         pack(panel);
     }
 
-    // Creates a basic ui object with a rect transform and a canvas renderer
+    /// <summary>
+    /// Creates a basic ui object with a rect transform and a canvas renderer
+    /// </summary>
+    /// <param name="objectName">name for the object</param>
+    /// <param name="parent">parent object</param>
+    /// <returns></returns>
     private GameObject createBaseUIObject(string objectName = "Unnamed", GameObject parent = null) {
         GameObject uiObject = new GameObject();
         uiObject.AddComponent<RectTransform>();
@@ -152,7 +165,12 @@ public class SettingsUI : MonoBehaviour {
         return uiObject;
     }
 
-    // Creates a section for containing and categorizing settings
+    /// <summary>
+    /// Creates a section for containing and categorizing settings
+    /// </summary>
+    /// <param name="title">Title of section</param>
+    /// <param name="parent">parent object</param>
+    /// <returns></returns>
     private GameObject addSection(string title, GameObject parent) {
         GameObject sectionPanel = createBaseUIObject("Section: " + title, parent);
 
@@ -182,7 +200,11 @@ public class SettingsUI : MonoBehaviour {
         return sectionPanel;
     }
 
-    // Creates the base for which any of the option types below (slider, dropdown, etc..) build ontop of
+    /// <summary>
+    /// Creates the base for which any of the option types below (slider, dropdown, etc..) build ontop of
+    /// </summary>
+    /// <param name="parent">parent object</param>
+    /// <param name="text">name of option</param>
     private GameObject addBasicOption(string text, GameObject parent) {
         GameObject option = createBaseUIObject("Option panel: " + text, parent);
         RectTransform rt = option.GetComponent<RectTransform>();
@@ -216,7 +238,14 @@ public class SettingsUI : MonoBehaviour {
         return interactiveElement;
     }
 
-    // Creates a textfield type option
+    /// <summary>
+    /// Creates a textfield type option
+    /// </summary>
+    /// <param name="optionName">Name used to store setting value in PlayerPrefs, also used as default display name</param>
+    /// <param name="parent">parent section</param>
+    /// <param name="placeholderText">Placeholder text when field is empty</param>
+    /// <param name="func">A function containing extra fuctionalty to run on save (Eg. change resolution to what is set by the resolution setting)</param>
+    /// <returns>the dropdown menu</returns>
     private GameObject addTextOption(string optionName, GameObject parent, string placeholderText = "", Func<object> func = null) {
         GameObject option = addBasicOption(optionName, parent);
         option.AddComponent<Image>();
@@ -258,8 +287,17 @@ public class SettingsUI : MonoBehaviour {
         return option;
     }
 
-    // Creates a slider type option
-    private GameObject addSliderOption(string optionName, GameObject parent, int minval, int maxval, Func<object> func = null) {
+    /// <summary>
+    /// Creates a slider type option
+    /// </summary>
+    /// <param name="optionName">Name used to store setting value in PlayerPrefs, also used as default display name</param>
+    /// <param name="parent">parent section</param>
+    /// <param name="minval">lowest value on slider</param>
+    /// <param name="maxval">highset value on slider</param>
+    /// <param name="isInt">Should the value be integers only?</param>
+    /// <param name="func">A function containing extra fuctionalty to run on save. (Eg. change resolution to what is set by the resolution setting)</param>
+    /// <returns>the dropdown menu</returns>
+    private GameObject addSliderOption(string optionName, GameObject parent, int minval, int maxval, bool isInt = false, Func<object> func = null) {
         GameObject option = addBasicOption(optionName, parent);
         Slider slider = option.AddComponent<Slider>();
         slider.minValue = minval;
@@ -298,7 +336,13 @@ public class SettingsUI : MonoBehaviour {
         minvalText.GetComponent<Text>().text = minval.ToString();
         maxvalText.GetComponent<Text>().text = maxval.ToString();
 
-        slider.onValueChanged.AddListener(delegate { currentvalText.GetComponent<Text>().text = slider.value.ToString("0.0"); });
+
+        if (isInt) {
+            slider.GetComponent<Slider>().wholeNumbers = true;
+            slider.onValueChanged.AddListener(delegate { currentvalText.GetComponent<Text>().text = slider.value.ToString("0"); });
+        } else {
+            slider.onValueChanged.AddListener(delegate { currentvalText.GetComponent<Text>().text = slider.value.ToString("0.0"); });
+        }
 
         slider.targetGraphic = handle.GetComponent<Image>();
         slider.fillRect = fill.GetComponent<RectTransform>();
@@ -308,10 +352,18 @@ public class SettingsUI : MonoBehaviour {
         _sliders.Add(optionName, slider);
         _settingExcecutions.Add(optionName, func);
 
+
         return option;
     }
 
-    // Adds a dropdown type option
+    /// <summary>
+    /// Adds a dropdown type option
+    /// </summary>
+    /// <param name="optionName">Name used to store setting value in PlayerPrefs, also used as default display name</param>
+    /// <param name="parent">parent section</param>
+    /// <param name="elements">The elements to display in the dropdown</param>
+    /// <param name="func">A function containing extra fuctionalty to run on save. (Eg. change resolution to what is set by the resolution setting)</param>
+    /// <returns>the dropdown menu</returns>
     private GameObject addDropdownOption(string optionName, GameObject parent, string[] elements, Func<object> func = null) {
         GameObject option = addBasicOption(optionName, parent);
         option.AddComponent<Image>();
@@ -388,7 +440,10 @@ public class SettingsUI : MonoBehaviour {
         return option;
     }
 
-    // Resize the panel and sections inside so that they fit the number of settings and size of the window
+    /// <summary>
+    /// Resize the panel and sections inside so that they fit the number of settings and size of the window
+    /// </summary>
+    /// <param name="panel">panel to resize</param>
     private void pack(GameObject panel) {
         int totalHeight = 0;
 
@@ -400,9 +455,8 @@ public class SettingsUI : MonoBehaviour {
             totalHeight += sectionItems * optionHeight;
         }
 
-        //RectTransform rt = panel.GetComponent<RectTransform>();
-        //rt.anchorMin = new Vector2(0, 1);
-        //rt.offsetMin = new Vector2(0, totalHeight);
+        // TODO: Support scrolling when there are to many settings to display at one time
+
     }
 
 

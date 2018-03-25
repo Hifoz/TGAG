@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// Class controlling menu UI
+/// Menu UI
 /// </summary>
 public class MenuUI : MonoBehaviour {
     public static bool isEnabled = true;
@@ -37,7 +37,7 @@ public class MenuUI : MonoBehaviour {
         }
 	}
 
-    #region shared
+    #region shared functionality
     /// <summary>
     /// When user clicks "options in main menu
     /// </summary>
@@ -126,10 +126,16 @@ public class MenuUI : MonoBehaviour {
 
     #region ingame only
 
+    /// <summary>
+    /// Used to leave the menu and resume playing
+    /// </summary>
     public void onResume() {
         GetComponent<Canvas>().enabled = false;
     }
 
+    /// <summary>
+    /// Used to return from the game to the main menu scene
+    /// </summary>
     public void returnToMain() {
         SceneManager.LoadScene("MainMenu");
     }
