@@ -418,6 +418,10 @@ Prefab:
       propertyPath: m_SortingOrder
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1243962063109040, guid: a81e118afb85ee84aa1d7f2d2c3054ef, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a81e118afb85ee84aa1d7f2d2c3054ef, type: 2}
   m_IsPrefabParent: 0
@@ -756,7 +760,7 @@ MonoBehaviour:
   target: {fileID: 1174243102}
   targetDistance: 20
   cameraHeight: 0.75
-  underwaterOverlay: {fileID: 0}
+  underwaterOverlay: {fileID: 1256312891}
 --- !u!135 &1058874306
 SphereCollider:
   m_ObjectHideFlags: 0

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 
 /// <summary>
-/// Script for the esc menu (ingame).
+/// Contains logic for displaying debug info in game
 /// </summary>
 public class DebugUIController : MonoBehaviour {
     public WorldGenManager chunkManager;
@@ -43,7 +43,9 @@ public class DebugUIController : MonoBehaviour {
         }
     }
 
-
+    /// <summary>
+    /// Toggles the debug info on/off
+    /// </summary>
     private void toggleDebugInfo() {
         chunkManagerDebug.SetActive(debug);
         debug = !debug;

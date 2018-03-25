@@ -6,6 +6,7 @@ using UnityEngine.UI;
 /// Class controlling menu UI
 /// </summary>
 public class MenuUI : MonoBehaviour {
+    public static bool isEnabled = true;
 
     public GameObject mainButtons;
 
@@ -22,14 +23,17 @@ public class MenuUI : MonoBehaviour {
         mainButtons.SetActive(true);
         if (SceneManager.GetActiveScene().name == "main") {
             GetComponent<Canvas>().enabled = false;
+            isEnabled = false;
         }
     }
 
     // Update is called once per frame
     void Update () {
         if(SceneManager.GetActiveScene().name == "main") {
-            if (Input.GetKeyDown(KeyCode.Escape))
-                GetComponent<Canvas>().enabled = !GetComponent<Canvas>().enabled;
+            if (Input.GetKeyDown(KeyCode.Escape)) {
+                isEnabled = !isEnabled;
+                GetComponent<Canvas>().enabled = isEnabled;
+            }
         }
 	}
 

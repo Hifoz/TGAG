@@ -14,6 +14,10 @@ public class WaterAnimalBrainPlayer : AnimalBrainPlayer {
     override public void move() {
         state.desiredSpeed = 0;
 
+        if (MenuUI.isEnabled) {  // Ignore input while in menu
+            return;
+        }
+
         if (!Input.GetKey(KeyCode.LeftAlt)) {
             right = Camera.main.transform.rotation * Vector3.right;
             up = Camera.main.transform.rotation * Vector3.up;

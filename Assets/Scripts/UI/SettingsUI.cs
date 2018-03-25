@@ -18,7 +18,6 @@ public class SettingsUI : MonoBehaviour {
     private Dictionary<string, Slider> _sliders = new Dictionary<string, Slider>();
     private Dictionary<string, Dropdown> _dropdowns = new Dictionary<string, Dropdown>();
     private Dictionary<string, InputField> _inputFields = new Dictionary<string, InputField>();
-    // TODO : Add a toggle type?
 
     // What functions should be called when a setting is changed and saved
     private Dictionary<string, Func<object>> _settingExcecutions = new Dictionary<string, Func<object>>();
