@@ -95,5 +95,10 @@ public class BlockingList<T> {
         }
     }
 
-
+    public delegate void Update<T>(List<T> list);
+    public void updateList(Update<T> update) {
+        lock (list) {
+            update(list);
+        }
+    }
 }

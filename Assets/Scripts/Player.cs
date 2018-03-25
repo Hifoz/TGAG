@@ -7,6 +7,7 @@ public class Player : MonoBehaviour {
     public static ThreadSafeVector3 playerPos = new ThreadSafeVector3();
     public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
     public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
+    public Vector3 worldOffset;
 
     public GameObject magicTrailPrefab;
 
@@ -34,7 +35,7 @@ public class Player : MonoBehaviour {
             shootMagicTrail();
         }
 
-        playerPos.set(transform.position);
+        playerPos.set(transform.position + worldOffset);
         playerRot.set(transform.rotation * Vector3.forward);
         playerSpeed.set(rb.velocity);
     }

@@ -194,7 +194,7 @@ public class ChunkVoxelDataThread {
                     MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, chunkBlockData, biomeManager);
                     trees.Add(tree[0]);
                     treeTrunks.Add(tree[1]);
-                    treePositions.Add(localPos + order.position);
+                    treePositions.Add(localPos);
                 } else {
                     i--; //Try again
                 }
