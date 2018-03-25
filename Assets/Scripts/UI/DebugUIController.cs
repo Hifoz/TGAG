@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Script for the esc menu (ingame).
 /// </summary>
-public class EscMenu : MonoBehaviour {
+public class DebugUIController : MonoBehaviour {
     public WorldGenManager chunkManager;
 
     public GameObject chunkManagerDebug;

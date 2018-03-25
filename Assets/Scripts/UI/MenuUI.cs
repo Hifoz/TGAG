@@ -3,9 +3,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// Class controlling main menu UI
+/// Class controlling menu UI
 /// </summary>
-public class MainMenuUI : MonoBehaviour {
+public class MenuUI : MonoBehaviour {
 
     public GameObject mainButtons;
 

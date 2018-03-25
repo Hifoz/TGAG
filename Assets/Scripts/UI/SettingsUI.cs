@@ -47,7 +47,6 @@ public class SettingsUI : MonoBehaviour {
             PlayerPrefs.SetInt(entry.Key, entry.Value.value);
 
         PlayerPrefs.Save();
-
         executeSettings();
     }
 
@@ -61,7 +60,7 @@ public class SettingsUI : MonoBehaviour {
             entry.Value.value = PlayerPrefs.GetInt(entry.Key, entry.Value.value);
     }
 
-    // Run functions attached to the setting (eg. change resolution to what is set by the resolution setting) 
+    // Run functions attached to the setting (eg. change resolution to what is set by the resolution setting, or ) 
     private void executeSettings() {
         foreach (KeyValuePair<string, Func<object>> entry in _settingExcecutions) {
             if (entry.Value != null)
@@ -72,6 +71,33 @@ public class SettingsUI : MonoBehaviour {
     // Set up the content of the settings menu here
     private void generateMenu() {
         GameObject panel = this.gameObject; // Yep
+
+
+        // DEV TOOLS:
+        GameObject devTools = addSection("Dev tools", panel);
+
+        GameObject maxChunkLaunch = addTextOption("MaxChunkLaunchesPerUpdate", 
+            devTools, 
+            func: delegate {
+                if (PlayerPrefs.GetFloat("MaxChunkLaunchesPerUpdate", Settings.MaxChunkLaunchesPerUpdate) < 1) // If the value was set to less than 1, set it back to 1
+                    PlayerPrefs.SetFloat("MaxChunkLaunchesPerUpdate", 1);
+
+                Settings.MaxChunkLaunchesPerUpdate = (int)PlayerPrefs.GetFloat("MaxChunkLaunchesPerUpdate", Settings.MaxChunkLaunchesPerUpdate);
+                return null;
+            }
+        );
+        maxChunkLaunch.GetComponent<InputField>().contentType = InputField.ContentType.IntegerNumber;
+
+        GameObject threadCount = addSliderOption("WorldGenThreads", 
+            devTools, 
+            1, Environment.ProcessorCount, 
+            delegate {
+                Settings.WorldGenThreads = (int)PlayerPrefs.GetFloat("WorldGenThreads", Settings.WorldGenThreads);
+                return null;
+            }
+        );
+        threadCount.GetComponent<Slider>().wholeNumbers = true;
+
 
 
         // VIDEO SETTINGS:
@@ -106,7 +132,7 @@ public class SettingsUI : MonoBehaviour {
             }
         );
         
-        //pack(panel);
+        pack(panel);
     }
 
     // Creates a basic ui object with a rect transform and a canvas renderer
@@ -367,19 +393,17 @@ public class SettingsUI : MonoBehaviour {
     private void pack(GameObject panel) {
         int totalHeight = 0;
 
-
         for (int i = 0; i < panel.transform.childCount; i++) {
             RectTransform sectionRT = panel.transform.GetChild(i).gameObject.GetComponent<RectTransform>();
             int sectionItems = panel.transform.GetChild(i).childCount;
             sectionRT.offsetMin = new Vector2(0, totalHeight + sectionItems * optionHeight);
             sectionRT.offsetMax = new Vector2(0, totalHeight);
             totalHeight += sectionItems * optionHeight;
-
         }
 
-        RectTransform rt = panel.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0, 1);
-        rt.offsetMin = new Vector2(0, totalHeight);
+        //RectTransform rt = panel.GetComponent<RectTransform>();
+        //rt.anchorMin = new Vector2(0, 1);
+        //rt.offsetMin = new Vector2(0, totalHeight);
     }
 
 
