@@ -497,6 +497,11 @@ public class WorldGenManager : MonoBehaviour {
         Settings.load();
         clear();
 
+        Player.playerPos = new ThreadSafeVector3();
+        Player.playerRot = new ThreadSafeVector3();
+        Player.playerSpeed = new ThreadSafeVector3();
+
+
         stats = new WorldGenManagerStats();
         StartCoroutine(stats.calculatePerSecondStats());
 

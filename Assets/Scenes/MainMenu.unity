@@ -263,7 +263,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 2065842938}
         m_MethodName: LaunchBenchmark
         m_Mode: 1
         m_Arguments:
@@ -589,7 +589,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 2065842938}
         m_MethodName: LaunchRealBenchmark
         m_Mode: 1
         m_Arguments:
@@ -1063,3 +1063,9 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2065842938 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114474597208051742, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
+    type: 2}
+  m_PrefabInternal: {fileID: 1620391795}
+  m_Script: {fileID: 11500000, guid: b57251d440d22f6468d686d76617704c, type: 3}
