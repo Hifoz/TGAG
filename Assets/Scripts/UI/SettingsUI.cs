@@ -22,11 +22,9 @@ public class SettingsUI : MonoBehaviour {
     // What functions should be called when a setting is changed and saved
     private Dictionary<string, Func<object>> _settingExcecutions = new Dictionary<string, Func<object>>();
 
-
-    void Start() {
+    public void Start() {
         generateMenu();
         load();
-
         executeSettings();
     }
 
@@ -77,7 +75,7 @@ public class SettingsUI : MonoBehaviour {
     /// Used to set up the content of the settings menu
     /// </summary>
     private void generateMenu() {
-        GameObject panel = this.gameObject;
+        GameObject panel = transform.GetChild(0).gameObject;
 
 
         // DEV TOOLS:
