@@ -122,8 +122,19 @@ public abstract class Animal : MonoBehaviour {
         this.state = state;
     }
 
+    /// <summary>
+    /// Spawns the animal
+    /// </summary>
+    /// <param name="pos"></param>
     public void Spawn(Vector3 pos) {
         brain.Spawn(pos);
+    }
+
+    /// <summary>
+    /// Resets the inWaterInt (sets it to zero)
+    /// </summary>
+    public void resetInWater() {
+        inWaterInt = 0;
     }
 
     //    _   _                               _     _ _         __                  _   _                 
@@ -589,7 +600,9 @@ public abstract class Animal : MonoBehaviour {
         s += "InWaterInt: " + inWaterInt + "\n\n";
 
         s += "Desired speed: " + state.desiredSpeed + "\n";
-        s += "Desired heading: " + state.desiredHeading + "\n";
+        s += "Desired heading: " + state.desiredHeading + "\n\n";
+
+        s += "Speed: " + state.speed + "\n";
         s += "Position: " + transform.position + "\n\n";
 
         s += "Animation in transition: " + flagAnimationTransition.ToString();

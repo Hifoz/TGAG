@@ -133,26 +133,24 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     private void handleAnimals() {
         enableColliders(player.position);
-        if (landAnimalPrefab) {
-            foreach (GameObjectPool animalPool in animalPools) {
-                Stack<GameObject> deSpawn = new Stack<GameObject>();
-                foreach (GameObject animalObj in animalPool.activeList) {
-                    if (!orderedAnimals.Contains(animalObj) && isAnimalTooFarAway(animalObj.transform.position)) {
-                        deSpawn.Push(animalObj);
-                    } else {
-                        if (!orderedAnimals.Contains(animalObj)) {
-                            tryDisable(animalObj, animalObj.transform.position);
-                        }
-                        if (animalObj.activeSelf) {
-                            enableColliders(animalObj.transform.position);
-                        }
+        foreach (GameObjectPool animalPool in animalPools) {
+            Stack<GameObject> deSpawn = new Stack<GameObject>();
+            foreach (GameObject animalObj in animalPool.activeList) {
+                if (!orderedAnimals.Contains(animalObj) && isAnimalTooFarAway(animalObj.transform.position)) {
+                    deSpawn.Push(animalObj);
+                } else {
+                    if (!orderedAnimals.Contains(animalObj)) {
+                        tryDisable(animalObj, animalObj.transform.position);
+                    }
+                    if (animalObj.activeSelf) {
+                        enableColliders(animalObj.transform.position);
                     }
                 }
-                while (deSpawn.Count > 0) {
-                    animalPool.returnObject(deSpawn.Pop());
-                }
             }
-        }
+            while (deSpawn.Count > 0) {
+                animalPool.returnObject(deSpawn.Pop());
+            }
+        }        
     }
 
     /// <summary>
@@ -378,6 +376,7 @@ public class WorldGenManager : MonoBehaviour {
             worldOffset += offset;
 
             player.position -= offset;
+            player.gameObject.GetComponent<Animal>().resetInWater();
 
             foreach (ChunkData chunk in activeChunks) {
                 chunk.chunkParent.transform.position -= offset;
@@ -388,6 +387,7 @@ public class WorldGenManager : MonoBehaviour {
             foreach (GameObjectPool pool in animalPools) {
                 foreach (GameObject animal in pool.activeList) {
                     animal.transform.position -= offset;
+                    animal.GetComponent<Animal>().resetInWater();
                 }
             }
             player.gameObject.GetComponent<Player>().worldOffset = worldOffset;
