@@ -115,10 +115,14 @@ public class WaterAnimal : Animal {
     override protected void calculateSpeedAndHeading() {
         if (Vector3.Angle(state.heading, state.desiredHeading) > 0.1f) {
             state.heading = Vector3.RotateTowards(state.heading, state.desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        } else {
+            state.heading = state.desiredHeading;
         }
         
         if (Mathf.Abs(state.desiredSpeed - state.speed) > 0.2f) {
             state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration;
+        } else {
+            state.speed = state.desiredSpeed;
         }
     }
 

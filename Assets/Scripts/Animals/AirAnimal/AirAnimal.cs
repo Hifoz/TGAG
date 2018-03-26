@@ -299,7 +299,11 @@ public class AirAnimal : Animal {
     override protected void calculateSpeedAndHeading() {
         if (Vector3.Angle(state.heading, state.desiredHeading) > 0.1f) {
             state.heading = Vector3.RotateTowards(state.heading, state.desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        } else {
+            state.heading = state.desiredHeading;
         }
+
+
         if (state.inWater) {
             preventDownardMovement();
         }
@@ -311,6 +315,8 @@ public class AirAnimal : Animal {
             } else {
                 state.speed -= Time.deltaTime * acceleration * glideDrag;
             }
+        } else {
+            state.speed = state.desiredSpeed;
         }
     }
 
