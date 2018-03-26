@@ -118,6 +118,22 @@ public class WorldGenManager : MonoBehaviour {
         handleAnimals();
     }
 
+    /// <summary>
+    /// Gets animals
+    /// </summary>
+    /// <returns></returns>
+    public GameObjectPool[] getAnimals() {
+        return animalPools;
+    }
+
+    /// <summary>
+    /// Gets world offset
+    /// </summary>
+    /// <returns></returns>
+    public Vector3 getWorldOffset() {
+        return worldOffset;
+    }
+
     //    __  __       _          __                  _   _                 
     //   |  \/  |     (_)        / _|                | | (_)                
     //   | \  / | __ _ _ _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -376,7 +392,11 @@ public class WorldGenManager : MonoBehaviour {
             worldOffset += offset;
 
             player.position -= offset;
-            player.gameObject.GetComponent<Animal>().resetInWater();
+            Player playerScript = player.gameObject.GetComponent<Player>();
+            if (playerScript != null) { //Player might be a dummy
+                player.gameObject.GetComponent<Animal>().resetInWater();
+                playerScript.worldOffset = worldOffset;
+            }
 
             foreach (ChunkData chunk in activeChunks) {
                 chunk.chunkParent.transform.position -= offset;
@@ -390,7 +410,6 @@ public class WorldGenManager : MonoBehaviour {
                     animal.GetComponent<Animal>().resetInWater();
                 }
             }
-            player.gameObject.GetComponent<Player>().worldOffset = worldOffset;
         }        
     }
 
@@ -671,10 +690,6 @@ public class WorldGenManager : MonoBehaviour {
         s += "WORLD_OFFSET_INTERVAL: " + maxWorldDist + "\n";
         s += "PLAYER_DISTANCE: " + Player.playerPos.get().magnitude;
         return s;
-    }
-
-    public GameObjectPool[] getAnimals() {
-        return animalPools;
     }
 
     private void OnDestroy() {

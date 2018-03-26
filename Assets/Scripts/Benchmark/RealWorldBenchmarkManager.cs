@@ -92,7 +92,7 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
                 playerPos += dir * playerSpeed * Time.deltaTime;
                 dummyPlayer.position = playerPos;
                 
-                Player.playerPos.set(playerPos);
+                Player.playerPos.set(playerPos + WorldGenManager.getWorldOffset());
                 Player.playerRot.set(dir);
                 Player.playerSpeed.set(dir * playerSpeed);
 
