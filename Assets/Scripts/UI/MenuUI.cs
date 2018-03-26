@@ -67,7 +67,7 @@ public class MenuUI : MonoBehaviour {
     /// When the player clicks "apply" in options sub-menu
     /// </summary>
     public void closeAndSave() {
-        optionsPanel.GetComponent<SettingsUI>().save();
+        optionsPanel.transform.GetComponentInParent<SettingsUI>().save();
         closeSettings();
     }
 
