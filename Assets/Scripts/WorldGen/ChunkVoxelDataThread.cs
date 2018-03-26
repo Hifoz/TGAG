@@ -191,7 +191,7 @@ public class ChunkVoxelDataThread {
             localPos = findGroundLevel(Utils.floorVectorToInt(localPos), chunkBlockData);
             if (localPos.y > WorldGenConfig.waterHeight + 2) {
                 if(localPos != Vector3.down) {
-                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, chunkBlockData, biomeManager);
+                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, order.position, chunkBlockData, biomeManager);
                     trees.Add(tree[0]);
                     treeTrunks.Add(tree[1]);
                     treePositions.Add(localPos);

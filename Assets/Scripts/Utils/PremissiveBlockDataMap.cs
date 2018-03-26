@@ -11,6 +11,7 @@ public class PremissiveBlockDataMap {
         public List<Pair<BiomeBase, float>> biomes;
     }
 
+    Vector3 chunkPos;
     BlockDataMap map;
     BiomeManager biomeManager;
     Dictionary<Vector2Int, xzData> xzDataDict = new Dictionary<Vector2Int, xzData>();
@@ -19,7 +20,10 @@ public class PremissiveBlockDataMap {
     /// Constructor taking a BlockDataMap
     /// </summary>
     /// <param name="map">Map that this map is based on</param>
-    public PremissiveBlockDataMap(BlockDataMap map, BiomeManager biomeManager) {
+    /// <param name="chunkPos">The position of the chunk</param>
+    /// <param name="biomeManager">A biomemanager</param>
+    public PremissiveBlockDataMap(Vector3 chunkPos, BlockDataMap map, BiomeManager biomeManager) {
+        this.chunkPos = chunkPos;
         this.map = map;
         this.biomeManager = biomeManager;
     }
@@ -33,8 +37,8 @@ public class PremissiveBlockDataMap {
         if (map.checkBounds(index)) {
             return map.mapdata[map.index1D(index)].blockType == BlockData.BlockType.NONE;
         } else {
-            Vector3 pos = new Vector3(index.x, index.y, index.z);
-            Vector2Int xzPos = new Vector2Int(index.x, index.z);
+            Vector3 pos = new Vector3(index.x, index.y, index.z) + chunkPos;
+            Vector2Int xzPos = new Vector2Int(index.x, index.z) + new Vector2Int((int)chunkPos.x, (int)chunkPos.z);
             xzData xzdata;
             if (!xzDataDict.TryGetValue(xzPos, out xzdata)) {
                 xzdata = new xzData();
