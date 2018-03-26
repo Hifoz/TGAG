@@ -75,4 +75,14 @@ public static class Utils {
     public static int mod(int x, int m) {
         return (x % m + m) % m;
     }
+
+    /// <summary>
+    /// Does element wise multiplication of two vectos
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns>result</returns>
+    public static Vector3 elementWiseMult(Vector3 a, Vector3 b) {
+        return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+    }
 }

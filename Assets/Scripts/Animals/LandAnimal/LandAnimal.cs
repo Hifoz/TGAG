@@ -166,7 +166,10 @@ public class LandAnimal : Animal {
     override protected void calculateSpeedAndHeading() {
         if (Vector3.Angle(state.heading, state.desiredHeading) > 0.1f) {
             state.heading = Vector3.RotateTowards(state.heading, state.desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        } else {
+            state.heading = state.desiredHeading;
         }
+
         if (state.inWater) {
             preventDownardMovement();
         }
@@ -178,6 +181,8 @@ public class LandAnimal : Animal {
             } else {
                 state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration * 0.2f;
             }
+        } else {
+            state.speed = state.desiredSpeed;
         }
     }
 

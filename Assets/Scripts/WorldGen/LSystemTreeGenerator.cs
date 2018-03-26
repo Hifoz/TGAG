@@ -78,8 +78,8 @@ public static class LSystemTreeGenerator {
     /// </summary>
     /// <param name="pos">Position of the tree</param>
     /// <returns>Meshdata</returns>
-    public static MeshData[] generateMeshData(Vector3 pos, BlockDataMap chunk, BiomeManager biomeManager) {
-        PremissiveBlockDataMap chunkMap = new PremissiveBlockDataMap(chunk, biomeManager);
+    public static MeshData[] generateMeshData(Vector3 pos, Vector3 chunkPos, BlockDataMap chunk, BiomeManager biomeManager) {
+        PremissiveBlockDataMap chunkMap = new PremissiveBlockDataMap(chunkPos, chunk, biomeManager);
 
         List<LineSegment> tree = GenerateLSystemTree(pos);
 
