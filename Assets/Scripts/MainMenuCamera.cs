@@ -11,6 +11,10 @@ public class MainMenuCamera : MonoBehaviour {
     public float height;
     public float speed;
     float angle = 0;
+
+
+
+
 	// Update is called once per frame
 	void Update () {
         angle += Time.deltaTime * speed;

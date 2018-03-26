@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// This class is for settings in the options menu.
+/// This class constains settigns related to threading and chnk launching
 /// </summary>
 public static class Settings {
     

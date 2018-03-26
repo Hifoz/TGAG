@@ -1,15 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 /// <summary>
-/// Script for the esc menu (ingame).
+/// Contains logic for displaying debug info in game
 /// </summary>
-public class EscMenu : MonoBehaviour {
+public class DebugUIController : MonoBehaviour {
     public WorldGenManager chunkManager;
 
-    public GameObject menu;
     public GameObject chunkManagerDebug;
     public Text chunkManagerDebugText;
 
@@ -18,6 +16,9 @@ public class EscMenu : MonoBehaviour {
     private List<GameObject> animalDebuggers;
     private GameObjectPool[] animalPools;
 
+    private bool debug = true;
+
+
     void Start() {
         animalPools = chunkManager.getAnimals();
         debuggedAnimals = new HashSet<GameObject>();
@@ -25,8 +26,8 @@ public class EscMenu : MonoBehaviour {
     }
 
     void Update() {
-        if (Input.GetKeyDown(KeyCode.Escape)) {
-            menu.SetActive(!menu.activeSelf);
+        if (Input.GetKeyDown(KeyCode.F1)) {
+            toggleDebugInfo();
         }
 
         if (chunkManagerDebug.activeSelf) {
@@ -43,21 +44,22 @@ public class EscMenu : MonoBehaviour {
     }
 
     /// <summary>
-    /// Called when the debug toggle is clicked
+    /// Toggles the debug info on/off
     /// </summary>
-    /// <param name="toggle"></param>
-    public void OnDebugToggle(Toggle toggle) {
-        chunkManagerDebug.SetActive(toggle.isOn);
+    private void toggleDebugInfo() {
+        chunkManagerDebug.SetActive(debug);
+        debug = !debug;
 
-        if (!toggle.isOn) { //Cleanup animal debugging       
+        if (debug) { //Cleanup animal debugging       
             foreach (GameObject debugger in animalDebuggers) {
                 Destroy(debugger);
             }
             animalDebuggers.Clear();
             debuggedAnimals.Clear();
         } else {
-            debugAnimal(chunkManager.player.gameObject);            
-        }        
+            debugAnimal(chunkManager.player.gameObject);
+        }
+
     }
 
     /// <summary>
@@ -71,10 +73,4 @@ public class EscMenu : MonoBehaviour {
         debuggedAnimals.Add(animal);
     }
 
-    /// <summary>
-    /// Send the player back to the main menu.
-    /// </summary>
-    public void BackToMainMenu() {
-        SceneManager.LoadScene("MainMenu");
-    }
 }
