@@ -98,6 +98,7 @@ public class WorldGenManager : MonoBehaviour {
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start () {
+        Debug.Log("THREADS: " + Settings.WorldGenThreads);
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         biomeManager = new BiomeManager();
         Reset();
@@ -495,6 +496,11 @@ public class WorldGenManager : MonoBehaviour {
     public void Reset(int threadCount = 0) {
         Settings.load();
         clear();
+
+        Player.playerPos = new ThreadSafeVector3();
+        Player.playerRot = new ThreadSafeVector3();
+        Player.playerSpeed = new ThreadSafeVector3();
+
 
         stats = new WorldGenManagerStats();
         StartCoroutine(stats.calculatePerSecondStats());
