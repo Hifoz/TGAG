@@ -22,7 +22,7 @@ public enum BodyParameter {
     SCALE = 0,
     HEAD_SIZE, HEAD_RADIUS, //Radius is the thichness of the lines
     NECK_LENGTH, NECK_RADIUS,
-    SPINE_LENGTH, SPINE_RADIUS,
+    SPINE_LENGTH, SPINE_JOINTS, SPINE_JOINT_LENGTH, SPINE_RADIUS,
     LEG_PAIRS, LEG_JOINTS, LEG_LENGTH, LEG_JOINT_LENGTH, LEG_RADIUS,
     TAIL_JOINTS, TAIL_LENGTH, TAIL_JOINT_LENGTH, TAIL_RADIUS,
     WING_LENGTH, WING_JOINTS, WING_JOINT_LENGTH, WING_RADIUS
@@ -56,7 +56,6 @@ public abstract class AnimalSkeleton {
         public LineSegment boneLine; //line of bone to use for skinning
     }
     //Misc members
-    public int index; // Index of animal in ChunkManager    
     protected static ThreadSafeRng rng = new ThreadSafeRng();
 
     //Skeleton related members
@@ -67,8 +66,6 @@ public abstract class AnimalSkeleton {
     protected Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
 
     //Mesh related member variables
-    private Vector3 lowerBounds;
-    private Vector3 upperBounds;
     private MeshData meshData;
     private List<Matrix4x4> bindPoses = new List<Matrix4x4>();
     private List<BoneWeight> weights;
@@ -83,7 +80,15 @@ public abstract class AnimalSkeleton {
     //   | |   | |_| | |_) | | | (__  | |  | |  __/ |_| | | | (_) | (_| \__ \
     //   |_|    \__,_|_.__/|_|_|\___| |_|  |_|\___|\__|_| |_|\___/ \__,_|___/
     //                                                                       
-    //                                                                       
+    //      
+    
+    /// <summary>
+    /// Gets the gameobject that owns this skeleton
+    /// </summary>
+    /// <returns>owner</returns>
+    public GameObject getOwner() {
+        return rootBone.gameObject;
+    }
 
     /// <summary>
     /// Gets the specified bones.
@@ -338,7 +343,7 @@ public abstract class AnimalSkeleton {
     /// <summary>
     /// Adds colliders to the skeleton
     /// </summary>
-    private void createColliders() {
+    virtual protected void createColliders() {
         Bone spine = skeletonBones[BodyPart.SPINE][0];
         BoxCollider col = spine.bone.gameObject.AddComponent<BoxCollider>();
         Vector3 size = col.size;
@@ -358,33 +363,24 @@ public abstract class AnimalSkeleton {
     /// <summary>
     /// Generates the MeshData for the animal
     /// </summary>
-    private void generateVoxelMeshData() {
-        upperBounds = new Vector3(-99999, -99999, -99999);
-        lowerBounds = new Vector3(99999, 99999, 99999);
-        foreach (LineSegment line in skeletonLines[BodyPart.ALL]) {
-            updateBounds(line);
-        }
+    private void generateVoxelMeshData() {     
 
         float scale = bodyParameters.Get<float>(BodyParameter.SCALE);
+        LineStructureBounds bounds = new LineStructureBounds(skeletonLines[BodyPart.ALL], LineStructureType.ANIMAL, (pointMapBoundsModifier * scale + 2.5f), (voxelSize * scale));
 
-        upperBounds += Vector3.one * (pointMapBoundsModifier * scale + 2.5f);
-        lowerBounds -= Vector3.one * (pointMapBoundsModifier * scale + 2.5f);
-        Vector3 size = upperBounds - lowerBounds;
-        size /= (voxelSize * scale);
-
-        BlockDataMap pointMap = new BlockDataMap(Mathf.CeilToInt(size.x), Mathf.CeilToInt(size.y), Mathf.CeilToInt(size.z));
+        BlockDataMap pointMap = new BlockDataMap(bounds.sizeI.x, bounds.sizeI.y, bounds.sizeI.z);
         List<LineSegment> skeleton = skeletonLines[BodyPart.ALL];
         for (int x = 0; x < pointMap.GetLength(0); x++) {
             for (int y = 0; y < pointMap.GetLength(1); y++) {
                 for (int z = 0; z < pointMap.GetLength(2); z++) {
                     int i = pointMap.index1D(x, y, z);
-                    Vector3 samplePos = new Vector3(x, y, z) * (voxelSize * scale) + lowerBounds;
+                    Vector3 samplePos = new Vector3(x, y, z) * (voxelSize * scale) + bounds.lowerBounds;
                     pointMap.mapdata[i] = new BlockData(calcBlockType(skeleton, samplePos, scale), BlockData.BlockType.NONE);
                 }
             }
         }
         meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL)[0];
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(bounds.lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL)[0];
     }
 
     /// <summary>
@@ -428,29 +424,6 @@ public abstract class AnimalSkeleton {
         boneWeight.weight0 = 1f;
         return boneWeight;
     }
-
-    /// <summary>
-    /// Updates the bounds of the skeleton
-    /// </summary>
-    /// <param name="line">LineSegment line</param>
-    private void updateBounds(LineSegment line) {
-        updateBounds(line.a);
-        updateBounds(line.b);
-    }
-
-    /// <summary>
-    /// Updates the bounds of the skeleton
-    /// </summary>
-    /// <param name="line">Vector3 line</param>
-    private void updateBounds(Vector3 point) {
-        lowerBounds.x = (lowerBounds.x < point.x) ? lowerBounds.x : point.x;
-        lowerBounds.y = (lowerBounds.y < point.y) ? lowerBounds.y : point.y;
-        lowerBounds.z = (lowerBounds.z < point.z) ? lowerBounds.z : point.z;
-        upperBounds.x = (upperBounds.x > point.x) ? upperBounds.x : point.x;
-        upperBounds.y = (upperBounds.y > point.y) ? upperBounds.y : point.y;
-        upperBounds.z = (upperBounds.z > point.z) ? upperBounds.z : point.z;
-    }
-
 
     //    _____       _                    _____          _      
     //   |  __ \     | |                  / ____|        | |     

@@ -23,18 +23,6 @@ public static class LSystemTreeGenerator {
         public float lineLen;
     }
 
-    /// <summary>
-    /// Class representing a tree.
-    /// The size and bounds is used to fit the 
-    /// BlockData[,,] pointmap to the tree.
-    /// </summary>
-    public class Tree {
-        public List<LineSegment> tree;
-        public Vector3 size;
-        public Vector3 lowerBounds;
-        public Vector3 upperBounds;
-    }
-
     //Defenition of language (the array is not used in the code)
     private static char[] language = new char[] {
         'N', //Variable
@@ -90,30 +78,36 @@ public static class LSystemTreeGenerator {
     /// </summary>
     /// <param name="pos">Position of the tree</param>
     /// <returns>Meshdata</returns>
-    public static MeshData[] generateMeshData(Vector3 pos) {
+    public static MeshData[] generateMeshData(Vector3 pos, BlockDataMap chunk, BiomeManager biomeManager) {
+        PremissiveBlockDataMap chunkMap = new PremissiveBlockDataMap(chunk, biomeManager);
 
-        Tree tree = GenerateLSystemTree(pos);
+        List<LineSegment> tree = GenerateLSystemTree(pos);
 
-        BlockDataMap pointMap = new BlockDataMap(Mathf.CeilToInt(tree.size.x), Mathf.CeilToInt(tree.size.y), Mathf.CeilToInt(tree.size.z));
-        BlockDataMap pointMapTrunk = new BlockDataMap(Mathf.CeilToInt(tree.size.x), Mathf.CeilToInt(tree.size.y), Mathf.CeilToInt(tree.size.z));
-        //Debug.Log("(" + pointMap.GetLength(0) + "," + pointMap.GetLength(1) + "," + pointMap.GetLength(2) + ")");
-        for (int x = 0; x < pointMap.GetLength(0); x++) {
-            for (int y = 0; y < pointMap.GetLength(1); y++) {
-                for (int z = 0; z < pointMap.GetLength(2); z++) {
-                    int i = pointMap.index1D(x, y, z);
-                    Vector3 samplePos = new Vector3(x, y, z) + tree.lowerBounds;
-                    samplePos = Utils.floorVector(samplePos);
-                    pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos, tree.tree), BlockData.BlockType.NONE);
-                    pointMapTrunk.mapdata[i] = pointMap.mapdata[i];
-                    if (pointMap.mapdata[i].blockType == BlockData.BlockType.LEAF) {
-                        pointMapTrunk.mapdata[i] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+        float modifier = ((WorldGenConfig.treeThickness < WorldGenConfig.treeLeafThickness) ? WorldGenConfig.treeLeafThickness : WorldGenConfig.treeThickness) * boundingBoxModifier;
+        LineStructureBounds bounds = new LineStructureBounds(tree, LineStructureType.TREE, modifier);
+
+        BlockDataMap pointMap = new BlockDataMap(bounds.sizeI.x, bounds.sizeI.y, bounds.sizeI.z);
+        BlockDataMap pointMapTrunk = new BlockDataMap(bounds.sizeI.x, bounds.sizeI.y, bounds.sizeI.z);
+        Vector3 flooredLowerBounds = Utils.floorVector(bounds.lowerBounds);
+        for (int x = 1; x < pointMap.GetLength(0) - 1; x++) {
+            for (int y = 1; y < pointMap.GetLength(1) - 1; y++) {
+                for (int z = 1; z < pointMap.GetLength(2) - 1; z++) {
+                    Vector3 samplePos = new Vector3(x, y, z) + flooredLowerBounds;
+                    Vector3Int chunkIndex = Utils.floorVectorToInt(pos + samplePos);
+                    if (chunkMap.indexEmpty(chunkIndex)) {
+                        int i = pointMap.index1D(x, y, z);
+                        pointMap.mapdata[i] = new BlockData(calcBlockType(samplePos, tree), BlockData.BlockType.NONE);
+                        pointMapTrunk.mapdata[i] = pointMap.mapdata[i];
+                        if (pointMap.mapdata[i].blockType == BlockData.BlockType.LEAF) {
+                            pointMapTrunk.mapdata[i] = new BlockData(BlockData.BlockType.NONE, BlockData.BlockType.NONE);
+                        }
                     }
                 }
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds))[0];
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, ChunkConfig.treeVoxelSize, -Utils.floorVector(tree.lowerBounds))[0];
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, WorldGenConfig.treeVoxelSize, -flooredLowerBounds)[0];
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, WorldGenConfig.treeVoxelSize, -flooredLowerBounds)[0];
         return meshData;
     }
     
@@ -126,9 +120,9 @@ public static class LSystemTreeGenerator {
     private static BlockData.BlockType calcBlockType(Vector3 pos, List<LineSegment> tree) {
         for (int i = 0; i < tree.Count; i++) {
             float dist = tree[i].distance(pos);
-            if (dist < ChunkConfig.treeThickness) {
+            if (dist < WorldGenConfig.treeThickness) {
                 return BlockData.BlockType.WOOD;
-            } else if (tree[i].endLine && dist < ChunkConfig.treeLeafThickness && leafPos(pos)) {
+            } else if (tree[i].endLine && dist < WorldGenConfig.treeLeafThickness && leafPos(pos)) {
                 return BlockData.BlockType.LEAF;
             }
         }
@@ -165,31 +159,26 @@ public static class LSystemTreeGenerator {
     /// </summary>
     /// <param name="pos"></param>
     /// <returns></returns>
-    public static Tree GenerateLSystemTree(Vector3 pos) {
+    public static List<LineSegment> GenerateLSystemTree(Vector3 pos) {
         //Initialize.
-        Tree tree = new Tree();
-        tree.tree = new List<LineSegment>(); ;
-        tree.lowerBounds = new Vector3(99999, 0, 99999);
-        tree.upperBounds = new Vector3(-99999, -99999, -99999);
+        List<LineSegment> tree = new List<LineSegment>(); ;
 
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(pos));
-        string word = recurseString(start.ToString(), ChunkConfig.grammarRecursionDepth, rng);
+        string word = recurseString(start.ToString(), WorldGenConfig.grammarRecursionDepth, rng);
 
         Stack<Turtle> states = new Stack<Turtle>();
         Turtle turtle = new Turtle();
         turtle.heading = Vector3.up;
         turtle.pos = Vector3.zero;
         turtle.axis = Axis.X;
-        turtle.lineLen = ChunkConfig.treeLineLength;
+        turtle.lineLen = WorldGenConfig.treeLineLength;
         
         //Make the turtle proccess the word.
         foreach(char c in word) {
             switch (c) {
                 case 'D':
-                    tree.tree.Add(new LineSegment(turtle.pos, turtle.pos + turtle.heading * turtle.lineLen));
+                    tree.Add(new LineSegment(turtle.pos, turtle.pos + turtle.heading * turtle.lineLen));
                     turtle.pos = turtle.pos + turtle.heading * turtle.lineLen;
-                    tree.lowerBounds = updateLowerBounds(tree.lowerBounds, turtle.pos);
-                    tree.upperBounds = updateUpperBounds(tree.upperBounds, turtle.pos);
                     break;
                 case 'X':
                     turtle.axis = Axis.X;
@@ -210,59 +199,19 @@ public static class LSystemTreeGenerator {
                     states.Push(turtle);
                     break;
                 case ']':
-                    LineSegment line = tree.tree[tree.tree.Count - 1]; //When the turtle pops, the branch is complete.
+                    LineSegment line = tree[tree.Count - 1]; //When the turtle pops, the branch is complete.
                     line.endLine = true;
-                    tree.tree[tree.tree.Count - 1] = line;
+                    tree[tree.Count - 1] = line;
                     turtle = states.Pop();
                     break;
             }
         }
-        LineSegment lastLine = tree.tree[tree.tree.Count - 1]; //When the turtle pops, the branch is complete.
+        LineSegment lastLine = tree[tree.Count - 1]; //When the turtle pops, the branch is complete.
         lastLine.endLine = true;
-        tree.tree[tree.tree.Count - 1] = lastLine;
-        //Ready the result and return.
-        float modifier = ((ChunkConfig.treeThickness < ChunkConfig.treeLeafThickness) ? ChunkConfig.treeLeafThickness : ChunkConfig.treeThickness) * boundingBoxModifier;
-        tree.lowerBounds -= new Vector3(1, 0, 1) * modifier;
-        tree.upperBounds += Vector3.one * modifier;
-        tree.size = (tree.upperBounds - tree.lowerBounds);
-        //Debug.Log(tree.size + "__" + tree.lowerBounds + "__" + tree.upperBounds);
+
+        tree[tree.Count - 1] = lastLine;
         return tree;
-    }
-
-    /// <summary>
-    /// Helper function for GenerateLSystemTree.
-    /// </summary>
-    /// <param name="bounds">The bounds to update</param>
-    /// <param name="turtlePos">The position of the turtle</param>
-    /// <returns>Updated bounds</returns>
-    private static Vector3 updateLowerBounds(Vector3 bounds, Vector3 turtlePos) {
-        if (turtlePos.x < bounds.x) {
-            bounds.x = turtlePos.x;
-        }
-        if (turtlePos.z < bounds.z) {
-            bounds.z = turtlePos.z;
-        }
-        return bounds;
-    }
-
-    /// <summary>
-    /// Helper function for GenerateLSystemTree.
-    /// </summary>
-    /// <param name="bounds">The bounds to update</param>
-    /// <param name="turtlePos">The position of the turtle</param>
-    /// <returns>Updated bounds</returns>
-    private static Vector3 updateUpperBounds(Vector3 bounds, Vector3 turtlePos) {
-        if (turtlePos.x > bounds.x) {
-            bounds.x = turtlePos.x;
-        }
-        if (turtlePos.y > bounds.y) {
-            bounds.y = turtlePos.y;
-        }
-        if (turtlePos.z > bounds.z) {
-            bounds.z = turtlePos.z;
-        }
-        return bounds;
-    }
+    }   
 
     /// <summary>
     /// Recurses the string and applies the rules of the grammar defined by this class.

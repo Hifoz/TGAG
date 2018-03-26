@@ -5,7 +5,12 @@ using System.Collections;
 /// <summary>
 /// Super class for all air animals
 /// </summary>
-public abstract class AirAnimal : Animal {
+public class AirAnimal : Animal {
+    //Coroutine flags
+    protected bool flagLaunching = false;
+    private bool flagAscending = false;
+    private bool flagRagDollTail = false;
+
     //Animation stuff
     protected AirAnimalSkeleton airSkeleton;
 
@@ -19,20 +24,14 @@ public abstract class AirAnimal : Animal {
     private AnimalAnimation walkingAnimation;
 
     //Physics stuff
-    protected const float walkSpeed = 5f;
-    protected const float flySpeed = 30f;
     protected const float glideDrag = 0.25f;
 
-    protected bool isLaunching = false;
-
-    private bool correctingSpine = false;
-    private bool spineIsCorrrect = true;
-
-    private void Update() {
+    override protected void Update() {
         if (skeleton != null) {
-            move();
+            brain.move();
             calculateSpeedAndHeading();
             doGravity();
+            calcVelocity();
             levelSpine();
             handleAnimations();
         }
@@ -54,26 +53,22 @@ public abstract class AirAnimal : Animal {
         base.setSkeleton(skeleton);
         airSkeleton = (AirAnimalSkeleton)skeleton;
 
-        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
-        LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
-        StartCoroutine(ragdollLimb(tail, tailLine, () => { return true; }, false, 1f, transform));
-
         makeLegsRagDoll();
 
         generateAnimations();
+
+        flagLaunching = false;
     }
 
-
-    //    _   _                               _     _ _         __                  _   _                 
-    //   | \ | |                             | |   | (_)       / _|                | | (_)                
-    //   |  \| | ___  _ __ ______ _ __  _   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-    //   | . ` |/ _ \| '_ \______| '_ \| | | | '_ \| | |/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-    //   | |\  | (_) | | | |     | |_) | |_| | |_) | | | (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
-    //   |_| \_|\___/|_| |_|     | .__/ \__,_|_.__/|_|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-    //                           | |                                                                      
-    //                           |_|                                                                      
-
-    override protected abstract void move();
+    /// <summary>
+    /// Sets the animal brain, and sets up actions for the brain
+    /// </summary>
+    /// <param name="brain"></param>
+    public override void setAnimalBrain(AnimalBrain brain) {
+        base.setAnimalBrain(brain);
+        brain.addAction("launch", tryLaunch);
+        brain.addAction("ascend", tryAscend);
+    }
 
     //                   _                 _   _                __                  _   _                 
     //       /\         (_)               | | (_)              / _|                | | (_)                
@@ -117,7 +112,6 @@ public abstract class AirAnimal : Animal {
     /// <param name="wingRot2">Keyframes for wing rotations 2</param>
     /// <returns></returns>
     private AnimalAnimation generateFlyingAnimation(Vector3[] spinePos, Vector3[] wingRot1, Vector3[] wingRot2) {
-        Bone spineBone = skeleton.getBones(BodyPart.SPINE)[0];
         List<Bone> neckBones = skeleton.getBones(BodyPart.NECK);
         List<Bone> rightWing = airSkeleton.getWing(true);
         List<Bone> leftWing = airSkeleton.getWing(false);
@@ -210,32 +204,40 @@ public abstract class AirAnimal : Animal {
     /// Handles the animation logic
     /// </summary>
     private void handleAnimations() {
-        if (!animationInTransition) {
-            currentAnimation.animate(speed * ((grounded) ? animSpeedScalingGround : animSpeedScalingAir));
+        if (!flagAnimationTransition) {
+            currentAnimation.animate(state.speed * ((state.grounded) ? animSpeedScalingGround : animSpeedScalingAir));
             if (currentAnimation == walkingAnimation) {
                 groundLegsAndWings();
             }
         }
 
-        if (grounded) {
+        if (state.grounded) {
             if (currentAnimation != walkingAnimation) {
                 tryAnimationTransition(walkingAnimation, animSpeedScalingAir, animSpeedScalingGround, 0.5f);
             }
         } else {
             float transistionTime = (currentAnimation == walkingAnimation) ? 0.5f : 0.5f;
             float nextSpeedScaling = (currentAnimation == walkingAnimation) ? animSpeedScalingGround : animSpeedScalingAir;
-            if (desiredSpeed == 0 && currentAnimation != glidingAnimation) {                
+            if (state.desiredSpeed == 0 && currentAnimation != glidingAnimation) {                
                 tryAnimationTransition(glidingAnimation, animSpeedScalingAir, nextSpeedScaling, transistionTime);
-            } else if (desiredSpeed != 0 && currentAnimation != flappingAnimation) {
+            } else if (state.desiredSpeed != 0 && currentAnimation != flappingAnimation) {
                 tryAnimationTransition(flappingAnimation, animSpeedScalingAir, nextSpeedScaling, transistionTime);
             }
         }
 
-        if (ragDollLegs && grounded) {
+        if (ragDollLegs && state.grounded) {
             ragDollLegs = false;
-        } else if (!ragDollLegs && !grounded) {
+        } else if (!ragDollLegs && !state.grounded) {
             ragDollLegs = true;
             makeLegsRagDoll();
+        }
+
+        if (!flagRagDollTail) {
+            flagRagDollTail = true;
+            flagRagDollTail = true;
+            List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+            LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
+            StartCoroutine(ragdollLimb(tail, tailLine, () => { return flagRagDollTail; }, false, 4f, transform));
         }
     }
 
@@ -278,19 +280,36 @@ public abstract class AirAnimal : Animal {
     //                 |___/                                                             
 
     /// <summary>
+    /// Does velocity calculations
+    /// </summary>
+    override protected void calcVelocity() {
+        transform.LookAt(state.transform.position + state.heading);
+        Vector3 velocity;
+        if (state.grounded || state.inWater) {
+            velocity = state.spineHeading.normalized * state.speed;
+        } else {
+            velocity = state.heading.normalized * state.speed;
+        }
+        rb.velocity = velocity + gravity;
+    }
+
+    /// <summary>
     /// Function for calculating speed and heading
     /// </summary>
     override protected void calculateSpeedAndHeading() {
-        if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
-            heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        if (Vector3.Angle(state.heading, state.desiredHeading) > 0.1f) {
+            state.heading = Vector3.RotateTowards(state.heading, state.desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
-        if (desiredSpeed - speed > 0.2f) { //Acceleration           
-            speed += Time.deltaTime * acceleration;            
-        } else if (speed - desiredSpeed > 0.2f) { //Deceleration
-            if (!grounded) {
-                speed -= Time.deltaTime * acceleration * glideDrag;
+        if (state.inWater) {
+            preventDownardMovement();
+        }
+        if (state.desiredSpeed - state.speed > 0.2f) { //Acceleration           
+            state.speed += Time.deltaTime * acceleration;            
+        } else if (state.speed - state.desiredSpeed > 0.2f) { //Deceleration
+            if (state.grounded || state.inWater) {
+                state.speed -= Time.deltaTime * acceleration;       
             } else {
-                speed -= Time.deltaTime * acceleration;
+                state.speed -= Time.deltaTime * acceleration * glideDrag;
             }
         }
     }
@@ -299,9 +318,9 @@ public abstract class AirAnimal : Animal {
     /// Gravity calculations for when you are not grounded
     /// </summary>
     override protected void notGroundedGravity() {
-        grounded = false;
-        if (speed <= flySpeed / 2) {
-            gravity += Physics.gravity * Time.deltaTime * (1 - speed / (flySpeed / 2f));
+        state.grounded = false;
+        if (state.speed <= brain.fastSpeed / 2) {
+            gravity += Physics.gravity * Time.deltaTime * (1 - state.speed / (brain.fastSpeed / 2f));
         } else {
             gravity = Vector3.zero;
         }
@@ -312,10 +331,10 @@ public abstract class AirAnimal : Animal {
     /// </summary>
     /// <returns>Success flag</returns>
     protected bool tryLaunch() {
-        if (!isLaunching) {
+        if (!flagLaunching) {
             StartCoroutine(launch());
         }
-        return !isLaunching;
+        return !flagLaunching;
     }
 
     /// <summary>
@@ -323,59 +342,55 @@ public abstract class AirAnimal : Animal {
     /// </summary>
     /// <returns></returns>
     private IEnumerator launch() {
-        isLaunching = true;
+        flagLaunching = true;
         acceleration = acceleration * 4;
         gravity -= Physics.gravity * 2f;
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
-            grounded = false;
+            state.grounded = false;
+            state.inWater = false;
             yield return 0;
         }
         acceleration = acceleration / 4;
-        isLaunching = false;
+        flagLaunching = false;
     }
 
     /// <summary>
-    /// Levels the spine with the ground
+    /// Tries to ascend
     /// </summary>
-    protected override void levelSpine() {
-        if (grounded) {
-            base.levelSpine();
-            spineIsCorrrect = false;
-        } else if (!grounded && !spineIsCorrrect) {            
-            spineIsCorrrect = tryCorrectSpine();
+    /// <returns>success flag</returns>
+    private bool tryAscend() {
+        if (!flagAscending) {
+            StartCoroutine(ascend());
         }
+        return !flagAscending;
     }
 
     /// <summary>
-    /// Tries to correct the spine
-    /// </summary>
-    /// <returns>Success flag</returns>
-    private bool tryCorrectSpine() {
-        if (!correctingSpine) {
-            StartCoroutine(correctSpine());
-        }
-        return !correctingSpine;
-    }
-
-    /// <summary>
-    /// Corrects the spine (returning it to zero rotation)
+    /// Makes the NPC fly straight up
     /// </summary>
     /// <returns></returns>
-    private IEnumerator correctSpine() {
-        correctingSpine = true;
-        Bone spine = skeleton.getBones(BodyPart.SPINE)[0];
-        Quaternion originalRot = spine.bone.localRotation;
-        for (float t = 0; t <= 1f; t += Time.deltaTime) {
-            spine.bone.localRotation = Quaternion.Lerp(originalRot, Quaternion.identity, t);
+    private IEnumerator ascend() {
+        flagAscending = true;
+        Vector3 originalHeading = state.desiredHeading;
+
+        tryLaunch();
+        for (float t = 0; t <= 1f; t += Time.deltaTime / 2f) {
+            state.desiredHeading = Vector3.up;
             yield return 0;
         }
-        spine.bone.localRotation = Quaternion.identity;
-        correctingSpine = false;
+        state.desiredHeading = originalHeading;
+        flagAscending = false;
     }
 
-    private void OnCollisionEnter(Collision collision) {
-        gravity = Vector3.zero;
-        isLaunching = false;
+    override protected void OnCollisionEnter(Collision collision) {
+        base.OnCollisionEnter(collision);
+        flagLaunching = false;
     }
 
+    override protected void OnDisable() {
+        base.OnDisable();
+        flagRagDollTail = false;
+        flagLaunching = false;
+        flagAscending = false;
+    }
 }

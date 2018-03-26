@@ -1,24 +1,25 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 
-public abstract class LandAnimal : Animal {
+public class LandAnimal : Animal {
+    //Coroutine flags
+    bool flagJumping = false;
+    private bool flagRagDollTail = false;
+
     //Animation stuff
     bool ragDolling = false;
     AnimalAnimation walkingAnimation;
     LandAnimalSkeleton landSkeleton;
     private float speedAnimScaling;
 
-    //Physics stuff
-    protected const float walkSpeed = 5f;
-    protected const float runSpeed = walkSpeed * 4f;
-
-
     // Update is called once per frame
-    void Update() {
+    override protected void Update() {
         if (skeleton != null) {
-            calculateSpeedAndHeading();
-            move();
+            calculateSpeedAndHeading();           
+            brain.move();
+            calcVelocity();
             levelSpine();
             doGravity();
             handleRagdoll();
@@ -30,16 +31,16 @@ public abstract class LandAnimal : Animal {
     /// sets the skeleton, and applies the new mesh.
     /// </summary>
     override public void setSkeleton(AnimalSkeleton skeleton) {
-        base.setSkeleton(skeleton);
-        List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
-        LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
-        StartCoroutine(ragdollLimb(tail, tailLine, () => { return true; }, false, 4f, transform));
+        base.setSkeleton(skeleton);        
         landSkeleton = (LandAnimalSkeleton)skeleton;
 
         generateAnimations();
     }
 
-    override protected abstract void move();
+    public override void setAnimalBrain(AnimalBrain brain) {
+        base.setAnimalBrain(brain);
+        brain.addAction("jump", tryJump);
+    }
 
     //                   _                 _   _                __                  _   _                 
     //       /\         (_)               | | (_)              / _|                | | (_)                
@@ -103,28 +104,36 @@ public abstract class LandAnimal : Animal {
     /// </summary>
     private void handleAnimations() {
         if (!ragDolling) {
-            currentAnimation.animate(speed * speedAnimScaling);
+            currentAnimation.animate(state.speed * speedAnimScaling);
             int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
             for (int i = 0; i < legPairs; i++) {
                 groundLimb(landSkeleton.getLeg(true, i), 0.5f);
                 groundLimb(landSkeleton.getLeg(true, i), 0.5f);
             }
-        }
+        }        
     }
 
     /// <summary>
     /// Function for handling ragdoll effects when free falling
     /// </summary>
     private void handleRagdoll() {
-        if (grounded) {
+        if (state.grounded || state.inWater) {
             ragDolling = false;
-        } else if (!grounded && !ragDolling) {
+        } else if (!state.grounded && !ragDolling && !state.inWater) {
             ragDolling = true;
+            ragDollCondition condition = () => { return (!state.grounded && !state.inWater); };
             for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
-                StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], () => { return !grounded; }, true));
-                StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], () => { return !grounded; }, true));
+                StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], condition, true));
+                StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], condition, true));
             }
-            StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], () => { return !grounded; }, true));
+            StartCoroutine(ragdollLimb(skeleton.getBones(BodyPart.NECK), skeleton.getLines(BodyPart.NECK)[0], condition, true));
+        }
+
+        if (!flagRagDollTail) {
+            flagRagDollTail = true;
+            List<Bone> tail = skeleton.getBones(BodyPart.TAIL);
+            LineSegment tailLine = skeleton.getLines(BodyPart.TAIL)[0];
+            StartCoroutine(ragdollLimb(tail, tailLine, () => { return flagRagDollTail; }, false, 4f, transform));
         }
     }
 
@@ -135,25 +144,74 @@ public abstract class LandAnimal : Animal {
     //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
     //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                  __/ |                                                            
-    //                 |___/                        
+    //                 |___/         
+    
+    /// <summary>
+    /// Does velocity calculations
+    /// </summary>
+    override protected void calcVelocity() {
+        Vector3 velocity;
+        if (state.grounded || state.inWater) {
+            velocity = state.spineHeading.normalized * state.speed;
+        } else {
+            velocity = state.heading.normalized * state.speed;
+        }
+        rb.velocity = velocity + gravity;
+        transform.LookAt(state.transform.position + state.heading);
+    }
 
     /// <summary>
     /// Function for calculating speed and heading
     /// </summary>
     override protected void calculateSpeedAndHeading() {
-        if (Vector3.Angle(heading, desiredHeading) > 0.1f) {
-            heading = Vector3.RotateTowards(heading, desiredHeading, Time.deltaTime * headingChangeRate, 1f);
+        if (Vector3.Angle(state.heading, state.desiredHeading) > 0.1f) {
+            state.heading = Vector3.RotateTowards(state.heading, state.desiredHeading, Time.deltaTime * headingChangeRate, 1f);
         }
-        if (Mathf.Abs(desiredSpeed - speed) > 0.2f) {
-            if (grounded) {
-                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration;
+        if (state.inWater) {
+            preventDownardMovement();
+        }
+        if (Mathf.Abs(state.desiredSpeed - state.speed) > 0.2f) {
+            if (state.grounded) {
+                state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration;
+            } else if (state.inWater) {
+                state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration * 0.5f;
             } else {
-                speed += Mathf.Sign(desiredSpeed - speed) * Time.deltaTime * acceleration * 0.2f;
+                state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration * 0.2f;
             }
         }
-    }     
+    }
 
-    private void OnCollisionEnter(Collision collision) {
+    /// <summary>
+    /// Tries to jump
+    /// </summary>
+    /// <returns>success flag</returns>
+    private bool tryJump() {
+        if (!flagJumping) {
+            StartCoroutine(jump());
+        }
+        return !flagJumping;
+    }
+
+    /// <summary>
+    /// Makes the player jump
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator jump() {
+        flagJumping = true;
+        gravity += -Physics.gravity * 2f;
+        yield return new WaitForSeconds(1.0f);
+        flagJumping = false;
+    }
+
+    override protected void OnCollisionEnter(Collision collision) {
+        base.OnCollisionEnter(collision);
         gravity = Vector3.zero;
+        flagJumping = false;
+    }
+
+    override protected void OnDisable() {
+        base.OnDisable();
+        flagRagDollTail = false;
+        flagJumping = false;
     }
 }

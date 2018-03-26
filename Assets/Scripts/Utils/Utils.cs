@@ -5,13 +5,27 @@
 /// </summary>
 public static class Utils {
 
-    //Floors the vector
+    /// <summary>
+    /// Floors the vector
+    /// </summary>
+    /// <param name="vec">vector to floor</param>
+    /// <returns>Floored vector</returns>
     public static Vector3 floorVector(Vector3 vec) {
         vec.x = Mathf.Floor(vec.x);
         vec.y = Mathf.Floor(vec.y);
         vec.z = Mathf.Floor(vec.z);
         return vec;
     }
+
+    /// <summary>
+    /// Floors the vector
+    /// </summary>
+    /// <param name="vec">vector to floor</param>
+    /// <returns>Floored vector</returns>
+    public static Vector3Int floorVectorToInt(Vector3 vec) {
+        return new Vector3Int(Mathf.FloorToInt(vec.x), Mathf.FloorToInt(vec.y), Mathf.FloorToInt(vec.z));
+    }
+
 
     /// <summary>
     /// Returns the fraction of the float

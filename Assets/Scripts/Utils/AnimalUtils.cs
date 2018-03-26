@@ -13,34 +13,60 @@ public static class AnimalUtils {
     /// <param name="target">Target animal</param>
     /// <param name="animalType">Type of target animal</param>
     /// <returns>The added component</returns>
-    public static Animal addAnimalComponentNPC(GameObject target, Type animalType) {
-        if (animalType.BaseType.Equals(typeof(LandAnimal))) {
-            return target.AddComponent<LandAnimalNPC>();
-        } else if (animalType.BaseType.Equals(typeof(AirAnimal))) {
-            return target.AddComponent<AirAnimalNPC>();
-        } else if (animalType.BaseType.Equals(typeof(WaterAnimal))) {
-            return target.AddComponent<WaterAnimalNPC>();
+    public static Animal addAnimalComponent(GameObject target, Type animalType) {
+        if (animalType.Equals(typeof(LandAnimal))) {
+            return target.AddComponent<LandAnimal>();
+        } else if (animalType.Equals(typeof(AirAnimal))) {
+            return target.AddComponent<AirAnimal>();
+        } else if (animalType.Equals(typeof(WaterAnimal))) {
+            return target.AddComponent<WaterAnimal>();
         } else {
-            throw new Exception("AnimalUtils, addAnimalComponentNPC error! The provided type is invalid! you provided: " + animalType.Name);
+            throw new Exception("AnimalUtils, addAnimalComponent error! The provided type is invalid! you provided: " + animalType.Name);
         }
     }
 
     /// <summary>
-    /// Resolves type and adds appropriate AnimalPlayer component to target
+    /// Resolves type and adds appropriate brain component to target
     /// </summary>
     /// <param name="target">Target animal</param>
-    /// <param name="animalType">Type of target animal</param>
-    /// <returns>The added component</returns>
-    public static Animal addAnimalComponentPlayer(GameObject target, Type animalType) {
-        if (animalType.BaseType.Equals(typeof(LandAnimal))) {
-            return target.AddComponent<LandAnimalPlayer>();
-        } else if (animalType.BaseType.Equals(typeof(AirAnimal))) {
-            return target.AddComponent<AirAnimalPlayer>();
-        } else if (animalType.BaseType.Equals(typeof(WaterAnimal))) {
-            return target.AddComponent<WaterAnimalPlayer>();
+    public static AnimalBrain addAnimalBrainPlayer(Animal target) {
+        Type type = target.GetType();
+        AnimalBrain brain = null;
+        if (type.Equals(typeof(LandAnimal))) {
+            brain = new LandAnimalBrainPlayer();
+            ((LandAnimal)target).setAnimalBrain(brain);
+        } else if (type.Equals(typeof(AirAnimal))) {
+            brain = new AirAnimalBrainPlayer();
+            ((AirAnimal)target).setAnimalBrain(brain);
+        } else if (type.Equals(typeof(WaterAnimal))) {
+            brain = new WaterAnimalBrainPlayer();
+            ((WaterAnimal)target).setAnimalBrain(brain);
         } else {
-            throw new Exception("AnimalUtils, addAnimalComponentPlayer error! The provided type is invalid! you provided: " + animalType.Name);
-        }       
+            throw new Exception("AnimalUtils, addAnimalBrainNPC error! The provided type is invalid! you provided: " + type.Name);
+        }
+        return brain;
+    }
+
+    /// <summary>
+    /// Resolves type and adds appropriate brain component to target
+    /// </summary>
+    /// <param name="target">Target animal</param>
+    public static AnimalBrain addAnimalBrainNPC(Animal target) {
+        Type type = target.GetType();
+        AnimalBrain brain = null;
+        if (type.Equals(typeof(LandAnimal))) {
+            brain = new LandAnimalBrainNPC();
+            ((LandAnimal)target).setAnimalBrain(brain);
+        } else if (type.Equals(typeof(AirAnimal))) {
+            brain = new AirAnimalBrainNPC();
+            ((AirAnimal)target).setAnimalBrain(brain);
+        } else if (type.Equals(typeof(WaterAnimal))) {
+            brain = new WaterAnimalBrainNPC();
+            ((WaterAnimal)target).setAnimalBrain(brain);
+        } else {
+            throw new Exception("AnimalUtils, addAnimalBrainNPC error! The provided type is invalid! you provided: " + type.Name);
+        }
+        return brain;
     }
 
     /// <summary>
@@ -50,11 +76,11 @@ public static class AnimalUtils {
     /// <param name="animalType">Type fo the target</param>
     /// <returns>AnimalSkeleton</returns>
     public static AnimalSkeleton createAnimalSkeleton(GameObject target, Type animalType) {
-        if (animalType.BaseType.Equals(typeof(LandAnimal))) {
+        if (animalType.Equals(typeof(LandAnimal))) {
             return new LandAnimalSkeleton(target.transform);
-        } else if (animalType.BaseType.Equals(typeof(AirAnimal))) {
+        } else if (animalType.Equals(typeof(AirAnimal))) {
             return new AirAnimalSkeleton(target.transform);
-        } else if (animalType.BaseType.Equals(typeof(WaterAnimal))) {
+        } else if (animalType.Equals(typeof(WaterAnimal))) {
             return new WaterAnimalSkeleton(target.transform);
         } else {
             throw new Exception("AnimalUtils, createAnimalSkeleton error! The provided type is invalid! you provided: " + animalType.Name);

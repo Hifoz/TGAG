@@ -135,23 +135,33 @@ public class ChunkVoxelDataThread {
 
         switch (order.task) {
             case Task.CHUNK:
-                Vector3 distFromPlayer = order.position - Player.playerPos.get();
-                if (Mathf.Abs(distFromPlayer.x) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > ChunkConfig.chunkSize * (ChunkConfig.chunkCount + 5) * 0.5f) {
-                    result.task = Task.CANCEL;
-                    result.chunkVoxelData = new ChunkVoxelData(order.position);
-                } else {
-                    result.chunkVoxelData = handleChunkOrder(order);
-                }
+                result.chunkVoxelData = handleChunkOrder(order);
                 break;
             case Task.ANIMAL:
                 order.animalSkeleton.generateInThread();
                 result.animalSkeleton = order.animalSkeleton;
+                break;
+            case Task.CANCEL:
+                result.task = Task.CANCEL;
+                result.chunkVoxelData = new ChunkVoxelData(order.position);
                 break;
         }
 
         return result;
     }
 
+    /// <summary>
+    /// Shoudl chunk at position be canceled?
+    /// </summary>
+    /// <param name="pos">Position of chunk</param>
+    /// <returns>bool should cancel</returns>
+    private bool cancelChunk(Vector3 pos) {
+        Vector3 distFromPlayer = pos - Player.playerPos.get();
+        if (Mathf.Abs(distFromPlayer.x) > WorldGenConfig.chunkSize * (WorldGenConfig.chunkCount + 5) * 0.5f || Mathf.Abs(distFromPlayer.z) > WorldGenConfig.chunkSize * (WorldGenConfig.chunkCount + 5) * 0.5f) {
+            return true;
+        }
+        return false;
+    }
 
     /// <summary>
     /// Generates a chunk with trees
@@ -160,29 +170,32 @@ public class ChunkVoxelDataThread {
     /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData(order.position);
-        //Generate the chunk terrain
-        result.meshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager));
-        result.waterMeshData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager), meshDataType: MeshDataGenerator.MeshDataType.WATER);
-        //Generate the trees in the chunk
+
+        //Generate the chunk terrain:
+        BlockDataMap chunkBlockData = ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager);
+        result.meshData = MeshDataGenerator.GenerateMeshData(chunkBlockData);
+        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(chunkBlockData);
+
+
+        //Generate the trees in the chunk:
+        int maxTrees = biomeManager.getClosestBiome(new Vector2Int((int)order.position.x, (int)order.position.z)).maxTreesPerChunk;
+
         System.Random rng = new System.Random(NoiseUtils.Vector2Seed(order.position));
-        int treeCount = Mathf.CeilToInt(((float)rng.NextDouble() * ChunkConfig.maxTreesPerChunk) - 0.5f);
+        int treeCount = Mathf.CeilToInt(((float)rng.NextDouble() * maxTrees) - 0.5f);
 
         List<MeshData> trees = new List<MeshData>();
         List<MeshData> treeTrunks = new List<MeshData>();
         List<Vector3> treePositions = new List<Vector3>();
 
         for (int i = 0; i < treeCount; i++) {
-            Vector3 pos = new Vector3((float)rng.NextDouble() * ChunkConfig.chunkSize, 0, (float)rng.NextDouble() * ChunkConfig.chunkSize);
-            pos += order.position;
-            pos = Utils.floorVector(pos);
-            pos = findGroundLevel(pos);
-            pos = Utils.floorVector(pos);
-            if(pos.y > ChunkConfig.waterHeight + 3) {
-                if(!float.IsInfinity(pos.x) && !float.IsInfinity(pos.y) && !float.IsInfinity(pos.z)) { // Don't use Vector3.negativeInfinity to check, apparently it doesn't catch it...
-                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(pos);
+            Vector3 localPos = new Vector3((float)rng.NextDouble() * WorldGenConfig.chunkSize, 0, (float)rng.NextDouble() * WorldGenConfig.chunkSize);
+            localPos = findGroundLevel(Utils.floorVectorToInt(localPos), chunkBlockData);
+            if (localPos.y > WorldGenConfig.waterHeight + 2) {
+                if(localPos != Vector3.down) {
+                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, chunkBlockData, biomeManager);
                     trees.Add(tree[0]);
                     treeTrunks.Add(tree[1]);
-                    treePositions.Add(pos);
+                    treePositions.Add(localPos + order.position);
                 } else {
                     i--; //Try again
                 }
@@ -191,7 +204,6 @@ public class ChunkVoxelDataThread {
         result.trees = trees.ToArray();
         result.treeTrunks = treeTrunks.ToArray();
         result.treePositions = treePositions.ToArray();
-
         return result;
     }
 
@@ -200,32 +212,25 @@ public class ChunkVoxelDataThread {
     /// </summary>
     /// <param name="pos">Vector3 position to investigate</param>
     /// <returns>Vector3 ground level position</returns>
-    private Vector3 findGroundLevel(Vector3 pos) {
-        const int maxIter = 100;
-        int iter = 0;
-        
-        List<Pair<Biome, float>> biomes = biomeManager.getInRangeBiomes(new Vector2Int((int)pos.x, (int)pos.z));
-        float height = ChunkVoxelDataGenerator.calcHeight(pos, biomes);
-
-        pos.y = (int)height;
-        bool lastVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes);
+    private Vector3 findGroundLevel(Vector3Int localPos, BlockDataMap data) {
+        int halfLength = data.GetLength(1) / 2;
+        localPos.y = halfLength;
+        bool lastVoxel = data.mapdata[data.index1D(localPos)].blockType != BlockData.BlockType.NONE;
         bool currentVoxel = lastVoxel;
         int dir = (lastVoxel) ? 1 : -1;
         
-        while (iter < maxIter) {
-            pos.y += dir;
+        for (int i = 0; i < halfLength; i++) { 
+            localPos.y += dir;
             lastVoxel = currentVoxel;
-
-            currentVoxel = ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)height, biomes);
+            currentVoxel = data.mapdata[data.index1D(localPos)].blockType != BlockData.BlockType.NONE;
             if (lastVoxel != currentVoxel) {
-                if (!lastVoxel) { //Put the tree in an empty voxel
-                    pos.y -= dir;
+                if (lastVoxel) { //Put the tree in an empty voxel
+                    localPos.y -= dir;
                 }
-                return pos;
+                return localPos;
             }
-            iter++;
         }
-        return Vector3.negativeInfinity;
+        return Vector3.down;
     }
 
     /// <summary>
@@ -237,6 +242,13 @@ public class ChunkVoxelDataThread {
         int resultIndex = -1;
         float preferredValue = Int32.MaxValue;
         for(int i = 0; i < list.Count; i++) {
+            if (list[i].task == Task.CHUNK) { //Prioritize canceling chunks the most
+                if (cancelChunk(list[i].position)) {
+                    list[i].task = Task.CANCEL;
+                    return i;
+                }
+            }
+
             Vector3 chunkPos = list[i].position;
             Vector3 playerPos = Player.playerPos.get();
             Vector3 playerMoveDir = Player.playerSpeed.get();

@@ -4,27 +4,72 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Struct that contains statistics about what the ChunkManager does
+/// The different kind of stats for the chunk manager
 /// </summary>
-public struct ChunkManagerStats {
-    public int generatedChunks;
-    public int generatedAnimals;
-    public int cancelledChunks;
+public enum WorldGenManagerStatsType {
+    GENERATED_CHUNKS = 0,
+    GENERATED_ANIMALS,
+    CANCELLED_CHUNKS,
+    ENABLED_COLLIDERS,
+    OBJECTS_ENABLED,
+    OBJECTS_DISABLED
+}
+
+/// <summary>
+/// Struct that contains statistics about what the WorldGenManager does
+/// </summary>
+public class WorldGenManagerStats {
+    public Dictionary<WorldGenManagerStatsType, int> aggregateValues;
+    public Dictionary<WorldGenManagerStatsType, int> lastSecondValues;
+
+    /// <summary>
+    /// Initializes the dictionaries
+    /// </summary>
+    public WorldGenManagerStats() {
+        aggregateValues = new Dictionary<WorldGenManagerStatsType, int>();
+        lastSecondValues = new Dictionary<WorldGenManagerStatsType, int>();
+        foreach (WorldGenManagerStatsType type in Enum.GetValues(typeof(WorldGenManagerStatsType))) {
+            aggregateValues.Add(type, 0);
+            lastSecondValues.Add(type, 0);
+        }        
+    }
+
+    /// <summary>
+    /// Calculates the per second values
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator calculatePerSecondStats() {
+        Dictionary<WorldGenManagerStatsType, int> oldAggregates = new Dictionary<WorldGenManagerStatsType, int>();
+        foreach (WorldGenManagerStatsType type in Enum.GetValues(typeof(WorldGenManagerStatsType))) {
+            oldAggregates.Add(type, 0);
+        }
+
+        while (true) {
+            foreach(KeyValuePair<WorldGenManagerStatsType, int> stats in aggregateValues) {
+                oldAggregates[stats.Key] = stats.Value;
+            }
+            yield return new WaitForSecondsRealtime(1);
+            foreach (KeyValuePair<WorldGenManagerStatsType, int> stats in aggregateValues) {
+                lastSecondValues[stats.Key] = stats.Value - oldAggregates[stats.Key];
+            }
+        }
+    }
 }
 
 /// <summary>
 /// This class is responsible for handling the chunks that makes up the world.
 /// It creates and places chunks into the world, keeping the player at the center of the world.
 /// </summary>
-public class ChunkManager : MonoBehaviour {
+public class WorldGenManager : MonoBehaviour {
 
-    public ChunkManagerStats stats = new ChunkManagerStats();
+    public WorldGenManagerStats stats;
     public Transform player;
     public TextureManager textureManager;
     public GameObject chunkPrefab;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
+    public GameObject waterAnimalPrefab;
     private Vector3 offset;
 
     // Chunks
@@ -37,16 +82,17 @@ public class ChunkManager : MonoBehaviour {
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
-
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
 
     // Animals
-    private GameObject[] animals = new GameObject[20]; //Might want to pool animals in the future too, but for now they're just at a fixed size of 20
-    private HashSet<int> orderedAnimals = new HashSet<int>();
+    private GameObjectPool[] animalPools = new GameObjectPool[3];
+    private const int LAND_ANIMAL_POOL = 0;
+    private const int AIR_ANIMAL_POOL = 1;
+    private const int WATER_ANIMAL_POOL = 2;
+    private HashSet<GameObject> orderedAnimals = new HashSet<GameObject>();    
 
     // Biomes
     private BiomeManager biomeManager;
-
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -55,7 +101,6 @@ public class ChunkManager : MonoBehaviour {
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         biomeManager = new BiomeManager();
         Reset();
-        //StartCoroutine(debugRoutine());
     }
 	
 	// Update is called once per frame
@@ -79,31 +124,27 @@ public class ChunkManager : MonoBehaviour {
 
 
     /// <summary>
-    /// Handles spawning of animals.
+    /// Handles animals
     /// </summary>
     private void handleAnimals() {
         enableColliders(player.position);
         if (landAnimalPrefab) {
-            for (int i = 0; i < animals.Length; i++) {
-                GameObject animal = animals[i];
-                if (!orderedAnimals.Contains(i) && isAnimalTooFarAway(animal.transform.position)) {
-                    Vector3 spawnPos = calculateValidSpawnPosition();
-                    if (spawnPos != Vector3.down) {
-                        animal.SetActive(true);
-                        animal.transform.position = spawnPos;
-                        AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animal, animal.GetComponent<Animal>().GetType());
-                        animalSkeleton.index = i;
-                        orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
-                        orderedAnimals.Add(i);
-                        animal.SetActive(false);
+            foreach (GameObjectPool animalPool in animalPools) {
+                Stack<GameObject> deSpawn = new Stack<GameObject>();
+                foreach (GameObject animalObj in animalPool.activeList) {
+                    if (!orderedAnimals.Contains(animalObj) && isAnimalTooFarAway(animalObj.transform.position)) {
+                        deSpawn.Push(animalObj);
+                    } else {
+                        if (!orderedAnimals.Contains(animalObj)) {
+                            tryDisable(animalObj, animalObj.transform.position);
+                        }
+                        if (animalObj.activeSelf) {
+                            enableColliders(animalObj.transform.position);
+                        }
                     }
-                } else {
-                    if (!orderedAnimals.Contains(i)) {
-                        tryDisable(animal, animal.transform.position);
-                    }
-                    if (animal.activeSelf) {
-                        enableColliders(animal.transform.position);
-                    }
+                }
+                while (deSpawn.Count > 0) {
+                    animalPool.returnObject(deSpawn.Pop());
                 }
             }
         }
@@ -113,8 +154,8 @@ public class ChunkManager : MonoBehaviour {
     /// Clears all elements in the chunkGrid
     /// </summary>
     private void clearChunkGrid() {
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+        for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
                 chunkGrid[x, z] = null;
             }
         }
@@ -164,8 +205,8 @@ public class ChunkManager : MonoBehaviour {
     /// Orders needed chunks from the ChunkVoxelDataThreads.
     /// </summary>
     private void orderNewChunks() {
-        for (int x = 0; x < ChunkConfig.chunkCount; x++) {
-            for (int z = 0; z < ChunkConfig.chunkCount; z++) {
+        for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
                 Vector3 chunkPos = chunkPos2world(new Vector3(x, 0, z));
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     orders.Add(new Order(chunkPos, Task.CHUNK));
@@ -184,16 +225,17 @@ public class ChunkManager : MonoBehaviour {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
-                    launchOrderedChunk(result.chunkVoxelData);
-                    stats.generatedChunks++;
+                    ChunkData cd = launchOrderedChunk(result.chunkVoxelData);
+                    StartCoroutine(orderAnimals(cd));
+                    stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS]++;
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
-                    stats.generatedAnimals++;
+                    stats.aggregateValues[WorldGenManagerStatsType.GENERATED_ANIMALS]++;
                     break;
                 case Task.CANCEL:
                     pendingChunks.Remove(result.chunkVoxelData.chunkPos);
-                    stats.cancelledChunks++;
+                    stats.aggregateValues[WorldGenManagerStatsType.CANCELLED_CHUNKS]++;
                     break;
             }
             consumed++;
@@ -203,7 +245,7 @@ public class ChunkManager : MonoBehaviour {
     /// <summary>
     /// Deploys ordered chunks from the ChunkVoxelDataThreads.
     /// </summary>
-    private void launchOrderedChunk(ChunkVoxelData chunkMeshData) {
+    private ChunkData launchOrderedChunk(ChunkVoxelData chunkMeshData) {
         pendingChunks.Remove(chunkMeshData.chunkPos);
 
         ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
@@ -230,7 +272,7 @@ public class ChunkManager : MonoBehaviour {
 
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
             GameObject waterChunk = chunkPool.getObject();
-            waterChunk.layer = 0;
+            waterChunk.layer = 4;
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
@@ -259,16 +301,65 @@ public class ChunkManager : MonoBehaviour {
         cd.treeColliders = treeColliders;
 
         activeChunks.Add(cd);
+        return cd;
+    }
+
+    /// <summary>
+    /// Orders animals for chunk
+    /// </summary>
+    /// <param name="cd">chunkdata</param>
+    private IEnumerator orderAnimals(ChunkData cd) {
+        const float animalSpawnChance = 0.02f; //This means that a chunk has a 2% chance to spawn an animal
+        if (UnityEngine.Random.Range(0f, 1f) < animalSpawnChance) {
+            cd.tryEnableColliders();
+            yield return new WaitForSeconds(1f); //Give the colliders a frame to initialize
+
+            //Calculate spawn position
+            Vector3 spawnPos = cd.pos + Vector3.up * (WorldGenConfig.chunkHeight + 10) + new Vector3(WorldGenConfig.chunkSize / 2, 0, WorldGenConfig.chunkSize / 2);
+            
+            int layerMaskWater = 1 << 4;
+            RaycastHit hitWater;
+            bool water = Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitWater, WorldGenConfig.chunkHeight * 1.2f, layerMaskWater);
+            if (water) {
+                spawnPos = hitWater.point;
+            } else {
+                int layerMaskGround = 1 << 8;
+                RaycastHit hitGround;
+                if (Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitGround, WorldGenConfig.chunkHeight * 1.2f, layerMaskGround)) {
+                    spawnPos = hitGround.point + Vector3.up * 4;
+                } else {
+                    Debug.Log("INFO: AnimalOrder, failed to find spawn point for animal, will drop from sky");
+                }
+            }
+
+            GameObject animal;
+            if (water) {
+                animal = animalPools[WATER_ANIMAL_POOL].getObject();
+            } else {
+                if (UnityEngine.Random.Range(0, 2) == 0) {
+                    animal = animalPools[LAND_ANIMAL_POOL].getObject();
+                } else {
+                    animal = animalPools[AIR_ANIMAL_POOL].getObject();
+                }
+            }
+
+            animal.transform.position = spawnPos;
+            AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animal, animal.GetComponent<Animal>().GetType());
+            AnimalUtils.addAnimalBrainNPC(animal.GetComponent<Animal>());
+            orders.Add(new Order(animal.transform.position, animalSkeleton, Task.ANIMAL));
+            orderedAnimals.Add(animal);
+            animal.SetActive(false);           
+        }
     }
 
     /// <summary>
     /// Applies the animalSkeleton to the animal
     /// </summary>
     /// <param name="animalSkeleton">AnimalSkeleton animalSkeleton</param>
-    private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {        
-        GameObject animal = animals[animalSkeleton.index];
+    private void applyOrderedAnimal(AnimalSkeleton animalSkeleton) {
+        GameObject animal = animalSkeleton.getOwner();
         spawnAnimal(animal, animalSkeleton);
-        orderedAnimals.Remove(animalSkeleton.index);
+        orderedAnimals.Remove(animal);
     }
 
     //    _    _      _                    __                  _   _                 
@@ -287,8 +378,12 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="pos">pos to check</param>
     /// <returns>bool true false</returns>
     private bool isAnimalTooFarAway(Vector3 pos) {
-        float maxDistance = ChunkConfig.chunkCount * ChunkConfig.chunkSize / 2;
-        return Vector3.Distance(pos, player.position) > maxDistance;
+        float xDist = Mathf.Abs(player.position.x - pos.x);
+        float zDist = Mathf.Abs(player.position.z - pos.z);
+        bool outOfXBounds = xDist > WorldGenConfig.chunkCount / 2 * WorldGenConfig.chunkSize;
+        bool outOfZBounds = zDist > WorldGenConfig.chunkCount / 2 * WorldGenConfig.chunkSize;
+        bool outOfYBounds = pos.y < -10;
+        return outOfXBounds || outOfZBounds || outOfYBounds; 
     }
 
     /// <summary>
@@ -297,10 +392,6 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="animal">Animal to spawn</param>
     /// <returns></returns>
     private void spawnAnimal(GameObject animal, AnimalSkeleton skeleton) {
-        Vector3Int chunkPos = world2ChunkPos(animal.transform.position);
-        if (isAnimalTooFarAway(animal.transform.position) || (checkBounds(chunkPos.x, chunkPos.z) && chunkGrid[chunkPos.x, chunkPos.z] == null)) {
-            animal.transform.position = calculateValidSpawnPosition();
-        }
         animal.GetComponent<Animal>().Spawn(animal.transform.position);
         animal.SetActive(true);
         animal.GetComponent<Animal>().setSkeleton(skeleton);
@@ -315,7 +406,9 @@ public class ChunkManager : MonoBehaviour {
         for (int x = index.x - 1; x <= index.x + 1; x++) {
             for (int z = index.z - 1; z <= index.z + 1; z++) {
                 if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
-                    chunkGrid[x, z].tryEnableColliders();
+                    if(chunkGrid[x, z].tryEnableColliders()) {
+                        stats.aggregateValues[WorldGenManagerStatsType.ENABLED_COLLIDERS]++;
+                    }
                 }
             }
         }
@@ -328,8 +421,8 @@ public class ChunkManager : MonoBehaviour {
     private Vector3 getPlayerPos() {
         float x = player.position.x;
         float z = player.position.z;
-        x = Mathf.Floor(x / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
-        z = Mathf.Floor(z / ChunkConfig.chunkSize) * ChunkConfig.chunkSize;
+        x = Mathf.Floor(x / WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize;
+        z = Mathf.Floor(z / WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize;
         return new Vector3(x, 0, z);
     }
 
@@ -339,7 +432,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="worldPos">Worldpos to convert</param>
     /// <returns>chunkpos</returns>
     private Vector3Int world2ChunkPos(Vector3 worldPos) {
-        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / ChunkConfig.chunkSize;
+        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / WorldGenConfig.chunkSize;
         return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
     } 
 
@@ -349,25 +442,8 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="chunkPos">Chunkpos to convert</param>
     /// <returns>Wolrd pos</returns>
     private Vector3 chunkPos2world(Vector3 chunkPos) {
-        Vector3 world = chunkPos * ChunkConfig.chunkSize + offset + getPlayerPos();
+        Vector3 world = chunkPos * WorldGenConfig.chunkSize + offset + getPlayerPos();
         return world;
-    }
-
-    /// <summary>
-    /// Calculates a valid spawn position for animals
-    /// </summary>
-    /// <returns>Vector3 pos, Vector3.down for when no pos can be calculated</returns>
-    private Vector3 calculateValidSpawnPosition() {
-        if (activeChunks.Count < 1) {
-            return Vector3.down;
-        }
-        Vector3 pos = activeChunks[UnityEngine.Random.Range(0, activeChunks.Count)].pos;
-        pos += new Vector3(
-            UnityEngine.Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2),
-            ChunkConfig.chunkHeight + 10,
-            UnityEngine.Random.Range(-ChunkConfig.chunkSize / 2, ChunkConfig.chunkSize / 2)
-        );
-        return pos;
     }
 
     /// <summary>
@@ -380,10 +456,16 @@ public class ChunkManager : MonoBehaviour {
         pos.y = camPos.y;
         Vector3 cam2chunk = pos - camPos;
         cam2chunk.y = Camera.main.transform.forward.y;
-        if (cam2chunk.magnitude > ChunkConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
-            obj.SetActive(false);
+        if (cam2chunk.magnitude > WorldGenConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
+            if (obj.activeSelf) {
+                obj.SetActive(false);
+                stats.aggregateValues[WorldGenManagerStatsType.OBJECTS_DISABLED]++;
+            }
         } else {
-            obj.SetActive(true);
+            if (!obj.activeSelf) {
+                obj.SetActive(true);
+                stats.aggregateValues[WorldGenManagerStatsType.OBJECTS_ENABLED]++;
+            }
         }
     }
 
@@ -394,7 +476,7 @@ public class ChunkManager : MonoBehaviour {
     /// <param name="y">y index (worldspace z)</param>
     /// <returns>bool in bound</returns>
     private bool checkBounds(int x, int y) {
-        return (x >= 0 && x < ChunkConfig.chunkCount && y >= 0 && y < ChunkConfig.chunkCount);
+        return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
     }
 
     //    ____                  _                          _       __                  _   _                 
@@ -407,15 +489,18 @@ public class ChunkManager : MonoBehaviour {
     //                                                                                                       
 
     /// <summary>
-    /// Resets the chunkManager, clearing all data and initializing
+    /// Resets the WorldGenManager, clearing all data and initializing
     /// </summary>
     /// <param name="threadCount">Threadcount to use after reset</param>
     public void Reset(int threadCount = 0) {
         Settings.load();
         clear();
 
-        offset = new Vector3(-ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize, 0, -ChunkConfig.chunkCount / 2f * ChunkConfig.chunkSize);
-        chunkGrid = new ChunkData[ChunkConfig.chunkCount, ChunkConfig.chunkCount];
+        stats = new WorldGenManagerStats();
+        StartCoroutine(stats.calculatePerSecondStats());
+
+        offset = new Vector3(-WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize, 0, -WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize);
+        chunkGrid = new ChunkData[WorldGenConfig.chunkCount, WorldGenConfig.chunkCount];
 
         if (threadCount == 0) {
             threadCount = Settings.WorldGenThreads;
@@ -431,25 +516,31 @@ public class ChunkManager : MonoBehaviour {
         treePool = new GameObjectPool(treePrefab, transform, "tree", false);
 
         if (landAnimalPrefab != null) {
-            for (int i = 0; i < animals.Length; i++) {                
-                animals[i] = Instantiate((UnityEngine.Random.Range(0, 2) == 0) ? landAnimalPrefab : airAnimalPrefab);
-                animals[i].transform.position = new Vector3(9999, 9999, 9999);
-                animals[i].SetActive(false);
+            foreach(GameObjectPool animalPool in animalPools) {
+                if (animalPool != null) {
+                    animalPool.destroyAllGameObjects();
+                }
             }
+
+            animalPools[LAND_ANIMAL_POOL] = new GameObjectPool(landAnimalPrefab, null, "LandAnimal");
+            animalPools[AIR_ANIMAL_POOL] = new GameObjectPool(airAnimalPrefab, null, "AirAnimal");
+            animalPools[WATER_ANIMAL_POOL] = new GameObjectPool(waterAnimalPrefab, null, "WaterAnimal");
         }
 
         GameObject playerObj = player.gameObject;
         if (player.tag == "Player") { //To account for dummy players
             Camera.main.GetComponent<CameraController>().cameraHeight = 7.5f;
-            AnimalSkeleton playerSkeleton = new LandAnimalSkeleton(playerObj.transform);
-            playerSkeleton.generateInThread();
-            playerObj.GetComponent<LandAnimalPlayer>().setSkeleton(playerSkeleton);
-            playerObj.GetComponent<Player>().initPlayer(animals);
+            Animal playerAnimal = player.gameObject.GetComponent<Animal>();
+            AnimalSkeleton skeleton = AnimalUtils.createAnimalSkeleton(player.gameObject, playerAnimal.GetType());
+            skeleton.generateInThread();
+            playerAnimal.setSkeleton(skeleton);
+            AnimalUtils.addAnimalBrainPlayer(playerAnimal);
+            playerObj.GetComponent<Player>().initPlayer(animalPools);
         }
     }
 
     /// <summary>
-    /// Clears and resets the ChunkManager, used when changing WorldGen settings at runtime.
+    /// Clears and resets the WorldGenManager, used when changing WorldGen settings at runtime.
     /// </summary>
     public void clear() {
         stopThreads();
@@ -487,33 +578,10 @@ public class ChunkManager : MonoBehaviour {
             treePool.destroyAllGameObjects();
         }
 
-        foreach (var animal in animals) {
-            if (animal != null) {
-                Destroy(animal);
+        foreach (var animalPool in animalPools) {
+            if (animalPool != null) {
+                animalPool.destroyAllGameObjects();
             }
-        }
-    }
-
-    //    __  __ _             __                  _   _                 
-    //   |  \/  (_)           / _|                | | (_)                
-    //   | \  / |_ ___  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-    //   | |\/| | / __|/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-    //   | |  | | \__ \ (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
-    //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-    //                                                                   
-    //                                                                   
-
-    /// <summary>
-    /// Prints debug info
-    /// </summary>
-    /// <returns></returns>
-    IEnumerator debugRoutine() {
-        while (true) {
-            yield return new WaitForSeconds(0.5f);
-            Debug.Log("====================================================================");
-            Debug.Log("Ordered chunks: " + pendingChunks.Count + " | Inactive Chunks: " + chunkPool.inactiveStack.Count);
-            Debug.Log("Inactive trees: " + treePool.inactiveStack.Count);
-            Debug.Log("Ordered animals: " + orderedAnimals.Count);
         }
     }
 
@@ -528,6 +596,34 @@ public class ChunkManager : MonoBehaviour {
                 thread.stop();
             }
         }
+    }
+
+    //    __  __ _             __                  _   _                 
+    //   |  \/  (_)           / _|                | | (_)                
+    //   | \  / |_ ___  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
+    //   | |\/| | / __|/ __| |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+    //   | |  | | \__ \ (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
+    //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+    //                                                                   
+    //         
+
+    /// <summary>
+    /// Produces a string that contains debug data
+    /// </summary>
+    /// <returns></returns>
+    public string getDebugString() {
+        string s = "";
+        foreach(KeyValuePair<WorldGenManagerStatsType, int> stat in stats.aggregateValues) {
+            s += string.Format("{0}: {1}\n{0}_LAST_SECOND: {2}\n\n", stat.Key.ToString(), stat.Value, stats.lastSecondValues[stat.Key]);
+        }
+
+        s += "ORDERED_CHUNKS: " + pendingChunks.Count + "\n";
+        s += "ORDERED_ANIMALS: " + orderedAnimals.Count + "\n";
+        return s;
+    }
+
+    public GameObjectPool[] getAnimals() {
+        return animalPools;
     }
 
     private void OnDestroy() {

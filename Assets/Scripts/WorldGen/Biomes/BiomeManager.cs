@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 public class BiomeManager {
-    private List<Biome> biomes = new List<Biome>();
-    private List<Pair<Biome, Vector2Int>> biomePoints = new List<Pair<Biome, Vector2Int>>();
+    private List<BiomeBase> biomes = new List<BiomeBase>();
+    private List<Pair<BiomeBase, Vector2Int>> biomePoints = new List<Pair<BiomeBase, Vector2Int>>();
 
-    private Pair<Biome, Vector2Int>[,] biomeGrid;
+    private Pair<BiomeBase, Vector2Int>[,] biomeGrid;
     private int gridScale = 100; // Number of meters per grid-element
 
     private PoissonDiscSampler poissonSampler;
@@ -25,20 +25,21 @@ public class BiomeManager {
     /// Constructor
     /// </summary>
     public BiomeManager() {
-        rng = new System.Random(ChunkConfig.seed);
+        rng = new System.Random(WorldGenConfig.seed);
 
         // Initialize biomes
         biomes.Add(new BasicBiome());
-        biomes.Add(new BasicBiome2());
-        biomes.Add(new BasicBiome3());
+        biomes.Add(new MountainBiome());
+        biomes.Add(new LowlandForestBiome());
+        biomes.Add(new DesertBiome());
 
 
         // Initialize biome points
-        biomeGrid = new Pair<Biome, Vector2Int>[gridWidth, gridHeight];
-        poissonSampler = new PoissonDiscSampler(radius, gridWidth, gridHeight, wrap: true, seed: ChunkConfig.seed);
+        biomeGrid = new Pair<BiomeBase, Vector2Int>[gridWidth, gridHeight];
+        poissonSampler = new PoissonDiscSampler(radius, gridWidth, gridHeight, wrap: true, seed: WorldGenConfig.seed);
         Vector2Int offset = new Vector2Int(gridWidth/2, gridHeight/2);
         foreach (Vector2Int sample in poissonSampler.sample()) {
-            biomeGrid[sample.x, sample.y] = new Pair<Biome, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * gridScale);
+            biomeGrid[sample.x, sample.y] = new Pair<BiomeBase, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * gridScale);
         }
     }
 
@@ -48,10 +49,13 @@ public class BiomeManager {
     /// </summary>
     /// <param name="pos">position to sample</param>
     /// <returns>Biomes for this position and the distance from the sample pos to the biome point</returns>
-    public List<Pair<Biome, float>> getInRangeBiomes(Vector2Int pos) {
+    public List<Pair<BiomeBase, float>> getInRangeBiomes(Vector2Int pos) {
+
+        pos = modifyPosition(pos);
+
 
         // Find all points in range
-        List<Pair<Biome, float>> inRangeBiomes = new List<Pair<Biome, float>>();    // Might want to separate the biome from the weight, because we often just use one of them at the time.
+        List<Pair<BiomeBase, float>> inRangeBiomes = new List<Pair<BiomeBase, float>>();    // Might want to separate the biome from the weight, because we often just use one of them at the time.
 
         float closestPointDistance = closestBiomePoint(pos).second;
         float range = closestPointDistance + borderWidth;
@@ -67,7 +71,7 @@ public class BiomeManager {
                 if (biomeGrid[gridX, gridY] != null) {
                     float dist = Vector2Int.Distance(pos, biomeGrid[gridX, gridY].second);
                     if (dist < range) {
-                        inRangeBiomes.Add(new Pair<Biome, float>(biomeGrid[gridX, gridY].first, dist));
+                        inRangeBiomes.Add(new Pair<BiomeBase, float>(biomeGrid[gridX, gridY].first, dist));
                     }
                 }
             }
@@ -82,38 +86,26 @@ public class BiomeManager {
 
 
         float tot = 0;
-        foreach (Pair<Biome, float> p in inRangeBiomes) {
+        foreach (Pair<BiomeBase, float> p in inRangeBiomes) {
             p.second = Mathf.Pow(1 - (p.second - closestPointDistance) / borderWidth, 2);
             tot += p.second;
         }
-        foreach (Pair<Biome, float> p in inRangeBiomes) {
+        foreach (Pair<BiomeBase, float> p in inRangeBiomes) {
             p.second = (p.second / tot);
         }
 
         return inRangeBiomes;
     }
-
-    public Biome getBiome(int x, int z) {
-        return new Biome(getInRangeBiomes(new Vector2Int(x, z)));
-    }
-
+    
     /// <summary>
     /// Gets the biome that is closest to a position
     /// </summary>
     /// <param name="pos">position to check</param>
     /// <returns>closest biome</returns>
-    public Biome getClosestBiome(Vector2Int pos) {
+    public BiomeBase getClosestBiome(Vector2Int pos) {
         return closestBiomePoint(pos).first;
     }
 
-
-    /// <summary>
-    /// Loads biomes from a folder
-    /// </summary>
-    /// <param name="folderpath">path to folder containing biome files</param>
-    public void loadFromFile(String folderpath) {
-        throw new NotImplementedException("BiomeManager.loadFromFile(...) not yet implemented.");
-    }
 
     #endregion
 
@@ -124,8 +116,8 @@ public class BiomeManager {
     /// </summary>
     /// <param name="pos">position to test</param>
     /// <returns>distance from closest biome point</returns>
-    private Pair<Biome, float> closestBiomePoint(Vector2Int pos) {
-        Pair<Biome, float> bestBiomePoint = new Pair<Biome, float>(null, float.MaxValue);
+    private Pair<BiomeBase, float> closestBiomePoint(Vector2Int pos) {
+        Pair<BiomeBase, float> bestBiomePoint = new Pair<BiomeBase, float>(null, float.MaxValue);
 
         int r3 = radius * 3;
         Vector2Int offset = new Vector2Int(gridWidth / 2, gridHeight / 2);
@@ -151,4 +143,20 @@ public class BiomeManager {
     #endregion
 
 
+    private Vector2Int modifyPosition(Vector2Int vec) {
+        vec.x += (int)(SimplexNoise.Simplex1D(new Vector2(vec.x, vec.y), 0.01f) * 15);
+        vec.y += (int)(SimplexNoise.Simplex1D(new Vector2(vec.y + 1234, vec.x + 4444), 0.01f) * 15);
+
+        return vec;
+    }
+
+
+
+    /// <summary>
+    /// Loads biomes from a folder
+    /// </summary>
+    /// <param name="folderpath">path to folder containing biome files</param>
+    public void loadFromFile(String folderpath) {
+        throw new NotImplementedException("BiomeManager.loadFromFile(...) not yet implemented.");
+    }
 }
