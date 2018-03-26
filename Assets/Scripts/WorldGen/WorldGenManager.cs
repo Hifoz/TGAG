@@ -64,7 +64,7 @@ public class WorldGenManagerStats {
 /// </summary>
 public class WorldGenManager : MonoBehaviour {
     private Vector3 worldOffset;
-    private const float maxWorldDist = 100f;
+    private const float maxWorldDist = 1000f;
 
     public WorldGenManagerStats stats;
     public Transform player;
