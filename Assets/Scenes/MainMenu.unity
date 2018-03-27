@@ -212,7 +212,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 76473631}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -725.5, y: -368, z: 5}
+  m_LocalPosition: {x: -759, y: -368, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1586219829}
@@ -640,7 +640,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 621804032}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 820.5, y: 461.5, z: 0}
+  m_LocalPosition: {x: 854, y: 491.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 76473632}
@@ -678,7 +678,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 719064996}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -725.5001, y: -419.27753, z: 5}
+  m_LocalPosition: {x: -759.0001, y: -419.27753, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 56517848}
@@ -1047,9 +1047,12 @@ MonoBehaviour:
   chunkPrefab: {fileID: 1818736290914746, guid: 418521e80a6a4c64e8a2f9d1d24db817,
     type: 2}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
-  landAnimalPrefab: {fileID: 0}
-  airAnimalPrefab: {fileID: 0}
-  waterAnimalPrefab: {fileID: 0}
+  landAnimalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
+    type: 2}
+  airAnimalPrefab: {fileID: 1263446260787308, guid: 70d74767b31c04843b941187b0032569,
+    type: 2}
+  waterAnimalPrefab: {fileID: 1162195383910464, guid: af550f6cfee173545a3424f00e543179,
+    type: 2}
 --- !u!4 &1732240071
 Transform:
   m_ObjectHideFlags: 0
