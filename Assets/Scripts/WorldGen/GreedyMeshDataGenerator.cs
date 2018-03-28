@@ -56,6 +56,7 @@ class GreedyMeshDataGenerator {
         this.blockData = blockData;
         this.meshDataType = meshDataType;
         this.voxelSize = voxelSize;
+        this.offset = offset;
     }
 
 
@@ -190,7 +191,8 @@ class GreedyMeshDataGenerator {
         int vertIndex = vertices.Count;
 
         for(int i = 0; i < verts.Length; i++) {
-            verts[i] -= offset;// * voxelSize;
+            verts[i] -= offset;
+            verts[i] *= voxelSize;
         }
 
         if (!voxel.isFlipped) {
