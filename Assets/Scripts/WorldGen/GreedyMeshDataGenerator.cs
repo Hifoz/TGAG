@@ -5,9 +5,9 @@ using UnityEngine;
 
 
 class VoxelFace {
-    public BlockData data;
-    public int dir;
-    public bool isFlipped;
+    public BlockData data = BlockData.Empty;
+    public int dir = 0;
+    public bool isFlipped = false;
     public bool nodraw = false;
 
     public VoxelFace(BlockData data, int dir, bool isFlipped = false) {
@@ -87,18 +87,20 @@ class GreedyMeshDataGenerator {
                     for (x[u] = 0; x[u] < blockData.GetLength(u); x[u]++, n++) {
                         BlockData a = x[d] >= 0 ? blockData.mapdata[blockData.index1D(x[0], x[1], x[2])] : new BlockData(BlockData.BlockType.NONE);
                         BlockData b = x[d] < blockData.GetLength(d) - 1 ? blockData.mapdata[blockData.index1D(x[0] + q[0], x[1] + q[1], x[2] + q[2])] : new BlockData(BlockData.BlockType.NONE);
-                        if (checkVoxel(a) == checkVoxel(b)){
-                            mask[n] = new VoxelFace(BlockData.Empty, d);
-                        } else if(checkVoxel(a)) {
-                            mask[n] = new VoxelFace(a, d, false);
-                        } else {
-                            mask[n] = new VoxelFace(b, d, true);
+
+                        if (checkVoxel(a) != checkVoxel(b)){
+                            if (checkVoxel(a)) {
+                                mask[n] = new VoxelFace(a, d, false);
+                            } else {
+                                mask[n] = new VoxelFace(b, d, true);
+                            }
                         }
 
                         // Make the outside blocks nodraw:
-                        if (x[v] < 1 || x[v] >= blockData.GetLength(v) - 1 ||
+                        if ((x[v] < 1 || x[v] >= blockData.GetLength(v) - 1 ||
                             x[u] < 1 || x[u] >= blockData.GetLength(u) - 1 ||
-                            x[d] < 1 || x[d] >= blockData.GetLength(d) - 1)
+                            x[d] < 1 || x[d] >= blockData.GetLength(d) - 1) 
+                            && mask[n] != null)
                             mask[n].nodraw = true;
 
 
@@ -147,11 +149,10 @@ class GreedyMeshDataGenerator {
 
                             addFace(verts, w, h, c);
 
-
                             // Clear mask:
                             for(l = 0; l < h; l++) {
                                 for(k = 0; k < w; k++) {
-                                    mask[n + k + l * blockData.GetLength(u)] = new VoxelFace(BlockData.Empty, d);
+                                    mask[n + k + l * blockData.GetLength(u)] = null;
                                 }
                             }
                             i += w;
@@ -189,7 +190,7 @@ class GreedyMeshDataGenerator {
         int vertIndex = vertices.Count;
 
         for(int i = 0; i < verts.Length; i++) {
-            verts[i] = (verts[i] - offset) * voxelSize;
+            verts[i] -= offset;// * voxelSize;
         }
 
         if (!voxel.isFlipped) {
