@@ -15,6 +15,10 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
     public static bool posContainsVoxel(Vector3 pos, int height, BiomeBase biome) {
+        if (Corruption.corruptionFactor(pos) >= 1f) {
+            return false;
+        }
+
         if (pos.y < biome.minGroundHeight)
             return true;
         else if (pos.y > biome.maxGroundHeight)
@@ -31,6 +35,10 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
     public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes) {
+        if (Corruption.corruptionFactor(pos) >= 1f) {
+            return false;
+        }
+
         if (biomes.Count == 1)
             return posContainsVoxel(pos, height, biomes[0].first);
 
@@ -156,7 +164,7 @@ public static class ChunkVoxelDataGenerator {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE)
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
-                    else if (y < WorldGenConfig.waterHeight)
+                    else if (Corruption.corruptionFactor(pos) < 1 && y < WorldGenConfig.waterHeight)
                         data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WATER;
                 }
             }
@@ -283,7 +291,4 @@ public static class ChunkVoxelDataGenerator {
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(1, noise01, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want the noise to remove the ground creating a void.
     }
-
-
-
 }

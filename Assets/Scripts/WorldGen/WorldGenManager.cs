@@ -64,7 +64,7 @@ public class WorldGenManagerStats {
 /// </summary>
 public class WorldGenManager : MonoBehaviour {
     private Vector3 worldOffset;
-    private const float maxWorldDist = 1000f;
+    private const float worldShiftDistance = 1000f;
 
     public WorldGenManagerStats stats;
     public Transform player;
@@ -116,7 +116,7 @@ public class WorldGenManager : MonoBehaviour {
         orderNewChunks();
         consumeThreadResults();
         handleAnimals();
-    }
+    }   
 
     /// <summary>
     /// Gets animals
@@ -142,7 +142,6 @@ public class WorldGenManager : MonoBehaviour {
     //   |_|  |_|\__,_|_|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                                                                      
     //                                                                      
-
 
     /// <summary>
     /// Handles animals
@@ -387,7 +386,7 @@ public class WorldGenManager : MonoBehaviour {
     private void offsetWorld() {
         Vector3 playerxz = Utils.elementWiseMult(player.position, new Vector3(1, 0, 1));
         playerxz = Utils.floorVector(playerxz);
-        if (playerxz.magnitude > maxWorldDist) {
+        if (playerxz.magnitude > worldShiftDistance) {
             Vector3 offset = calculateChunkPos(playerxz);
             worldOffset += offset;
 
@@ -687,8 +686,9 @@ public class WorldGenManager : MonoBehaviour {
         s += "CURRENT_ANIMAL_ORDERS: " + orderedAnimals.Count + "\n\n";
 
         s += "WORLD_OFFSET: " + worldOffset + "\n";
-        s += "WORLD_OFFSET_INTERVAL: " + maxWorldDist + "\n";
-        s += "PLAYER_DISTANCE: " + Player.playerPos.get().magnitude;
+        s += "WORLD_OFFSET_INTERVAL: " + worldShiftDistance + "\n";
+        s += "PLAYER_DISTANCE: " + Player.playerPos.get().magnitude + "\n";
+        s += "CORRUPTION_FACTOR (Player): " + Corruption.corruptionFactor(Player.playerPos.get());
         return s;
     }
 

@@ -188,6 +188,9 @@ public class ChunkVoxelDataThread {
 
         for (int i = 0; i < treeCount; i++) {
             Vector3 localPos = new Vector3((float)rng.NextDouble() * WorldGenConfig.chunkSize, 0, (float)rng.NextDouble() * WorldGenConfig.chunkSize);
+            if (Corruption.corruptionFactor(localPos + order.position) >= 1f) {
+                continue;
+            }
             localPos = findGroundLevel(Utils.floorVectorToInt(localPos), chunkBlockData);
             if (localPos.y > WorldGenConfig.waterHeight + 2) {
                 if(localPos != Vector3.down) {
