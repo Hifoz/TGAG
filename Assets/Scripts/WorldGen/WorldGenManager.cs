@@ -367,7 +367,7 @@ public class WorldGenManager : MonoBehaviour {
             AnimalUtils.addAnimalBrainNPC(animal.GetComponent<Animal>());
             orders.Add(new Order(animal.transform.position + worldOffset, animalSkeleton, Task.ANIMAL));
             orderedAnimals.Add(animal);
-            animal.SetActive(false);           
+            animal.SetActive(false);
         }
     }
 

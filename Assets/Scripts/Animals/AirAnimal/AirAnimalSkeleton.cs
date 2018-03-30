@@ -10,7 +10,7 @@ public class AirAnimalSkeleton : AnimalSkeleton {
     /// Constructor that does the mainThread skeleton generation, and binds skeleton to the passed transform
     /// </summary>
     /// <param name="root">Transform to bind skeleton to</param>
-    public AirAnimalSkeleton(Transform root) {
+    public AirAnimalSkeleton(Transform root, int seed = -1) {
         bodyParametersRange = new MixedDictionary<BodyParameter>(new Dictionary<BodyParameter, object>() {
                 { BodyParameter.SCALE, new Range<float>(0.5f, 1.0f) },
 
@@ -39,6 +39,8 @@ public class AirAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.WING_RADIUS, new Range<float>(0.5f, 0.75f) }
             }
         );
+
+        base.rng = new ThreadSafeRng(seed == -1 ? seedGen.randomInt() : seed);
 
         generateInMainThread(root);
     }

@@ -56,7 +56,8 @@ public abstract class AnimalSkeleton {
         public LineSegment boneLine; //line of bone to use for skinning
     }
     //Misc members
-    protected static ThreadSafeRng rng = new ThreadSafeRng();
+    protected static ThreadSafeRng seedGen = new ThreadSafeRng();
+    protected ThreadSafeRng rng;
 
     //Skeleton related members
     protected MixedDictionary<BodyParameter> bodyParametersRange;

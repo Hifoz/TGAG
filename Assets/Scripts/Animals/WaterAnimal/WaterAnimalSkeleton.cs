@@ -7,7 +7,7 @@ public class WaterAnimalSkeleton : AnimalSkeleton {
     /// Constructor that does the mainThread skeleton generation, and binds skeleton to the passed transform
     /// </summary>
     /// <param name="root">Transform to bind skeleton to</param>
-    public WaterAnimalSkeleton(Transform root) {
+    public WaterAnimalSkeleton(Transform root, int seed = -1) {
         bodyParametersRange = new MixedDictionary<BodyParameter>(new Dictionary<BodyParameter, object>() {
                 { BodyParameter.SCALE, new Range<float>(0.5f, 1.0f) },
 
@@ -19,6 +19,8 @@ public class WaterAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.SPINE_RADIUS, new Range<float>(1f, 2.0f) },
             }
         );
+
+        base.rng = new ThreadSafeRng(seed == -1 ? seedGen.randomInt() : seed);
 
         generateInMainThread(root);
     }
