@@ -91,6 +91,7 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
+    /// <param name="meshDataType">type of the mesh</param>
     /// <returns>an array of meshdata objects made from input data</returns>
     public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
         MeshDataGenerator MDG = new MeshDataGenerator();

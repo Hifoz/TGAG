@@ -16,12 +16,28 @@ public class CollectedAnimal {
     }
 }
 
-
 public class AnimalCollection : MonoBehaviour {
     private List<CollectedAnimal> collectedAnimals = new List<CollectedAnimal>();
     public GameObject waterDisplayAnimal;
     public GameObject airDisplayAnimal;
     public GameObject landDisplayAnimal;
+    public Camera displayCamera;
+
+
+
+    private void Start() {
+        addAnimal(new CollectedAnimal {
+            animalType = typeof(LandAnimal),
+            skeletonSeed = 1337
+        });
+
+        displayAnimal(0);
+    }
+
+
+
+
+
 
     /// <summary>
     /// Displays an animal on the CollectionItemDisplay
@@ -39,9 +55,10 @@ public class AnimalCollection : MonoBehaviour {
         AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animalDisplay, animalDisplay.GetComponent<Animal>().GetType());
         animalSkeleton.generateInThread();
         animalDisplay.GetComponent<Animal>().setSkeleton(animalSkeleton);
+        animalDisplay.SetActive(true);
+        animalDisplay.transform.position = displayCamera.transform.position + new Vector3(0, 0, 20);
 
-
-        throw new NotImplementedException("AnimalCollection.displayAnimal() has not yet been implemented.");
+        //throw new NotImplementedException("AnimalCollection.displayAnimal() has not yet been implemented.");
     }
 
     /// <summary>
