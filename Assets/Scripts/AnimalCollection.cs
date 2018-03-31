@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -23,6 +24,7 @@ public class AnimalCollection : MonoBehaviour {
     public GameObject landDisplayAnimal;
     public Camera displayCamera;
 
+    private GameObject displayedAnimal;
 
 
     private void Start() {
@@ -37,29 +39,43 @@ public class AnimalCollection : MonoBehaviour {
 
 
 
-
-
     /// <summary>
     /// Displays an animal on the CollectionItemDisplay
     /// </summary>
     public void displayAnimal(int index) {
-        GameObject animalDisplay;
         if (collectedAnimals[index].animalType == typeof(LandAnimal)) {
-            animalDisplay = landDisplayAnimal;
+            displayedAnimal = landDisplayAnimal;
         } else if (collectedAnimals[index].animalType == typeof(AirAnimal)) {
-            animalDisplay = airDisplayAnimal;
+            displayedAnimal = airDisplayAnimal;
         } else { // Water animal
-            animalDisplay = waterDisplayAnimal;
+            displayedAnimal = waterDisplayAnimal;
         }
 
-        AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(animalDisplay, animalDisplay.GetComponent<Animal>().GetType());
+        AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(displayedAnimal, displayedAnimal.GetComponent<Animal>().GetType(), collectedAnimals[index].skeletonSeed);
         animalSkeleton.generateInThread();
-        animalDisplay.GetComponent<Animal>().setSkeleton(animalSkeleton);
-        animalDisplay.SetActive(true);
-        animalDisplay.transform.position = displayCamera.transform.position + new Vector3(0, 0, 20);
+        displayedAnimal.GetComponent<Animal>().setSkeleton(animalSkeleton);
+        displayedAnimal.SetActive(true);
+        displayedAnimal.transform.position = displayCamera.transform.position + new Vector3(0, 0, 20);
 
-        //throw new NotImplementedException("AnimalCollection.displayAnimal() has not yet been implemented.");
+        StartCoroutine(rotateDisplay());
     }
+
+
+    public void hideDisplayedAnimal() {
+        displayedAnimal.SetActive(false);
+    }
+
+
+    private IEnumerator rotateDisplay() {
+        Debug.Log("start rotating");
+        float rot = 0.4f;
+        while (displayedAnimal.activeInHierarchy) {
+            displayedAnimal.transform.Rotate(Vector3.up, rot);// (rot += 0.001f)%360);
+            yield return new WaitForEndOfFrame();
+        }
+        Debug.Log("stop rotating");
+    }
+
 
     /// <summary>
     /// Add a new animal to the collection
