@@ -4,6 +4,31 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/*
+ * 
+ * TODO : 
+ * - Seed for animal skin must be consistent
+ * - Add first animal to collection
+ * - Make animal-switching add the new animal to collection
+ * - Show number of animals collected (in total, and per type)
+ * - Let the player "browse" through collected animals
+ * - Let the player filter the what animal types to browse (something simple, either all types or one specific type)
+ * - Add entry point to collection from menu and a keyboard-key
+ * 
+ * 
+ * 
+ * Should the player be able to look at all animals ever collected from main menu?
+ *  - Or should we just save stats and have a statistics page in main menu with different things?
+ *      -- Most animals collected in a playthrough (Also per type?)
+ *      -- Least animals collected in a playthrough (Also per type?)
+ *      -- etc.
+ *      -- Other stats not related to animal collection(eg. shortest time spent to complete a playthrough)
+ *
+ *
+ */
+
+
+
 
 /// <summary>
 /// Contains the data needed to restore an animal for showing in the collection display
@@ -18,16 +43,19 @@ public class CollectedAnimal {
 }
 
 public class AnimalCollection : MonoBehaviour {
-    private List<CollectedAnimal> collectedAnimals = new List<CollectedAnimal>();
+
+    public Camera displayCamera;
+    public float rotationSpeed = 0.4f;
+
     public GameObject waterDisplayAnimal;
     public GameObject airDisplayAnimal;
     public GameObject landDisplayAnimal;
-    public Camera displayCamera;
 
     private GameObject displayedAnimal;
-
+    private List<CollectedAnimal> collectedAnimals = new List<CollectedAnimal>();
 
     private void Start() {
+        // For testing, add a random animal
         addAnimal(new CollectedAnimal {
             animalType = typeof(LandAnimal),
             skeletonSeed = 1337
@@ -66,11 +94,15 @@ public class AnimalCollection : MonoBehaviour {
     }
 
 
+    /// <summary>
+    /// Rotates the displayed animal
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator rotateDisplay() {
         Debug.Log("start rotating");
         float rot = 0.4f;
         while (displayedAnimal.activeInHierarchy) {
-            displayedAnimal.transform.Rotate(Vector3.up, rot);// (rot += 0.001f)%360);
+            displayedAnimal.transform.Rotate(Vector3.up, rot);
             yield return new WaitForEndOfFrame();
         }
         Debug.Log("stop rotating");
