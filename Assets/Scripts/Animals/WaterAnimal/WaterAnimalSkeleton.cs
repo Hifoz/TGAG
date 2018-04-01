@@ -21,6 +21,7 @@ public class WaterAnimalSkeleton : AnimalSkeleton {
         );
 
         base.rng = new ThreadSafeRng(seed == -1 ? seedGen.randomInt() : seed);
+        base.seed = seed;
 
         generateInMainThread(root);
     }

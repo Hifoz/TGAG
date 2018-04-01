@@ -137,7 +137,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 27318558}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -842, y: 504.16467, z: -12}
+  m_LocalPosition: {x: -842, y: 504.672, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 546177072}
@@ -206,7 +206,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 31442308}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 519.1647, z: 0}
+  m_LocalPosition: {x: 0, y: 519.672, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1087241528}
@@ -390,12 +390,12 @@ Prefab:
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
       propertyPath: m_LocalPosition.x
-      value: 546.5
+      value: 312.5
       objectReference: {fileID: 0}
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
       propertyPath: m_LocalPosition.y
-      value: 307.5
+      value: 176
       objectReference: {fileID: 0}
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
@@ -1475,8 +1475,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 546.5, y: 307.5, z: 0}
-  m_LocalScale: {x: 0.56927085, y: 0.56927085, z: 0.56927085}
+  m_LocalPosition: {x: 312.5, y: 176, z: 0}
+  m_LocalScale: {x: 0.32552084, y: 0.32552084, z: 0.32552084}
   m_Children:
   - {fileID: 27318559}
   - {fileID: 1087241528}
@@ -1688,6 +1688,11 @@ Prefab:
       propertyPath: m_CollisionDetection
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114009028626163160, guid: b5903303425d2534087cb390327fa505,
+        type: 2}
+      propertyPath: animalCollection
+      value: 
+      objectReference: {fileID: 1523347011}
     m_RemovedComponents:
     - {fileID: 114874013804140952, guid: b5903303425d2534087cb390327fa505, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: b5903303425d2534087cb390327fa505, type: 2}
@@ -1963,7 +1968,7 @@ GameObject:
   - component: {fileID: 1523347011}
   - component: {fileID: 1523347012}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: AnimalCollectionPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1976,7 +1981,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1523347007}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.0000076293945, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1015196873}
@@ -2032,10 +2037,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0563a660ba38d04da9685d0c3d3ff7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  displayCamera: {fileID: 400236238}
+  rotationSpeed: 0.4
   waterDisplayAnimal: {fileID: 93023759}
   airDisplayAnimal: {fileID: 515057568}
   landDisplayAnimal: {fileID: 720662132}
-  displayCamera: {fileID: 400236238}
 --- !u!114 &1523347012
 MonoBehaviour:
   m_ObjectHideFlags: 0

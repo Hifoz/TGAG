@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using System;
 
 public class Player : MonoBehaviour {
     // Values are needed in the CVDTs for calculating order priority
@@ -8,7 +9,7 @@ public class Player : MonoBehaviour {
     public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
     public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
     public Vector3 worldOffset;
-
+    
     public GameObject magicTrailPrefab;
 
     private GameObject magicTrail;
@@ -27,7 +28,22 @@ public class Player : MonoBehaviour {
         }
 
         rb = GetComponent<Rigidbody>();
+        StartCoroutine(addToCollection());
     }
+
+    /// <summary>
+    /// Adds the player animal to the animal collection;
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator addToCollection() {
+        yield return new WaitForSeconds(1);
+        GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().addAnimal(new CollectedAnimal {
+            skeletonSeed = GetComponent<Animal>().getSkeleton().getSeed(),
+            animalType = GetComponent<Animal>().GetType()
+        });
+        GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().displayAnimal(0);
+    }
+
 
     // Update is called once per frame
     void Update() {

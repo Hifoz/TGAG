@@ -8,13 +8,12 @@ using UnityEngine;
  * 
  * TODO : 
  * - Seed for animal skin must be consistent
- * - Add first animal to collection
- * - Make animal-switching add the new animal to collection
  * - Show number of animals collected (in total, and per type)
  * - Let the player "browse" through collected animals
  * - Let the player filter the what animal types to browse (something simple, either all types or one specific type)
  * - Add entry point to collection from menu and a keyboard-key
- * 
+ * - Make animals have some sort of animation when displayed
+ *      -- Disable ragdolling?
  * 
  * 
  * Should the player be able to look at all animals ever collected from main menu?
@@ -54,18 +53,6 @@ public class AnimalCollection : MonoBehaviour {
     private GameObject displayedAnimal;
     private List<CollectedAnimal> collectedAnimals = new List<CollectedAnimal>();
 
-    private void Start() {
-        // For testing, add a random animal
-        addAnimal(new CollectedAnimal {
-            animalType = typeof(LandAnimal),
-            skeletonSeed = 1337
-        });
-
-        displayAnimal(0);
-    }
-
-
-
 
     /// <summary>
     /// Displays an animal on the CollectionItemDisplay
@@ -89,6 +76,9 @@ public class AnimalCollection : MonoBehaviour {
     }
 
 
+    /// <summary>
+    /// Used to hide a displayed animal from the CollectionItemDisplay
+    /// </summary>
     public void hideDisplayedAnimal() {
         displayedAnimal.SetActive(false);
     }
@@ -97,7 +87,6 @@ public class AnimalCollection : MonoBehaviour {
     /// <summary>
     /// Rotates the displayed animal
     /// </summary>
-    /// <returns></returns>
     private IEnumerator rotateDisplay() {
         Debug.Log("start rotating");
         float rot = 0.4f;

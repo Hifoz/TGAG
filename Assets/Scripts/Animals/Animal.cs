@@ -183,7 +183,8 @@ public abstract class Animal : MonoBehaviour {
 
         while (condition()) {
             for (int i = 0; i < desiredPositions.Length; i++) {
-                desiredPositions[i] = limb[0].bone.position + referenceTransform.rotation * model.direction * model.length * (i + 1) / limb.Count;
+                if(transform != null)
+                    desiredPositions[i] = limb[0].bone.position + referenceTransform.rotation * model.direction * model.length * (i + 1) / limb.Count;
             }
 
             for (int i = 0; i < limb.Count - 1; i++) {
