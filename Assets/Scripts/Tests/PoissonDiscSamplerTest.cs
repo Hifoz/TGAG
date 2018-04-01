@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 class PoissonDiscSamplerTest : MonoBehaviour {
-    public GameObject testObject;
+    public GameObject testObject = null;
     PoissonDiscSampler sampler;
 
 

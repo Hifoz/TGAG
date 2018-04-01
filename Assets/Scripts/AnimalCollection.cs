@@ -8,8 +8,6 @@ using UnityEngine.UI;
  * 
  * TODO : 
  * - Seed for animal skin must be consistent
- * - Current seed storing solution doesn't seem to work for body parameters, this must also be fixed.
- *      -- For some reason, there will only be stored one animal per type, is seed not initialized properly at all?
  * - Make animals have some sort of animation when displayed
  *      -- Disable ragdolling?
  * 
@@ -100,7 +98,7 @@ public class AnimalCollection : MonoBehaviour {
             throw new Exception("AnimalCollection.collectedOfDisplayType[" + displayedAnimalIndex + "] has an illegal type.");
         }
 
-        AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(displayedAnimal, displayedAnimal.GetComponent<Animal>().GetType(), collectedAnimals[displayedAnimalIndex].skeletonSeed);
+        AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(displayedAnimal, displayedAnimal.GetComponent<Animal>().GetType(), collectedOfDisplayType[displayedAnimalIndex].skeletonSeed);
         animalSkeleton.generateInThread();
         displayedAnimal.GetComponent<Animal>().setSkeleton(animalSkeleton);
         displayedAnimal.SetActive(true);
@@ -135,8 +133,6 @@ public class AnimalCollection : MonoBehaviour {
         if (animal.animalType.BaseType != typeof(Animal))
             throw new Exception("Trying to add an animal of a non-animal type");
 
-        Debug.Log(animal.skeletonSeed);
-
         foreach(CollectedAnimal ca in collectedAnimals) {
             if (ca.equals(animal)) return;
         }
@@ -146,7 +142,7 @@ public class AnimalCollection : MonoBehaviour {
             collectedOfDisplayType.Add(animal);
         }
 
-        // Update the animal count
+        // Update the animal counts
         GameObject.Find("totalAnimalsBtn").GetComponentInChildren<Text>().text = "Total Animals: " + collectedAnimals.Count();
         if (animal.animalType == typeof(LandAnimal)) {
             GameObject.Find("landAnimalsBtn").GetComponentInChildren<Text>().text = "Land Animals: " + collectedAnimals.Count((CollectedAnimal ca) => (ca.animalType == typeof(LandAnimal)));
