@@ -36,8 +36,10 @@ public class LandAnimalSkeleton : AnimalSkeleton {
             }
         );
 
-        base.rng = new ThreadSafeRng(seed == -1 ? seedGen.randomInt() : seed);
-        base.seed = seed;
+        if (seed == -1)
+            seed = seedGen.randomInt();
+        base.rng = new ThreadSafeRng(seed);
+        base.seed = seed; ;
 
         generateInMainThread(root);
     }

@@ -1955,11 +1955,6 @@ Prefab:
       propertyPath: m_Name
       value: MenuCanvas
       objectReference: {fileID: 0}
-    - target: {fileID: 224042750150663578, guid: 21c3dc74cc9631145afcea40629523ac,
-        type: 2}
-      propertyPath: m_SizeDelta.x
-      value: 1000
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 21c3dc74cc9631145afcea40629523ac, type: 2}
   m_IsPrefabParent: 0

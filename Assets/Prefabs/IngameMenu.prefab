@@ -2068,7 +2068,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Air Animals Collected: 0'
+  m_Text: 'Air Animals: 0'
 --- !u!114 &114033739519968040
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2101,7 +2101,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Land Animals Collected: 0'
+  m_Text: 'Land Animals: 0'
 --- !u!114 &114039720018367448
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -5794,7 +5794,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Animals Collected: 0'
+  m_Text: 'Total Animals: 0'
 --- !u!114 &114816586721918644
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -6614,7 +6614,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Water Animals Collected: 0'
+  m_Text: 'Water Animals: 0'
 --- !u!114 &114995817702926342
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -19,8 +19,9 @@ public class WaterAnimalSkeleton : AnimalSkeleton {
                 { BodyParameter.SPINE_RADIUS, new Range<float>(1f, 2.0f) },
             }
         );
-
-        base.rng = new ThreadSafeRng(seed == -1 ? seedGen.randomInt() : seed);
+        if(seed == -1)
+            seed = seedGen.randomInt();
+        base.rng = new ThreadSafeRng(seed);
         base.seed = seed;
 
         generateInMainThread(root);

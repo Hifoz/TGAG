@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 /*
  * 
  * TODO : 
  * - Seed for animal skin must be consistent
- *      -- Current seed storing solution doesn't seem to work for body parameters, this must also be fixed.
- * - Show number of animals collected (in total, and per type)
+ * - Current seed storing solution doesn't seem to work for body parameters, this must also be fixed.
+ *      -- For some reason, there will only be stored one animal per type, is seed not initialized properly at all?
  * - Make animals have some sort of animation when displayed
  *      -- Disable ragdolling?
  * 
@@ -93,8 +94,10 @@ public class AnimalCollection : MonoBehaviour {
             displayedAnimal = landDisplayAnimal;
         } else if (collectedOfDisplayType[displayedAnimalIndex].animalType == typeof(AirAnimal)) {
             displayedAnimal = airDisplayAnimal;
-        } else { // Water animal
+        } else if (collectedOfDisplayType[displayedAnimalIndex].animalType == typeof(WaterAnimal)) {
             displayedAnimal = waterDisplayAnimal;
+        } else {
+            throw new Exception("AnimalCollection.collectedOfDisplayType[" + displayedAnimalIndex + "] has an illegal type.");
         }
 
         AnimalSkeleton animalSkeleton = AnimalUtils.createAnimalSkeleton(displayedAnimal, displayedAnimal.GetComponent<Animal>().GetType(), collectedAnimals[displayedAnimalIndex].skeletonSeed);
@@ -129,15 +132,30 @@ public class AnimalCollection : MonoBehaviour {
     /// </summary>
     /// <param name="animal">The animal to add</param>
     public void addAnimal(CollectedAnimal animal) {
+        if (animal.animalType.BaseType != typeof(Animal))
+            throw new Exception("Trying to add an animal of a non-animal type");
+
+        Debug.Log(animal.skeletonSeed);
+
         foreach(CollectedAnimal ca in collectedAnimals) {
             if (ca.equals(animal)) return;
         }
         collectedAnimals.Add(animal);
-        Debug.Log("Animal Added");
 
         if(animal.animalType == displayType || displayType == typeof(Animal)) {
             collectedOfDisplayType.Add(animal);
         }
+
+        // Update the animal count
+        GameObject.Find("totalAnimalsBtn").GetComponentInChildren<Text>().text = "Total Animals: " + collectedAnimals.Count();
+        if (animal.animalType == typeof(LandAnimal)) {
+            GameObject.Find("landAnimalsBtn").GetComponentInChildren<Text>().text = "Land Animals: " + collectedAnimals.Count((CollectedAnimal ca) => (ca.animalType == typeof(LandAnimal)));
+        } else if (animal.animalType == typeof(AirAnimal)) {
+            GameObject.Find("airAnimalsBtn").GetComponentInChildren<Text>().text = "Air Animals: " + collectedAnimals.Count((CollectedAnimal ca) => (ca.animalType == typeof(AirAnimal)));
+        } else if (animal.animalType == typeof(WaterAnimal)) {
+            GameObject.Find("waterAnimalsBtn").GetComponentInChildren<Text>().text = "Water Animals: " + collectedAnimals.Count((CollectedAnimal ca) => (ca.animalType == typeof(WaterAnimal)));
+        }
+
     }
 
     /// <summary>
