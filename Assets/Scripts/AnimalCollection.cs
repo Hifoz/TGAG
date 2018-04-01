@@ -8,6 +8,7 @@ using UnityEngine.UI;
  * 
  * TODO : 
  * - Seed for animal skin must be consistent
+ * - Indicator of what filter is in use
  * - Make animals have some sort of animation when displayed
  *      -- Disable ragdolling?
  * 

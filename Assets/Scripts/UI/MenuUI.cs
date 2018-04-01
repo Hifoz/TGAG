@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class MenuUI : MonoBehaviour {
 
+    public Text title;
+
     public GameObject mainButtons;
 
     public GameObject playButtons;
@@ -151,6 +153,7 @@ public class MenuUI : MonoBehaviour {
     /// Switches from collection buttons to main button set
     /// </summary>
     public void closeCollection() {
+        title.text = "Paused";
         collectionButtons.SetActive(false);
         mainButtons.SetActive(true);
     }
@@ -159,6 +162,7 @@ public class MenuUI : MonoBehaviour {
     /// Switches to collection buttons
     /// </summary>
     public void openCollection() {
+        title.text = "Animal Collection";
         collectionButtons.SetActive(true);
         mainButtons.SetActive(false);
     }
