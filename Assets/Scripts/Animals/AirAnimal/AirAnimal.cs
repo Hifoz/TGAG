@@ -28,7 +28,8 @@ public class AirAnimal : Animal {
 
     override protected void Update() {
         if (skeleton != null) {
-            brain.move();
+            if(brain != null)
+                brain.move();
             calculateSpeedAndHeading();
             doGravity();
             calcVelocity();
