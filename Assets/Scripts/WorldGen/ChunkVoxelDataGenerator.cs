@@ -188,7 +188,7 @@ public static class ChunkVoxelDataGenerator {
 
         // Use the biomes to find the block type:
         if (biomes.Count == 1) {
-            biomes[0].first.getBlockType(data, pos, corruptionFactor);
+            biomes[0].first.getBlockType(data, pos);
         } else {
             float increment = 0;
             float randVal = (float)rng.NextDouble();
@@ -204,7 +204,7 @@ public static class ChunkVoxelDataGenerator {
                 p.second /= tot;
                 increment += p.second;
                 if (increment >= randVal) {
-                    p.first.getBlockType(data, pos, corruptionFactor);
+                    p.first.getBlockType(data, pos);
                     break;
                 }
             }

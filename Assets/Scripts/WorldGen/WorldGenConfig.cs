@@ -53,10 +53,6 @@ public static class WorldGenConfig {
         return Mathf.Lerp(waterEndLevel, chunkHeight, corruptionFactor);
     }
 
-    public static float getWaterStart(float corruptionFactor) {
-        return Mathf.Lerp(0, chunkHeight - waterEndLevel, corruptionFactor);
-    }
-
     public static int corruptWaterHeight(int y, float corruptionFactor) {
         int relativeWaterPos = waterEndLevel - y;
         return (int)getWaterEnd(corruptionFactor) - relativeWaterPos;

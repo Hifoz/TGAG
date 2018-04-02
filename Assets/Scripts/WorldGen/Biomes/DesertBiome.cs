@@ -31,7 +31,7 @@ class DesertBiome : BiomeBase {
     /// </summary>
     /// <param name="data"></param>
     /// <param name="pos"></param>
-    public void getBlockType(BlockDataMap data, Vector3Int pos) {
+    public override void getBlockType(BlockDataMap data, Vector3Int pos) {
         data.mapdata[data.index1D(pos.x, pos.y, pos.z)].blockType = BlockData.BlockType.SAND;
     }
 }
