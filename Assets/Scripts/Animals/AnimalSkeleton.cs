@@ -56,12 +56,15 @@ public abstract class AnimalSkeleton {
         public LineSegment boneLine; //line of bone to use for skinning
     }
     //Misc members
-    protected static ThreadSafeRng rng = new ThreadSafeRng();
+    protected static ThreadSafeRng seedGen = new ThreadSafeRng();
+    protected ThreadSafeRng rng;
+    protected int seed;
 
     //Skeleton related members
     protected MixedDictionary<BodyParameter> bodyParametersRange;
     protected Transform rootBone;
     protected MixedDictionary<BodyParameter> bodyParameters = new MixedDictionary<BodyParameter>();
+
     protected Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
     protected Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
 
@@ -154,6 +157,14 @@ public abstract class AnimalSkeleton {
         for (int i = 0; i < meshData.vertices.Length; i++) {
             weights.Add(calcVertBoneWeight(meshData.vertices[i]));
         }
+    }
+
+    /// <summary>
+    /// Gets the seed used to generate the skeleton
+    /// </summary>
+    /// <returns></returns>
+    public int getSeed() {
+        return seed;
     }
 
     //    _____      _            _         __  __      _   _               _     
@@ -380,7 +391,7 @@ public abstract class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(bounds.lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL)[0];
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(bounds.lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL, seed)[0];
     }
 
     /// <summary>

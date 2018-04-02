@@ -183,7 +183,8 @@ public abstract class Animal : MonoBehaviour {
 
         while (condition()) {
             for (int i = 0; i < desiredPositions.Length; i++) {
-                desiredPositions[i] = limb[0].bone.position + referenceTransform.rotation * model.direction * model.length * (i + 1) / limb.Count;
+                if(referenceTransform != null && limb[0].bone != null)
+                    desiredPositions[i] = limb[0].bone.position + referenceTransform.rotation * model.direction * model.length * (i + 1) / limb.Count;
             }
 
             for (int i = 0; i < limb.Count - 1; i++) {
@@ -253,6 +254,8 @@ public abstract class Animal : MonoBehaviour {
     /// <returns>Bool target reached</returns>
     protected bool ccdPartial(List<Bone> limb, Vector3 target, float speed = ikSpeed) {
         Transform effector = limb[limb.Count - 1].bone;
+        if (effector == null)
+            return true;
         float dist = Vector3.Distance(effector.position, target);
         if (dist > ikTolerance) {
             for (int i = limb.Count - 1; i >= 0; i--) {
