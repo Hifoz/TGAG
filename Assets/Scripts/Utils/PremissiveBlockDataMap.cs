@@ -44,8 +44,8 @@ public class PremissiveBlockDataMap {
             if (!xzDataDict.TryGetValue(xzPos, out xzdata)) {
                 xzdata = new xzData();
                 xzdata.biomes = biomeManager.getInRangeBiomes(xzPos);
-                xzdata.height = ChunkVoxelDataGenerator.calcHeight(pos, xzdata.biomes);
                 xzdata.corruptionFactor = Corruption.corruptionFactor(pos);
+                xzdata.height = ChunkVoxelDataGenerator.calcHeight(pos, xzdata.biomes, xzdata.corruptionFactor);
                 xzDataDict.Add(xzPos, xzdata);
             }
             return !ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)xzdata.height, xzdata.biomes, xzdata.corruptionFactor);

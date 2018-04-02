@@ -11,7 +11,7 @@ public static class WorldGenConfig {
     public static int chunkSize = 20;
     public static int chunkCount = 40;
     public static int chunkHeight = 200;
-    private const int waterEndLevel = 18; 
+    public const int waterEndLevel = 18; 
     //2D noise settings
     public static float noiseExponent2D = 3;
     public static int octaves2D = 6;
@@ -47,25 +47,5 @@ public static class WorldGenConfig {
     /// <returns></returns>
     public static bool heightInWater(float y) {
         return heightInWater((int)y);
-    }
-
-    /// <summary>
-    /// Gets the end height for water, send corruption factor to have it adjusted for corruption
-    /// </summary>
-    /// <param name="corruptionFactor"></param>
-    /// <returns></returns>
-    public static float getWaterEnd(float corruptionFactor = 0) {
-        return Mathf.Lerp(waterEndLevel, chunkHeight, corruptionFactor);
-    }
-
-    /// <summary>
-    /// Adjusts a water height for corruption
-    /// </summary>
-    /// <param name="y">height to adjust</param>
-    /// <param name="corruptionFactor">corruption factor float</param>
-    /// <returns>new height</returns>
-    public static int corruptWaterHeight(int y, float corruptionFactor) {
-        int relativeWaterPos = waterEndLevel - y;
-        return (int)getWaterEnd(corruptionFactor) - relativeWaterPos;
     }
 }

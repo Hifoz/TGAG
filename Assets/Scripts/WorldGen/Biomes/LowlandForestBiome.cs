@@ -6,7 +6,7 @@ class LowlandForestBiome : BiomeBase {
     public LowlandForestBiome() :
         base(
             //General
-            minGroundHeight:0,
+            minGroundHeight:1,
             maxGroundHeight:90,
             snowHeight: 80,
             //2D noise settings
