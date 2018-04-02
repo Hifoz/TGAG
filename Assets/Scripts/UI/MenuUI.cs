@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class MenuUI : MonoBehaviour {
 
+    public Text title;
+
     public GameObject mainButtons;
 
     public GameObject playButtons;
@@ -15,6 +17,7 @@ public class MenuUI : MonoBehaviour {
     public GameObject optionsButtons;
     public GameObject optionsPanel;
 
+    public GameObject collectionButtons;
 
 
     // Use this for initialization
@@ -138,10 +141,32 @@ public class MenuUI : MonoBehaviour {
     /// </summary>
     public void onResume() {
         closeSettings();
+        if (collectionButtons != null) {
+            closeCollection();
+        }
         GetComponent<Canvas>().enabled = false;
         Time.timeScale = 1;
         Cursor.lockState = CursorLockMode.Locked;
     }
+
+    /// <summary>
+    /// Switches from collection buttons to main button set
+    /// </summary>
+    public void closeCollection() {
+        title.text = "Paused";
+        collectionButtons.SetActive(false);
+        mainButtons.SetActive(true);
+    }
+
+    /// <summary>
+    /// Switches to collection buttons
+    /// </summary>
+    public void openCollection() {
+        title.text = "Animal Collection";
+        collectionButtons.SetActive(true);
+        mainButtons.SetActive(false);
+    }
+
 
     /// <summary>
     /// Used to return from the game to the main menu scene

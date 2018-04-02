@@ -7,6 +7,7 @@ using UnityEngine.UI;
 /// For animating the colors on the text of a button.
 /// </summary>
 [RequireComponent(typeof(Button))]
+[ExecuteInEditMode]
 public class ButtonText : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler {
 
     public Color baseColor;

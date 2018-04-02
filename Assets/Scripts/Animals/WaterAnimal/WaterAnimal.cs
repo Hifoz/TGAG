@@ -20,7 +20,8 @@ public class WaterAnimal : Animal {
     override protected void Update() {
         if (skeleton != null) {
             calculateSpeedAndHeading();
-            brain.move();
+            if(brain != null)
+                brain.move();
             calcVelocity();
             doGravity();
             handleAnimations();

@@ -4,8 +4,15 @@
 /// A threadsafe random number generator;
 /// </summary>
 public class ThreadSafeRng {
+    Random rng;
 
-    Random rng = new Random();
+    public ThreadSafeRng() {
+        rng = new Random();
+    }
+
+    public ThreadSafeRng(int seed) {
+        rng = new Random(seed);
+    }
 
     /// <summary>
     /// Generates a number between min and max
@@ -33,6 +40,16 @@ public class ThreadSafeRng {
     public int randomInt(int min, int max) {
         lock (rng) {
             return rng.Next(min, max);
+        }
+    }
+
+    /// <summary>
+    /// Generates a number
+    /// </summary>
+    /// <returns>int number</returns>
+    public int randomInt() {
+        lock (rng) {
+            return rng.Next();
         }
     }
 }
