@@ -16,6 +16,7 @@ public static class Corruption {
     public static float corruptionFactor(Vector3 pos) {
         pos.y = 0;
         float corruptionFactor = pos.magnitude / maxWorldDistance;
-        return Mathf.Clamp01(corruptionFactor);
+        corruptionFactor = Mathf.Clamp01(corruptionFactor);
+        return Mathf.Clamp01(corruptionFactor * corruptionFactor);
     }
 }

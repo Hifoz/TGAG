@@ -241,7 +241,9 @@ public class ChunkVoxelDataThread {
 
     private bool posNextToWater(Vector3Int pos, BlockDataMap data) {
         return (data.mapdata[data.index1D(pos + Vector3Int.up)].blockType == BlockData.BlockType.WATER ||
-                data.mapdata[data.index1D(pos + Vector3Int.down)].blockType == BlockData.BlockType.WATER);
+                data.mapdata[data.index1D(pos + Vector3Int.down)].blockType == BlockData.BlockType.WATER ||
+                data.mapdata[data.index1D(pos + Vector3Int.up)].blockType == BlockData.BlockType.SAND ||
+                data.mapdata[data.index1D(pos + Vector3Int.down)].blockType == BlockData.BlockType.SAND);
     }
 
     /// <summary>

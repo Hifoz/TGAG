@@ -14,8 +14,8 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">The position to investigate</param>
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
-    public static bool posContainsVoxel(Vector3 pos, int height, BiomeBase biome) {
-        if (Corruption.corruptionFactor(pos) >= 1f) {
+    public static bool posContainsVoxel(Vector3 pos, int height, BiomeBase biome, float corruptionFactor) {
+        if (corruptionFactor >= 1f) {
             return false;
         }
 
@@ -24,7 +24,9 @@ public static class ChunkVoxelDataGenerator {
         else if (pos.y > biome.maxGroundHeight)
             return false;
         else
-            return (pos.y < height || biome.structure3DRate > calc3DStructure(pos, biome, height)) && biome.unstructure3DRate < calc3DUnstructure(pos, biome, height);
+            return (pos.y < height * corruptionFactor || 
+                    biome.structure3DRate > calc3DStructure(pos, biome, height)) && 
+                    biome.unstructure3DRate < calc3DUnstructure(pos, biome, height);
     }
 
     /// <summary>
@@ -40,7 +42,7 @@ public static class ChunkVoxelDataGenerator {
         }
 
         if (biomes.Count == 1)
-            return posContainsVoxel(pos, height, biomes[0].first);
+            return posContainsVoxel(pos, height, biomes[0].first, corruptionFactor);
 
         float structure = 0;
         float unstructure = 0;
@@ -66,7 +68,9 @@ public static class ChunkVoxelDataGenerator {
             unstructureRate += biomes[i].first.unstructure3DRate * biomes[i].second;
         }
 
-        return (pos.y < height || structureRate > structure) && unstructureRate < unstructure;
+        return (pos.y < height * corruptionFactor ||
+                structureRate > structure) && 
+                unstructureRate < unstructure;
     }
 
 
@@ -144,7 +148,7 @@ public static class ChunkVoxelDataGenerator {
 
         while (active.Any()) {
             voxel = active.Dequeue();
-            bool containsVoxel = posContainsVoxel(pos + voxel, heightmap[voxel.x, voxel.z], biomemap[voxel.x, voxel.z]);
+            bool containsVoxel = posContainsVoxel(pos + voxel, heightmap[voxel.x, voxel.z], biomemap[voxel.x, voxel.z], corruptionMap[voxel.x, voxel.z]);
 
             data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = 
                 containsVoxel ? BlockData.BlockType.DIRT : BlockData.BlockType.NONE;
@@ -168,7 +172,7 @@ public static class ChunkVoxelDataGenerator {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], corruptionMap[x, z], rng); // TODO make this use biomes in some way?
-                    else if (Corruption.corruptionFactor(pos) < 1 && WorldGenConfig.heightInWater(y))
+                    else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y))
                         data.mapdata[data.index1D(x, WorldGenConfig.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
                 }
             }
@@ -263,7 +267,6 @@ public static class ChunkVoxelDataGenerator {
                 maxH += biomes[i].first.maxGroundHeight * biomes[i].second;
             }
         }
-
 
         return minH + finalNoise * maxH;
     }

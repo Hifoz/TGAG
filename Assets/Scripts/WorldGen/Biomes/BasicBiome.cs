@@ -5,7 +5,7 @@ class BasicBiome : BiomeBase {
     public BasicBiome() :
         base(
             //General
-            minGroundHeight: 0,
+            minGroundHeight: 1,
             maxGroundHeight: 200,
             snowHeight: 90,
             //2D noise settings

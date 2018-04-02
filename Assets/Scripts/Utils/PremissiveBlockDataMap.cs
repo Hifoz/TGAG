@@ -48,7 +48,7 @@ public class PremissiveBlockDataMap {
                 xzdata.corruptionFactor = Corruption.corruptionFactor(pos);
                 xzDataDict.Add(xzPos, xzdata);
             }
-            return !ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)xzdata.height, xzdata.biomes);
+            return !ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)xzdata.height, xzdata.biomes, xzdata.corruptionFactor);
         }
     } 
 }
