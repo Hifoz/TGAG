@@ -36,7 +36,7 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <returns></returns>
     public IEnumerator addToCollection() {
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0.5f);
         GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().addAnimal(new CollectedAnimal {
             skeletonSeed = GetComponent<Animal>().getSkeleton().getSeed(),
             animalType = GetComponent<Animal>().GetType()

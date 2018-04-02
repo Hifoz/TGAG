@@ -19,7 +19,9 @@ public class MeshDataGenerator {
 
     protected Vector3 offset;
 
-    private static ThreadSafeRng rng = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
+    private static ThreadSafeRng seedGen = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
+    private ThreadSafeRng rng = new ThreadSafeRng();
+    private int seed;
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -93,16 +95,23 @@ public class MeshDataGenerator {
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <param name="meshDataType">type of the mesh</param>
     /// <returns>an array of meshdata objects made from input data</returns>
-    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN) {
+    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), MeshDataType meshDataType = MeshDataType.TERRAIN, int seed = -1) {
         MeshDataGenerator MDG = new MeshDataGenerator();
         MDG.meshDataType = meshDataType;
         MDG.offset = offset;
 
         MDG.pointmap = pointmap;
 
+        if(seed == -1) {
+            MDG.seed = seedGen.randomInt();
+        } else {
+            MDG.seed = seed;
+        }
+        MDG.rng = new ThreadSafeRng(MDG.seed);
+
         if (meshDataType == MeshDataType.ANIMAL) {
             //X = frequency, Y = seed
-            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f));
+            MDG.animalData = new Vector2(MDG.rng.randomFloat(0.2f, 0.8f), MDG.rng.randomFloat(0.0f, 1.0f));
         }
 
         for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {

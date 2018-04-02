@@ -6,20 +6,9 @@ using UnityEngine.UI;
 
 /*
  * 
- * TODO : 
- * - Seed for animal skin must be consistent
- * - Indicator of what filter is in use
+ * TODO :
  * - Make animals have some sort of animation when displayed
  *      -- Disable ragdolling?
- * 
- * 
- * Should the player be able to look at all animals ever collected from main menu?
- *  - Or should we just save stats and have a statistics page in main menu with different things?
- *      -- Most animals collected in a playthrough (Also per type?)
- *      -- Least animals collected in a playthrough (Also per type?)
- *      -- etc.
- *      -- Other stats not related to animal collection(eg. shortest time spent to complete a playthrough)
- *
  *
  */
 
@@ -38,6 +27,9 @@ public class CollectedAnimal {
     }
 }
 
+/// <summary>
+/// Responsible for handling animal collection
+/// </summary>
 public class AnimalCollection : MonoBehaviour {
 
     public Camera displayCamera;
@@ -68,12 +60,17 @@ public class AnimalCollection : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Opens the animal collection display
+    /// </summary>
     public void openDisplay() {
         displayAnimal(0);
         transform.localScale = new Vector3(1, 1, 1);
     }
 
-
+    /// <summary>
+    /// Closes the animal collection display
+    /// </summary>
     public void closeDisplay() {
         hideDisplayedAnimal();
         transform.localScale = new Vector3(0, 0, 0);
@@ -104,13 +101,20 @@ public class AnimalCollection : MonoBehaviour {
         displayedAnimal.GetComponent<Animal>().setSkeleton(animalSkeleton);
         displayedAnimal.SetActive(true);
         displayedAnimal.transform.position = displayCamera.transform.position + new Vector3(0, 0, 20);
+        displayedAnimal.transform.Rotate(new Vector3(0, 180, 0));
     }
 
+    /// <summary>
+    /// Displays the next animal
+    /// </summary>
     public void displayNext() {
         hideDisplayedAnimal();
         displayAnimal(displayedAnimalIndex + 1);
     }
 
+    /// <summary>
+    /// Displays the previous animal
+    /// </summary>
     public void displayPrevious() {
         hideDisplayedAnimal();
         displayAnimal(displayedAnimalIndex - 1);
@@ -172,7 +176,7 @@ public class AnimalCollection : MonoBehaviour {
 
 
     /// <summary>
-    /// 
+    /// Sets what type of animal to show in the display
     /// </summary>
     /// <param name="type"></param>
     public void setAnimalDisplayType(int type) {
@@ -209,5 +213,10 @@ public class AnimalCollection : MonoBehaviour {
     }
 
 
+
+    /// <summary>Returns a copy of the list of collected animals</summary>
+    public List<CollectedAnimal> getAnimalList() {
+        return collectedAnimals.ToList();
+    }
 
 }

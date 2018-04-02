@@ -391,7 +391,7 @@ public abstract class AnimalSkeleton {
             }
         }
         meshData = new MeshData();
-        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(bounds.lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL)[0];
+        meshData = MeshDataGenerator.GenerateMeshData(pointMap, (voxelSize * scale), -(bounds.lowerBounds / (voxelSize * scale)), MeshDataGenerator.MeshDataType.ANIMAL, seed)[0];
     }
 
     /// <summary>
