@@ -83,11 +83,14 @@ public static class ChunkVoxelDataGenerator {
 
         List<Pair<BiomeBase, float>>[,] biomemap = new List<Pair<BiomeBase, float>>[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
         int[,] heightmap = new int[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
+        float[,] corruptionMap = new float[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
 
         for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
             for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
+                Vector3 xzPos = new Vector3(x, 0, z);
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
-                heightmap[x, z] = (int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z]);
+                heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z]);
+                corruptionMap[x, z] = Corruption.corruptionFactor(pos + xzPos);
                 // Initialize the blockdata map with heightmap data
                 for (int y = 0; y < heightmap[x, z]; y++) {
                     data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.DIRT;
@@ -162,10 +165,10 @@ public static class ChunkVoxelDataGenerator {
         for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
             for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
-                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE)
-                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
-                    else if (Corruption.corruptionFactor(pos) < 1 && y < WorldGenConfig.waterHeight)
-                        data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WATER;
+                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], corruptionMap[x, z], rng); // TODO make this use biomes in some way?
+                    else if (Corruption.corruptionFactor(pos) < 1 && WorldGenConfig.heightInWater(y))
+                        data.mapdata[data.index1D(x, WorldGenConfig.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
                 }
             }
         }
@@ -180,12 +183,12 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<BiomeBase, float>> biomes, System.Random rng) {
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<BiomeBase, float>> biomes, float corruptionFactor, System.Random rng) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Use the biomes to find the block type:
         if (biomes.Count == 1) {
-            biomes[0].first.getBlockType(data, pos);
+            biomes[0].first.getBlockType(data, pos, corruptionFactor);
         } else {
             float increment = 0;
             float randVal = (float)rng.NextDouble();
@@ -201,7 +204,7 @@ public static class ChunkVoxelDataGenerator {
                 p.second /= tot;
                 increment += p.second;
                 if (increment >= randVal) {
-                    p.first.getBlockType(data, pos);
+                    p.first.getBlockType(data, pos, corruptionFactor);
                     break;
                 }
             }

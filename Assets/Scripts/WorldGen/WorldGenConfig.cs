@@ -11,7 +11,7 @@ public static class WorldGenConfig {
     public static int chunkSize = 20;
     public static int chunkCount = 40;
     public static int chunkHeight = 200;
-    public static int waterHeight = 18;
+    private const int waterEndLevel = 18; 
     //2D noise settings
     public static float noiseExponent2D = 3;
     public static int octaves2D = 6;
@@ -21,4 +21,44 @@ public static class WorldGenConfig {
     public static float treeThickness = 0.5f;
     public static float treeLeafThickness = 3f;
     public static int grammarRecursionDepth = 4;
+
+    /// <summary>
+    /// Calculates if a position is in water
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    public static bool positionInWater(Vector3 pos) {
+        return heightInWater((int)pos.y);
+    }
+
+    /// <summary>
+    /// Calculates if a position is in water
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    public static bool heightInWater(int y) {
+        return y < waterEndLevel;
+    }
+
+    /// <summary>
+    /// Calculates if a position is in water
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    public static bool heightInWater(float y) {
+        return heightInWater((int)y);
+    }
+
+    public static float getWaterEnd(float corruptionFactor) {
+        return Mathf.Lerp(waterEndLevel, chunkHeight, corruptionFactor);
+    }
+
+    public static float getWaterStart(float corruptionFactor) {
+        return Mathf.Lerp(0, chunkHeight - waterEndLevel, corruptionFactor);
+    }
+
+    public static int corruptWaterHeight(int y, float corruptionFactor) {
+        int relativeWaterPos = waterEndLevel - y;
+        return (int)getWaterEnd(corruptionFactor) - relativeWaterPos;
+    }
 }

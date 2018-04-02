@@ -70,11 +70,11 @@ public abstract class BiomeBase {
     /// </summary>
     /// <param name="data"></param>
     /// <param name="pos"></param>
-    public virtual void getBlockType(BlockDataMap data, Vector3Int pos) {
+    public virtual void getBlockType(BlockDataMap data, Vector3Int pos, float corruptionFactor) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Add block type here:
-        if (pos.y < WorldGenConfig.waterHeight)
+        if (WorldGenConfig.positionInWater(pos))
             data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:

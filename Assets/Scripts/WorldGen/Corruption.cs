@@ -5,7 +5,7 @@ using System.Collections;
 /// Class dealing with corruption
 /// </summary>
 public static class Corruption {
-    private const float maxWorldDistance = 500f; //Distance to edge of the world
+    private const float maxWorldDistance = 5000f; //Distance to edge of the world
 
     /// <summary>
     /// Calculates corruption factor of pos.
@@ -16,11 +16,6 @@ public static class Corruption {
     public static float corruptionFactor(Vector3 pos) {
         pos.y = 0;
         float corruptionFactor = pos.magnitude / maxWorldDistance;
-        if (corruptionFactor > 1f) {
-            corruptionFactor = 1f;
-        } else if (corruptionFactor < 0f) {
-            corruptionFactor = 0f;
-        }
-        return corruptionFactor;
+        return Mathf.Clamp01(corruptionFactor);
     }
 }
