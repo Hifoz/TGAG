@@ -34,7 +34,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="heights">height from all biomes covering the sample position</param>
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
-    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes) {
+    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes, float corruptionFactor) {
         if (Corruption.corruptionFactor(pos) >= 1f) {
             return false;
         }
@@ -89,8 +89,9 @@ public static class ChunkVoxelDataGenerator {
             for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                 Vector3 xzPos = new Vector3(x, 0, z);
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
-                heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z]);
                 corruptionMap[x, z] = Corruption.corruptionFactor(pos + xzPos);
+                heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z]);
+
                 // Initialize the blockdata map with heightmap data
                 for (int y = 0; y < heightmap[x, z]; y++) {
                     data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.DIRT;

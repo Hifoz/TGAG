@@ -49,10 +49,21 @@ public static class WorldGenConfig {
         return heightInWater((int)y);
     }
 
-    public static float getWaterEnd(float corruptionFactor) {
+    /// <summary>
+    /// Gets the end height for water, send corruption factor to have it adjusted for corruption
+    /// </summary>
+    /// <param name="corruptionFactor"></param>
+    /// <returns></returns>
+    public static float getWaterEnd(float corruptionFactor = 0) {
         return Mathf.Lerp(waterEndLevel, chunkHeight, corruptionFactor);
     }
 
+    /// <summary>
+    /// Adjusts a water height for corruption
+    /// </summary>
+    /// <param name="y">height to adjust</param>
+    /// <param name="corruptionFactor">corruption factor float</param>
+    /// <returns>new height</returns>
     public static int corruptWaterHeight(int y, float corruptionFactor) {
         int relativeWaterPos = waterEndLevel - y;
         return (int)getWaterEnd(corruptionFactor) - relativeWaterPos;
