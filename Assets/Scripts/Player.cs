@@ -41,7 +41,7 @@ public class Player : MonoBehaviour {
             skeletonSeed = GetComponent<Animal>().getSkeleton().getSeed(),
             animalType = GetComponent<Animal>().GetType()
         });
-        GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().displayAnimal(0);
+        GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().showAnimal(0);
     }
 
 
