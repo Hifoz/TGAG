@@ -5,9 +5,10 @@
 /// </summary>
 public class Corruption : MonoBehaviour{
     private const float maxWorldDistance = 5000f; //Distance to edge of the world
+    private const float pristineWorldDistance = 1000f;
 
     private void Update() {
-
+        RenderSettings.skybox.SetFloat("_CorruptionFactor", corruptionFactor(Player.playerPos.get()));
     }
 
     /// <summary>
@@ -17,11 +18,10 @@ public class Corruption : MonoBehaviour{
     /// <param name="pos">position to calculate corruption for</param>
     /// <returns></returns>
     public static float corruptionFactor(Vector3 pos) {
-        return 0.99f;
         pos.y = 0;
-        float corruptionFactor = pos.magnitude / maxWorldDistance;
+        float corruptionFactor = (pos.magnitude - pristineWorldDistance) / (maxWorldDistance - pristineWorldDistance);
         corruptionFactor = Mathf.Clamp01(corruptionFactor);
-        return Mathf.Clamp01(corruptionFactor * corruptionFactor);
+        return Mathf.Clamp01(corruptionFactor);
     }
 
     /// <summary>

@@ -53,10 +53,12 @@ Shader "Hidden/Kino/Fog"
     // Fog/skybox information
     half4 _FogColor;
     samplerCUBE _SkyCubemap;
+	samplerCUBE _SkyCubemapCorrupted;
     half4 _SkyCubemap_HDR;
     half4 _SkyTint;
     half _SkyExposure;
     float _SkyRotation;
+	float _CorruptionFactor;
 
     struct v2f
     {
@@ -140,7 +142,9 @@ Shader "Hidden/Kino/Fog"
 
     #if USE_SKYBOX
         // Look up the skybox color.
-        half3 skyColor = DecodeHDR(texCUBE(_SkyCubemap, i.ray), _SkyCubemap_HDR);
+        half3 skyColor1 = DecodeHDR(texCUBE(_SkyCubemap, i.ray), _SkyCubemap_HDR);
+		half3 skyColor2 = DecodeHDR(texCUBE(_SkyCubemapCorrupted, i.ray), _SkyCubemap_HDR);
+		half3 skyColor = lerp(skyColor1, skyColor2, _CorruptionFactor);
         skyColor *= _SkyTint.rgb * _SkyExposure * unity_ColorSpaceDouble;
         // Lerp between source color to skybox color with fog amount.
         return lerp(half4(skyColor, 1), sceneColor, fog);
