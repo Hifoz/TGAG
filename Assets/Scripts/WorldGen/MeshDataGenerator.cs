@@ -6,14 +6,6 @@ using UnityEngine;
 
 
 /// <summary>
-/// Contains any extra/optional data that can be used to generate a mesh.
-/// </summary>
-public class MeshDataExtras {
-    public Vector2 animalData = Vector2.negativeInfinity; // Used for populating the uvs if meshDataType == ANIMAL
-}
-
-
-/// <summary>
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
@@ -41,70 +33,7 @@ public class MeshDataGenerator {
     public enum GeneratorMode {
         CULL, GREEDY
     };
-
-
-
-    #region mesh building
-
-    /// <summary>
-    /// NB! Not thread safe! Do not call from threads other then the main thread.
-    /// Generates a mesh from MeshData.
-    /// </summary>
-    /// <param name="md">MeshData</param>
-    public static void applyMeshData(MeshFilter meshFilter, MeshData md) {
-        Mesh mesh = meshFilter.mesh;
-        if (mesh == null) {
-            mesh = new Mesh();
-        } else {
-            mesh.Clear();
-        }
-        mesh.vertices = md.vertices;
-        mesh.normals = md.normals;
-        mesh.triangles = md.triangles;
-        mesh.colors = md.colors;
-        mesh.uv = md.uvs;
-        meshFilter.mesh = mesh;
-    }
-
-    /// <summary>
-    /// NB! Not thread safe! Do not call from threads other then the main thread.
-    /// Generates a mesh from MeshData.
-    /// </summary>
-    /// <param name="md">MeshData</param>
-    public static void applyMeshData(MeshCollider meshCollider, MeshData md) {
-        Mesh mesh = meshCollider.sharedMesh;
-        if (mesh == null) {
-            mesh = new Mesh();
-        } else {
-            mesh.Clear();
-        }
-        mesh.vertices = md.vertices;
-        mesh.normals = md.normals;
-        mesh.triangles = md.triangles;
-        mesh.colors = md.colors;
-        mesh.uv = md.uvs;
-        meshCollider.sharedMesh = mesh;
-    }
-
-    /// <summary>
-    /// NB! Not thread safe! Do not call from threads other then the main thread.
-    /// Generates a mesh from MeshData.
-    /// This overload can cause memory leaks, you need to delete the mesh when you are done with it (or reuse)
-    /// </summary>
-    /// <param name="md">MeshData</param>
-    /// <returns>Mesh</returns>
-    public static Mesh applyMeshData(MeshData md) {
-        Mesh mesh = new Mesh();
-        mesh.vertices = md.vertices;
-        mesh.normals = md.normals;
-        mesh.triangles = md.triangles;
-        mesh.colors = md.colors;
-        mesh.uv = md.uvs;
-        return mesh;
-    }
-
-    #endregion
-
+    
     #region meshdata generation
 
     /// <summary>
@@ -120,7 +49,7 @@ public class MeshDataGenerator {
             return gmg.generateMeshData();
         }
 
-        // TODO : Move meshdata generation code in this class into a CullingMeshDataGenerator class.
+        // TODO : Move meshdata generation code in this class into a NaiveMeshDataGenerator class.
 
         MeshDataGenerator MDG = new MeshDataGenerator();
         MDG.meshDataType = meshDataType;
@@ -350,6 +279,68 @@ public class MeshDataGenerator {
             uvs.Add(coords[rotations[rotation, i]]);
         }
 
+    }
+
+    #endregion
+
+
+    #region mesh building
+
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    public static void applyMeshData(MeshFilter meshFilter, MeshData md) {
+        Mesh mesh = meshFilter.mesh;
+        if (mesh == null) {
+            mesh = new Mesh();
+        } else {
+            mesh.Clear();
+        }
+        mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        meshFilter.mesh = mesh;
+    }
+
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    public static void applyMeshData(MeshCollider meshCollider, MeshData md) {
+        Mesh mesh = meshCollider.sharedMesh;
+        if (mesh == null) {
+            mesh = new Mesh();
+        } else {
+            mesh.Clear();
+        }
+        mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        meshCollider.sharedMesh = mesh;
+    }
+
+    /// <summary>
+    /// NB! Not thread safe! Do not call from threads other then the main thread.
+    /// Generates a mesh from MeshData.
+    /// This overload can cause memory leaks, you need to delete the mesh when you are done with it (or reuse)
+    /// </summary>
+    /// <param name="md">MeshData</param>
+    /// <returns>Mesh</returns>
+    public static Mesh applyMeshData(MeshData md) {
+        Mesh mesh = new Mesh();
+        mesh.vertices = md.vertices;
+        mesh.normals = md.normals;
+        mesh.triangles = md.triangles;
+        mesh.colors = md.colors;
+        mesh.uv = md.uvs;
+        return mesh;
     }
 
     #endregion
