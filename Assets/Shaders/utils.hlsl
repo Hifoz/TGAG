@@ -23,7 +23,7 @@ float inRange (float input, float lower, float upper){
 //this hash based noise function is based on https://www.shadertoy.com/view/XslGRr made by Inigo Quilez
 
 float hash (float n){
-	return frac(abs(sin(n.x) * 43758.5453));
+	return frac(abs(sin(n) * 43758.5453));
 }
 
 float noise (float3 x){

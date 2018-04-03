@@ -17,10 +17,10 @@ public static class LSystemTreeGenerator {
     /// Struct representing a turtle, turtles draw the trees
     /// </summary>
     private struct Turtle {
-        public Vector3 heading;
-        public Vector3 pos;
-        public Axis axis;
-        public float lineLen;
+        public Vector3 heading; //The direction to draw in
+        public Vector3 pos;     //Current position of turtle
+        public Axis axis;       //Axis to rotate turtle in
+        public float lineLen;   //The length of the lines the turtle draws
     }
 
     //Defenition of language (the array is not used in the code)

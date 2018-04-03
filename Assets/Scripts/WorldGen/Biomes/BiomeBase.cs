@@ -18,6 +18,8 @@ public abstract class BiomeBase {
     public readonly float structure3DRate = 0;
     public readonly float unstructure3DRate = 0;
     public readonly float frequency3D = 0;
+    public readonly float corruptionRate = 0;
+    public readonly float corruptionFrequency = 0;
     //Foliage
     public readonly int maxTreesPerChunk = 0;
     public readonly float treeLineLength = 0;
@@ -33,7 +35,8 @@ public abstract class BiomeBase {
     /// </summary>
     protected BiomeBase(int minGroundHeight, int maxGroundHeight, int snowHeight, float frequency2D, 
                     float noiseExponent2D, int octaves2D, float structure3DRate, float unstructure3DRate, 
-                    float frequency3D, int maxTreesPerChunk, float treeLineLength, float treeVoxelSize, 
+                    float frequency3D, float corruptionRate, float corruptionFrequency,
+                    int maxTreesPerChunk, float treeLineLength, float treeVoxelSize, 
                     float treeLeafThickness, int grammarRecursionDepth, float treeThickness) {
         this.minGroundHeight = minGroundHeight;
         this.maxGroundHeight = maxGroundHeight;
@@ -46,6 +49,8 @@ public abstract class BiomeBase {
         this.structure3DRate = structure3DRate;
         this.unstructure3DRate = unstructure3DRate;
         this.frequency3D = frequency3D;
+        this.corruptionRate = corruptionRate;
+        this.corruptionFrequency = corruptionFrequency;
 
         this.maxTreesPerChunk = maxTreesPerChunk;
         this.treeLineLength = treeLineLength;
@@ -74,7 +79,7 @@ public abstract class BiomeBase {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Add block type here:
-        if (pos.y < WorldGenConfig.waterHeight)
+        if (WorldGenConfig.positionInWater(pos))
             data.mapdata[pos1d].blockType = BlockData.BlockType.SAND;
 
         // Add modifier type:

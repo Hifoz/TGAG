@@ -188,17 +188,16 @@ public class ChunkVoxelDataThread {
 
         for (int i = 0; i < treeCount; i++) {
             Vector3 localPos = new Vector3((float)rng.NextDouble() * WorldGenConfig.chunkSize, 0, (float)rng.NextDouble() * WorldGenConfig.chunkSize);
-            localPos = findGroundLevel(Utils.floorVectorToInt(localPos), chunkBlockData);
-            if (localPos.y > WorldGenConfig.waterHeight + 2) {
-                if(localPos != Vector3.down) {
-                    MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, order.position, chunkBlockData, biomeManager);
-                    trees.Add(tree[0]);
-                    treeTrunks.Add(tree[1]);
-                    treePositions.Add(localPos);
-                } else {
-                    i--; //Try again
-                }
+            if (Corruption.corruptionFactor(localPos + order.position) >= 1f) {
+                continue;
             }
+            localPos = findGroundLevel(Utils.floorVectorToInt(localPos), chunkBlockData); 
+            if(localPos != Vector3.down) {
+                MeshData[] tree = LSystemTreeGenerator.generateMeshData(localPos, order.position, chunkBlockData, biomeManager);
+                trees.Add(tree[0]);
+                treeTrunks.Add(tree[1]);
+                treePositions.Add(localPos);
+            }    
         }
         result.trees = trees.ToArray();
         result.treeTrunks = treeTrunks.ToArray();
@@ -214,22 +213,37 @@ public class ChunkVoxelDataThread {
     private Vector3 findGroundLevel(Vector3Int localPos, BlockDataMap data) {
         int halfLength = data.GetLength(1) / 2;
         localPos.y = halfLength;
-        bool lastVoxel = data.mapdata[data.index1D(localPos)].blockType != BlockData.BlockType.NONE;
-        bool currentVoxel = lastVoxel;
-        int dir = (lastVoxel) ? 1 : -1;
+        BlockData.BlockType lastVoxel = data.mapdata[data.index1D(localPos)].blockType;
+        BlockData.BlockType currentVoxel = lastVoxel;
+        int dir = (lastVoxel == BlockData.BlockType.NONE) ? -1 : 1;
         
         for (int i = 0; i < halfLength; i++) { 
             localPos.y += dir;
             lastVoxel = currentVoxel;
-            currentVoxel = data.mapdata[data.index1D(localPos)].blockType != BlockData.BlockType.NONE;
-            if (lastVoxel != currentVoxel) {
-                if (lastVoxel) { //Put the tree in an empty voxel
-                    localPos.y -= dir;
+            currentVoxel = data.mapdata[data.index1D(localPos)].blockType;
+            if (currentVoxel == BlockData.BlockType.NONE && lastVoxel != BlockData.BlockType.NONE) {
+                localPos.y -= dir;
+                if (posNextToWater(localPos, data)) {
+                    return Vector3.down;
+                }
+                return localPos;
+            }
+            if (lastVoxel == BlockData.BlockType.NONE && currentVoxel != BlockData.BlockType.NONE) {
+                localPos.y += dir;
+                if (posNextToWater(localPos, data)) {
+                    return Vector3.down;
                 }
                 return localPos;
             }
         }
         return Vector3.down;
+    }
+
+    private bool posNextToWater(Vector3Int pos, BlockDataMap data) {
+        return (data.mapdata[data.index1D(pos + Vector3Int.up)].blockType == BlockData.BlockType.WATER ||
+                data.mapdata[data.index1D(pos + Vector3Int.down)].blockType == BlockData.BlockType.WATER ||
+                data.mapdata[data.index1D(pos + Vector3Int.up)].blockType == BlockData.BlockType.SAND ||
+                data.mapdata[data.index1D(pos + Vector3Int.down)].blockType == BlockData.BlockType.SAND);
     }
 
     /// <summary>
@@ -240,7 +254,13 @@ public class ChunkVoxelDataThread {
     private int getPreferredOrder(List<Order> list) {
         int resultIndex = -1;
         float preferredValue = Int32.MaxValue;
-        for(int i = 0; i < list.Count; i++) {
+
+        //Moved this out to reduce locking
+        Vector3 playerPos = Player.playerPos.get();
+        Vector3 playerMoveDir = Player.playerSpeed.get();
+        Vector3 cameraViewDir = CameraController.cameraDir.get();
+
+        for (int i = 0; i < list.Count; i++) {
             if (list[i].task == Task.CHUNK) { //Prioritize canceling chunks the most
                 if (cancelChunk(list[i].position)) {
                     list[i].task = Task.CANCEL;
@@ -249,10 +269,6 @@ public class ChunkVoxelDataThread {
             }
 
             Vector3 chunkPos = list[i].position;
-            Vector3 playerPos = Player.playerPos.get();
-            Vector3 playerMoveDir = Player.playerSpeed.get();
-            Vector3 cameraViewDir = CameraController.cameraDir.get();
-
             Vector3 preferredDir = playerMoveDir * 2 + cameraViewDir;
             Vector3 chunkDir = (chunkPos - playerPos);
             chunkDir.y = 0;

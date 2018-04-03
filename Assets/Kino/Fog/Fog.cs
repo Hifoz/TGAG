@@ -126,9 +126,11 @@ namespace Kino
                 // Transfer the skybox parameters.
                 var skybox = RenderSettings.skybox;
                 _material.SetTexture("_SkyCubemap", skybox.GetTexture("_Tex"));
+                _material.SetTexture("_SkyCubemapCorrupted", skybox.GetTexture("_TexCorrupt"));
                 _material.SetColor("_SkyTint", skybox.GetColor("_Tint"));
                 _material.SetFloat("_SkyExposure", skybox.GetFloat("_Exposure"));
                 _material.SetFloat("_SkyRotation", skybox.GetFloat("_Rotation"));
+                _material.SetFloat("_CorruptionFactor", skybox.GetFloat("_CorruptionFactor"));
             }
             else
             {

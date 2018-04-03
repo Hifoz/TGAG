@@ -572,6 +572,10 @@ public abstract class Animal : MonoBehaviour {
         }
     }
 
+    virtual protected void OnTriggerStay(Collider other) {
+
+    }
+
     virtual protected void OnCollisionEnter(Collision collision) {
         brain.OnCollisionEnter();
     }
