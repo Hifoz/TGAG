@@ -238,10 +238,11 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     private void consumeThreadResults() {
         int consumed = 0;
+        Vector3 realPlayerPos = player.position + worldOffset;
 
         //Consume waiting chunks
         for (int i = 0; i < waitingChunks.Count; i++) {
-            float distance = Vector3.Distance(waitingChunks[i].chunkVoxelData.chunkPos, player.position);
+            float distance = Vector3.Distance(waitingChunks[i].chunkVoxelData.chunkPos, realPlayerPos);
             if (distance <= chunkLaunchDistance) {
                 Result result = waitingChunks[i];
                 waitingChunks.RemoveAt(i);
@@ -267,7 +268,7 @@ public class WorldGenManager : MonoBehaviour {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
-                    if (Vector3.Distance(result.chunkVoxelData.chunkPos, player.position) > chunkLaunchDistance) {
+                    if (Vector3.Distance(result.chunkVoxelData.chunkPos, realPlayerPos) > chunkLaunchDistance) {
                         waitingChunks.Add(result);
                         break;
                     }
