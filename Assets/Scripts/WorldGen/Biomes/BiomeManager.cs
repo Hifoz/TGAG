@@ -25,9 +25,10 @@ public class BiomeManager {
     public BiomeManager() {
         rng = new System.Random(WorldGenConfig.seed);
 
-        // Initialize biomes
+        // Initialize biomes:
         biomes.Add(new BasicBiome());
         biomes.Add(new MountainBiome());
+        biomes.Add(new OceanBiome());
         biomes.Add(new LowlandForestBiome());
         biomes.Add(new DesertBiome());
 
