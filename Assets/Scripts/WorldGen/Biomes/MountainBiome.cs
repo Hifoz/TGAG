@@ -17,7 +17,7 @@ class MountainBiome : BiomeBase {
             unstructure3DRate: 0.7f,
             frequency3D: 0.009f,
             corruptionRate: 0.5f,
-            corruptionFrequency: 0.02f,
+            corruptionFrequency: 0.015f,
             //Foliage
             maxTreesPerChunk: 2,
             treeLineLength: 2.0f,

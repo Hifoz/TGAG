@@ -254,7 +254,13 @@ public class ChunkVoxelDataThread {
     private int getPreferredOrder(List<Order> list) {
         int resultIndex = -1;
         float preferredValue = Int32.MaxValue;
-        for(int i = 0; i < list.Count; i++) {
+
+        //Moved this out to reduce locking
+        Vector3 playerPos = Player.playerPos.get();
+        Vector3 playerMoveDir = Player.playerSpeed.get();
+        Vector3 cameraViewDir = CameraController.cameraDir.get();
+
+        for (int i = 0; i < list.Count; i++) {
             if (list[i].task == Task.CHUNK) { //Prioritize canceling chunks the most
                 if (cancelChunk(list[i].position)) {
                     list[i].task = Task.CANCEL;
@@ -263,10 +269,6 @@ public class ChunkVoxelDataThread {
             }
 
             Vector3 chunkPos = list[i].position;
-            Vector3 playerPos = Player.playerPos.get();
-            Vector3 playerMoveDir = Player.playerSpeed.get();
-            Vector3 cameraViewDir = CameraController.cameraDir.get();
-
             Vector3 preferredDir = playerMoveDir * 2 + cameraViewDir;
             Vector3 chunkDir = (chunkPos - playerPos);
             chunkDir.y = 0;

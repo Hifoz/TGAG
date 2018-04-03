@@ -685,6 +685,13 @@ public class WorldGenManager : MonoBehaviour {
         s += "CURRENT_CHUNK_ORDERS: " + pendingChunks.Count + "\n";
         s += "CURRENT_ANIMAL_ORDERS: " + orderedAnimals.Count + "\n\n";
 
+        s += "ACTIVE_CHUNKS: " + activeChunks.Count + "\n";
+        int activeAnimals = 0;
+        foreach (GameObjectPool pool in animalPools) {
+            activeAnimals += pool.activeList.Count;
+        }
+        s += "ACTIVE_ANIMALS: " + activeAnimals + "\n\n";
+
         s += "WORLD_OFFSET: " + worldOffset + "\n";
         s += "WORLD_OFFSET_INTERVAL: " + worldShiftDistance + "\n";
         s += "PLAYER_DISTANCE: " + Player.playerPos.get().magnitude + "\n";

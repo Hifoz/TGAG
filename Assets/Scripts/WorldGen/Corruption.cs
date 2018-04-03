@@ -3,8 +3,12 @@
 /// <summary>
 /// Class dealing with corruption
 /// </summary>
-public static class Corruption {
+public class Corruption : MonoBehaviour{
     private const float maxWorldDistance = 5000f; //Distance to edge of the world
+
+    private void Update() {
+
+    }
 
     /// <summary>
     /// Calculates corruption factor of pos.
@@ -21,16 +25,6 @@ public static class Corruption {
     }
 
     /// <summary>
-    /// corrupts the 2D height map data
-    /// </summary>
-    /// <param name="height">height to corrupt</param>
-    /// <param name="cf">corruption factor</param>
-    /// <returns>corrupted height</returns>
-    public static float corruptHeight(float height, float cf) {
-        return height * (1 - cf);
-    }
-
-    /// <summary>
     /// Adjusts a water height for corruption
     /// </summary>
     /// <param name="y">height to adjust</param>
@@ -41,9 +35,16 @@ public static class Corruption {
         return (int)Mathf.Lerp(WorldGenConfig.waterEndLevel, WorldGenConfig.chunkHeight * 0.75f, corruptionFactor) - relativeWaterPos;
     }
 
+    /// <summary>
+    /// Calculates corruption noise at position
+    /// </summary>
+    /// <param name="pos">position to use</param>
+    /// <param name="biome">biome to do corruption for</param>
+    /// <returns>corruption noise at position</returns>
     public static float corruptionNoise(Vector3 pos, BiomeBase biome) {
         float noise = SimplexNoise.Simplex3D(pos + Vector3.left * WorldGenConfig.seed, biome.corruptionFrequency);
         float noise01 = (noise + 1f) * 0.5f;
-        return noise01;
+        float t = (pos.y - biome.minGroundHeight) / biome.maxGroundHeight;
+        return Mathf.Lerp(noise01, 1, t * t); //Because you don't want an ugly flat "ceiling" everywhere.
     }
 }
