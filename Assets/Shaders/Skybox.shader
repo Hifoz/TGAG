@@ -4,6 +4,8 @@
 		[Gamma] _Exposure("Exposure", Range(0, 8)) = 1.0
 		_Rotation("Rotation", Range(0, 360)) = 0
 		[NoScaleOffset] _Tex("Cubemap   (HDR)", Cube) = "grey" {}
+		[NoScaleOffset] _TexCorrupt("Cubemap Corrupted   (HDR)", Cube) = "grey" {}
+		_CorruptionFactor("Corruption Factor", Range(0, 1)) = 0
 	}
 
 	SubShader {
@@ -21,10 +23,12 @@
 			#include "utils.hlsl"
 
 			samplerCUBE _Tex;
+			samplerCUBE _TexCorrupt;
 			half4 _Tex_HDR;
 			half4 _Tint;
 			half _Exposure;
 			float _Rotation;
+			float _CorruptionFactor;
 
 			float3 RotateAroundYInDegrees(float3 vertex, float degrees) {
 				float alpha = degrees * UNITY_PI / 180.0;
@@ -56,21 +60,14 @@
 			}
 
 			fixed4 frag(v2f i) : SV_Target {
-				half4 tex = texCUBE(_Tex, i.texcoord);
-				half3 c = DecodeHDR(tex, _Tex_HDR);
+				half4 tex1 = texCUBE(_Tex, i.texcoord);
+				half3 c1 = DecodeHDR(tex1, _Tex_HDR);
+				half4 tex2 = texCUBE(_TexCorrupt, i.texcoord);
+				half3 c2 = DecodeHDR(tex2, _Tex_HDR);
+				half3 c = lerp(c1, c2, _CorruptionFactor);
 				c = c * _Tint.rgb * unity_ColorSpaceDouble.rgb;
 				c *= _Exposure;
-				//return half4(c, 1);
-
-				half3 lightBlue = half3(0.48, 0.65, 1);
-				half3 white = half3(1, 1, 1);
-
-				float n = noise(i.texcoord * 15);
-				half4 clr = half4(0, 0, 0, 1);
-
-				float clrChoice = inRange(n, 0.0, 0.2);
-				clr.rgb += lightBlue * clrChoice + (1 - clrChoice) * white;
-				return clr;
+				return half4(c, 1);
 			}
 		ENDCG
 		}

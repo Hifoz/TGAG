@@ -29,6 +29,8 @@ Shader "Hidden/Kino/Fog"
         _SkyTint ("-", Color) = (.5, .5, .5, .5)
         [Gamma] _SkyExposure ("-", Range(0, 8)) = 1.0
         [NoScaleOffset] _SkyCubemap ("-", Cube) = "" {}
+		[NoScaleOffset] _SkyCubemapCorrupted ("-", Cube) = "" {}
+		_CorruptionFactor ("-", Float) = 0
     }
     CGINCLUDE
 
@@ -77,7 +79,7 @@ Shader "Hidden/Kino/Fog"
     {
         v2f o;
 
-        o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+        o.pos = UnityObjectToClipPos(v.vertex);
         o.uv = v.texcoord.xy;
         o.uv_depth = v.texcoord.xy;
         o.ray = RotateAroundYAxis(v.texcoord1.xyz, -_SkyRotation);
