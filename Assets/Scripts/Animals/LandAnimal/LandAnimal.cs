@@ -157,6 +157,10 @@ public class LandAnimal : Animal {
         } else {
             velocity = state.heading.normalized * state.speed;
         }
+
+        if (state.inWater)
+            velocity *= 0.4f;
+
         rb.velocity = velocity + gravity;
         transform.LookAt(state.transform.position + state.heading);
     }

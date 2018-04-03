@@ -293,6 +293,8 @@ public class AirAnimal : Animal {
         } else {
             velocity = state.heading.normalized * state.speed;
         }
+        if (state.inWater)
+            velocity *= 0.25f;
         rb.velocity = velocity + gravity;
     }
 
