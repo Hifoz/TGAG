@@ -253,7 +253,7 @@ public class WorldGenManager : MonoBehaviour {
                     break;
                 }
             } else {
-                Vector3Int chunkPos = wolrd2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos);
+                Vector3Int chunkPos = wolrd2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
                 if (!checkBounds(chunkPos.x, chunkPos.z)) {
                     pendingChunks.Remove(waitingChunks[i].chunkVoxelData.chunkPos);
                     waitingChunks.RemoveAt(i);
