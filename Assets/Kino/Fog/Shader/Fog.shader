@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-//
+﻿//
 // KinoFog - Deferred fog effect
 //
 // Copyright (C) 2015 Keijiro Takahashi
@@ -79,7 +77,7 @@ Shader "Hidden/Kino/Fog"
     {
         v2f o;
 
-        o.pos = UnityObjectToClipPos(v.vertex);
+        o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
         o.uv = v.texcoord.xy;
         o.uv_depth = v.texcoord.xy;
         o.ray = RotateAroundYAxis(v.texcoord1.xyz, -_SkyRotation);
