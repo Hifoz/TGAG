@@ -17,6 +17,8 @@ class DesertBiome : BiomeBase {
             structure3DRate: 0.2f,
             unstructure3DRate: 0.3f,
             frequency3D: 0.0045f,
+            corruptionRate: 0.5f,
+            corruptionFrequency: 0.02f,
             //Foliage
             maxTreesPerChunk: 0,
             treeLineLength: 2.0f,

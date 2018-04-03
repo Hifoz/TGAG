@@ -25,10 +25,14 @@ public static class ChunkVoxelDataGenerator {
             return true;
         else if (pos.y > biome.maxGroundHeight)
             return false;
-        else
+        else {
+            float corruption = Corruption.corruptionNoise(pos, biome);
             return (pos.y < height ||
-                    Corruption.corrupt3DStructureRate(biome.structure3DRate, corruptionFactor) > calc3DStructure(pos, biome, height, corruptionFactor)) &&
-                     Corruption.corrupt3DUnstructureRate(biome.unstructure3DRate, corruptionFactor) < calc3DUnstructure(pos, biome, height, corruptionFactor);
+                    biome.structure3DRate > calc3DStructure(pos, biome, height) ||
+                    biome.corruptionRate > corruption) &&
+                    (biome.unstructure3DRate < calc3DUnstructure(pos, biome, height) ||
+                     biome.corruptionRate < corruption);
+        }
     }
 
     /// <summary>
@@ -39,7 +43,7 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
     public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes, float corruptionFactor) {
-        if (Corruption.corruptionFactor(pos) >= 1f) {
+        if (corruptionFactor >= 1f) {
             return false;
         }
         if (pos.y <= 0) {
@@ -51,8 +55,10 @@ public static class ChunkVoxelDataGenerator {
 
         float structure = 0;
         float unstructure = 0;
+        float corruption = 0;
         float structureRate = 0;
         float unstructureRate = 0;
+        float corruptionRate = 0;
         float minH = 0;
         float maxH = 0;
 
@@ -67,15 +73,19 @@ public static class ChunkVoxelDataGenerator {
             return false;
 
         for (int i = 0; i < biomes.Count; i++) {
-            structure += calc3DStructure(pos, biomes[i].first, height, corruptionFactor) * biomes[i].second;
-            unstructure += calc3DUnstructure(pos, biomes[i].first, height, corruptionFactor) * biomes[i].second;
+            structure += calc3DStructure(pos, biomes[i].first, height) * biomes[i].second;
+            unstructure += calc3DUnstructure(pos, biomes[i].first, height) * biomes[i].second;
+            corruption += Corruption.corruptionNoise(pos, biomes[i].first) * biomes[i].second;
             structureRate += biomes[i].first.structure3DRate * biomes[i].second;
-            unstructureRate += biomes[i].first.unstructure3DRate * biomes[i].second;
+            unstructureRate += biomes[i].first.unstructure3DRate * biomes[i].second;   
+            corruptionRate += biomes[i].first.corruptionRate * biomes[i].second;
         }
 
         return (pos.y < height ||
-                Corruption.corrupt3DStructureRate(structureRate, corruptionFactor) > structure) &&
-                Corruption.corrupt3DUnstructureRate(unstructureRate, corruptionFactor) < unstructure;
+                structureRate > structure ||
+                corruptionRate > corruption) &&
+                (unstructureRate < unstructure ||
+                corruptionRate < corruption);
     }
 
 
@@ -176,7 +186,7 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                     if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
-                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], corruptionMap[x, z], rng); // TODO make this use biomes in some way?
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
                     else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y))
                         data.mapdata[data.index1D(x, Corruption.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
                 }
@@ -193,7 +203,7 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="data">the generated terrain data</param>
     /// <param name="pos">position of block to find type for</param>
-    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<BiomeBase, float>> biomes, float corruptionFactor, System.Random rng) {
+    private static void decideBlockType(BlockDataMap data, Vector3Int pos, List<Pair<BiomeBase, float>> biomes, System.Random rng) {
         int pos1d = data.index1D(pos.x, pos.y, pos.z);
 
         // Use the biomes to find the block type:
@@ -251,8 +261,7 @@ public static class ChunkVoxelDataGenerator {
             Vector3 samplePos = pos + new Vector3(1, 1, 0) * WorldGenConfig.seed * octaveStrength;
             float noise = 0;
             for (int b = 0; b < biomes.Count; b++) {
-                float freq = Corruption.corruptHeightFrequency(biomes[b].first.frequency2D / octaveStrength, corruptionFactor);
-                noise += SimplexNoise.Simplex2D(samplePos, freq) * biomes[b].second;
+                noise += SimplexNoise.Simplex2D(samplePos, biomes[b].first.frequency2D / octaveStrength) * biomes[b].second;
             }
             float noise01 = (noise + 1f) / 2f;
             finalNoise += noise01 * octaveStrength;
@@ -275,7 +284,7 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-        return minH + finalNoise * maxH;
+        return Corruption.corruptHeight(minH + finalNoise * maxH, corruptionFactor);
     }
 
     /// <summary>
@@ -283,13 +292,9 @@ public static class ChunkVoxelDataGenerator {
     /// Uses 3D simplex noise.
     /// </summary>
     /// <param name="pos">Sample pos</param>
-    /// <param name="corruptionFactor">float for corruptionFactor</param>
     /// <returns>bool</returns>
-    private static float calc3DStructure(Vector3 pos, BiomeBase biome, int height, float corruptionFactor) {
-        float freq = Corruption.corrupt3DStructureFrequency(biome.frequency3D, corruptionFactor);
-        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * WorldGenConfig.seed, freq) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * WorldGenConfig.seed, freq);
-        noise *= 0.5f;
+    private static float calc3DStructure(Vector3 pos, BiomeBase biome, int height) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * WorldGenConfig.seed, biome.frequency3D);
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(noise01, 1, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want an ugly flat "ceiling" everywhere.
     }
@@ -299,13 +304,9 @@ public static class ChunkVoxelDataGenerator {
     /// Uses 3D simplex noise.
     /// </summary>
     /// <param name="pos">Sample pos</param>
-    /// <param name="corruptionFactor">float for corruptionFactor</param>
     /// <returns>bool</returns>
-    private static float calc3DUnstructure(Vector3 pos, BiomeBase biome, int height, float corruptionFactor) {
-        float freq = Corruption.corrupt3DUnstructureFrequency(biome.frequency3D, corruptionFactor);
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * WorldGenConfig.seed, freq) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * WorldGenConfig.seed, freq);
-        noise *= 0.5f;
+    private static float calc3DUnstructure(Vector3 pos, BiomeBase biome, int height) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * WorldGenConfig.seed, biome.frequency3D);
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(1, noise01, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want the noise to remove the ground creating a void.
     }

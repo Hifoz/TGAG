@@ -5,6 +5,7 @@ public abstract class AnimalBrainNPC : AnimalBrain {
 
     protected Vector3 roamCenter;
     virtual public float roamDist { get { return 50f; } }
+    virtual public Vector3 RoamCenter { get { return roamCenter; } }
 
     /// <summary>
     /// Spawns the animal at position
