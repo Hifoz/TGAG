@@ -212,7 +212,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 76473631}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -759, y: -368, z: 5}
+  m_LocalPosition: {x: -614, y: -368, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1586219829}
@@ -361,12 +361,12 @@ Prefab:
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
       propertyPath: m_LocalPosition.x
-      value: 820.5
+      value: 709
       objectReference: {fileID: 0}
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
       propertyPath: m_LocalPosition.y
-      value: 461.5
+      value: 339
       objectReference: {fileID: 0}
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
@@ -640,7 +640,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 621804032}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 854, y: 491.5, z: 0}
+  m_LocalPosition: {x: 709, y: 339, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 76473632}
@@ -678,7 +678,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 719064996}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -759.0001, y: -419.27753, z: 5}
+  m_LocalPosition: {x: -614.0001, y: -419.27753, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 56517848}
@@ -1046,6 +1046,8 @@ MonoBehaviour:
   textureManager: {fileID: 1374817407}
   chunkPrefab: {fileID: 1818736290914746, guid: 418521e80a6a4c64e8a2f9d1d24db817,
     type: 2}
+  materialWater: {fileID: 2100000, guid: ea4f3b82432ff774398582c639fab0d7, type: 2}
+  materialTerrain: {fileID: 2100000, guid: 25605bf9ee4f35849a8775317a3442e1, type: 2}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
   landAnimalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
     type: 2}

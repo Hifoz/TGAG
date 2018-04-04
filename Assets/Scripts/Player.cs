@@ -69,9 +69,10 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <param name="magicTrail">The magic trail</param>
     /// <param name="animals">The list of all animals</param>
-    public void transferPlayer(GameObject magicTrail, GameObjectPool[] animals) {
+    public void transferPlayer(GameObject magicTrail, GameObjectPool[] animals, Vector3 worldOffset) {
         this.magicTrail = magicTrail;
         this.animalPool = animals;
+        this.worldOffset = worldOffset;
     }
 
     /// <summary>
@@ -136,7 +137,7 @@ public class Player : MonoBehaviour {
         AnimalBrainNPC otherBrain = (AnimalBrainNPC)AnimalUtils.addAnimalBrainNPC(myAnimal);
         otherBrain.takeOverPlayer();
 
-        other.AddComponent<Player>().transferPlayer(magicTrail, animalPool);
+        other.AddComponent<Player>().transferPlayer(magicTrail, animalPool, GetComponent<Player>().worldOffset);
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 

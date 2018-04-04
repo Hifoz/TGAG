@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     public GameObject chunkPrefab;
+    public Material materialWater;
+    public Material materialTerrain;
     public TextureManager textureManager;
     public GameObject treePrefab;
     public GameObject animalPrefab;
@@ -248,6 +250,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
             subChunk.name = "subchunk";
+            subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             cd.terrainChunk.Add(subChunk);
@@ -262,6 +265,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             waterChunk.GetComponent<MeshCollider>().convex = true;
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
             waterChunk.name = "waterSubChunk";
+            waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);

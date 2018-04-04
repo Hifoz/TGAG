@@ -48,7 +48,7 @@ public class LandAnimalBrainPlayer : AnimalBrainPlayer {
     /// Sets speed based on input
     /// </summary>
     private void setSpeed() {
-        if (!state.grounded && !state.inWater) {
+        if (!state.grounded && !state.inWater && !state.onWaterSurface) {
             state.desiredSpeed = 0;
         } else {
             if (Input.GetKey(KeyCode.LeftShift)) {

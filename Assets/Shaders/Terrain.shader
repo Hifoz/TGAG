@@ -59,9 +59,9 @@ Shader "Custom/Terrain" {
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-				o.eyeNormal = (mul(UNITY_MATRIX_MV, float4(v.normal.x, v.normal.y, v.normal.z, 0))).xyz;
+				o.eyeNormal = mul(UNITY_MATRIX_MV, v.normal.xyz);
 				o.posEye = UnityObjectToViewPos(v.vertex);
-				o.lightDirEye = mul(UNITY_MATRIX_V, -_WorldSpaceLightPos0); //It's a directional light
+				o.lightDirEye = mul(UNITY_MATRIX_V, _WorldSpaceLightPos0); //It's a directional light
 				//Light
 				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				o.diff = nl;

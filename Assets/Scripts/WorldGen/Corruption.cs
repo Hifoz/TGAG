@@ -3,12 +3,16 @@
 /// <summary>
 /// Class dealing with corruption
 /// </summary>
-public class Corruption : MonoBehaviour{
+public class Corruption : MonoBehaviour {
+    public Material materialWater;
+
     private const float maxWorldDistance = 5000f; //Distance to edge of the world
     private const float pristineWorldDistance = 1000f;
 
     private void Update() {
-        RenderSettings.skybox.SetFloat("_CorruptionFactor", corruptionFactor(Player.playerPos.get()));
+        float cf = corruptionFactor(Player.playerPos.get());
+        RenderSettings.skybox.SetFloat("_CorruptionFactor", cf);
+        materialWater.SetFloat("_CorruptionFactor", cf);
     }
 
     /// <summary>
