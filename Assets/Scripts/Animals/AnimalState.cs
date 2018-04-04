@@ -5,6 +5,7 @@ using System.Collections;
 /// Helper class, usefull for sharing the state with the brain
 /// </summary>
 public class AnimalState {
+    public bool onWaterSurface = false;
     public bool inWater = false;
     public bool grounded = false;
 

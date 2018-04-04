@@ -23,8 +23,7 @@ public abstract class Animal : MonoBehaviour {
     //Physics stuff
     protected float headingChangeRate = 5f;
     protected float acceleration = 5f;
-    private const float levelSpeed = 3f;
-    protected int inWaterInt = 0; //Used to compute if you are in water, incremented by colliding with water
+    private const float levelSpeed = 6f;
     protected Rigidbody rb;
     protected Vector3 gravity;
 
@@ -84,7 +83,6 @@ public abstract class Animal : MonoBehaviour {
 
         currentAnimation = null;
         state.inWater = false;
-        inWaterInt = 0;
         flagSpineCorrecting = false;
         flagAnimationTransition = false;
     }
@@ -128,13 +126,6 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="pos"></param>
     public void Spawn(Vector3 pos) {
         brain.Spawn(pos);
-    }
-
-    /// <summary>
-    /// Resets the inWaterInt (sets it to zero)
-    /// </summary>
-    public void resetInWater() {
-        inWaterInt = 0;
     }
 
     //    _   _                               _     _ _         __                  _   _                 
@@ -381,25 +372,17 @@ public abstract class Animal : MonoBehaviour {
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
         bool canStand = false;
-        bool onWaterSurface = false;
 
         //Calculate water state
         if (flagHitWater) {
             if (hitWater.distance < 2f) {
-                state.inWater = true;
-                onWaterSurface = true;
+                state.onWaterSurface = true;
             } else {
-                state.inWater = false;
-                inWaterInt = 0;
-                onWaterSurface = false;
+                state.onWaterSurface = false;
             }
         } else {
-            onWaterSurface = false;           
+            state.onWaterSurface = false;           
         }       
-
-        if (inWaterInt == 0 && !onWaterSurface && state.inWater) {
-            state.inWater = false;
-        }
 
         if (flagHitGround) {
             canStand = hitGround.distance <= stanceHeight;
@@ -407,7 +390,7 @@ public abstract class Animal : MonoBehaviour {
 
         if (canStand || !state.inWater) {
             groundedGravity(hitGround, spineBone, stanceHeight);
-        } else if (onWaterSurface) {
+        } else if (state.onWaterSurface) {
             waterSurfaceGravity(hitWater);
         } else if (state.inWater) {
             waterGravity();
@@ -559,21 +542,19 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual protected void OnTriggerEnter(Collider other) {
-        if (other.name == "waterSubChunk") {
-            inWaterInt++;
-            state.inWater = inWaterInt > 0;
-        }
+
     }
 
     virtual protected void OnTriggerExit(Collider other) {
         if (other.name == "waterSubChunk") {
-            inWaterInt--;
-            state.inWater = inWaterInt > 0;
+            state.inWater = false;
         }
     }
 
     virtual protected void OnTriggerStay(Collider other) {
-
+        if (other.name == "waterSubChunk") {
+            state.inWater = true;
+        }
     }
 
     virtual protected void OnCollisionEnter(Collision collision) {
@@ -604,7 +585,7 @@ public abstract class Animal : MonoBehaviour {
         string s = "";
         s += "Grounded: " + state.grounded.ToString() + "\n";
         s += "InWater: " + state.inWater.ToString() + "\n";
-        s += "InWaterInt: " + inWaterInt + "\n\n";
+        s += "OnWaterSurface: " + state.onWaterSurface.ToString() + "\n\n";
 
         s += "Desired speed: " + state.desiredSpeed + "\n";
         s += "Desired heading: " + state.desiredHeading + "\n\n";

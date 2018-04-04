@@ -357,6 +357,7 @@ public class AirAnimal : Animal {
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
             state.grounded = false;
             state.inWater = false;
+            state.onWaterSurface = false;
             yield return 0;
         }
         acceleration = acceleration / 4;

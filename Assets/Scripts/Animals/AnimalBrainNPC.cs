@@ -36,7 +36,7 @@ public abstract class AnimalBrainNPC : AnimalBrain {
     /// <summary>
     /// Tries to avoid obstacle
     /// </summary>
-    private void avoidObstacle() {
+    protected virtual void avoidObstacle() {
         int layerMask = 1 << 8;
         if (Physics.Raycast(new Ray(state.transform.position, state.desiredHeading), 10f, layerMask)) {
             state.desiredHeading = -state.desiredHeading;
