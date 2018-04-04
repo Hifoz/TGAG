@@ -7,15 +7,16 @@ Shader "Custom/Water" {
 		_CorruptionFactor("Corruption Factor", Float) = 0
 	}
 	SubShader{
-		Blend SrcAlpha OneMinusSrcAlpha
-		AlphaToMask On
-
-		Tags{
-			"RenderType" = "Fade"
-			"Queue" = "Transparent"
-			"LightMode" = "ForwardBase"
-		}
 		Pass {
+			Blend SrcAlpha OneMinusSrcAlpha
+			AlphaToMask On
+
+			Tags{
+				"RenderType" = "Fade"
+				"Queue" = "Transparent"
+				"LightMode" = "ForwardBase"
+			}
+
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -57,19 +58,22 @@ Shader "Custom/Water" {
 				float3 normalMod = float3(noise(samplePos), noise(samplePos + float3(247.5, 567.4, 31.74)), noise(samplePos + float3(247.5, 567.4, 31.74) / 2));
 				float wavyness = 0.05;
 				float3 modifiedNormal = normalize(v.normal + normalMod * wavyness);
+				//Only sampling the skybox in the up direction helps blend egdes in with the rest of the water body
+				// Even if it makes the reflection inaccurate.
+				float3 modifiedReflectNormal = normalize(float3(0, 1, 0) + normalMod * wavyness);
 				//Usefull data
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.posEye = UnityObjectToViewPos(v.vertex);
-				o.lightDirEye = normalize(_WorldSpaceLightPos0); //It's a directional light
-				o.eyeNormal = UnityObjectToViewPos(modifiedNormal);
-
+				o.lightDirEye = mul(UNITY_MATRIX_V, _WorldSpaceLightPos0); //It's a directional light
+				o.eyeNormal = mul(UNITY_MATRIX_MV, modifiedNormal); //Important note, UnityObjectToViewPos fucks up nomral transforms, because it uses float4(normal, 1)
+				half3 worldNormal = UnityObjectToWorldNormal(modifiedNormal);
 				//Reflection
 				float3 worldViewDir = normalize(UnityWorldSpaceViewDir(worldPos));
-				o.worldRefl = reflect(-worldViewDir, modifiedNormal);
+				o.worldRefl = reflect(-worldViewDir, modifiedReflectNormal);
 				//Lighting
-				half nl = max(0, dot(modifiedNormal, _WorldSpaceLightPos0.xyz));
+				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 				o.diff = nl * _LightColor0;
-				o.ambient = ShadeSH9(half4(modifiedNormal.xyz, 1));
+				o.ambient = ShadeSH9(half4(worldNormal, 1));
 				// Shadow
 				TRANSFER_SHADOW(o);
 				return o;
@@ -77,23 +81,50 @@ Shader "Custom/Water" {
 
 			fixed4 frag(v2f i) : SV_Target{
 				//Reflection
-				//TODO, sample corrupt skybox, and interpolate like in kinofog
 				half3 skyColor1 = DecodeHDR(texCUBE(_SkyCubemap, i.worldRefl), unity_SpecCube0_HDR);
 				half3 skyColor2 = DecodeHDR(texCUBE(_SkyCubemapCorrupted, i.worldRefl), unity_SpecCube0_HDR);
 				half3 skyColor = lerp(skyColor1, skyColor2, _CorruptionFactor);
 				//Shadow
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//----Light----
-				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 1);
-				fixed3 light = (i.diff + specular) * shadow + i.ambient;
-				//fixed3 light = specular;
+				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
+				float3 light = (i.diff + specular) * shadow + i.ambient * 0.5;
 				//Combine into final color
-				half4 c = { 0, 0, 0, 0.94 };
+				half4 c = { 1, 1, 1, 0.94 };
 				c.rgb = skyColor;
-				//c.rbg *= light;
+				c.rgb *= light;
 				return c;
 			}
 			ENDCG
-		}		
+		}	
+
+		// shadow caster rendering pass
+		// using macros from UnityCG.cginc
+		Pass {
+			Tags{ "LightMode" = "ShadowCaster" }
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#pragma multi_compile_shadowcaster
+			#include "UnityCG.cginc"
+
+			struct v2f {
+			V2F_SHADOW_CASTER;
+			};
+
+			v2f vert(appdata_base v) {
+				v2f o;
+				TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+					return o;
+			}
+
+			float4 frag(v2f i) : SV_Target{
+				SHADOW_CASTER_FRAGMENT(i)
+			}
+				ENDCG
+		}
+		// shadow casting support
+		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 	}
 }
