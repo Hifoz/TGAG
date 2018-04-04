@@ -9,7 +9,7 @@ public class WaterAnimalSkeleton : AnimalSkeleton {
     /// <param name="root">Transform to bind skeleton to</param>
     public WaterAnimalSkeleton(Transform root, int seed = -1) {
         bodyParametersRange = new MixedDictionary<BodyParameter>(new Dictionary<BodyParameter, object>() {
-                { BodyParameter.SCALE, new Range<float>(0.5f, 1.0f) },
+                { BodyParameter.SCALE, new Range<float>(0.5f, 2.0f) },
 
                 { BodyParameter.HEAD_SIZE, new Range<float>(2f, 4f) },
                 { BodyParameter.HEAD_RADIUS, new Range<float>(0.5f, 1.0f) },
