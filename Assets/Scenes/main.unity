@@ -997,6 +997,8 @@ MonoBehaviour:
   textureManager: {fileID: 412411876}
   chunkPrefab: {fileID: 1818736290914746, guid: 418521e80a6a4c64e8a2f9d1d24db817,
     type: 2}
+  materialWater: {fileID: 2100000, guid: ea4f3b82432ff774398582c639fab0d7, type: 2}
+  materialTerrain: {fileID: 2100000, guid: 25605bf9ee4f35849a8775317a3442e1, type: 2}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
   landAnimalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
     type: 2}
@@ -1028,6 +1030,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df4012c952578294885de5a65470f9dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  materialWater: {fileID: 2100000, guid: ea4f3b82432ff774398582c639fab0d7, type: 2}
 --- !u!1 &1058874300
 GameObject:
   m_ObjectHideFlags: 0

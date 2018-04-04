@@ -68,6 +68,8 @@ public class WorldGenManager : MonoBehaviour {
     public Transform player;
     public TextureManager textureManager;
     public GameObject chunkPrefab;
+    public Material materialWater;
+    public Material materialTerrain;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
@@ -319,6 +321,7 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.GetComponent<MeshCollider>().convex = false;
             subChunk.GetComponent<MeshCollider>().enabled = false;
             subChunk.name = "terrainSubChunk";
+            subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             cd.terrainChunk.Add(subChunk);
@@ -334,6 +337,7 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
             waterChunk.GetComponent<MeshCollider>().enabled = false;
             waterChunk.name = "waterSubChunk";
+            waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);
