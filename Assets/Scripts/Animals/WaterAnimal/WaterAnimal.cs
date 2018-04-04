@@ -192,6 +192,11 @@ public class WaterAnimal : Animal {
     /// <returns></returns>
     private IEnumerator flapBackToWater() {
         flagFlapBackToWater = true;
+        if (brain.GetType().Equals(typeof(WaterAnimalBrainNPC))) {
+            state.desiredHeading = ((AnimalBrainNPC)brain).RoamCenter - transform.position;
+            state.desiredHeading.y = 0;
+            state.desiredHeading.Normalize();
+        }
 
         const float speed = 100;
         Vector3 currentPos = transform.position;
@@ -206,7 +211,7 @@ public class WaterAnimal : Animal {
             transform.position = Vector3.Lerp(first, second, t);
             yield return 0;
         }
-        if (brain.GetType().IsSubclassOf(typeof(AnimalBrainNPC))) {
+        if (brain.GetType().Equals(typeof(WaterAnimalBrainNPC))) {
             state.desiredHeading = ((AnimalBrainNPC)brain).RoamCenter - transform.position;
             state.desiredHeading.y = 0;
             state.desiredHeading.Normalize();

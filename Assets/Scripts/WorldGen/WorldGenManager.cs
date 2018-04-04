@@ -428,7 +428,7 @@ public class WorldGenManager : MonoBehaviour {
             player.position -= offset;
             Player playerScript = player.gameObject.GetComponent<Player>();
             if (playerScript != null) { //Player might be a dummy
-                player.gameObject.GetComponent<Animal>().resetInWater();
+                player.gameObject.GetComponent<Animal>();
                 playerScript.worldOffset = worldOffset;
             }
 
@@ -441,7 +441,7 @@ public class WorldGenManager : MonoBehaviour {
             foreach (GameObjectPool pool in animalPools) {
                 foreach (GameObject animal in pool.activeList) {
                     animal.transform.position -= offset;
-                    animal.GetComponent<Animal>().resetInWater();
+                    animal.GetComponent<Animal>();
                 }
             }
         }        

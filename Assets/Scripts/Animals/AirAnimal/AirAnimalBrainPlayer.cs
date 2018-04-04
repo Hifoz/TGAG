@@ -20,7 +20,7 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
             up = Camera.main.transform.rotation * Vector3.up;
 
             state.desiredHeading = Camera.main.transform.forward;
-            if (state.grounded || state.inWater) {
+            if (state.grounded || state.inWater || state.onWaterSurface) {
                 state.desiredHeading.y = 0;
                 up = Vector3.up;
             }
@@ -43,14 +43,14 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
         }
         
         if (Input.GetKey(KeyCode.Space)) {
-            if (state.grounded || state.inWater) {
+            if (state.grounded || state.inWater || state.onWaterSurface) {
                 actions["launch"]();
             } else if (!state.grounded) {
                 finalHeading += Quaternion.AngleAxis(-45, right) * state.desiredHeading;
             }
         }
 
-        if (!state.grounded && !state.inWater) {
+        if (!state.grounded && !state.inWater && !state.onWaterSurface) {
             if (Input.GetKey(KeyCode.C)) {
                 finalHeading += Quaternion.AngleAxis(45, right) * state.desiredHeading;
             }
@@ -66,7 +66,7 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
     /// Sets speed based on input
     /// </summary>
     private void setSpeed() {
-        if (state.grounded || state.inWater) {
+        if (state.grounded || state.inWater || state.onWaterSurface) {
             state.desiredSpeed = slowSpeed;
         } else {
             state.desiredSpeed = fastSpeed;
