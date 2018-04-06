@@ -1,10 +1,5 @@
-﻿//#define DRAW_BW
-//#define DRAW_NORMAL
-
-
-Shader "Custom/Terrain" {
+﻿Shader "Custom/Tree" {
 	Properties {
-
 	}
 	SubShader {
 		Pass {
@@ -34,6 +29,7 @@ Shader "Custom/Terrain" {
 				float4 normal : NORMAL;
 				float4 color : COLOR;
 				float2 uv : TEXCOORD0;
+
 			};
 
 			struct v2f {
@@ -47,32 +43,8 @@ Shader "Custom/Terrain" {
 				SHADOW_COORDS(5) // put shadows data into TEXCOORD5
 				fixed3 diff : COLOR2;
 				fixed3 ambient : COLOR3;
-			};
 
-			static const int COLOR_COUNT = 5;
-
-			static float frequencies[COLOR_COUNT] = {
-				12, //Dirt
-				12, //Stone
-				12, //Sand
-				12, //Grass
-				12	//Snow
-			};
-
-			static half3 colors1[COLOR_COUNT] = {
-				half3(0.725, 0.403, 0.035), //Dirt
-				half3(0.509, 0.509, 0.509),	//Stone
-				half3(1, 0.803, 0.580),		//Sand
-				half3(0, 0.858, 0.341),		//Grass
-				half3(1, 1, 1)				//Snow
-			};
-
-			static half3 colors2[COLOR_COUNT] = {
-				half3(0.725, 0.403, 0.035) / 2, //Dirt
-				half3(0.509, 0.509, 0.509) / 2,	//Stone
-				half3(1, 0.803, 0.580) / 2,		//Sand
-				half3(0, 0.858, 0.341) / 2,		//Grass
-				half3(1, 1, 1) / 2				//Snow
+				float3 worldNormal : TEXCOORD6;
 			};
 	
 			v2f vert(appdata v) {
@@ -91,6 +63,8 @@ Shader "Custom/Terrain" {
 				//Shadow
 				TRANSFER_SHADOW(o);
 
+				o.worldNormal = v.normal;
+
 				o.uv = v.uv;
 				o.color = v.color;	
 				return o;
@@ -105,10 +79,7 @@ Shader "Custom/Terrain" {
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
 				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
 
-				int colorIndex = i.uv.x * COLOR_COUNT; //colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT
-				half4 o = half4(1, 1, 1, 1);
-
-				o.rgb = colors1[colorIndex];
+				half4 o = half4(0.5, 0.5, 0.5, 1);
 				o.rbg *= light;
 				return o;
 			}

@@ -228,10 +228,8 @@ public class MeshDataGenerator {
         if (meshDataType == MeshDataType.ANIMAL) {
             addSliceData(vertices.GetRange(vertices.Count - 4, 4));
         } else {
-            addTextureCoordinates(blockData, dir);
-            addSliceData(blockData, dir);
+            addColorData(blockData, dir);
         }
-
     }
 
 
@@ -263,6 +261,48 @@ public class MeshDataGenerator {
 
         for (int i = 0; i < 4; i++)
             colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
+    }
+
+    /// <summary>
+    /// Stores the indices of the texture slices to use for a face of a block.
+    /// </summary>
+    /// <param name="blockData">Data of the block</param>
+    /// <param name="faceDir">Direction of the face</param>
+    protected void addColorData(BlockData blockData, FaceDirection faceDir) {
+
+        float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType) / 5f + 0.01f; //5 because COLOR_COUNT in shader is 5
+        float colorIndex2 = (blockData.modifier == BlockData.BlockType.NONE) ? colorIndex1 : BlockData.blockTypeToColorIndex(blockData.modifier) / 5f + 0.01f;
+
+        switch (faceDir) { //The idea here is to use colorindex2 for side blending, so the "positive y" verticies get different color indexes.
+            case FaceDirection.zm:
+            case FaceDirection.xp:
+                uvs.AddRange(new Vector2[4] {
+                    new Vector2(colorIndex1, colorIndex1), new Vector2(colorIndex1, colorIndex2),
+                    new Vector2(colorIndex1, colorIndex1), new Vector2(colorIndex1, colorIndex2)
+                });
+                break;
+            case FaceDirection.zp:
+            case FaceDirection.xm:
+                uvs.AddRange(new Vector2[4] {
+                    new Vector2(colorIndex1, colorIndex1), new Vector2(colorIndex1, colorIndex1),
+                    new Vector2(colorIndex1, colorIndex2), new Vector2(colorIndex1, colorIndex2)
+                });
+                break;
+            case FaceDirection.ym:
+            case FaceDirection.yp: 
+                uvs.AddRange(new Vector2[4] {
+                    new Vector2(colorIndex2, colorIndex2), new Vector2(colorIndex2, colorIndex2),
+                    new Vector2(colorIndex2, colorIndex2), new Vector2(colorIndex2, colorIndex2)
+                });
+                break;
+        }
+
+        colors.AddRange(new Color[4] { //Placeholder, not doing anything
+            new Color(1, 1, 1, 1),
+            new Color(1, 1, 1, 1),
+            new Color(1, 1, 1, 1),
+            new Color(1, 1, 1, 1),
+        });
     }
 
     /// <summary>
