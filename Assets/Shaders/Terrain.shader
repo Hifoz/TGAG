@@ -50,12 +50,13 @@ Shader "Custom/Terrain" {
 			};
 
 			static const int COLOR_COUNT = 5;
+			static const float lodDist = 250;
 
 			static float frequencies[COLOR_COUNT] = {
 				4.74,	//Dirt
 				4.74,	//Stone
 				4.74,	//Sand
-				4.74,	//Grass
+				2.74,	//Grass
 				2.74	//Snow
 			};
 
@@ -70,22 +71,22 @@ Shader "Custom/Terrain" {
 			static fixed3 colors1[COLOR_COUNT] = {
 				fixed3(0.729, 0.505, 0.070),	//Dirt
 				fixed3(0.509, 0.509, 0.509),	//Stone
-				fixed3(1, 0.803, 0.580),		//Sand
-				fixed3(0.443, 0.890, 0.192),	//Grass
+				fixed3(0.980, 0.929, 0.521),		//Sand
+				fixed3(0.564, 0.854, 0.062),	//Grass
 				fixed3(1, 1, 1)					//Snow
 			};
 
 			static fixed3 colors2[COLOR_COUNT] = {
 				colors1[0] / 1.5,	//Dirt
 				colors1[1] / 2,		//Stone
-				colors1[2] / 1.4,	//Sand
-				colors1[3] / 1.5,	//Grass
+				colors1[2] / 1.5,	//Sand
+				colors1[3] / 1.5,
 				colors1[4] / 1.5	//Snow
 			};
 
-			fixed3 calculateColor(float3 samplePos, int index) {
+			fixed3 calculateColor(float3 samplePos, int index, float lod) {
 				float n = noise(samplePos, frequencies[index], octaves[index]);
-				return lerp(colors1[index], colors2[index], n);
+				return lerp(colors1[index], colors2[index], n * lod + (1 - lod) * 0.5);
 			}
 	
 			v2f vert(appdata v) {
@@ -119,11 +120,12 @@ Shader "Custom/Terrain" {
 				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
 				//Color
 				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
-				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT);
-				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT);
+				float lod = length(i.posEye) < lodDist;
+				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, lod);
+				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, lod);
 				//work out modifiers, for side blending
 				float blendingNoise = noise(i.worldPos, 6.4) / 10;
-				fixed normal = i.uv.y < 0.8 + blendingNoise;
+				fixed normal = (i.uv.y  < (0.8 + blendingNoise)) * lod;
 				fixed modifier = 1 - normal;
 				//Calculate final color
 				fixed4 o = fixed4(1, 1, 1, 1);
