@@ -27,7 +27,7 @@ public class MeshDataGenerator {
         xp, xm, yp, ym, zp, zm
     }
     public enum MeshDataType {
-        TERRAIN, ANIMAL
+        TERRAIN, ANIMAL, TREE
     }
     protected MeshDataType meshDataType;
 
@@ -225,11 +225,18 @@ public class MeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
         
-        if (meshDataType == MeshDataType.ANIMAL) {
-            encodePositionalData(vertices.GetRange(vertices.Count - 4, 4));
-        } else {
-            addColorData(blockData, dir);
-            addTextureCoordinates(blockData, dir);
+        switch (meshDataType) {
+            case MeshDataType.ANIMAL:
+                encodePositionalData(vertices.GetRange(vertices.Count - 4, 4));
+                break;
+            case MeshDataType.TERRAIN:
+                addColorDataTerrain(blockData, dir);
+                addTextureCoordinates(blockData, dir);
+                break;
+            case MeshDataType.TREE:
+                addColorDataTree(blockData, dir);
+                addTextureCoordinates(blockData, dir);
+                break;
         }
     }
 
@@ -239,7 +246,7 @@ public class MeshDataGenerator {
     /// </summary>
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
-    protected void addColorData(BlockData blockData, FaceDirection faceDir) {
+    protected void addColorDataTerrain(BlockData blockData, FaceDirection faceDir) {
         const float COLOR_COUNT = 5; //Size of colors array in shader
         const float smallDelta = 0.01f; //To make the int index = colorIndex * COLOR_COUNT conversion stable
         float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType) / COLOR_COUNT + smallDelta; //5 because COLOR_COUNT in shader is 5
@@ -259,6 +266,23 @@ public class MeshDataGenerator {
                 });
                 break;            
         }
+    }
+
+    /// <summary>
+    /// Stores color indexes in the color array.
+    /// Theres an array of colors in the shader, that are indexed by the numbers in mesh.color.
+    /// </summary>
+    /// <param name="blockData">Data of the block</param>
+    /// <param name="faceDir">Direction of the face</param>
+    protected void addColorDataTree(BlockData blockData, FaceDirection faceDir) {
+        const float COLOR_COUNT = 2; //Size of colors array in shader
+        const float smallDelta = 0.01f; //To make the int index = colorIndex * COLOR_COUNT conversion stable
+        float colorIndex = (blockData.blockType == BlockData.BlockType.WOOD) ? 0 : 1 / COLOR_COUNT + smallDelta; //5 because COLOR_COUNT in shader is 5
+
+        colors.AddRange(new Color[4] {
+            new Color(colorIndex, colorIndex, 0, 0), new Color(colorIndex, colorIndex, 0, 0),
+            new Color(colorIndex, colorIndex, 0, 0), new Color(colorIndex, colorIndex, 0, 0)
+        });
     }
 
     /// <summary>

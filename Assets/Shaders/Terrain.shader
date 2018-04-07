@@ -52,28 +52,41 @@ Shader "Custom/Terrain" {
 			static const int COLOR_COUNT = 5;
 
 			static float frequencies[COLOR_COUNT] = {
-				12, //Dirt
-				12, //Stone
-				12, //Sand
-				12, //Grass
-				12	//Snow
+				4.74,	//Dirt
+				4.74,	//Stone
+				4.74,	//Sand
+				4.74,	//Grass
+				2.74	//Snow
 			};
 
-			static half3 colors1[COLOR_COUNT] = {
-				half3(0.725, 0.403, 0.035), //Dirt
-				half3(0.509, 0.509, 0.509),	//Stone
-				half3(1, 0.803, 0.580),		//Sand
-				half3(0, 0.858, 0.341),		//Grass
-				half3(1, 1, 1)				//Snow
+			static int octaves[COLOR_COUNT] = {
+				2,	//Dirt
+				2,	//Stone
+				2,	//Sand
+				2,	//Grass
+				2	//Snow
 			};
 
-			static half3 colors2[COLOR_COUNT] = {
-				half3(0.725, 0.403, 0.035) / 2, //Dirt
-				half3(0.509, 0.509, 0.509) / 2,	//Stone
-				half3(1, 0.803, 0.580) / 2,		//Sand
-				half3(0, 0.858, 0.341) / 2,		//Grass
-				half3(1, 1, 1) / 2				//Snow
+			static fixed3 colors1[COLOR_COUNT] = {
+				fixed3(0.729, 0.505, 0.070),	//Dirt
+				fixed3(0.509, 0.509, 0.509),	//Stone
+				fixed3(1, 0.803, 0.580),		//Sand
+				fixed3(0.443, 0.890, 0.192),	//Grass
+				fixed3(1, 1, 1)					//Snow
 			};
+
+			static fixed3 colors2[COLOR_COUNT] = {
+				colors1[0] / 1.5,	//Dirt
+				colors1[1] / 2,		//Stone
+				colors1[2] / 1.4,	//Sand
+				colors1[3] / 1.5,	//Grass
+				colors1[4] / 1.5	//Snow
+			};
+
+			fixed3 calculateColor(float3 samplePos, int index) {
+				float n = noise(samplePos, frequencies[index], octaves[index]);
+				return lerp(colors1[index], colors2[index], n);
+			}
 	
 			v2f vert(appdata v) {
 				v2f o;
@@ -102,17 +115,19 @@ Shader "Custom/Terrain" {
 				//shadow
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
-				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
+				fixed3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
 				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
-
-				int colorIndex1 = i.color.r * COLOR_COUNT; //colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float
-				int colorIndex2 = i.color.g * COLOR_COUNT; //colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float
-				half4 o = half4(1, 1, 1, 1);
-
-				float normal = i.uv.y < 0.8;
-				float modifier = 1 - normal;				
-
-				o.rgb = colors1[colorIndex1] * normal + colors1[colorIndex2] * modifier;
+				//Color
+				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
+				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT);
+				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT);
+				//work out modifiers, for side blending
+				float blendingNoise = noise(i.worldPos, 6.4) / 10;
+				fixed normal = i.uv.y < 0.8 + blendingNoise;
+				fixed modifier = 1 - normal;
+				//Calculate final color
+				fixed4 o = fixed4(1, 1, 1, 1);
+				o.rgb = color1 * normal + color2 * modifier;
 				o.rbg *= light;
 				return o;
 			}

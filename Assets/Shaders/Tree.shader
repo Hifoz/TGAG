@@ -44,6 +44,35 @@
 				fixed3 diff : COLOR2;
 				fixed3 ambient : COLOR3;
 			};
+
+
+			static const int COLOR_COUNT = 2;
+
+			static float frequencies[COLOR_COUNT] = {
+				4.74,	//Wood
+				4.74	//Leaf
+			};
+
+			static int octaves[COLOR_COUNT] = {
+				2,	//Wood
+				2	//Leaf
+			};
+
+			static fixed3 colors1[COLOR_COUNT] = {
+				fixed3(0.729, 0.505, 0.070),	//Wood
+				fixed3(0.443, 0.890, 0.192)		//Leaf
+			};
+
+			static fixed3 colors2[COLOR_COUNT] = {
+				colors1[0] / 1.5,	//Wood
+				colors1[1] / 2		//Leaf
+			};
+
+			fixed3 calculateColor(float3 samplePos, int index) {
+				float n = noise(samplePos, frequencies[index], octaves[index]);
+				return lerp(colors1[index], colors2[index], n);
+			}
+
 	
 			v2f vert(appdata v) {
 				v2f o;
@@ -74,8 +103,12 @@
 				//light
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
 				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
-
-				half4 o = half4(0.5, 0.5, 0.5, 1);
+				//Color
+				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
+				fixed3 color = calculateColor(i.worldPos, i.color.r * COLOR_COUNT);
+				//Calculate final color
+				fixed4 o = fixed4(1, 1, 1, 1);
+				o.rgb = color;
 				o.rbg *= light;
 				return o;
 			}
