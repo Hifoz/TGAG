@@ -101,12 +101,19 @@ public class WorldGenManager : MonoBehaviour {
     private BiomeManager biomeManager;
 
     /// <summary>
+    /// Create biome manager
+    /// </summary>
+    void Awake() {
+        biomeManager = new BiomeManager();
+    }
+
+
+    /// <summary>
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start () {
         Debug.Log("THREADS: " + Settings.WorldGenThreads);
         textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
-        biomeManager = new BiomeManager();
         Reset();
     }
 
@@ -688,6 +695,14 @@ public class WorldGenManager : MonoBehaviour {
     //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                                                                   
     //         
+
+    /// <summary>
+    /// Returns the biomemanager
+    /// </summary>
+    public BiomeManager getBiomeManager() {
+        return biomeManager;
+    }
+
 
     /// <summary>
     /// Produces a string that contains debug data

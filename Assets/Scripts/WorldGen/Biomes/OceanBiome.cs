@@ -5,6 +5,7 @@
 class OceanBiome : BiomeBase {
     public OceanBiome() :
         base(
+            name: "ocean",
             //General
             minGroundHeight:0,
             maxGroundHeight:30,
@@ -17,6 +18,8 @@ class OceanBiome : BiomeBase {
             structure3DRate: 0.5f,
             unstructure3DRate: 0.3f,
             frequency3D: 0.0045f,
+            corruptionRate: 0f,
+            corruptionFrequency: 0f,
             //Foliage
             maxTreesPerChunk: 4,
             treeLineLength: 2.0f,

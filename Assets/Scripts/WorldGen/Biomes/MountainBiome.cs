@@ -4,6 +4,7 @@
 class MountainBiome : BiomeBase {
     public MountainBiome() :
         base(
+            name:"mountain",
             //General
             minGroundHeight: 20,
             maxGroundHeight: 200,

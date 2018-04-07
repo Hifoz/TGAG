@@ -6,6 +6,7 @@ using UnityEngine;
 /// Base class for biomes
 /// </summary>
 public abstract class BiomeBase {
+    public readonly string biomeName = "Base"; 
     //General
     public readonly int minGroundHeight = 0;
     public readonly int maxGroundHeight = 0;
@@ -33,11 +34,13 @@ public abstract class BiomeBase {
     /// <summary>
     /// A constructor taking in all the parameters. Used by sub-classes as readonly variables can only be set in the constructor of the class it is stored in.
     /// </summary>
-    protected BiomeBase(int minGroundHeight, int maxGroundHeight, int snowHeight, float frequency2D, 
+    protected BiomeBase(string name, int minGroundHeight, int maxGroundHeight, int snowHeight, float frequency2D, 
                     float noiseExponent2D, int octaves2D, float structure3DRate, float unstructure3DRate, 
                     float frequency3D, float corruptionRate, float corruptionFrequency,
                     int maxTreesPerChunk, float treeLineLength, float treeVoxelSize, 
                     float treeLeafThickness, int grammarRecursionDepth, float treeThickness) {
+        this.biomeName = name;
+
         this.minGroundHeight = minGroundHeight;
         this.maxGroundHeight = maxGroundHeight;
         this.snowHeight = snowHeight;

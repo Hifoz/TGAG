@@ -5,6 +5,7 @@
 class LowlandForestBiome : BiomeBase {
     public LowlandForestBiome() :
         base(
+            name:"lowlands",
             //General
             minGroundHeight:1,
             maxGroundHeight:90,
