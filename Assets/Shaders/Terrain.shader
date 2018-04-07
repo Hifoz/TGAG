@@ -105,10 +105,14 @@ Shader "Custom/Terrain" {
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
 				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
 
-				int colorIndex = i.uv.x * COLOR_COUNT; //colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT
+				int colorIndex1 = i.color.r * COLOR_COUNT; //colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float
+				int colorIndex2 = i.color.g * COLOR_COUNT; //colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float
 				half4 o = half4(1, 1, 1, 1);
 
-				o.rgb = colors1[colorIndex];
+				float normal = i.uv.y < 0.8;
+				float modifier = 1 - normal;				
+
+				o.rgb = colors1[colorIndex1] * normal + colors1[colorIndex2] * modifier;
 				o.rbg *= light;
 				return o;
 			}

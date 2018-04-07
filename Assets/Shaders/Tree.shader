@@ -43,8 +43,6 @@
 				SHADOW_COORDS(5) // put shadows data into TEXCOORD5
 				fixed3 diff : COLOR2;
 				fixed3 ambient : COLOR3;
-
-				float3 worldNormal : TEXCOORD6;
 			};
 	
 			v2f vert(appdata v) {
@@ -62,8 +60,6 @@
 				o.ambient = ShadeSH9(half4(worldNormal, 1));
 				//Shadow
 				TRANSFER_SHADOW(o);
-
-				o.worldNormal = v.normal;
 
 				o.uv = v.uv;
 				o.color = v.color;	

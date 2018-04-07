@@ -226,90 +226,46 @@ public class MeshDataGenerator {
 
         
         if (meshDataType == MeshDataType.ANIMAL) {
-            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
+            encodePositionalData(vertices.GetRange(vertices.Count - 4, 4));
         } else {
             addColorData(blockData, dir);
+            addTextureCoordinates(blockData, dir);
         }
     }
 
-
     /// <summary>
-    /// Stores the indices of the texture slices to use for a face of a block.
-    /// </summary>
-    /// <param name="blockData">Data of the block</param>
-    /// <param name="faceDir">Direction of the face</param>
-    protected void addSliceData(BlockData blockData, FaceDirection faceDir) {
-        TextureData.TextureType[] texTypes = new TextureData.TextureType[2];
-
-        // Get texture types for base and modifier
-        for (int i = 0; i < 2; i++) {
-            BlockData.BlockType blockType = (i == 0 ? blockData.blockType : blockData.modifier);
-
-            // Convert block type to texture type:
-            string typeName = blockType.ToString();
-            if(blockType == BlockData.BlockType.GRASS || blockType == BlockData.BlockType.SNOW) {
-                if (faceDir == FaceDirection.yp)
-                    typeName += "_TOP";
-                else if (faceDir == FaceDirection.ym)
-                    typeName = "NONE";
-                else
-                    typeName += "_SIDE";
-            }
-            texTypes[i] = (TextureData.TextureType)Enum.Parse(typeof(TextureData.TextureType), typeName);
-
-        }
-
-        for (int i = 0; i < 4; i++)
-            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
-    }
-
-    /// <summary>
-    /// Stores the indices of the texture slices to use for a face of a block.
+    /// Stores color indexes in the color array.
+    /// Theres an array of colors in the shader, that are indexed by the numbers in mesh.color.
     /// </summary>
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     protected void addColorData(BlockData blockData, FaceDirection faceDir) {
+        const float COLOR_COUNT = 5; //Size of colors array in shader
+        const float smallDelta = 0.01f; //To make the int index = colorIndex * COLOR_COUNT conversion stable
+        float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType) / COLOR_COUNT + smallDelta; //5 because COLOR_COUNT in shader is 5
+        float colorIndex2 = (blockData.modifier == BlockData.BlockType.NONE) ? colorIndex1 : BlockData.blockTypeToColorIndex(blockData.modifier) / COLOR_COUNT + smallDelta;       
 
-        float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType) / 5f + 0.01f; //5 because COLOR_COUNT in shader is 5
-        float colorIndex2 = (blockData.modifier == BlockData.BlockType.NONE) ? colorIndex1 : BlockData.blockTypeToColorIndex(blockData.modifier) / 5f + 0.01f;
-
-        switch (faceDir) { //The idea here is to use colorindex2 for side blending, so the "positive y" verticies get different color indexes.
-            case FaceDirection.zm:
-            case FaceDirection.xp:
-                uvs.AddRange(new Vector2[4] {
-                    new Vector2(colorIndex1, colorIndex1), new Vector2(colorIndex1, colorIndex2),
-                    new Vector2(colorIndex1, colorIndex1), new Vector2(colorIndex1, colorIndex2)
+        switch (faceDir) {
+            case FaceDirection.yp:
+                colors.AddRange(new Color[4] {
+                    new Color(colorIndex2, colorIndex2, 0, 0), new Color(colorIndex2, colorIndex2, 0, 0),
+                    new Color(colorIndex2, colorIndex2, 0, 0), new Color(colorIndex2, colorIndex2, 0, 0)
                 });
                 break;
-            case FaceDirection.zp:
-            case FaceDirection.xm:
-                uvs.AddRange(new Vector2[4] {
-                    new Vector2(colorIndex1, colorIndex1), new Vector2(colorIndex1, colorIndex1),
-                    new Vector2(colorIndex1, colorIndex2), new Vector2(colorIndex1, colorIndex2)
+            default:
+                colors.AddRange(new Color[4] {
+                    new Color(colorIndex1, colorIndex2, 0, 0), new Color(colorIndex1, colorIndex2, 0, 0),
+                    new Color(colorIndex1, colorIndex2, 0, 0), new Color(colorIndex1, colorIndex2, 0, 0)
                 });
-                break;
-            case FaceDirection.ym:
-            case FaceDirection.yp: 
-                uvs.AddRange(new Vector2[4] {
-                    new Vector2(colorIndex2, colorIndex2), new Vector2(colorIndex2, colorIndex2),
-                    new Vector2(colorIndex2, colorIndex2), new Vector2(colorIndex2, colorIndex2)
-                });
-                break;
+                break;            
         }
-
-        colors.AddRange(new Color[4] { //Placeholder, not doing anything
-            new Color(1, 1, 1, 1),
-            new Color(1, 1, 1, 1),
-            new Color(1, 1, 1, 1),
-            new Color(1, 1, 1, 1),
-        });
     }
 
     /// <summary>
     /// Encodes colors as unique positions used for noise calculations in animal shader
     /// </summary>
     /// <param name="verticies">Verticies to encode into colors</param>
-    protected void addSliceData(List<Vector3> verts) {
+    protected void encodePositionalData(List<Vector3> verts) {
         Vector3 scalingVector = new Vector3(pointmap.GetLength(0), pointmap.GetLength(1), pointmap.GetLength(2));
         foreach (Vector3 vert in verts) {
             colors.Add(new Color(
