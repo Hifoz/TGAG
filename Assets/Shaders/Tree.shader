@@ -48,9 +48,9 @@
 
 			static const int COLOR_COUNT = 2;
 
-			static float frequencies[COLOR_COUNT] = {
-				4.74,	//Wood
-				4.74	//Leaf
+			static float3 frequencies[COLOR_COUNT] = {
+				float3(4.74, 0.74, 4.74),	//Wood
+				float3(4.74, 4.74, 4.74)	//Leaf
 			};
 
 			static int octaves[COLOR_COUNT] = {
@@ -59,8 +59,8 @@
 			};
 
 			static fixed3 colors1[COLOR_COUNT] = {
-				fixed3(0.729, 0.505, 0.070),	//Wood
-				fixed3(0.443, 0.890, 0.192)		//Leaf
+				fixed3(0.505, 0.298, 0.156),	//Wood
+				fixed3(0.862, 0.980, 0.019)		//Leaf
 			};
 
 			static fixed3 colors2[COLOR_COUNT] = {
@@ -70,7 +70,12 @@
 
 			fixed3 calculateColor(float3 samplePos, int index) {
 				float n = noise(samplePos, frequencies[index], octaves[index]);
-				return lerp(colors1[index], colors2[index], n);
+				fixed3 baseColor = lerp(colors1[index], colors2[index], n);
+				fixed3 colorTrunk = 
+					baseColor * (n >= 0.4) * (n <= 0.6) +
+					colors1[index] * (n < 0.4) +
+					colors2[index] * (n > 0.6);
+				return colorTrunk * (index == 0) + baseColor * (index == 1);
 			}
 
 	
@@ -94,8 +99,6 @@
 				o.color = v.color;	
 				return o;
 			}
-
-			UNITY_DECLARE_TEX2DARRAY(_TexArr);
 
 			float4 frag(v2f i) : SV_Target {
 				//shadow
