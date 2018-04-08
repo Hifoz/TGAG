@@ -99,8 +99,6 @@
 				return o;
 			}
 
-			UNITY_DECLARE_TEX2DARRAY(_TexArr);
-
 			float4 frag(v2f i) : SV_Target {
 				//shadow
 				fixed shadow = SHADOW_ATTENUATION(i);

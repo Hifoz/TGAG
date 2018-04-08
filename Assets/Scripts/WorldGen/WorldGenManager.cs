@@ -66,7 +66,6 @@ public class WorldGenManager : MonoBehaviour {
 
     public WorldGenManagerStats stats;
     public Transform player;
-    public TextureManager textureManager;
     public GameObject chunkPrefab;
     public Material materialWater;
     public Material materialTerrain;
@@ -105,7 +104,6 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     void Start () {
         Debug.Log("THREADS: " + Settings.WorldGenThreads);
-        textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         biomeManager = new BiomeManager();
         Reset();
     }
@@ -322,7 +320,6 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.GetComponent<MeshCollider>().enabled = false;
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
-            subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             cd.terrainChunk.Add(subChunk);
         }
@@ -338,7 +335,6 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.GetComponent<MeshCollider>().enabled = false;
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
-            waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);
         }
@@ -351,7 +347,6 @@ public class WorldGenManager : MonoBehaviour {
             tree.transform.parent = chunk.transform;
             MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
             treeColliders[i] = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             tree.GetComponent<MeshCollider>().enabled = false;
             trees[i] = tree;
         }
