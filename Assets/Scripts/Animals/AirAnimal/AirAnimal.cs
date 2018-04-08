@@ -38,9 +38,6 @@ public class AirAnimal : Animal {
         }
     }
 
-    private void LateUpdate() {
-        state.inWindArea = (transform.position.y > WindController.globalWindHeight);
-    }
 
     //    _____       _     _ _         __                  _   _                 
     //   |  __ \     | |   | (_)       / _|                | | (_)                

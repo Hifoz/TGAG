@@ -401,19 +401,19 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4088067806197192, guid: f7f88ecb914311042b68ea2d6a6ffad8, type: 2}
       propertyPath: m_LocalRotation.x
-      value: -0.7071068
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4088067806197192, guid: f7f88ecb914311042b68ea2d6a6ffad8, type: 2}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4088067806197192, guid: f7f88ecb914311042b68ea2d6a6ffad8, type: 2}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4088067806197192, guid: f7f88ecb914311042b68ea2d6a6ffad8, type: 2}
       propertyPath: m_LocalRotation.w
-      value: 0.7071068
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4088067806197192, guid: f7f88ecb914311042b68ea2d6a6ffad8, type: 2}
       propertyPath: m_RootOrder
