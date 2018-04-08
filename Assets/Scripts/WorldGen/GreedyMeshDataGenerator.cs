@@ -191,6 +191,7 @@ class GreedyMeshDataGenerator {
         int vertIndex = vertices.Count;
 
         for(int i = 0; i < verts.Length; i++) {
+            verts[i] -= new Vector3(0.5f, 0.5f, 0.5f); // This is to match the naive mesh gen, where voxels are offset to center the block around the point, instead of having the point in a bottom corner like we do here
             verts[i] -= offset;
             verts[i] *= voxelSize;
         }

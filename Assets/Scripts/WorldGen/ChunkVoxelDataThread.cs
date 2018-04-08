@@ -179,7 +179,7 @@ public class ChunkVoxelDataThread {
 
 
         //Generate wind area:
-        result.windData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getWindAreaData(order.position, biomeManager), meshDataType: MeshDataGenerator.MeshDataType.BASIC)[0];
+        result.windData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getWindAreaData(order.position, biomeManager), meshDataType: MeshDataGenerator.MeshDataType.BASIC, genMode: MeshDataGenerator.GeneratorMode.GREEDY)[0];
 
 
         //Generate the trees in the chunk:

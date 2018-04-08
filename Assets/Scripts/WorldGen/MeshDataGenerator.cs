@@ -32,12 +32,12 @@ public class MeshDataGenerator {
         if (seed == -1)
             seed = seedGen.randomInt();
 
-        /* GREEDY DISABLED DUE TO GLITTER ARTIFACTING
-        if (mode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
+        // DONT USE GREEDY MESH GEN FOR ALL THINGS
+        if (genMode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
             GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType);
             return gmg.generateMeshData();
         }
-        */
+
 
         NaiveMeshDataGenerator nmg = new NaiveMeshDataGenerator(pointmap, voxelSize, offset, meshDataType, seed);
         return nmg.generateMeshData();
