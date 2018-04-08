@@ -222,12 +222,6 @@ float4 leafTex(float3 pos) {
 	return float4(HSVtoRGB(float3(hue, saturation, value)), 1);
 }
 
-// Generate texture for water
-// pos: worldposition to sample
-float4  waterTex(float3 pos) {
-	// TODO more than simple color
-	return float4(0.4, 0.4, 1, 0.95);
-}
 
 // Sample the texel value for a type at samplePos
 // type: type of the block

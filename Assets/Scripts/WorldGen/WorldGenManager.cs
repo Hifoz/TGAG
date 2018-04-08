@@ -66,7 +66,6 @@ public class WorldGenManager : MonoBehaviour {
 
     public WorldGenManagerStats stats;
     public Transform player;
-    public TextureManager textureManager;
     public GameObject chunkPrefab;
     public Material materialWater;
     public Material materialTerrain;
@@ -105,7 +104,6 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     void Start () {
         Debug.Log("THREADS: " + Settings.WorldGenThreads);
-        textureManager = GameObject.Find("TextureManager").GetComponent<TextureManager>();
         biomeManager = new BiomeManager();
         Reset();
     }
@@ -239,21 +237,15 @@ public class WorldGenManager : MonoBehaviour {
     /// Consumes results from Worker threads.
     /// </summary>
     private void consumeThreadResults() {
-        int consumed = 0;
         Vector3 realPlayerPos = player.position + worldOffset;
-
         //Consume waiting chunks
         for (int i = 0; i < waitingChunks.Count; i++) {
             float distance = Vector3.Distance(waitingChunks[i].chunkVoxelData.chunkPos, realPlayerPos);
             if (distance <= chunkLaunchDistance) {
                 Result result = waitingChunks[i];
                 waitingChunks.RemoveAt(i);
-                i--;
-                consumed++;
                 launchOrderedChunk(result);
-                if (consumed >= Settings.MaxChunkLaunchesPerUpdate) {
-                    break;
-                }
+                return;                
             } else {
                 Vector3Int chunkPos = world2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
                 if (!checkBounds(chunkPos.x, chunkPos.z)) {
@@ -266,7 +258,7 @@ public class WorldGenManager : MonoBehaviour {
         
 
         //Consume fresh thread results
-        while(results.getCount() > 0 && consumed < Settings.MaxChunkLaunchesPerUpdate) {
+        if (results.getCount() > 0) {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
@@ -285,7 +277,6 @@ public class WorldGenManager : MonoBehaviour {
                     stats.aggregateValues[WorldGenManagerStatsType.CANCELLED_CHUNKS]++;
                     break;
             }
-            consumed++;
         }
     }
 
@@ -322,7 +313,6 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.GetComponent<MeshCollider>().enabled = false;
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
-            subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             cd.terrainChunk.Add(subChunk);
         }
@@ -338,7 +328,6 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.GetComponent<MeshCollider>().enabled = false;
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
-            waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);
         }
@@ -351,7 +340,6 @@ public class WorldGenManager : MonoBehaviour {
             tree.transform.parent = chunk.transform;
             MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
             treeColliders[i] = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             tree.GetComponent<MeshCollider>().enabled = false;
             trees[i] = tree;
         }

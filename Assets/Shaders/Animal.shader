@@ -122,7 +122,5 @@
 			}
 				ENDCG
 		}
-		// shadow casting support
-		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 	}
 }

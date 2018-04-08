@@ -12,7 +12,7 @@ public class MeshDataGenerator {
     private static ThreadSafeRng seedGen = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
 
     public enum MeshDataType {
-        TERRAIN, WATER, ANIMAL
+        TERRAIN, WATER, ANIMAL, TREE
     }
     public enum GeneratorMode {
         NAIVE, GREEDY
@@ -24,7 +24,7 @@ public class MeshDataGenerator {
     /// <param name="pointmap">Point data used to build the mesh.
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
-    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), 
+    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3),
                                               MeshDataType meshDataType = MeshDataType.TERRAIN, int seed = -1, GeneratorMode genMode = GeneratorMode.NAIVE) {
         if (seed == -1)
             seed = seedGen.randomInt();

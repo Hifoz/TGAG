@@ -8,7 +8,6 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     public GameObject chunkPrefab;
     public Material materialWater;
     public Material materialTerrain;
-    public TextureManager textureManager;
     public GameObject treePrefab;
     public GameObject animalPrefab;
     private Vector3 offset;
@@ -33,7 +32,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     void Start() {
         Settings.load();
         biomeManager = new BiomeManager();
-        WorldGenConfig.chunkCount = 20;
+        WorldGenConfig.chunkCount = 10; //Was 20 pre shaderOpt, which doubled chunkSize and halved chunkCount
         offset = new Vector3(-WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize, 0, -WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize);
     }
 
@@ -251,7 +250,6 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             subChunk.GetComponent<MeshCollider>().convex = false;
             subChunk.name = "subchunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
-            subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             cd.terrainChunk.Add(subChunk);
         }
@@ -266,7 +264,6 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
-            waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);
         }
@@ -276,7 +273,6 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             tree.transform.position = chunkMeshData.treePositions[i] + chunkMeshData.chunkPos;
             MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
             MeshDataGenerator.applyMeshData(tree.GetComponent<MeshCollider>(), chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
 
             trees[i] = tree;
         }

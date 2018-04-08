@@ -1,6 +1,5 @@
-﻿Shader "Custom/Terrain" {
+﻿Shader "Custom/Tree" {
 	Properties {
-
 	}
 	SubShader {
 		Pass {
@@ -30,6 +29,7 @@
 				float4 normal : NORMAL;
 				float4 color : COLOR;
 				float2 uv : TEXCOORD0;
+
 			};
 
 			struct v2f {
@@ -45,38 +45,34 @@
 				fixed3 ambient : COLOR3;
 			};
 
-			static const int COLOR_COUNT = 5;
-			static const float lodDist = 250; //250
-			static const float lodStartDist = 100; //100
 
-			static float frequencies[COLOR_COUNT] = {
-				7.74,	//Dirt
-				4.74,	//Stone
-				7.74,	//Sand
-				10.74,	//Grass
-				2.74	//Snow
+			static const int COLOR_COUNT = 2;
+
+			static float3 frequencies[COLOR_COUNT] = {
+				float3(8.74, 0.84, 8.74),	//Wood
+				float3(4.74, 4.74, 4.74)	//Leaf
 			};
 
 			static fixed3 colors1[COLOR_COUNT] = {
-				fixed3(0.729, 0.505, 0.070),	//Dirt
-				fixed3(0.509, 0.509, 0.509),	//Stone
-				fixed3(0.988, 0.827, 0.474),	//Sand
-				fixed3(0.584, 0.811, 0.027),	//Grass
-				fixed3(1, 1, 1)					//Snow
+				fixed3(0.505, 0.298, 0.156),	//Wood
+				fixed3(0.862, 0.980, 0.019)		//Leaf
 			};
 
 			static fixed3 colors2[COLOR_COUNT] = {
-				colors1[0] / 1.5,	//Dirt
-				colors1[1] / 2,		//Stone
-				colors1[2] / 1.4,	//Sand
-				colors1[3] / 1.4,	//Grass
-				colors1[4] / 1.5	//Snow
+				colors1[0] / 1.5,	//Wood
+				colors1[1] / 2		//Leaf
 			};
 
-			fixed3 calculateColor(float3 samplePos, int index, float lod) {
-				float n = noise(samplePos, frequencies[index] * (1 - lod) + frequencies[index] * lod * 0.3);
-				return lerp(colors1[index], colors2[index], n);
+			fixed3 calculateColor(float3 samplePos, int index) {
+				float n = noise(samplePos, frequencies[index]);
+				fixed3 baseColor = lerp(colors1[index], colors2[index], n);
+				fixed3 colorTrunk = 
+					baseColor * (n >= 0.4) * (n <= 0.6) +
+					colors1[index] * (n < 0.4) +
+					colors2[index] * (n > 0.6);
+				return colorTrunk * (index == 0) + baseColor * (index == 1);
 			}
+
 	
 			v2f vert(appdata v) {
 				v2f o;
@@ -103,26 +99,14 @@
 				//shadow
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
-				fixed3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 2);
-				fixed3 light = (i.diff + specular * 0.15) * shadow  + i.ambient;
+				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
+				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
 				//Color
 				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
-				//LOD works by making block 100% modifier color at a distance, so grass block would become 100% green at a distance
-				// This helps reduce aliasing, which shows it self as brown/green wave thinges.
-				// The block transition into 100% modifier color between lodStart and lod.
-				float dist = length(i.posEye);
-				float lod = dist < lodDist;
-				float lodStart = dist > lodStartDist;
-				float lodLevel = saturate((dist - lodStart) / lodDist);
-				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, lodStart);
-				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, lodStart);
-				//work out modifiers, for side blending
-				float blendingNoise = noise(i.worldPos, 6.4) / 10;
-				fixed normal = (i.uv.y  < ((0.8 + blendingNoise * (1 - lodStart)) * (1 - lodLevel))) * lod;
-				fixed modifier = 1 - normal;
+				fixed3 color = calculateColor(i.worldPos, i.color.r * COLOR_COUNT);
 				//Calculate final color
 				fixed4 o = fixed4(1, 1, 1, 1);
-				o.rgb = color1 * normal + color2 * modifier;
+				o.rgb = color;
 				o.rbg *= light;
 				return o;
 			}
@@ -147,7 +131,7 @@
 			v2f vert(appdata_base v) {
 				v2f o;
 				TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-					return o;
+				return o;
 			}
 
 			float4 frag(v2f i) : SV_Target{

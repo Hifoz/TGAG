@@ -106,8 +106,8 @@ public static class LSystemTreeGenerator {
             }
         }
         MeshData[] meshData = new MeshData[2];
-        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, WorldGenConfig.treeVoxelSize, -flooredLowerBounds)[0];
-        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, WorldGenConfig.treeVoxelSize, -flooredLowerBounds)[0];
+        meshData[0] = MeshDataGenerator.GenerateMeshData(pointMap, WorldGenConfig.treeVoxelSize, -flooredLowerBounds, MeshDataGenerator.MeshDataType.TREE)[0];
+        meshData[1] = MeshDataGenerator.GenerateMeshData(pointMapTrunk, WorldGenConfig.treeVoxelSize, -flooredLowerBounds, MeshDataGenerator.MeshDataType.TREE)[0];
         return meshData;
     }
     

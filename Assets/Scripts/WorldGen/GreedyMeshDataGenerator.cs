@@ -255,28 +255,8 @@ class GreedyMeshDataGenerator {
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     protected void addTextureTypeData(VoxelFace voxel) {
-        TextureData.TextureType[] texTypes = new TextureData.TextureType[2];
-
-        // Get texture types for base and modifier
-        for (int i = 0; i < 2; i++) {
-            BlockData.BlockType blockType = (i == 0 ? voxel.data.blockType : voxel.data.modifier);
-
-            // Convert block type to texture type:
-            string typeName = blockType.ToString();
-            if (blockType == BlockData.BlockType.GRASS || blockType == BlockData.BlockType.SNOW) {
-                if (voxel.dir == 1 && !voxel.isFlipped)
-                    typeName += "_TOP";
-                else if (voxel.dir == 1)
-                    typeName = "NONE";
-                else
-                    typeName += "_SIDE";
-            }
-            texTypes[i] = (TextureData.TextureType)Enum.Parse(typeof(TextureData.TextureType), typeName);
-
-        }
-
         for (int i = 0; i < 4; i++)
-            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
+            colors.Add(new Color(0, 0, 0)); // Using the color to store the texture type of the vertices
     }
 
     #endregion

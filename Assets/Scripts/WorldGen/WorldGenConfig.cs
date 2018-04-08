@@ -8,8 +8,8 @@ using UnityEngine;
 public static class WorldGenConfig {
     //General
     public static int seed = 1337; //161 for watery start
-    public static int chunkSize = 20;
-    public static int chunkCount = 40;
+    public static int chunkSize = 40;
+    public static int chunkCount = 20;
     public static int chunkHeight = 200;
     public const int waterEndLevel = 18; 
     //2D noise settings

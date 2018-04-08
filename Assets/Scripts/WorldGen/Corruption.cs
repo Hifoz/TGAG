@@ -1,10 +1,18 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 /// <summary>
 /// Class dealing with corruption
 /// </summary>
 public class Corruption : MonoBehaviour {
     public Material materialWater;
+    public Transform sun;
+
+    private Vector3 normalSun = new Vector3(50, -30, 0);
+    private Vector3 corruptSun = new Vector3(10, -30, 0);
+    private Vector3 currentSunTarget = new Vector3(50, -30, 0);
+    private Vector3 lastSunTarget = new Vector3(50, -30, 0);
+    private float timer = 1;
 
     private const float maxWorldDistance = 5000f; //Distance to edge of the world
     private const float pristineWorldDistance = 1000f;
@@ -13,6 +21,15 @@ public class Corruption : MonoBehaviour {
         float cf = corruptionFactor(Player.playerPos.get());
         RenderSettings.skybox.SetFloat("_CorruptionFactor", cf);
         materialWater.SetFloat("_CorruptionFactor", cf);
+        if (cf > 0) {
+            timer += Time.deltaTime * cf;
+            if (timer >= 1) {
+                timer = 0;
+                lastSunTarget = currentSunTarget;
+                currentSunTarget = Vector3.Lerp(normalSun, corruptSun, Random.Range(0f, 1f));
+            }           
+            sun.rotation = Quaternion.Euler(Vector3.Lerp(lastSunTarget, currentSunTarget, timer));
+        }        
     }
 
     /// <summary>

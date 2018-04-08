@@ -4,7 +4,7 @@ Shader "Custom/Water" {
 	Properties {
 		[NoScaleOffset] _SkyCubemap("Skybox", Cube) = "" {}
 		[NoScaleOffset] _SkyCubemapCorrupted("Corrupted Skybox", Cube) = "" {}
-		_CorruptionFactor("Corruption Factor", Float) = 0
+		_CorruptionFactor("Corruption Factor", Range(0, 1)) = 0
 	}
 	SubShader{
 		Pass {
@@ -108,23 +108,22 @@ Shader "Custom/Water" {
 			#pragma fragment frag
 			#pragma multi_compile_shadowcaster
 			#include "UnityCG.cginc"
+			#include "Utils.hlsl"
 
 			struct v2f {
-			V2F_SHADOW_CASTER;
+				V2F_SHADOW_CASTER;
 			};
 
 			v2f vert(appdata_base v) {
 				v2f o;
 				TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
-					return o;
+				return o;
 			}
 
 			float4 frag(v2f i) : SV_Target{
 				SHADOW_CASTER_FRAGMENT(i)
 			}
-				ENDCG
+			ENDCG
 		}
-		// shadow casting support
-		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 	}
 }
