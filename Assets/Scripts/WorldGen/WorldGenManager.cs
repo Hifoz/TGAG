@@ -186,7 +186,7 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     private void updateChunkGrid() {
         for (int i = 0; i < activeChunks.Count; i++) {
-            Vector3Int chunkPos = wolrd2ChunkPos(activeChunks[i].pos);
+            Vector3Int chunkPos = world2ChunkPos(activeChunks[i].pos);
             if (checkBounds(chunkPos.x, chunkPos.z)) {
                 chunkGrid[chunkPos.x, chunkPos.z] = activeChunks[i];
             } else {
@@ -255,7 +255,7 @@ public class WorldGenManager : MonoBehaviour {
                     break;
                 }
             } else {
-                Vector3Int chunkPos = wolrd2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
+                Vector3Int chunkPos = world2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
                 if (!checkBounds(chunkPos.x, chunkPos.z)) {
                     pendingChunks.Remove(waitingChunks[i].chunkVoxelData.chunkPos);
                     waitingChunks.RemoveAt(i);
@@ -491,7 +491,7 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="worldPos">Position to use</param>
     private void enableColliders(Vector3 worldPos) {
-        Vector3Int index = wolrd2ChunkPos(worldPos);
+        Vector3Int index = world2ChunkPos(worldPos);
         for (int x = index.x - 1; x <= index.x + 1; x++) {
             for (int z = index.z - 1; z <= index.z + 1; z++) {
                 if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
@@ -529,7 +529,7 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="worldPos">Worldpos to convert</param>
     /// <returns>chunkpos</returns>
-    private Vector3Int wolrd2ChunkPos(Vector3 worldPos) {
+    private Vector3Int world2ChunkPos(Vector3 worldPos) {
         Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / WorldGenConfig.chunkSize;
         return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
     } 

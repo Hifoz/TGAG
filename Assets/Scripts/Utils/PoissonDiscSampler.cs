@@ -23,6 +23,8 @@ class PoissonDiscSampler {
 
     private System.Random rng;
 
+    #region constructors
+
     /// <summary>
     /// Constructor for a blank sampler
     /// </summary>
@@ -66,34 +68,23 @@ class PoissonDiscSampler {
         }
     }
 
+    #endregion
 
-    /// <summary>
-    /// Adds a sample to the active and accepted lists.
-    /// </summary>
-    /// <param name="position">position of sample</param>
-    /// <returns></returns>
-    private Vector2Int addSample(Vector2Int position) {
-        activeList.Add(position);
-        grid[position.x, position.y] = true;
-        return position;
-    }
+    #region public functions
 
-
-    /*
-     * Using PoissonDiscSampler.sample():
-     * ------------------
+    /* Using PoissonDiscSampler.sample():
+     * 
      * 
      * foreach(Vector2 sample in sampler.sampler())
      *      // Do stuff with sample here
      * 
-     * 
      * ------- or -------
+     * 
      * using System.Linq; // Needed for ToList() functionality
      * ...
      * Vector2[] samplesAsList = sampler.sample().ToList();
      * // Do stuff with samplesAsList
      * 
-     * ------------------
      */
 
     /// <summary>
@@ -125,6 +116,21 @@ class PoissonDiscSampler {
         }
     }
 
+    #endregion
+
+    #region private functions
+
+    /// <summary>
+    /// Adds a sample to the active and accepted lists.
+    /// </summary>
+    /// <param name="position">position of sample</param>
+    /// <returns></returns>
+    private Vector2Int addSample(Vector2Int position) {
+        activeList.Add(position);
+        grid[position.x, position.y] = true;
+        return position;
+    }
+
 
     /// <summary>
     /// Checks if the sample clears its neighbourhood
@@ -153,10 +159,5 @@ class PoissonDiscSampler {
         return true;
     }
 
-
+    #endregion
 }
- 
- 
- 
- 
- 

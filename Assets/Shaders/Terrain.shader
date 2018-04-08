@@ -1,8 +1,4 @@
-﻿//#define DRAW_BW
-//#define DRAW_NORMAL
-
-
-Shader "Custom/Terrain" {
+﻿Shader "Custom/Terrain" {
 	Properties {
 
 	}

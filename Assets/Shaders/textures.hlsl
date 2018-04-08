@@ -34,7 +34,7 @@ float4 grassTex(float3 pos) {
 // pos: worldposition of fragment
 // sampleDistance: distance between fragment position and sample positions
 float4 grassSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 halfWhite) {
-	float blockSamplePosY = (samplePos.y - 0.6) % 1;
+	float blockSamplePosY = (samplePos.y - 0.1) % 1;
 	float blockPosY = (pos.y - 0.6) % 1;
 
 	if (blockSamplePosY < blockPosY)
@@ -126,7 +126,7 @@ float4 snowTex(float3 pos) {
 // pos: worldposition of fragment
 // sampleDistance: distance between fragment position and sample positions
 float4 snowSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 halfWhite) {
-	pos.y -= 0.6;
+	pos.y -= 0.1;
 	samplePos.y -= 0.6;
 
 	float blockSamplePosY = samplePos.y % 1 - 0.3;
@@ -253,7 +253,7 @@ float4 sampleTexelValue(int type, float3 pos, float3 samplePos, float sampleDist
 	case 12: // AllWhite
 		return float4(1, 1, 1, 1);
 	default:
-		return float4(1, 1, 1, 0);
+		return float4(0,0,0,0);
 	}
 }
 

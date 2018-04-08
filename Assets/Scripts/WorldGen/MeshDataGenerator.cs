@@ -4,24 +4,40 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
 /// <summary>
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
-
-    protected List<Vector3> vertices = new List<Vector3>();
-    protected List<Vector3> normals = new List<Vector3>();
-    protected List<int> triangles = new List<int>();
-    protected List<Color> colors = new List<Color>();
-    protected List<Vector2> uvs = new List<Vector2>();
-    protected Vector2 animalData; //This vector will populate the animal UV, contains data used for noise seed and animal skin type.
-    protected BlockDataMap pointmap;
-
-    protected Vector3 offset;
-
     private static ThreadSafeRng seedGen = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
-    private ThreadSafeRng rng = new ThreadSafeRng();
-    private int seed;
+
+    public enum MeshDataType {
+        TERRAIN, WATER, ANIMAL
+    }
+    public enum GeneratorMode {
+        NAIVE, GREEDY
+    };
+
+    /// <summary>
+    /// Generates all data needed for a mesh of cubes
+    /// </summary>
+    /// <param name="pointmap">Point data used to build the mesh.
+    /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
+    /// <returns>an array of meshdata objects made from input data</returns>
+    public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), 
+                                              MeshDataType meshDataType = MeshDataType.TERRAIN, int seed = -1, GeneratorMode genMode = GeneratorMode.NAIVE) {
+        if (seed == -1)
+            seed = seedGen.randomInt();
+
+        /* GREEDY DISABLED DUE TO GLITTER ARTIFACTING
+        if (mode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
+            GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType);
+            return gmg.generateMeshData();
+        }
+        */
+
+        NaiveMeshDataGenerator nmg = new NaiveMeshDataGenerator(pointmap, voxelSize, offset, meshDataType, seed);
+        return nmg.generateMeshData();
 
     public enum FaceDirection {
         xp, xm, yp, ym, zp, zm
@@ -29,7 +45,7 @@ public class MeshDataGenerator {
     public enum MeshDataType {
         TERRAIN, ANIMAL, TREE
     }
-    protected MeshDataType meshDataType;
+
 
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
