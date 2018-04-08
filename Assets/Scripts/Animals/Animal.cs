@@ -555,6 +555,10 @@ public abstract class Animal : MonoBehaviour {
         if (other.name == "waterSubChunk") {
             state.inWater = true;
         }
+
+        if (other.name == "windSubChunk") {
+            state.inWindArea = true;
+        }
     }
 
     virtual protected void OnCollisionEnter(Collision collision) {
@@ -585,7 +589,8 @@ public abstract class Animal : MonoBehaviour {
         string s = "";
         s += "Grounded: " + state.grounded.ToString() + "\n";
         s += "InWater: " + state.inWater.ToString() + "\n";
-        s += "OnWaterSurface: " + state.onWaterSurface.ToString() + "\n\n";
+        s += "OnWaterSurface: " + state.onWaterSurface.ToString() + "\n";
+        s += "InWindArea: " + state.inWindArea.ToString() + "\n\n";
 
         s += "Desired speed: " + state.desiredSpeed + "\n";
         s += "Desired heading: " + state.desiredHeading + "\n\n";

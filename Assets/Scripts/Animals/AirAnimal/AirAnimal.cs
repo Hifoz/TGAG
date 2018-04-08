@@ -38,6 +38,10 @@ public class AirAnimal : Animal {
         }
     }
 
+    private void LateUpdate() {
+        state.inWindArea = (transform.position.y > WindController.globalWindHeight);
+    }
+
     //    _____       _     _ _         __                  _   _                 
     //   |  __ \     | |   | (_)       / _|                | | (_)                
     //   | |__) |   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -295,6 +299,13 @@ public class AirAnimal : Animal {
         }
         if (state.inWater)
             velocity *= 0.25f;
+
+        if (state.inWindArea && !state.grounded && !state.inWater && transform.position.magnitude > 20f) {
+            velocity *= 0.6f;
+            velocity += WindController.globalWindDirection * WindController.globalWindSpeed;
+        }
+
+
         rb.velocity = velocity + gravity;
     }
 

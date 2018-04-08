@@ -357,6 +357,7 @@ public class WorldGenManager : MonoBehaviour {
 
         // Create wind mesh
         GameObject windChunk = chunkPool.getObject();
+        windChunk.layer = 10;
         windChunk.transform.parent = chunk.transform;
         windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
         windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);

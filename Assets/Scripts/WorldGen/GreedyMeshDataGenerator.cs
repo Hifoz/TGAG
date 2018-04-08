@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-
+/// <summary>
+/// Helper class containing data on a point in a layer mask
+/// </summary>
 class VoxelFace {
     public BlockData data = BlockData.Empty;
     public int dir = 0;
@@ -191,7 +193,7 @@ class GreedyMeshDataGenerator {
         int vertIndex = vertices.Count;
 
         for(int i = 0; i < verts.Length; i++) {
-            verts[i] -= new Vector3(0.5f, 0.5f, 0.5f); // This is to match the naive mesh gen, where voxels are offset to center the block around the point, instead of having the point in a bottom corner like we do here
+            verts[i] -= new Vector3(0.5f, 0.5f, 0.5f); // This is to match the naive mesh gen, where voxels are offset to center the block around the point
             verts[i] -= offset;
             verts[i] *= voxelSize;
         }
