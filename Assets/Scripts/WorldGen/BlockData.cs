@@ -37,6 +37,10 @@ public struct BlockData { // 2 bytes. 1 byte per blocktype stored
         this.modifier = modifier;
     }
 
+    public bool equals(BlockData other) {
+        return blockType == other.blockType && modifier == other.modifier;
+    }
+
     //Made this because reordering the enums made the world look really weird
     // Not gonna comb through the code to find out why, this is easier.
     /// <summary>
