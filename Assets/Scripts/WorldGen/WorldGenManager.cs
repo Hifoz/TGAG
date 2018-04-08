@@ -208,6 +208,11 @@ public class WorldGenManager : MonoBehaviour {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     chunkPool.returnObject(activeChunks[i].waterChunk[j]);
                 }
+                if(chunk != null) {
+                    Transform windParticleEffect = chunk.transform.Find("WindPE");
+                    if (windParticleEffect != null)
+                        Destroy(windParticleEffect.gameObject);
+                }
 
                 Destroy(chunk);
 
@@ -379,6 +384,7 @@ public class WorldGenManager : MonoBehaviour {
             // Add wind particle system to chunks
             GameObject particleSystem = Instantiate(windParticleSystemPrefab);
             particleSystem.transform.SetParent(chunk.transform);
+            particleSystem.gameObject.name = "WindPE";
             particleSystem.transform.position = chunkMeshData.chunkPos;
 
             float heightPos = 150;
@@ -389,7 +395,6 @@ public class WorldGenManager : MonoBehaviour {
             }
             particleSystem.transform.position += new Vector3(0, heightPos, 0);
 
-
             // Set the velocity
             ParticleSystem ps = particleSystem.GetComponent<ParticleSystem>();
             ParticleSystem.VelocityOverLifetimeModule psVOL = ps.velocityOverLifetime;
@@ -397,6 +402,8 @@ public class WorldGenManager : MonoBehaviour {
             psVOL.x = vel.x;
             psVOL.y = -0.15f;
             psVOL.z = vel.y;
+
+            cd.windParticleSystem = particleSystem;
         }
 
 
