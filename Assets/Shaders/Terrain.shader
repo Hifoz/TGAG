@@ -48,13 +48,12 @@
 			static const int COLOR_COUNT = 5;
 			static const float lodDist = 250; //250
 			static const float lodStartDist = 100; //100
-			static const float lodNoiseDist = 60;
 
 			static float frequencies[COLOR_COUNT] = {
-				14.74,	//Dirt
+				7.74,	//Dirt
 				4.74,	//Stone
 				7.74,	//Sand
-				12.74,	//Grass
+				10.74,	//Grass
 				2.74	//Snow
 			};
 
@@ -62,7 +61,7 @@
 				fixed3(0.729, 0.505, 0.070),	//Dirt
 				fixed3(0.509, 0.509, 0.509),	//Stone
 				fixed3(0.988, 0.827, 0.474),	//Sand
-				fixed3(0.564, 0.854, 0.062),	//Grass
+				fixed3(0.584, 0.811, 0.027),	//Grass
 				fixed3(1, 1, 1)					//Snow
 			};
 
@@ -70,12 +69,12 @@
 				colors1[0] / 1.5,	//Dirt
 				colors1[1] / 2,		//Stone
 				colors1[2] / 1.4,	//Sand
-				colors1[3] / 1.5,	//Grass
+				colors1[3] / 1.4,	//Grass
 				colors1[4] / 1.5	//Snow
 			};
 
 			fixed3 calculateColor(float3 samplePos, int index, float lod) {
-				float n = noise(samplePos, frequencies[index] * lod + frequencies[index] * (1 - lod) * 0.4);
+				float n = noise(samplePos, frequencies[index] * (1 - lod) + frequencies[index] * lod * 0.3);
 				return lerp(colors1[index], colors2[index], n);
 			}
 	
@@ -115,11 +114,10 @@
 				// The block transition into 100% modifier color between lodStart and lod.
 				float dist = length(i.posEye);
 				float lod = dist < lodDist;
-				float noiseLod = dist < lodNoiseDist;
 				float lodStart = dist > lodStartDist;
 				float lodLevel = saturate((dist - lodStart) / lodDist);
-				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, noiseLod);
-				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, noiseLod);
+				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, lodStart);
+				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, lodStart);
 				//work out modifiers, for side blending
 				float blendingNoise = noise(i.worldPos, 6.4) / 10;
 				fixed normal = (i.uv.y  < ((0.8 + blendingNoise * (1 - lodStart)) * (1 - lodLevel))) * lod;
@@ -159,7 +157,5 @@
 			}
 				ENDCG
 		}
-		// shadow casting support
-		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 	}
 }
