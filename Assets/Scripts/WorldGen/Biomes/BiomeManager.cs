@@ -36,7 +36,7 @@ public class BiomeManager {
         // Initialize biome points
         biomeGrid = new Pair<BiomeBase, Vector2Int>[gridWidth, gridHeight];
         poissonSampler = new PoissonDiscSampler(radius, gridWidth, gridHeight, wrap: true, seed: WorldGenConfig.seed);
-        Vector2Int offset = new Vector2Int(gridWidth/2, gridHeight/2);
+        Vector2Int offset = new Vector2Int(gridWidth / 2, gridHeight / 2);
         foreach (Vector2Int sample in poissonSampler.sample()) {
             biomeGrid[sample.x, sample.y] = new Pair<BiomeBase, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * gridScale);
         }
@@ -49,7 +49,6 @@ public class BiomeManager {
     /// <param name="range">range to check</param>
     /// <returns>A list of pairs containing biomes and their positions</returns>
     public List<Pair<BiomeBase, Vector2Int>> getInRangeBiomes(Vector2Int pos, int range) {
-        // Find all points in range
         List<Pair<BiomeBase, Vector2Int>> inRangeBiomes = new List<Pair<BiomeBase, Vector2Int>>();
         int gridRange = range / gridScale;
         Vector2Int offset = new Vector2Int(gridWidth / 2, gridHeight / 2);

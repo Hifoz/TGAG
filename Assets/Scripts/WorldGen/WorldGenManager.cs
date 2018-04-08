@@ -70,6 +70,7 @@ public class WorldGenManager : MonoBehaviour {
     public GameObject chunkPrefab;
     public Material materialWater;
     public Material materialTerrain;
+    public Material materialWindDebug;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
@@ -318,11 +319,13 @@ public class WorldGenManager : MonoBehaviour {
         chunk.transform.parent = this.transform;
         cd.chunkParent = chunk;
 
+        // Create terrain subchunks
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = chunkPool.getObject();
             subChunk.layer = 8;
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
+            subChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
@@ -334,11 +337,13 @@ public class WorldGenManager : MonoBehaviour {
             cd.terrainChunk.Add(subChunk);
         }
 
+        // Create water subchunks
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
             GameObject waterChunk = chunkPool.getObject();
             waterChunk.layer = 4;
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
+            waterChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
             waterChunk.GetComponent<MeshCollider>().convex = true;
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
@@ -349,6 +354,20 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);
         }
+
+        // Create wind mesh
+        GameObject windChunk = chunkPool.getObject();
+        windChunk.transform.parent = chunk.transform;
+        windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
+        windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
+        MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
+        windChunk.GetComponent<MeshCollider>().convex = true;
+        windChunk.GetComponent<MeshCollider>().isTrigger = true;
+        windChunk.GetComponent<MeshCollider>().enabled = false;
+        windChunk.name = "windSubChunk";
+        windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
+        windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+        cd.waterChunk.Add(windChunk);
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         Mesh[] treeColliders = new Mesh[chunkMeshData.trees.Length];

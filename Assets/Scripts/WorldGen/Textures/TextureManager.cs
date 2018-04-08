@@ -137,4 +137,19 @@ public class TextureManager : MonoBehaviour {
         hasChanged = true;
         textureList = new List<Color[]>();
     }
+
+    /// <summary>
+    /// Tries to load and return a texture from file.
+    /// (Does NOT add to texture array!)
+    /// </summary>
+    /// <param name="v">path relative to "Resources/"</param>
+    /// <returns></returns>
+    public Texture getTexture(string path) {
+        Texture2D loadedTexture = Resources.Load<Texture2D>(path);
+        if (loadedTexture == null) {
+            Debug.Log("Could not find file");
+            return null;
+        }
+        return loadedTexture;
+    }
 }

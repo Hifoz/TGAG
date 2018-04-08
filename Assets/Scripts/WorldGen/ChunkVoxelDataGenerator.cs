@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -209,6 +210,25 @@ public static class ChunkVoxelDataGenerator {
         return data;
     }
 
+
+    /// <summary>
+    /// Generates data for windarea in chunk
+    /// </summary>
+    /// <param name="pos">position of chunk</param>
+    /// <param name="biomeManager">biome manager</param>
+    /// <returns></returns>
+    public static BlockDataMap getWindAreaData(Vector3 pos, BiomeManager biomeManager) {
+        BlockDataMap data = new BlockDataMap(WorldGenConfig.chunkSize + 2, 3, WorldGenConfig.chunkSize + 2);
+
+        for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
+            for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
+                if (biomeManager.getClosestBiome(new Vector2Int(x + (int)pos.x, z + (int)pos.z)).biomeName == "ocean") {
+                    data.mapdata[data.index1D(x, 1, z)].blockType = BlockData.BlockType.WATER;
+                }
+            }
+        }
+        return data;
+    }
 
 
     /// <summary>

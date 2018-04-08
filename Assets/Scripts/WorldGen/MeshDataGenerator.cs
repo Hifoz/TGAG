@@ -27,7 +27,9 @@ public class MeshDataGenerator {
         xp, xm, yp, ym, zp, zm
     }
     public enum MeshDataType {
-        TERRAIN, ANIMAL
+        TERRAIN, // Used for terrain and water
+        ANIMAL,  // Used for animals
+        BASIC    // Used for using unity default shader
     }
     protected MeshDataType meshDataType;
 
@@ -229,7 +231,9 @@ public class MeshDataGenerator {
             addSliceData(vertices.GetRange(vertices.Count - 4, 4));
         } else {
             addTextureCoordinates(blockData, dir);
-            addSliceData(blockData, dir);
+            if(meshDataType == MeshDataType.TERRAIN) {
+                addSliceData(blockData, dir);
+            }
         }
 
     }
