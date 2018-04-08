@@ -164,52 +164,85 @@ class NaiveMeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
-        if (meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
-            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
-        } else {
-            addTextureCoordinates(blockData, dir);
-            if (meshDataType != MeshDataGenerator.MeshDataType.BASIC) {
-                addSliceData(blockData, dir);
-            }
+//<<<<<<< HEAD
+//        if (meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
+//            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
+//        } else {
+//            addTextureCoordinates(blockData, dir);
+//            if (meshDataType != MeshDataGenerator.MeshDataType.BASIC) {
+//                addSliceData(blockData, dir);
+//            }
+//=======
+
+        switch (meshDataType) {
+            case MeshDataGenerator.MeshDataType.ANIMAL:
+                encodePositionalData(vertices.GetRange(vertices.Count - 4, 4));
+                break;
+            case MeshDataGenerator.MeshDataType.TERRAIN:
+                addColorDataTerrain(blockData, dir);
+                addTextureCoordinates(blockData, dir);
+                break;
+            case MeshDataGenerator.MeshDataType.TREE:
+                addColorDataTree(blockData, dir);
+                addTextureCoordinates(blockData, dir);
+                break;
+            case MeshDataGenerator.MeshDataType.BASIC:
+            case MeshDataGenerator.MeshDataType.WATER:
+                addTextureCoordinates(blockData, dir);
+                break;
         }
     }
 
-
     /// <summary>
-    /// Stores the indices of the texture slices to use for a face of a block.
+    /// Stores color indexes in the color array.
+    /// Theres an array of colors in the shader, that are indexed by the numbers in mesh.color.
     /// </summary>
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
-    protected void addSliceData(BlockData blockData, FaceDirection faceDir) {
-        TextureData.TextureType[] texTypes = new TextureData.TextureType[2];
+    protected void addColorDataTerrain(BlockData blockData, FaceDirection faceDir) {
+        const float COLOR_COUNT = 5; //Size of colors array in shader
+        const float smallDelta = 0.01f; //To make the int index = colorIndex * COLOR_COUNT conversion stable
+        float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType) / COLOR_COUNT + smallDelta; //5 because COLOR_COUNT in shader is 5
+        float colorIndex2 = (blockData.modifier == BlockData.BlockType.NONE) ? colorIndex1 : BlockData.blockTypeToColorIndex(blockData.modifier) / COLOR_COUNT + smallDelta;
 
-        // Get texture types for base and modifier
-        for (int i = 0; i < 2; i++) {
-            BlockData.BlockType blockType = (i == 0 ? blockData.blockType : blockData.modifier);
-
-            // Convert block type to texture type:
-            string typeName = blockType.ToString();
-            if (blockType == BlockData.BlockType.GRASS || blockType == BlockData.BlockType.SNOW) {
-                if (faceDir == FaceDirection.yp)
-                    typeName += "_TOP";
-                else if (faceDir == FaceDirection.ym)
-                    typeName = "NONE";
-                else
-                    typeName += "_SIDE";
-            }
-            texTypes[i] = (TextureData.TextureType)Enum.Parse(typeof(TextureData.TextureType), typeName);
-
+        switch (faceDir) {
+            case FaceDirection.yp:
+                colors.AddRange(new Color[4] {
+                    new Color(colorIndex2, colorIndex2, 0, 0), new Color(colorIndex2, colorIndex2, 0, 0),
+                    new Color(colorIndex2, colorIndex2, 0, 0), new Color(colorIndex2, colorIndex2, 0, 0)
+                });
+                break;
+            default:
+                colors.AddRange(new Color[4] {
+                    new Color(colorIndex1, colorIndex2, 0, 0), new Color(colorIndex1, colorIndex2, 0, 0),
+                    new Color(colorIndex1, colorIndex2, 0, 0), new Color(colorIndex1, colorIndex2, 0, 0)
+                });
+                break;
         }
+    }
 
-        for (int i = 0; i < 4; i++)
-            colors.Add(new Color((int)texTypes[0], (int)texTypes[1], 0)); // Using the color to store the texture type of the vertices
+    /// <summary>
+    /// Stores color indexes in the color array.
+    /// Theres an array of colors in the shader, that are indexed by the numbers in mesh.color.
+    /// </summary>
+    /// <param name="blockData">Data of the block</param>
+    /// <param name="faceDir">Direction of the face</param>
+    protected void addColorDataTree(BlockData blockData, FaceDirection faceDir) {
+        const float COLOR_COUNT = 2; //Size of colors array in shader
+        const float smallDelta = 0.01f; //To make the int index = colorIndex * COLOR_COUNT conversion stable
+        float colorIndex = (blockData.blockType == BlockData.BlockType.WOOD) ? 0 : 1 / COLOR_COUNT + smallDelta; //5 because COLOR_COUNT in shader is 5
+
+        colors.AddRange(new Color[4] {
+            new Color(colorIndex, colorIndex, 0, 0), new Color(colorIndex, colorIndex, 0, 0),
+            new Color(colorIndex, colorIndex, 0, 0), new Color(colorIndex, colorIndex, 0, 0)
+        });
     }
 
     /// <summary>
     /// Encodes colors as unique positions used for noise calculations in animal shader
     /// </summary>
     /// <param name="verticies">Verticies to encode into colors</param>
-    protected void addSliceData(List<Vector3> verts) {
+    protected void encodePositionalData(List<Vector3> verts) {
         Vector3 scalingVector = new Vector3(blockDataMap.GetLength(0), blockDataMap.GetLength(1), blockDataMap.GetLength(2));
         foreach (Vector3 vert in verts) {
             colors.Add(new Color(
@@ -221,7 +254,6 @@ class NaiveMeshDataGenerator {
             uvs.Add(animalData);
         }
     }
-
 
     /// <summary>
     /// Adds texture coordinates for a face of a block.

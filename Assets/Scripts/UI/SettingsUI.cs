@@ -81,18 +81,6 @@ public class SettingsUI : MonoBehaviour {
         // DEV TOOLS:
         GameObject devTools = addSection("Dev tools", panel);
 
-        GameObject maxChunkLaunch = addTextOption("MaxChunkLaunchesPerUpdate", 
-            parent: devTools, 
-            func: delegate {
-                if (PlayerPrefs.GetFloat("MaxChunkLaunchesPerUpdate", Settings.MaxChunkLaunchesPerUpdate) < 1) // If the value was set to less than 1, set it back to 1
-                    PlayerPrefs.SetFloat("MaxChunkLaunchesPerUpdate", 1);
-
-                Settings.MaxChunkLaunchesPerUpdate = (int)PlayerPrefs.GetFloat("MaxChunkLaunchesPerUpdate", Settings.MaxChunkLaunchesPerUpdate);
-                return null;
-            }
-        );
-        maxChunkLaunch.GetComponent<InputField>().contentType = InputField.ContentType.IntegerNumber;
-
         GameObject threadCount = addSliderOption("WorldGenThreads", 
             parent: devTools, 
             minval: 1, 

@@ -21,7 +21,7 @@ class LowlandForestBiome : BiomeBase {
             corruptionRate: 0.5f,
             corruptionFrequency: 0.025f,
             //Foliage
-            maxTreesPerChunk: 4,
+            maxTreesPerChunk: 14,
             treeLineLength: 2.0f,
             treeVoxelSize: 1.0f,
             treeThickness: 0.5f,

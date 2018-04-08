@@ -15,6 +15,7 @@ public class MeshDataGenerator {
         TERRAIN, // Used for terrain
         WATER,   // Used for water
         ANIMAL,  // Used for animals
+        TREE,    // Used for trees
         BASIC    // Used for using unity default shader
     }
     public enum GeneratorMode {

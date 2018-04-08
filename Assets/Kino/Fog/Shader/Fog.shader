@@ -30,7 +30,7 @@ Shader "Hidden/Kino/Fog"
         [Gamma] _SkyExposure ("-", Range(0, 8)) = 1.0
         [NoScaleOffset] _SkyCubemap ("-", Cube) = "" {}
 		[NoScaleOffset] _SkyCubemapCorrupted ("-", Cube) = "" {}
-		_CorruptionFactor ("-", Float) = 0
+		_CorruptionFactor("Corruption Factor", Range(0, 1)) = 0
     }
     CGINCLUDE
 

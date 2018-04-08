@@ -12,9 +12,10 @@ float3 calcSpecular(float3 eyeLightDir, float3 eyeNormal, float3 eyePos, float e
 }
 
 
-// Returns 1 if lower < input < upper, for 0 <= input <= 1. The functions purpose is to avoid code branching with if statements.  
-float inRange (float input, float lower, float upper){
-	return (ceil(input - lower) - ceil(input - upper));
+// Returns 1 if lower <= input < upper, The functions purpose is to avoid code branching with if statements.  
+float inRange (float input, float lower, float upper) {
+	return (input >= lower) * (input < upper);
+	//return (ceil(input - lower) - ceil(input - upper));
 }
 
 //From looking at varius noise functions
@@ -44,6 +45,10 @@ float noise (float3 x){
 }
 
 float noise(float3 x, float freq) {
+	return noise(x * freq);
+}
+
+float noise(float3 x, float3 freq) {
 	return noise(x * freq);
 }
 

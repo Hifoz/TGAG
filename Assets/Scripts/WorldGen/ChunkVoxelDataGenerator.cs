@@ -286,6 +286,7 @@ public static class ChunkVoxelDataGenerator {
     public static float calcHeight(Vector3 pos, List<Pair<BiomeBase, float>> biomes, float corruptionFactor) {
         // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it might be nice if this was not the case, so one could have differing octave counts and stuff
         //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
+        //We calculate the octaves wrong, we should multiplie frequency by octave strength, and not multiply samplePos by octaveStrength.
         pos = new Vector3(pos.x, pos.z, 0); 
         float finalNoise = 0;
         float noiseScaler = 0;
