@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 
@@ -8,19 +7,44 @@ using UnityEngine;
 /// </summary>
 public static class ChunkVoxelDataGenerator {
 
+    private static bool posContainsVoxel(Vector3 pos, int height,
+        float structure3DRate, float unstructure3DRate, float corruptionRate,
+        float structure, float unstructure, float corruption, float corruptionFactor) {
+
+        bool inHeight = pos.y < height;
+        bool inStructure = structure3DRate > structure;
+        bool inUnstructure = unstructure3DRate < unstructure;
+        bool inCorruption = Mathf.Lerp(0, corruptionRate, corruptionFactor) > corruption;
+        return (inHeight || inStructure || inCorruption) && (inUnstructure);
+    }
+
     /// <summary>
     /// Determines if there is a voxel at the given location, with a precalculated 2d height.
     /// </summary>
     /// <param name="pos">The position to investigate</param>
     /// <param name="isAlreadyVoxel">If the location currently contains a voxel</param>
     /// <returns>Whether the location contains a voxel</returns>
-    public static bool posContainsVoxel(Vector3 pos, int height, BiomeBase biome) {
+    public static bool posContainsVoxel(Vector3 pos, int height, BiomeBase biome, float corruptionFactor) {
+        if (corruptionFactor >= 1f) {
+            return false;
+        }
+        if (pos.y <= 0) {
+            return true;
+        }
+
         if (pos.y < biome.minGroundHeight)
             return true;
         else if (pos.y > biome.maxGroundHeight)
             return false;
-        else
-            return (pos.y < height || biome.structure3DRate > calc3DStructure(pos, biome, height)) && biome.unstructure3DRate < calc3DUnstructure(pos, biome, height);
+        else {
+            float corruption = Corruption.corruptionNoise(pos, biome);
+            return posContainsVoxel(
+                pos, height,
+                biome.structure3DRate, biome.unstructure3DRate, biome.corruptionRate,
+                calc3DStructure(pos, biome), calc3DUnstructure(pos, biome),
+                Corruption.corruptionNoise(pos, biome), corruptionFactor
+            );
+        }
     }
 
     /// <summary>
@@ -30,14 +54,23 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="heights">height from all biomes covering the sample position</param>
     /// <param name="biomes">the biomes covering the sample position and the distance from the sample pos and the biome points</param>
     /// <returns></returns>
-    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes) {
+    public static bool posContainsVoxel(Vector3 pos, int height, List<Pair<BiomeBase, float>> biomes, float corruptionFactor) {
+        if (corruptionFactor >= 1f) {
+            return false;
+        }
+        if (pos.y <= 0) {
+            return true;
+        }
+
         if (biomes.Count == 1)
-            return posContainsVoxel(pos, height, biomes[0].first);
+            return posContainsVoxel(pos, height, biomes[0].first, corruptionFactor);
 
         float structure = 0;
         float unstructure = 0;
+        float corruption = 0;
         float structureRate = 0;
         float unstructureRate = 0;
+        float corruptionRate = 0;
         float minH = 0;
         float maxH = 0;
 
@@ -52,13 +85,20 @@ public static class ChunkVoxelDataGenerator {
             return false;
 
         for (int i = 0; i < biomes.Count; i++) {
-            structure += calc3DStructure(pos, biomes[i].first, height) * biomes[i].second;
-            unstructure += calc3DUnstructure(pos, biomes[i].first, height) * biomes[i].second;
+            structure += calc3DStructure(pos, biomes[i].first) * biomes[i].second;
+            unstructure += calc3DUnstructure(pos, biomes[i].first) * biomes[i].second;
+            corruption += Corruption.corruptionNoise(pos, biomes[i].first) * biomes[i].second;
             structureRate += biomes[i].first.structure3DRate * biomes[i].second;
-            unstructureRate += biomes[i].first.unstructure3DRate * biomes[i].second;
+            unstructureRate += biomes[i].first.unstructure3DRate * biomes[i].second;   
+            corruptionRate += biomes[i].first.corruptionRate * biomes[i].second;
         }
 
-        return (pos.y < height || structureRate > structure) && unstructureRate < unstructure;
+        return posContainsVoxel(
+                pos, height,
+                structureRate, unstructureRate, corruptionRate,
+                structure, unstructure,
+                corruption, corruptionFactor
+            );
     }
 
 
@@ -75,11 +115,15 @@ public static class ChunkVoxelDataGenerator {
 
         List<Pair<BiomeBase, float>>[,] biomemap = new List<Pair<BiomeBase, float>>[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
         int[,] heightmap = new int[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
+        float[,] corruptionMap = new float[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
 
         for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
             for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
+                Vector3 xzPos = new Vector3(x, 0, z);
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
-                heightmap[x, z] = (int)calcHeight(pos + new Vector3(x, 0, z), biomemap[x, z]);
+                corruptionMap[x, z] = Corruption.corruptionFactor(pos + xzPos);
+                heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z], corruptionMap[x, z]);
+
                 // Initialize the blockdata map with heightmap data
                 for (int y = 0; y < heightmap[x, z]; y++) {
                     data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.DIRT;
@@ -132,7 +176,7 @@ public static class ChunkVoxelDataGenerator {
 
         while (active.Any()) {
             voxel = active.Dequeue();
-            bool containsVoxel = posContainsVoxel(pos + voxel, heightmap[voxel.x, voxel.z], biomemap[voxel.x, voxel.z]);
+            bool containsVoxel = posContainsVoxel(pos + voxel, heightmap[voxel.x, voxel.z], biomemap[voxel.x, voxel.z], corruptionMap[voxel.x, voxel.z]);
 
             data.mapdata[data.index1D(voxel.x, voxel.y, voxel.z)].blockType = 
                 containsVoxel ? BlockData.BlockType.DIRT : BlockData.BlockType.NONE;
@@ -154,10 +198,10 @@ public static class ChunkVoxelDataGenerator {
         for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
             for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
-                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE)
+                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
-                    else if (y < WorldGenConfig.waterHeight)
-                        data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WATER;
+                    else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y))
+                        data.mapdata[data.index1D(x, Corruption.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
                 }
             }
         }
@@ -217,11 +261,12 @@ public static class ChunkVoxelDataGenerator {
     /// Calculates the height of the chunk at the position
     /// </summary>
     /// <param name="pos">position of voxel</param>
+    /// <param name="corruptionFactor">float for corruptionFactor</param>
     /// <returns>float height</returns>
-    public static float calcHeight(Vector3 pos, List<Pair<BiomeBase, float>> biomes) {
+    public static float calcHeight(Vector3 pos, List<Pair<BiomeBase, float>> biomes, float corruptionFactor) {
         // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it might be nice if this was not the case, so one could have differing octave counts and stuff
         //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
-        pos = new Vector3(pos.x, pos.z, 0);
+        pos = new Vector3(pos.x, pos.z, 0); 
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
@@ -252,7 +297,6 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-
         return minH + finalNoise * maxH;
     }
 
@@ -262,10 +306,8 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static float calc3DStructure(Vector3 pos, BiomeBase biome, int height) {
-        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * WorldGenConfig.seed, biome.frequency3D) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) + Vector3.one * WorldGenConfig.seed, biome.frequency3D);
-        noise *= 0.5f;
+    private static float calc3DStructure(Vector3 pos, BiomeBase biome) {
+        float noise = SimplexNoise.Simplex3D(pos + Vector3.one * WorldGenConfig.seed, biome.frequency3D);
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(noise01, 1, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want an ugly flat "ceiling" everywhere.
     }
@@ -276,14 +318,9 @@ public static class ChunkVoxelDataGenerator {
     /// </summary>
     /// <param name="pos">Sample pos</param>
     /// <returns>bool</returns>
-    private static float calc3DUnstructure(Vector3 pos, BiomeBase biome, int height) {
-        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * WorldGenConfig.seed, biome.frequency3D) +
-            SimplexNoise.Simplex3D(pos + new Vector3(0, 500, 0) - Vector3.one * WorldGenConfig.seed, biome.frequency3D);
-        noise *= 0.5f;
+    private static float calc3DUnstructure(Vector3 pos, BiomeBase biome) {
+        float noise = SimplexNoise.Simplex3D(pos - Vector3.one * WorldGenConfig.seed, biome.frequency3D);
         float noise01 = (noise + 1f) * 0.5f;
         return Mathf.Lerp(1, noise01, (pos.y - biome.minGroundHeight) / biome.maxGroundHeight); //Because you don't want the noise to remove the ground creating a void.
     }
-
-
-
 }

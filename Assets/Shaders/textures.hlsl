@@ -35,7 +35,7 @@ float4 grassTex(float3 pos) {
 // sampleDistance: distance between fragment position and sample positions
 float4 grassSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 halfWhite) {
 	float blockSamplePosY = (samplePos.y - 0.1) % 1;
-	float blockPosY = (pos.y - 0.1) % 1;
+	float blockPosY = (pos.y - 0.6) % 1;
 
 	if (blockSamplePosY < blockPosY)
 		blockSamplePosY -= (samplePos.y - pos.y * 2);
@@ -127,7 +127,7 @@ float4 snowTex(float3 pos) {
 // sampleDistance: distance between fragment position and sample positions
 float4 snowSideTex(float3 samplePos, float3 pos, float sampleDistance, half4 halfWhite) {
 	pos.y -= 0.1;
-	samplePos.y -= 0.1;
+	samplePos.y -= 0.6;
 
 	float blockSamplePosY = samplePos.y % 1 - 0.3;
 	float blockPosY = pos.y % 1 - 0.3;

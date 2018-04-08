@@ -75,13 +75,13 @@ public static class AnimalUtils {
     /// <param name="target">Target for skeleton</param>
     /// <param name="animalType">Type fo the target</param>
     /// <returns>AnimalSkeleton</returns>
-    public static AnimalSkeleton createAnimalSkeleton(GameObject target, Type animalType) {
+    public static AnimalSkeleton createAnimalSkeleton(GameObject target, Type animalType, int seed = -1) {
         if (animalType.Equals(typeof(LandAnimal))) {
-            return new LandAnimalSkeleton(target.transform);
+            return new LandAnimalSkeleton(target.transform, seed);
         } else if (animalType.Equals(typeof(AirAnimal))) {
-            return new AirAnimalSkeleton(target.transform);
+            return new AirAnimalSkeleton(target.transform, seed);
         } else if (animalType.Equals(typeof(WaterAnimal))) {
-            return new WaterAnimalSkeleton(target.transform);
+            return new WaterAnimalSkeleton(target.transform, seed);
         } else {
             throw new Exception("AnimalUtils, createAnimalSkeleton error! The provided type is invalid! you provided: " + animalType.Name);
         }

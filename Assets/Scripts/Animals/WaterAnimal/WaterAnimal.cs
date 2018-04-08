@@ -20,7 +20,8 @@ public class WaterAnimal : Animal {
     override protected void Update() {
         if (skeleton != null) {
             calculateSpeedAndHeading();
-            brain.move();
+            if(brain != null)
+                brain.move();
             calcVelocity();
             doGravity();
             handleAnimations();
@@ -191,9 +192,13 @@ public class WaterAnimal : Animal {
     /// <returns></returns>
     private IEnumerator flapBackToWater() {
         flagFlapBackToWater = true;
+        if (brain.GetType().Equals(typeof(WaterAnimalBrainNPC))) {
+            state.desiredHeading = ((AnimalBrainNPC)brain).RoamCenter - transform.position;
+            state.desiredHeading.y = 0;
+            state.desiredHeading.Normalize();
+        }
 
         const float speed = 100;
-        state.desiredHeading = -state.desiredHeading;
         Vector3 currentPos = transform.position;
         Vector3 halfwayControlPoint = Vector3.Lerp(currentPos, waterExitPoint, 0.5f) + Vector3.up * 100f;
 
@@ -206,7 +211,11 @@ public class WaterAnimal : Animal {
             transform.position = Vector3.Lerp(first, second, t);
             yield return 0;
         }
-
+        if (brain.GetType().Equals(typeof(WaterAnimalBrainNPC))) {
+            state.desiredHeading = ((AnimalBrainNPC)brain).RoamCenter - transform.position;
+            state.desiredHeading.y = 0;
+            state.desiredHeading.Normalize();
+        }
         flagFlapBackToWater = false;
     }
 

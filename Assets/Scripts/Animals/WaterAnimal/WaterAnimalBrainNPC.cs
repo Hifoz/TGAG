@@ -21,4 +21,14 @@ public class WaterAnimalBrainNPC : AnimalBrainNPC {
             state.desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * state.desiredHeading;
         }        
     }
+
+    /// <summary>
+    /// Tries to avoid obstacle
+    /// </summary>
+    protected override void avoidObstacle() {
+        int layerMask = 1 << 8;
+        if (Physics.Raycast(new Ray(state.transform.position, state.desiredHeading), 10f, layerMask)) {
+            state.desiredHeading = -state.desiredHeading;
+        }
+    }
 }

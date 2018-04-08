@@ -5,6 +5,7 @@ public abstract class AnimalBrainNPC : AnimalBrain {
 
     protected Vector3 roamCenter;
     virtual public float roamDist { get { return 50f; } }
+    virtual public Vector3 RoamCenter { get { return roamCenter; } }
 
     /// <summary>
     /// Spawns the animal at position
@@ -35,7 +36,7 @@ public abstract class AnimalBrainNPC : AnimalBrain {
     /// <summary>
     /// Tries to avoid obstacle
     /// </summary>
-    private void avoidObstacle() {
+    protected virtual void avoidObstacle() {
         int layerMask = 1 << 8;
         if (Physics.Raycast(new Ray(state.transform.position, state.desiredHeading), 10f, layerMask)) {
             state.desiredHeading = -state.desiredHeading;

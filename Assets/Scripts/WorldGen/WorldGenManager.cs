@@ -13,8 +13,6 @@ public enum WorldGenManagerStatsType {
     GENERATED_ANIMALS,
     CANCELLED_CHUNKS,
     ENABLED_COLLIDERS,
-    OBJECTS_ENABLED,
-    OBJECTS_DISABLED
 }
 
 /// <summary>
@@ -64,12 +62,14 @@ public class WorldGenManagerStats {
 /// </summary>
 public class WorldGenManager : MonoBehaviour {
     private Vector3 worldOffset;
-    private const float maxWorldDist = 1000f;
+    private const float worldShiftDistance = 1000f;
 
     public WorldGenManagerStats stats;
     public Transform player;
     public TextureManager textureManager;
     public GameObject chunkPrefab;
+    public Material materialWater;
+    public Material materialTerrain;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
@@ -87,6 +87,8 @@ public class WorldGenManager : MonoBehaviour {
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
     private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
+    private List<Result> waitingChunks = new List<Result>();
+    private const float chunkLaunchDistance = 275f; //Only chunks inside this range get deployed
 
     // Animals
     private GameObjectPool[] animalPools = new GameObjectPool[3];
@@ -116,7 +118,7 @@ public class WorldGenManager : MonoBehaviour {
         orderNewChunks();
         consumeThreadResults();
         handleAnimals();
-    }
+    }   
 
     /// <summary>
     /// Gets animals
@@ -143,7 +145,6 @@ public class WorldGenManager : MonoBehaviour {
     //                                                                      
     //                                                                      
 
-
     /// <summary>
     /// Handles animals
     /// </summary>
@@ -156,7 +157,6 @@ public class WorldGenManager : MonoBehaviour {
                     deSpawn.Push(animalObj);
                 } else {
                     if (!orderedAnimals.Contains(animalObj)) {
-                        tryDisable(animalObj, animalObj.transform.position);
                     }
                     if (animalObj.activeSelf) {
                         enableColliders(animalObj.transform.position);
@@ -189,7 +189,6 @@ public class WorldGenManager : MonoBehaviour {
             Vector3Int chunkPos = world2ChunkPos(activeChunks[i].pos);
             if (checkBounds(chunkPos.x, chunkPos.z)) {
                 chunkGrid[chunkPos.x, chunkPos.z] = activeChunks[i];
-                tryDisable(activeChunks[i].chunkParent, activeChunks[i].pos);
             } else {
                 GameObject chunk = activeChunks[i].chunkParent;
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
@@ -241,13 +240,41 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     private void consumeThreadResults() {
         int consumed = 0;
+        Vector3 realPlayerPos = player.position + worldOffset;
+
+        //Consume waiting chunks
+        for (int i = 0; i < waitingChunks.Count; i++) {
+            float distance = Vector3.Distance(waitingChunks[i].chunkVoxelData.chunkPos, realPlayerPos);
+            if (distance <= chunkLaunchDistance) {
+                Result result = waitingChunks[i];
+                waitingChunks.RemoveAt(i);
+                i--;
+                consumed++;
+                launchOrderedChunk(result);
+                if (consumed >= Settings.MaxChunkLaunchesPerUpdate) {
+                    break;
+                }
+            } else {
+                Vector3Int chunkPos = world2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
+                if (!checkBounds(chunkPos.x, chunkPos.z)) {
+                    pendingChunks.Remove(waitingChunks[i].chunkVoxelData.chunkPos);
+                    waitingChunks.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+        
+
+        //Consume fresh thread results
         while(results.getCount() > 0 && consumed < Settings.MaxChunkLaunchesPerUpdate) {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
-                    ChunkData cd = launchOrderedChunk(result.chunkVoxelData);
-                    StartCoroutine(orderAnimals(cd));
-                    stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS]++;
+                    if (Vector3.Distance(result.chunkVoxelData.chunkPos, realPlayerPos) > chunkLaunchDistance) {
+                        waitingChunks.Add(result);
+                        break;
+                    }
+                    launchOrderedChunk(result);
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
@@ -260,6 +287,15 @@ public class WorldGenManager : MonoBehaviour {
             }
             consumed++;
         }
+    }
+
+    /// <summary>
+    /// Deploys ordered chunks from the ChunkVoxelDataThreads.
+    /// </summary>
+    private void launchOrderedChunk(Result result) {
+        ChunkData cd = launchOrderedChunk(result.chunkVoxelData);
+        StartCoroutine(orderAnimals(cd));
+        stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS]++;
     }
 
     /// <summary>
@@ -285,6 +321,7 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.GetComponent<MeshCollider>().convex = false;
             subChunk.GetComponent<MeshCollider>().enabled = false;
             subChunk.name = "terrainSubChunk";
+            subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
             subChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             cd.terrainChunk.Add(subChunk);
@@ -300,6 +337,7 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
             waterChunk.GetComponent<MeshCollider>().enabled = false;
             waterChunk.name = "waterSubChunk";
+            waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial.SetTexture("_TexArr", textureManager.getTextureArray());
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             cd.waterChunk.Add(waterChunk);
@@ -367,7 +405,7 @@ public class WorldGenManager : MonoBehaviour {
             AnimalUtils.addAnimalBrainNPC(animal.GetComponent<Animal>());
             orders.Add(new Order(animal.transform.position + worldOffset, animalSkeleton, Task.ANIMAL));
             orderedAnimals.Add(animal);
-            animal.SetActive(false);           
+            animal.SetActive(false);
         }
     }
 
@@ -387,14 +425,14 @@ public class WorldGenManager : MonoBehaviour {
     private void offsetWorld() {
         Vector3 playerxz = Utils.elementWiseMult(player.position, new Vector3(1, 0, 1));
         playerxz = Utils.floorVector(playerxz);
-        if (playerxz.magnitude > maxWorldDist) {
+        if (playerxz.magnitude > worldShiftDistance) {
             Vector3 offset = calculateChunkPos(playerxz);
             worldOffset += offset;
 
             player.position -= offset;
             Player playerScript = player.gameObject.GetComponent<Player>();
             if (playerScript != null) { //Player might be a dummy
-                player.gameObject.GetComponent<Animal>().resetInWater();
+                player.gameObject.GetComponent<Animal>();
                 playerScript.worldOffset = worldOffset;
             }
 
@@ -407,7 +445,7 @@ public class WorldGenManager : MonoBehaviour {
             foreach (GameObjectPool pool in animalPools) {
                 foreach (GameObject animal in pool.activeList) {
                     animal.transform.position -= offset;
-                    animal.GetComponent<Animal>().resetInWater();
+                    animal.GetComponent<Animal>();
                 }
             }
         }        
@@ -507,29 +545,6 @@ public class WorldGenManager : MonoBehaviour {
     }
 
     /// <summary>
-    /// Tries do disable out of view objects
-    /// </summary>
-    /// <param name="obj">obj to disable</param>
-    /// <param name="pos">Position to use for checking angles with camera</param>
-    private void tryDisable(GameObject obj, Vector3 pos) {
-        Vector3 camPos = Camera.main.transform.position - Camera.main.transform.forward * 20;
-        pos.y = camPos.y;
-        Vector3 cam2chunk = pos - camPos;
-        cam2chunk.y = Camera.main.transform.forward.y;
-        if (cam2chunk.magnitude > WorldGenConfig.chunkSize * 10 && Vector3.Angle(cam2chunk, Camera.main.transform.forward) > 90) {
-            if (obj.activeSelf) {
-                obj.SetActive(false);
-                stats.aggregateValues[WorldGenManagerStatsType.OBJECTS_DISABLED]++;
-            }
-        } else {
-            if (!obj.activeSelf) {
-                obj.SetActive(true);
-                stats.aggregateValues[WorldGenManagerStatsType.OBJECTS_ENABLED]++;
-            }
-        }
-    }
-
-    /// <summary>
     /// Checks if X and Y are in bound for the ChunkGrid array.
     /// </summary>
     /// <param name="x">x index</param>
@@ -612,6 +627,7 @@ public class WorldGenManager : MonoBehaviour {
         stopThreads();
         orderedAnimals.Clear();
         pendingChunks.Clear();
+        waitingChunks.Clear();
 
         while (activeChunks.Count > 0) {
             Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
@@ -683,12 +699,21 @@ public class WorldGenManager : MonoBehaviour {
             s += string.Format("{0}: {1}\n{0}_LAST_SECOND: {2}\n\n", stat.Key.ToString(), stat.Value, stats.lastSecondValues[stat.Key]);
         }
 
+        s += "CURRENT_WAITING_CHUNKS: " + waitingChunks.Count + "\n";
         s += "CURRENT_CHUNK_ORDERS: " + pendingChunks.Count + "\n";
         s += "CURRENT_ANIMAL_ORDERS: " + orderedAnimals.Count + "\n\n";
 
+        s += "ACTIVE_CHUNKS: " + activeChunks.Count + "\n";
+        int activeAnimals = 0;
+        foreach (GameObjectPool pool in animalPools) {
+            activeAnimals += pool.activeList.Count;
+        }
+        s += "ACTIVE_ANIMALS: " + activeAnimals + "\n\n";
+
         s += "WORLD_OFFSET: " + worldOffset + "\n";
-        s += "WORLD_OFFSET_INTERVAL: " + maxWorldDist + "\n";
-        s += "PLAYER_DISTANCE: " + Player.playerPos.get().magnitude;
+        s += "WORLD_OFFSET_INTERVAL: " + worldShiftDistance + "\n";
+        s += "PLAYER_DISTANCE: " + Player.playerPos.get().magnitude + "\n";
+        s += "CORRUPTION_FACTOR (Player): " + Corruption.corruptionFactor(Player.playerPos.get());
         return s;
     }
 

@@ -12,10 +12,7 @@ public static class NoiseUtils {
     /// <param name="vec">Vector3 to convert</param>
     /// <returns>int seed</returns>
     public static int Vector2Seed(Vector3 vec) {
-        float x = frac(vec.x * 314.17654f);
-        float y = frac(vec.y * 4986.654f);
-        float z = frac(vec.z * 1998.8454f);
-        return (int)( (x + y + z) * 16987.9964f);
+        return (int)((hash(vec.x) + hash(vec.y) + hash(vec.z)) * 16987.9964f);
     }
 
     /// <summary>
@@ -25,5 +22,15 @@ public static class NoiseUtils {
     /// <returns>fraction of input float</returns>
     private static float frac(float x) {
         return x - Mathf.Floor(x);
+    }
+
+    /// <summary>
+    /// Hash function, gotten from a forum post
+    /// https://forum.unity.com/threads/perlin-noise-procedural-shader.33725/
+    /// </summary>
+    /// <param name="n"></param>
+    /// <returns></returns>
+    public static float hash(float n) {
+        return frac(Mathf.Abs(Mathf.Sin(n) * 43758.5453f));
     }
 }

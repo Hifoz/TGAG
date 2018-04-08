@@ -9,6 +9,7 @@ class PoissonDiscSamplerTest : MonoBehaviour {
     public GameObject testObject;
 #pragma warning restore 649
 
+
     PoissonDiscSampler sampler;
 
 

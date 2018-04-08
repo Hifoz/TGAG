@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using System;
 
 public class Player : MonoBehaviour {
     // Values are needed in the CVDTs for calculating order priority
@@ -8,7 +9,7 @@ public class Player : MonoBehaviour {
     public static ThreadSafeVector3 playerRot = new ThreadSafeVector3();
     public static ThreadSafeVector3 playerSpeed = new ThreadSafeVector3();
     public Vector3 worldOffset;
-
+    
     public GameObject magicTrailPrefab;
 
     private GameObject magicTrail;
@@ -27,7 +28,22 @@ public class Player : MonoBehaviour {
         }
 
         rb = GetComponent<Rigidbody>();
+        StartCoroutine(addToCollection());
     }
+
+    /// <summary>
+    /// Adds the player animal to the animal collection;
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator addToCollection() {
+        yield return new WaitForSeconds(0.5f);
+        GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().addAnimal(new CollectedAnimal {
+            skeletonSeed = GetComponent<Animal>().getSkeleton().getSeed(),
+            animalType = GetComponent<Animal>().GetType()
+        });
+        GameObject.Find("AnimalCollectionPanel").GetComponent<AnimalCollection>().showAnimal(0);
+    }
+
 
     // Update is called once per frame
     void Update() {
@@ -53,9 +69,10 @@ public class Player : MonoBehaviour {
     /// </summary>
     /// <param name="magicTrail">The magic trail</param>
     /// <param name="animals">The list of all animals</param>
-    public void transferPlayer(GameObject magicTrail, GameObjectPool[] animals) {
+    public void transferPlayer(GameObject magicTrail, GameObjectPool[] animals, Vector3 worldOffset) {
         this.magicTrail = magicTrail;
         this.animalPool = animals;
+        this.worldOffset = worldOffset;
     }
 
     /// <summary>
@@ -120,7 +137,7 @@ public class Player : MonoBehaviour {
         AnimalBrainNPC otherBrain = (AnimalBrainNPC)AnimalUtils.addAnimalBrainNPC(myAnimal);
         otherBrain.takeOverPlayer();
 
-        other.AddComponent<Player>().transferPlayer(magicTrail, animalPool);
+        other.AddComponent<Player>().transferPlayer(magicTrail, animalPool, GetComponent<Player>().worldOffset);
 
         Camera.main.GetComponent<CameraController>().target = other.transform;
 

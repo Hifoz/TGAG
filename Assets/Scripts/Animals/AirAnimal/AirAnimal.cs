@@ -28,7 +28,8 @@ public class AirAnimal : Animal {
 
     override protected void Update() {
         if (skeleton != null) {
-            brain.move();
+            if(brain != null)
+                brain.move();
             calculateSpeedAndHeading();
             doGravity();
             calcVelocity();
@@ -263,11 +264,13 @@ public class AirAnimal : Animal {
     private void makeLegsRagDoll() {
         List<Bone> rightLegs = skeleton.getBones(BodyPart.RIGHT_LEGS);
         LineSegment rightLegsLine = skeleton.getLines(BodyPart.RIGHT_LEGS)[0];
-        StartCoroutine(ragdollLimb(rightLegs, rightLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
+        if (gameObject.activeInHierarchy)
+            StartCoroutine(ragdollLimb(rightLegs, rightLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
 
         List<Bone> leftLegs = skeleton.getBones(BodyPart.LEFT_LEGS);
         LineSegment leftLegsLine = skeleton.getLines(BodyPart.LEFT_LEGS)[0];
-        StartCoroutine(ragdollLimb(leftLegs, leftLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
+        if(gameObject.activeInHierarchy)
+            StartCoroutine(ragdollLimb(leftLegs, leftLegsLine, () => { return ragDollLegs; }, true, 5f, transform));
     }
 
     //    _____  _               _             __                  _   _                 
@@ -325,7 +328,7 @@ public class AirAnimal : Animal {
     /// </summary>
     override protected void notGroundedGravity() {
         state.grounded = false;
-        if (state.speed <= brain.fastSpeed / 2) {
+        if (brain != null && state.speed <= brain.fastSpeed / 2) {
             gravity += Physics.gravity * Time.deltaTime * (1 - state.speed / (brain.fastSpeed / 2f));
         } else {
             gravity = Vector3.zero;
@@ -354,6 +357,7 @@ public class AirAnimal : Animal {
         for (float t = 0; t <= 1f; t += Time.deltaTime) {
             state.grounded = false;
             state.inWater = false;
+            state.onWaterSurface = false;
             yield return 0;
         }
         acceleration = acceleration / 4;

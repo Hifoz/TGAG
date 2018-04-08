@@ -9,6 +9,7 @@ public class PremissiveBlockDataMap {
     private class xzData {
         public float height;
         public List<Pair<BiomeBase, float>> biomes;
+        public float corruptionFactor;
     }
 
     Vector3 chunkPos;
@@ -43,10 +44,11 @@ public class PremissiveBlockDataMap {
             if (!xzDataDict.TryGetValue(xzPos, out xzdata)) {
                 xzdata = new xzData();
                 xzdata.biomes = biomeManager.getInRangeBiomes(xzPos);
-                xzdata.height = ChunkVoxelDataGenerator.calcHeight(pos, xzdata.biomes);
+                xzdata.corruptionFactor = Corruption.corruptionFactor(pos);
+                xzdata.height = ChunkVoxelDataGenerator.calcHeight(pos, xzdata.biomes, xzdata.corruptionFactor);
                 xzDataDict.Add(xzPos, xzdata);
             }
-            return !ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)xzdata.height, xzdata.biomes);
+            return !ChunkVoxelDataGenerator.posContainsVoxel(pos, (int)xzdata.height, xzdata.biomes, xzdata.corruptionFactor);
         }
     } 
 }

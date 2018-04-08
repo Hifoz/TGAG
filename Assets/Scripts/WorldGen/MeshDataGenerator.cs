@@ -22,17 +22,15 @@ public class MeshDataGenerator {
 
     protected Vector3 offset;
 
-    private static ThreadSafeRng rng = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
+    private static ThreadSafeRng seedGen = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
 
 
     public enum MeshDataType {
         TERRAIN, WATER, ANIMAL
     }
     public enum GeneratorMode {
-        CULL, GREEDY
+        NAIVE, GREEDY
     };
-    
-    #region meshdata generation
 
     /// <summary>
     /// Generates all data needed for a mesh of cubes
@@ -41,51 +39,22 @@ public class MeshDataGenerator {
     /// The outermost layer (in x and z) is used to decide whether to add faces on the cubes on the second outermost layer (in x and z).</param>
     /// <returns>an array of meshdata objects made from input data</returns>
     public static MeshData[] GenerateMeshData(BlockDataMap pointmap, float voxelSize = 1f, Vector3 offset = default(Vector3), 
-                                              MeshDataType meshDataType = MeshDataType.TERRAIN) {
+                                              MeshDataType meshDataType = MeshDataType.TERRAIN, int seed = -1, GeneratorMode genMode = GeneratorMode.NAIVE) {
+        if (seed == -1)
+            seed = seedGen.randomInt();
 
-        /*
+        /* GREEDY DISABLED DUE TO GLITTER ARTIFACTING
         if (mode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
             GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType);
             return gmg.generateMeshData();
         }
         */
 
+        NaiveMeshDataGenerator nmg = new NaiveMeshDataGenerator(pointmap, voxelSize, offset, meshDataType, seed);
+        return nmg.generateMeshData();
 
-        MeshDataGenerator MDG = new MeshDataGenerator();
-        NaiveMeshGenerator nmg = new NaiveMeshGenerator(pointmap, voxelSize, offset, meshDataType);
-        MDG.meshDataType = meshDataType;
-        MDG.offset = offset;
-
-        MDG.pointmap = pointmap;
-
-        if (meshDataType == MeshDataType.ANIMAL) {
-            //X = frequency, Y = seed
-            MDG.animalData = new Vector2(rng.randomFloat(0.2f, 0.8f), rng.randomFloat(0.0f, 1.0f));
-        }
-
-        for (int x = 1; x < pointmap.GetLength(0) - 1; x++) {
-            for (int y = 0; y < pointmap.GetLength(1); y++) {
-                for (int z = 1; z < pointmap.GetLength(2) - 1; z++) {
-                    if ((meshDataType != MeshDataType.WATER && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) ||
-                        (meshDataType == MeshDataType.WATER && pointmap.mapdata[pointmap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER)) {
-                        MDG.GenerateCube(new Vector3Int(x, y, z), pointmap.mapdata[pointmap.index1D(x, y, z)], voxelSize);
-                    }
-                }
-            }
-        }
-
-
-        MeshData meshData = new MeshData();
-        meshData.vertices = MDG.vertices.ToArray();
-        meshData.normals = MDG.normals.ToArray();
-        meshData.triangles = MDG.triangles.ToArray();
-        meshData.colors = MDG.colors.ToArray();
-        meshData.uvs = MDG.uvs.ToArray();
-        return meshData.split();
     }
 
-
-    #region mesh building
 
     /// <summary>
     /// NB! Not thread safe! Do not call from threads other then the main thread.
@@ -143,6 +112,4 @@ public class MeshDataGenerator {
         mesh.uv = md.uvs;
         return mesh;
     }
-
-    #endregion
 }
