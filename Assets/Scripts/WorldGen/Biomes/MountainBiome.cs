@@ -19,7 +19,7 @@ class MountainBiome : BiomeBase {
             corruptionRate: 0.5f,
             corruptionFrequency: 0.05f,
             //Foliage
-            maxTreesPerChunk: 4,
+            maxTreesPerChunk: 6,
             treeLineLength: 2.0f,
             treeVoxelSize: 1.0f,
             treeThickness: 0.5f,
