@@ -32,7 +32,7 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
     void Start() {
         Settings.load();
         biomeManager = new BiomeManager();
-        WorldGenConfig.chunkCount = 20;
+        WorldGenConfig.chunkCount = 10; //Was 20 pre shaderOpt, which doubled chunkSize and halved chunkCount
         offset = new Vector3(-WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize, 0, -WorldGenConfig.chunkCount / 2f * WorldGenConfig.chunkSize);
     }
 

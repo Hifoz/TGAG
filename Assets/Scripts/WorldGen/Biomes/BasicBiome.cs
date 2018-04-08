@@ -19,7 +19,7 @@ class BasicBiome : BiomeBase {
             corruptionRate: 0.5f,
             corruptionFrequency: 0.02f,
             //Foliage
-            maxTreesPerChunk: 1,
+            maxTreesPerChunk: 2,
             treeLineLength: 2.0f,
             treeVoxelSize: 1.0f,
             treeThickness: 0.5f,

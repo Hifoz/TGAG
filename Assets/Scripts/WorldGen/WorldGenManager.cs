@@ -237,21 +237,15 @@ public class WorldGenManager : MonoBehaviour {
     /// Consumes results from Worker threads.
     /// </summary>
     private void consumeThreadResults() {
-        int consumed = 0;
         Vector3 realPlayerPos = player.position + worldOffset;
-
         //Consume waiting chunks
         for (int i = 0; i < waitingChunks.Count; i++) {
             float distance = Vector3.Distance(waitingChunks[i].chunkVoxelData.chunkPos, realPlayerPos);
             if (distance <= chunkLaunchDistance) {
                 Result result = waitingChunks[i];
                 waitingChunks.RemoveAt(i);
-                i--;
-                consumed++;
                 launchOrderedChunk(result);
-                if (consumed >= Settings.MaxChunkLaunchesPerUpdate) {
-                    break;
-                }
+                return;                
             } else {
                 Vector3Int chunkPos = world2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
                 if (!checkBounds(chunkPos.x, chunkPos.z)) {
@@ -264,7 +258,7 @@ public class WorldGenManager : MonoBehaviour {
         
 
         //Consume fresh thread results
-        while(results.getCount() > 0 && consumed < Settings.MaxChunkLaunchesPerUpdate) {
+        if (results.getCount() > 0) {
             Result result = results.Dequeue();
             switch (result.task) {
                 case Task.CHUNK:
@@ -283,7 +277,6 @@ public class WorldGenManager : MonoBehaviour {
                     stats.aggregateValues[WorldGenManagerStatsType.CANCELLED_CHUNKS]++;
                     break;
             }
-            consumed++;
         }
     }
 
