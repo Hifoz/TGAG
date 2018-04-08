@@ -71,6 +71,7 @@ public class WorldGenManager : MonoBehaviour {
     public Material materialWater;
     public Material materialTerrain;
     public Material materialWindDebug;
+    public GameObject windParticleSystemPrefab;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
@@ -368,7 +369,34 @@ public class WorldGenManager : MonoBehaviour {
         windChunk.name = "windSubChunk";
         windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
         windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        windChunk.GetComponent<MeshRenderer>().enabled = false;
         cd.waterChunk.Add(windChunk);
+
+        // Add wind particle system to chunks
+        GameObject particleSystem = Instantiate(windParticleSystemPrefab);
+        particleSystem.transform.SetParent(chunk.transform);
+        particleSystem.transform.position = chunkMeshData.chunkPos;
+        ParticleSystem ps = particleSystem.GetComponent<ParticleSystem>();
+        ParticleSystem.ShapeModule psShape = ps.shape;
+
+
+
+        float heightPos = 150;
+        if (biomeManager.getClosestBiome(new Vector2Int((int)chunkMeshData.chunkPos.x, (int)chunkMeshData.chunkPos.z)).biomeName == "ocean") {
+            heightPos += WorldGenConfig.waterEndLevel;
+        } else {
+            heightPos += WindController.globalWindHeight;
+        }
+        particleSystem.transform.position += new Vector3(0, heightPos, 0);
+
+
+        // Set the velocity
+        ParticleSystem.VelocityOverLifetimeModule psVel = ps.velocityOverLifetime;
+        Vector2 vel = new Vector2(chunk.transform.position.x, chunk.transform.position.z).normalized;
+        psVel.x = vel.x;
+        psVel.y = -0.15f;
+        psVel.z = vel.y;
+
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         Mesh[] treeColliders = new Mesh[chunkMeshData.trees.Length];

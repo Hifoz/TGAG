@@ -14,6 +14,10 @@ public class LandAnimal : Animal {
     LandAnimalSkeleton landSkeleton;
     private float speedAnimScaling;
 
+    protected override void Start() {
+        base.Start();
+    }
+
     // Update is called once per frame
     override protected void Update() {
         if (skeleton != null) {
@@ -160,6 +164,14 @@ public class LandAnimal : Animal {
 
         if (state.inWater)
             velocity *= 0.4f;
+
+
+        if (state.inWindArea && !state.grounded && !state.inWater && transform.position.magnitude > 20f) {
+            velocity *= 0.7f;
+            velocity += WindController.globalWindDirection * WindController.globalWindSpeed * 0.7f;
+        }
+
+
 
         rb.velocity = velocity + gravity;
         transform.LookAt(state.transform.position + state.heading);
