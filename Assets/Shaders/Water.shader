@@ -4,7 +4,7 @@ Shader "Custom/Water" {
 	Properties {
 		[NoScaleOffset] _SkyCubemap("Skybox", Cube) = "" {}
 		[NoScaleOffset] _SkyCubemapCorrupted("Corrupted Skybox", Cube) = "" {}
-		_CorruptionFactor("Corruption Factor", Float) = 0
+		_CorruptionFactor("Corruption Factor", Range(0, 1)) = 0
 	}
 	SubShader{
 		Pass {

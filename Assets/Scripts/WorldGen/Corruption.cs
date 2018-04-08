@@ -22,6 +22,7 @@ public class Corruption : MonoBehaviour {
     /// <param name="pos">position to calculate corruption for</param>
     /// <returns></returns>
     public static float corruptionFactor(Vector3 pos) {
+        //return 0.99f;
         pos.y = 0;
         float corruptionFactor = (pos.magnitude - pristineWorldDistance) / (maxWorldDistance - pristineWorldDistance);
         corruptionFactor = Mathf.Clamp01(corruptionFactor);

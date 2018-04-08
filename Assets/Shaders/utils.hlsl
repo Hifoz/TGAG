@@ -48,31 +48,8 @@ float noise(float3 x, float freq) {
 	return noise(x * freq);
 }
 
-float noise(float3 x, float3 freq, int octaves) {
-	float strength = 1;
-	float scaling = strength;
-	float value = 0;
-	for (int i = 0; i < octaves; i++) {
-		value += noise(x * freq) * strength;
-		strength /= 2;
-		scaling += strength;
-		freq *= 2;
-	}
-	return value / scaling;
-}
-
-
-float noise(float3 x, float freq, int octaves) {
-	float strength = 1;
-	float scaling = strength;
-	float value = 0;
-	for (int i = 0; i < octaves; i++) {
-		value += noise(x * freq) * strength;
-		strength /= 2;
-		scaling += strength;
-		freq *= 2;
-	}
-	return value / scaling;
+float noise(float3 x, float3 freq) {
+	return noise(x * freq);
 }
 
 /*

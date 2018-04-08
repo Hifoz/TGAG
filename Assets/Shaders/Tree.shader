@@ -49,13 +49,8 @@
 			static const int COLOR_COUNT = 2;
 
 			static float3 frequencies[COLOR_COUNT] = {
-				float3(4.74, 0.74, 4.74),	//Wood
+				float3(8.74, 0.84, 8.74),	//Wood
 				float3(4.74, 4.74, 4.74)	//Leaf
-			};
-
-			static int octaves[COLOR_COUNT] = {
-				2,	//Wood
-				2	//Leaf
 			};
 
 			static fixed3 colors1[COLOR_COUNT] = {
@@ -69,7 +64,7 @@
 			};
 
 			fixed3 calculateColor(float3 samplePos, int index) {
-				float n = noise(samplePos, frequencies[index], octaves[index]);
+				float n = noise(samplePos, frequencies[index]);
 				fixed3 baseColor = lerp(colors1[index], colors2[index], n);
 				fixed3 colorTrunk = 
 					baseColor * (n >= 0.4) * (n <= 0.6) +

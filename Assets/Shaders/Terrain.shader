@@ -52,21 +52,14 @@ Shader "Custom/Terrain" {
 			static const int COLOR_COUNT = 5;
 			static const float lodDist = 250; //250
 			static const float lodStartDist = 100; //100
+			static const float lodNoiseDist = 60;
 
 			static float frequencies[COLOR_COUNT] = {
-				4.74,	//Dirt
+				14.74,	//Dirt
 				4.74,	//Stone
-				4.74,	//Sand
-				2.74,	//Grass
+				7.74,	//Sand
+				12.74,	//Grass
 				2.74	//Snow
-			};
-
-			static int octaves[COLOR_COUNT] = {
-				2,	//Dirt
-				2,	//Stone
-				2,	//Sand
-				2,	//Grass
-				2	//Snow
 			};
 
 			static fixed3 colors1[COLOR_COUNT] = {
@@ -80,14 +73,14 @@ Shader "Custom/Terrain" {
 			static fixed3 colors2[COLOR_COUNT] = {
 				colors1[0] / 1.5,	//Dirt
 				colors1[1] / 2,		//Stone
-				colors1[2] / 1.3,	//Sand
+				colors1[2] / 1.4,	//Sand
 				colors1[3] / 1.5,	//Grass
 				colors1[4] / 1.5	//Snow
 			};
 
 			fixed3 calculateColor(float3 samplePos, int index, float lod) {
-				float n = noise(samplePos, frequencies[index], octaves[index]);
-				return lerp(colors1[index], colors2[index], n * lod + (1 - lod) * 0.5);
+				float n = noise(samplePos, frequencies[index] * lod + frequencies[index] * (1 - lod) * 0.4);
+				return lerp(colors1[index], colors2[index], n);
 			}
 	
 			v2f vert(appdata v) {
@@ -117,19 +110,20 @@ Shader "Custom/Terrain" {
 				//shadow
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
-				fixed3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
-				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
+				fixed3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 2);
+				fixed3 light = (i.diff + specular * 0.15) * shadow  + i.ambient;
 				//Color
 				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
 				//LOD works by making block 100% modifier color at a distance, so grass block would become 100% green at a distance
 				// This helps reduce aliasing, which shows it self as brown/green wave thinges.
 				// The block transition into 100% modifier color between lodStart and lod.
 				float dist = length(i.posEye);
-				float lod = length(i.posEye) < lodDist;
+				float lod = dist < lodDist;
+				float noiseLod = dist < lodNoiseDist;
 				float lodStart = dist > lodStartDist;
 				float lodLevel = saturate((dist - lodStart) / lodDist);
-				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, lod);
-				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, lod);
+				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, noiseLod);
+				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, noiseLod);
 				//work out modifiers, for side blending
 				float blendingNoise = noise(i.worldPos, 6.4) / 10;
 				fixed normal = (i.uv.y  < ((0.8 + blendingNoise * (1 - lodStart)) * (1 - lodLevel))) * lod;
