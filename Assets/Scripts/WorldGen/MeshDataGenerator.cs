@@ -9,21 +9,7 @@ using UnityEngine;
 /// A Voxel Mesh generator 
 /// </summary>
 public class MeshDataGenerator {
-    public static GeneratorMode mode = GeneratorMode.GREEDY;
-    protected MeshDataType meshDataType;
-
-    protected List<Vector3> vertices = new List<Vector3>();
-    protected List<Vector3> normals = new List<Vector3>();
-    protected List<int> triangles = new List<int>();
-    protected List<Color> colors = new List<Color>();
-    protected List<Vector2> uvs = new List<Vector2>();
-    protected Vector2 animalData; //This vector will populate the animal UV, contains data used for noise seed and animal skin type.
-    protected BlockDataMap pointmap;
-
-    protected Vector3 offset;
-
     private static ThreadSafeRng seedGen = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
-
 
     public enum MeshDataType {
         TERRAIN, WATER, ANIMAL

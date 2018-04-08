@@ -29,8 +29,8 @@ class NaiveMeshDataGenerator {
 
 
     public NaiveMeshDataGenerator(BlockDataMap blockDataMap, float voxelSize = 1f, Vector3 offset = default(Vector3),
-                              MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN,
-                              int seed = -1) {
+                                  MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN,
+                                  int seed = -1) {
         this.blockDataMap = blockDataMap;
         this.meshDataType = meshDataType;
         this.voxelSize = voxelSize;
@@ -38,8 +38,6 @@ class NaiveMeshDataGenerator {
 
         this.seed = seed;
         this.rng = new ThreadSafeRng(seed);
-
-
 
         if (meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
             //X = frequency, Y = seed
@@ -89,14 +87,14 @@ class NaiveMeshDataGenerator {
     /// </summary>
     /// <param name="voxelPos">position of voxel</param>
     /// <returns>
-    ///     If meshDataType == TERRAIN: Whether the voxel is opaque.
+    ///     If meshDataType == TERRAIN or ANIMAL: Whether the voxel is opaque.
     ///     If meshDataType == WATER: Whether the voxel is something other than water.
     /// </returns>
     protected bool checkVoxel(Vector3Int voxelPos) {
         switch (meshDataType) {
             case MeshDataGenerator.MeshDataType.WATER:
                 return blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER;
-            default: // MeshDataType.TERRAIN
+            default:
                 return !(blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.NONE ||
                             blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER);
         }
