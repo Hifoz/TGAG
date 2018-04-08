@@ -23,6 +23,7 @@ public class TextureManager : MonoBehaviour {
         // Textures loaded onto the gpu from here must be at the top of the TextureType enum in correct order.
         // Also, make sure the switch in  textures.hlsl::getTexel(...) matches
         addHalfWhite();
+        loadTextureFromFile("texcoords", TextureData.TextureType.NONE);
     }
 
     /// <returns>size required for textures</returns>
@@ -122,7 +123,7 @@ public class TextureManager : MonoBehaviour {
     /// <param name="path">Path to the file, relative to "Resources/"</param>
     /// <returns>Whether the texture was successfully loaded.</returns>
     public bool loadTextureFromFile(string path, TextureData.TextureType texType) {
-        Texture2D loadedTexture = Resources.Load<Texture2D>(path);
+        Texture2D loadedTexture = Resources.Load<Texture2D>("Textures/"+path);
         if (loadedTexture == null) {
             Debug.Log("Could not find file");
             return false;
