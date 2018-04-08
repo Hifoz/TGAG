@@ -26,6 +26,9 @@ public struct BlockData { // 2 bytes. 1 byte per blocktype stored
         COUNT
     }
 
+    public static BlockData Empty = new BlockData(BlockType.NONE);
+
+
     public BlockType blockType;
     public BlockType modifier;
 
@@ -33,4 +36,9 @@ public struct BlockData { // 2 bytes. 1 byte per blocktype stored
         this.blockType = baseType;
         this.modifier = modifier;
     }
+
+    public bool equals(BlockData other) {
+        return blockType == other.blockType && modifier == other.modifier;
+    }
+
 }

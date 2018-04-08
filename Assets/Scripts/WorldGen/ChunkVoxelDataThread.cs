@@ -171,14 +171,15 @@ public class ChunkVoxelDataThread {
     /// <returns>ChunkVoxelData</returns>
     private ChunkVoxelData handleChunkOrder(Order order) {
         ChunkVoxelData result = new ChunkVoxelData(order.position);
+
         //Generate the chunk terrain:
         BlockDataMap chunkBlockData = ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager);
         result.meshData = MeshDataGenerator.GenerateMeshData(chunkBlockData);
-        result.waterMeshData = WaterMeshDataGenerator.GenerateWaterMeshData(chunkBlockData);
+        result.waterMeshData = MeshDataGenerator.GenerateMeshData(chunkBlockData, meshDataType: MeshDataGenerator.MeshDataType.WATER);
 
 
         //Generate wind area:
-        result.windData = WaterMeshDataGenerator.GenerateWaterMeshData(ChunkVoxelDataGenerator.getWindAreaData(order.position, biomeManager), meshDataType: MeshDataGenerator.MeshDataType.BASIC)[0];
+        result.windData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getWindAreaData(order.position, biomeManager), meshDataType: MeshDataGenerator.MeshDataType.BASIC)[0];
 
 
         //Generate the trees in the chunk:

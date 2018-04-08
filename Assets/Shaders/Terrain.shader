@@ -1,8 +1,4 @@
-﻿//#define DRAW_BW
-//#define DRAW_NORMAL
-
-
-Shader "Custom/Terrain" {
+﻿Shader "Custom/Terrain" {
 	Properties {
 		_TexArr("Texture Array", 2DArray) = "" {}
 	}
@@ -89,13 +85,10 @@ Shader "Custom/Terrain" {
 				int modType = i.color.g + 0.5;
 				half4 o;
 
-#if DRAW_BW
-				o = float4(0.5, 0.5, 0.5, 1);
-#elif DRAW_NORMAL
-				o.rgb = i.worldNormal;
-#else
-				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1)));
-#endif
+				//o = UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 1));
+
+				o = getTexel(baseType, modType, i.worldPos, i.posEye, UNITY_SAMPLE_TEX2DARRAY(_TexArr, float3(i.uv.x, i.uv.y, 0)));
+				
 				o.rbg *= light;
 				return o;
 			}

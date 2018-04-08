@@ -19,6 +19,8 @@ public class BiomeManager {
 
     private System.Random rng;
 
+    #region public functions
+
     /// <summary>
     /// Constructor
     /// </summary>
@@ -132,6 +134,10 @@ public class BiomeManager {
     }
 
 
+    #endregion
+
+    #region private functions
+    
     /// <summary>
     /// Gets the distance from closest biome point
     /// </summary>
@@ -161,6 +167,7 @@ public class BiomeManager {
     }
 
 
+    #endregion
 
 
     private Vector2Int modifyPosition(Vector2Int vec) {
