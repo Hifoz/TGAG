@@ -9,6 +9,7 @@ using UnityEngine;
 /// </summary>
 public enum WorldGenManagerStatsType {
     GENERATED_CHUNKS = 0,
+    GENERATED_VERTICES_K,
     ORDERED_CHUNKS,
     GENERATED_ANIMALS,
     CANCELLED_CHUNKS,
@@ -62,7 +63,7 @@ public class WorldGenManagerStats {
 /// </summary>
 public class WorldGenManager : MonoBehaviour {
     private Vector3 worldOffset;
-    private const float worldShiftDistance = 1000f;
+    private const float worldShiftDistance = 10000f;
 
     public WorldGenManagerStats stats;
     public Transform player;
@@ -82,14 +83,15 @@ public class WorldGenManager : MonoBehaviour {
     private ChunkData[,] chunkGrid;
     private GameObjectPool chunkPool;
     private GameObjectPool treePool;
+    private List<Result> waitingChunks = new List<Result>();
+    private Queue<ChunkVoxelData> chunkLaunchingQueue = new Queue<ChunkVoxelData>();
+    private const float chunkLaunchDistance = 275f; //Only chunks inside this range get deployed
 
     // Thread communication
     private ChunkVoxelDataThread[] CVDT;
     private BlockingList<Order> orders;
     private LockingQueue<Result> results; //When CVDT makes a mesh for a chunk the result is put in this queue for this thread to consume.
-    private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT
-    private List<Result> waitingChunks = new List<Result>();
-    private const float chunkLaunchDistance = 275f; //Only chunks inside this range get deployed
+    private HashSet<Vector3> pendingChunks = new HashSet<Vector3>(); //Chunks that are currently worked on my CVDT    
 
     // Animals
     private GameObjectPool[] animalPools = new GameObjectPool[3];
@@ -116,6 +118,7 @@ public class WorldGenManager : MonoBehaviour {
         Debug.Log("THREADS: " + Settings.WorldGenThreads);
         biomeManager = new BiomeManager();
         Reset();
+        StartCoroutine(chunkLauncher());
     }
 
     // Update is called once per frame
@@ -259,8 +262,8 @@ public class WorldGenManager : MonoBehaviour {
             if (distance <= chunkLaunchDistance) {
                 Result result = waitingChunks[i];
                 waitingChunks.RemoveAt(i);
-                launchOrderedChunk(result);
-                return;                
+                chunkLaunchingQueue.Enqueue(result.chunkVoxelData);
+                i--;
             } else {
                 Vector3Int chunkPos = world2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
                 if (!checkBounds(chunkPos.x, chunkPos.z)) {
@@ -280,8 +283,8 @@ public class WorldGenManager : MonoBehaviour {
                     if (Vector3.Distance(result.chunkVoxelData.chunkPos, realPlayerPos) > chunkLaunchDistance) {
                         waitingChunks.Add(result);
                         break;
-                    }
-                    launchOrderedChunk(result);
+                    } 
+                    chunkLaunchingQueue.Enqueue(result.chunkVoxelData);                    
                     break;
                 case Task.ANIMAL:
                     applyOrderedAnimal(result.animalSkeleton);
@@ -298,121 +301,148 @@ public class WorldGenManager : MonoBehaviour {
     /// <summary>
     /// Deploys ordered chunks from the ChunkVoxelDataThreads.
     /// </summary>
-    private void launchOrderedChunk(Result result) {
-        ChunkData cd = launchOrderedChunk(result.chunkVoxelData);
-        StartCoroutine(orderAnimals(cd));
-        stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS]++;
-    }
+    private IEnumerator chunkLauncher() {
+        const double maxTime = 10f; //Max time spent launching chunks per update in milliseconds
+        Timer timer = new Timer();
 
-    /// <summary>
-    /// Deploys ordered chunks from the ChunkVoxelDataThreads.
-    /// </summary>
-    private ChunkData launchOrderedChunk(ChunkVoxelData chunkMeshData) {
-        pendingChunks.Remove(chunkMeshData.chunkPos);
-        chunkMeshData.chunkPos -= worldOffset;
-        ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
-
-        GameObject chunk = new GameObject();
-        chunk.name = "chunk";
-        chunk.transform.parent = transform;
-        cd.chunkParent = chunk;
-
-        // Create terrain subchunks
-        for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
-            GameObject subChunk = chunkPool.getObject();
-            subChunk.layer = 8;
-            subChunk.transform.parent = chunk.transform;
-            subChunk.transform.position = chunkMeshData.chunkPos;
-            subChunk.transform.localScale = Vector3.one;
-            MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
-            subChunk.GetComponent<MeshCollider>().isTrigger = false;
-            subChunk.GetComponent<MeshCollider>().convex = false;
-            subChunk.GetComponent<MeshCollider>().enabled = false;
-            subChunk.name = "terrainSubChunk";
-            subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
-            subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
-            subChunk.GetComponent<MeshRenderer>().enabled = true;
-            cd.terrainChunk.Add(subChunk);
-        }
-
-        // Create water subchunks
-        for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
-            GameObject waterChunk = chunkPool.getObject();
-            waterChunk.layer = 4;
-            waterChunk.transform.parent = chunk.transform;
-            waterChunk.transform.position = chunkMeshData.chunkPos;
-            waterChunk.transform.localScale = Vector3.one;
-            MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
-            waterChunk.GetComponent<MeshCollider>().convex = true;
-            waterChunk.GetComponent<MeshCollider>().isTrigger = true;
-            waterChunk.GetComponent<MeshCollider>().enabled = false;
-            waterChunk.name = "waterSubChunk";
-            waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
-            waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
-            waterChunk.GetComponent<MeshRenderer>().enabled = true;
-            cd.waterChunk.Add(waterChunk);
-        }
-
-        if(chunkMeshData.chunkPos.magnitude > 100) {
-
-            // Create wind mesh
-            GameObject windChunk = chunkPool.getObject();
-            windChunk.layer = 10;
-            windChunk.transform.parent = chunk.transform;
-            windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
-            windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
-            MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
-            windChunk.GetComponent<MeshCollider>().convex = true;
-            windChunk.GetComponent<MeshCollider>().isTrigger = true;
-            windChunk.GetComponent<MeshCollider>().enabled = false;
-            windChunk.name = "windSubChunk";
-            windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
-            windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            windChunk.GetComponent<MeshRenderer>().enabled = false;
-            cd.waterChunk.Add(windChunk);
-            
-
-            // Add wind particle system to chunks
-            GameObject particleSystem = Instantiate(windParticleSystemPrefab);
-            particleSystem.transform.SetParent(chunk.transform);
-            particleSystem.gameObject.name = "WindPE";
-            particleSystem.transform.position = chunkMeshData.chunkPos;
-
-            float heightPos = 150;
-            if (biomeManager.getClosestBiome(new Vector2Int((int)chunkMeshData.chunkPos.x, (int)chunkMeshData.chunkPos.z)).biomeName == "ocean") {
-                heightPos += WorldGenConfig.waterEndLevel;
-            } else {
-                heightPos += WindController.globalWindHeight;
+        while (true) {
+            while (chunkLaunchingQueue.Count == 0) {
+                yield return 0;
+                timer.reset();
             }
-            particleSystem.transform.position += new Vector3(0, heightPos, 0);
 
-            // Set the velocity
-            ParticleSystem ps = particleSystem.GetComponent<ParticleSystem>();
-            ParticleSystem.VelocityOverLifetimeModule psVOL = ps.velocityOverLifetime;
-            Vector2 vel = new Vector2(chunkMeshData.chunkPos.x, chunkMeshData.chunkPos.z).normalized * -WindController.globalWindSpeed;
-            psVOL.x = vel.x;
-            psVOL.y = -0.15f;
-            psVOL.z = vel.y;
+            ChunkVoxelData chunkMeshData = chunkLaunchingQueue.Dequeue();
 
-            cd.windParticleSystem = particleSystem;
+            chunkMeshData.chunkPos -= worldOffset;
+            ChunkData cd = new ChunkData(chunkMeshData.chunkPos);
+
+            GameObject chunk = new GameObject();
+            chunk.name = "chunk";
+            chunk.transform.parent = this.transform;
+            cd.chunkParent = chunk;
+
+            for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
+                GameObject subChunk = chunkPool.getObject();
+                subChunk.layer = 8;
+                subChunk.transform.parent = chunk.transform;
+                subChunk.transform.position = chunkMeshData.chunkPos;
+                MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
+                subChunk.GetComponent<MeshCollider>().isTrigger = false;
+                subChunk.GetComponent<MeshCollider>().convex = false;
+                subChunk.GetComponent<MeshCollider>().enabled = false;
+                subChunk.name = "terrainSubChunk";
+                subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
+                subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+                cd.terrainChunk.Add(subChunk);
+
+                stats.aggregateValues[WorldGenManagerStatsType.GENERATED_VERTICES_K] += subChunk.GetComponent<MeshFilter>().mesh.vertices.Length / 1000;
+                if (timer.get() > maxTime) {
+                    yield return 0;
+                    timer.reset();
+                }
+            }
+            
+            for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
+                GameObject waterChunk = chunkPool.getObject();
+                waterChunk.layer = 4;
+                waterChunk.transform.parent = chunk.transform;
+                waterChunk.transform.position = chunkMeshData.chunkPos;
+                MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
+                waterChunk.GetComponent<MeshCollider>().convex = true;
+                waterChunk.GetComponent<MeshCollider>().isTrigger = true;
+                waterChunk.GetComponent<MeshCollider>().enabled = false;
+                waterChunk.name = "waterSubChunk";
+                waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
+                waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+                cd.waterChunk.Add(waterChunk);
+
+                stats.aggregateValues[WorldGenManagerStatsType.GENERATED_VERTICES_K] += waterChunk.GetComponent<MeshFilter>().mesh.vertices.Length / 1000;
+                if (timer.get() > maxTime) {
+                    yield return 0;
+                    timer.reset();
+                }
+            }
+
+            if (chunkMeshData.chunkPos.magnitude > 100) {
+                // Create wind mesh
+                GameObject windChunk = chunkPool.getObject();
+                windChunk.layer = 10;
+                windChunk.transform.parent = chunk.transform;
+                windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
+                windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
+                MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
+                windChunk.GetComponent<MeshCollider>().convex = true;
+                windChunk.GetComponent<MeshCollider>().isTrigger = true;
+                windChunk.GetComponent<MeshCollider>().enabled = false;
+                windChunk.name = "windSubChunk";
+                windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
+                windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                windChunk.GetComponent<MeshRenderer>().enabled = false;
+                cd.waterChunk.Add(windChunk);
+
+
+                // Add wind particle system to chunks
+                GameObject particleSystem = Instantiate(windParticleSystemPrefab);
+                particleSystem.transform.SetParent(chunk.transform);
+                particleSystem.gameObject.name = "WindPE";
+                particleSystem.transform.position = chunkMeshData.chunkPos;
+
+                float heightPos = 150;
+                if (biomeManager.getClosestBiome(new Vector2Int((int)chunkMeshData.chunkPos.x, (int)chunkMeshData.chunkPos.z)).biomeName == "ocean") {
+                    heightPos += WorldGenConfig.waterEndLevel;
+                } else {
+                    heightPos += WindController.globalWindHeight;
+                }
+                particleSystem.transform.position += new Vector3(0, heightPos, 0);
+
+                // Set the velocity
+                ParticleSystem ps = particleSystem.GetComponent<ParticleSystem>();
+                ParticleSystem.VelocityOverLifetimeModule psVOL = ps.velocityOverLifetime;
+                Vector2 vel = new Vector2(chunkMeshData.chunkPos.x, chunkMeshData.chunkPos.z).normalized * -WindController.globalWindSpeed;
+                psVOL.x = vel.x;
+                psVOL.y = -0.15f;
+                psVOL.z = vel.y;
+
+                cd.windParticleSystem = particleSystem;
+
+                if (timer.get() > maxTime) {
+                    yield return 0;
+                    timer.reset();
+                }
+            }
+
+
+            GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
+            Mesh[] treeColliders = new Mesh[chunkMeshData.trees.Length];
+            for (int i = 0; i < trees.Length; i++) {
+                GameObject tree = treePool.getObject();
+                tree.transform.position = chunkMeshData.treePositions[i] + chunkMeshData.chunkPos;
+                tree.transform.parent = chunk.transform;
+                MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
+                treeColliders[i] = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
+                tree.GetComponent<MeshCollider>().enabled = false;
+                trees[i] = tree;
+
+                stats.aggregateValues[WorldGenManagerStatsType.GENERATED_VERTICES_K] += tree.GetComponent<MeshFilter>().mesh.vertices.Length / 1000;
+                if (timer.get() > maxTime) {
+                    yield return 0;
+                    timer.reset();
+                }
+            }
+            cd.trees = trees;
+            cd.treeColliders = treeColliders;
+
+            pendingChunks.Remove(chunkMeshData.chunkPos);
+            activeChunks.Add(cd);
+
+            stats.aggregateValues[WorldGenManagerStatsType.GENERATED_CHUNKS]++;
+            StartCoroutine(orderAnimals(cd));
+
+            if (timer.get() > maxTime) {
+                yield return 0;
+                timer.reset();
+            }
         }
-
-
-        GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
-        Mesh[] treeColliders = new Mesh[chunkMeshData.trees.Length];
-        for (int i = 0; i < trees.Length; i++) {
-            GameObject tree = treePool.getObject();
-            tree.transform.position = chunkMeshData.treePositions[i] + chunkMeshData.chunkPos;
-            tree.transform.parent = chunk.transform;
-            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
-            treeColliders[i] = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshCollider>().enabled = false;
-            trees[i] = tree;
-        }
-        cd.trees = trees;
-        cd.treeColliders = treeColliders;
-        activeChunks.Add(cd);
-        return cd;
     }
 
     /// <summary>
@@ -420,7 +450,7 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="cd">chunkdata</param>
     private IEnumerator orderAnimals(ChunkData cd) {
-        const float animalSpawnChance = 0.02f; //This means that a chunk has a 2% chance to spawn an animal
+        const float animalSpawnChance = 0.08f; //This means that a chunk has a 2% chance to spawn an animal
         if (UnityEngine.Random.Range(0f, 1f) < animalSpawnChance) {
             cd.tryEnableColliders();
             yield return new WaitForSeconds(1f); //Give the colliders a frame to initialize
@@ -545,13 +575,20 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="worldPos">Position to use</param>
     private void enableColliders(Vector3 worldPos) {
+        const float distanceTreshold = 60 * 60;
         Vector3Int index = world2ChunkPos(worldPos);
+
         for (int x = index.x - 1; x <= index.x + 1; x++) {
-            for (int z = index.z - 1; z <= index.z + 1; z++) {
-                if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
+            for (int z = index.z - 1; z <= index.z + 1; z++) {       
+                
+                if (checkBounds(x, z) && chunkGrid[x, z] != null && 
+                    chunkGrid[x, z].chunkParent.activeSelf && 
+                    Utils.sqrHeightNormalizedDistance(chunkGrid[x, z].pos, worldPos) < distanceTreshold) {
+
                     if(chunkGrid[x, z].tryEnableColliders()) {
                         stats.aggregateValues[WorldGenManagerStatsType.ENABLED_COLLIDERS]++;
                     }
+
                 }
             }
         }
@@ -682,6 +719,7 @@ public class WorldGenManager : MonoBehaviour {
         orderedAnimals.Clear();
         pendingChunks.Clear();
         waitingChunks.Clear();
+        chunkLaunchingQueue.Clear();
 
         while (activeChunks.Count > 0) {
             Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
