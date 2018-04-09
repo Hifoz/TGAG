@@ -655,6 +655,7 @@ public class WorldGenManager : MonoBehaviour {
         orderedAnimals.Clear();
         pendingChunks.Clear();
         waitingChunks.Clear();
+        chunkLaunchingQueue.Clear();
 
         while (activeChunks.Count > 0) {
             Destroy(activeChunks[0].terrainChunk[0].transform.parent.gameObject);
