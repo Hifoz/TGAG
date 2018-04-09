@@ -85,4 +85,26 @@ public static class Utils {
     public static Vector3 elementWiseMult(Vector3 a, Vector3 b) {
         return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
+
+    /// <summary>
+    /// Height normalized distance
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    public static float heightNormalizedDistance(Vector3 a, Vector3 b) {
+        a.y = b.y;
+        return Vector3.Distance(a, b);
+    }
+
+    /// <summary>
+    /// square of height normalized distance
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    public static float sqrHeightNormalizedDistance(Vector3 a, Vector3 b) {
+        a.y = b.y;
+        return Vector3.SqrMagnitude(a - b);
+    }
 }
