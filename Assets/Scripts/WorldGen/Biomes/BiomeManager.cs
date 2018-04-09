@@ -27,9 +27,10 @@ public class BiomeManager {
     public BiomeManager() {
         rng = new System.Random(WorldGenConfig.seed);
 
-        // Initialize biomes
+        // Initialize biomes:
         biomes.Add(new BasicBiome());
         biomes.Add(new MountainBiome());
+        biomes.Add(new OceanBiome());
         biomes.Add(new LowlandForestBiome());
         biomes.Add(new DesertBiome());
 
@@ -37,20 +38,46 @@ public class BiomeManager {
         // Initialize biome points
         biomeGrid = new Pair<BiomeBase, Vector2Int>[gridWidth, gridHeight];
         poissonSampler = new PoissonDiscSampler(radius, gridWidth, gridHeight, wrap: true, seed: WorldGenConfig.seed);
-        Vector2Int offset = new Vector2Int(gridWidth/2, gridHeight/2);
+        Vector2Int offset = new Vector2Int(gridWidth / 2, gridHeight / 2);
         foreach (Vector2Int sample in poissonSampler.sample()) {
             biomeGrid[sample.x, sample.y] = new Pair<BiomeBase, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * gridScale);
         }
     }
 
+    /// <summary>
+    /// Gets the biomes in a range around this point
+    /// </summary>
+    /// <param name="pos">position to check</param>
+    /// <param name="range">range to check</param>
+    /// <returns>A list of pairs containing biomes and their positions</returns>
+    public List<Pair<BiomeBase, Vector2Int>> getInRangeBiomes(Vector2Int pos, int range) {
+        List<Pair<BiomeBase, Vector2Int>> inRangeBiomes = new List<Pair<BiomeBase, Vector2Int>>();
+        int gridRange = range / gridScale;
+        Vector2Int offset = new Vector2Int(gridWidth / 2, gridHeight / 2);
+        Vector2Int posInGrid = new Vector2Int(pos.x / gridScale, pos.y / gridScale) + offset;
+        for (int x = posInGrid.x - gridRange; x < posInGrid.x + gridRange; x++) {
+            for (int y = posInGrid.y - gridRange; y < posInGrid.y + gridRange; y++) {
+                int gridX = Utils.mod(x, gridWidth);
+                int gridY = Utils.mod(y, gridHeight);
+
+                if (biomeGrid[gridX, gridY] != null) {
+                    float dist = Vector2Int.Distance(pos, biomeGrid[gridX, gridY].second);
+                    if (dist < range) {
+                        inRangeBiomes.Add(new Pair<BiomeBase, Vector2Int>(biomeGrid[gridX, gridY].first, new Vector2Int((x - offset.x) * gridScale, (y - offset.y) * gridScale)));
+                    }
+                }
+            }
+        }
+        return inRangeBiomes;
+    }
 
     /// <summary>
     /// Gets the biomes for this position.
     /// </summary>
     /// <param name="pos">position to sample</param>
+    /// <param name="range">Range to check. If no value is passed, the range wil use the distance from the closest biome + borderWidth</param>
     /// <returns>Biomes for this position and the distance from the sample pos to the biome point</returns>
     public List<Pair<BiomeBase, float>> getInRangeBiomes(Vector2Int pos) {
-
         pos = modifyPosition(pos);
 
 
@@ -148,6 +175,11 @@ public class BiomeManager {
         vec.y += (int)(SimplexNoise.Simplex1D(new Vector2(vec.y + 1234, vec.x + 4444), 0.01f) * 15);
 
         return vec;
+    }
+
+
+    public float getRadius() {
+        return radius * gridScale;
     }
 
 

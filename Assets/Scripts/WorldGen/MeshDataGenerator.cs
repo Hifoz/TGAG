@@ -12,7 +12,11 @@ public class MeshDataGenerator {
     private static ThreadSafeRng seedGen = new ThreadSafeRng(); //Point of having it static is so that different threads produce different results.
 
     public enum MeshDataType {
-        TERRAIN, WATER, ANIMAL, TREE
+        TERRAIN, // Used for terrain
+        WATER,   // Used for water
+        ANIMAL,  // Used for animals
+        TREE,    // Used for trees
+        BASIC    // Used for using unity default shader
     }
     public enum GeneratorMode {
         NAIVE, GREEDY
@@ -29,16 +33,15 @@ public class MeshDataGenerator {
         if (seed == -1)
             seed = seedGen.randomInt();
 
-        /* GREEDY DISABLED DUE TO GLITTER ARTIFACTING
-        if (mode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
+        // DONT USE GREEDY MESH GEN FOR ALL THINGS
+        if (genMode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
             GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType);
             return gmg.generateMeshData();
         }
-        */
+
 
         NaiveMeshDataGenerator nmg = new NaiveMeshDataGenerator(pointmap, voxelSize, offset, meshDataType, seed);
         return nmg.generateMeshData();
-
     }
 
 

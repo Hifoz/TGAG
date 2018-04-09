@@ -24,7 +24,7 @@ public class AirAnimalBrainPlayer : AnimalBrainPlayer {
                 state.desiredHeading.y = 0;
                 up = Vector3.up;
             }
-            state.desiredHeading.Normalize();          
+            state.desiredHeading.Normalize();
         }
 
         Vector3 finalHeading = Vector3.zero;

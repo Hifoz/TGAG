@@ -70,6 +70,8 @@ public class WorldGenManager : MonoBehaviour {
     public GameObject chunkPrefab;
     public Material materialWater;
     public Material materialTerrain;
+    public Material materialWindDebug;
+    public GameObject windParticleSystemPrefab;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
@@ -100,6 +102,14 @@ public class WorldGenManager : MonoBehaviour {
 
     // Biomes
     private BiomeManager biomeManager;
+
+    /// <summary>
+    /// Create biome manager
+    /// </summary>
+    void Awake() {
+        biomeManager = new BiomeManager();
+    }
+
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -199,6 +209,11 @@ public class WorldGenManager : MonoBehaviour {
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     chunkPool.returnObject(activeChunks[i].waterChunk[j]);
+                }
+                if(chunk != null) {
+                    Transform windParticleEffect = chunk.transform.Find("WindPE");
+                    if (windParticleEffect != null)
+                        Destroy(windParticleEffect.gameObject);
                 }
 
                 Destroy(chunk);
@@ -716,6 +731,14 @@ public class WorldGenManager : MonoBehaviour {
     //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                                                                   
     //         
+
+    /// <summary>
+    /// Returns the biomemanager
+    /// </summary>
+    public BiomeManager getBiomeManager() {
+        return biomeManager;
+    }
+
 
     /// <summary>
     /// Produces a string that contains debug data

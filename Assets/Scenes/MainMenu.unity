@@ -212,7 +212,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 76473631}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -751.5, y: -368, z: 5}
+  m_LocalPosition: {x: -725.5, y: -368, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1586219829}
@@ -361,7 +361,7 @@ Prefab:
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
       propertyPath: m_LocalPosition.x
-      value: 846.5
+      value: 820.5
       objectReference: {fileID: 0}
     - target: {fileID: 224498354223345382, guid: a81e118afb85ee84aa1d7f2d2c3054ef,
         type: 2}
@@ -682,7 +682,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 719064996}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -751.5001, y: -419.27753, z: 5}
+  m_LocalPosition: {x: -725.5001, y: -419.27753, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 56517848}
@@ -1009,6 +1009,9 @@ MonoBehaviour:
     type: 2}
   materialWater: {fileID: 2100000, guid: ea4f3b82432ff774398582c639fab0d7, type: 2}
   materialTerrain: {fileID: 2100000, guid: 25605bf9ee4f35849a8775317a3442e1, type: 2}
+  materialWindDebug: {fileID: 2100000, guid: 217f645f4697f4d488a8aac562fff483, type: 2}
+  windParticleSystemPrefab: {fileID: 1338328819240414, guid: f7f88ecb914311042b68ea2d6a6ffad8,
+    type: 2}
   treePrefab: {fileID: 1641519437749542, guid: 3399ea94a3e3a404cb738ccf09bc1b7e, type: 2}
   landAnimalPrefab: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb,
     type: 2}

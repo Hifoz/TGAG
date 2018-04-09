@@ -8,6 +8,7 @@ public class AnimalState {
     public bool onWaterSurface = false;
     public bool inWater = false;
     public bool grounded = false;
+    public bool inWindArea = false;
 
     public float desiredSpeed = 0;
     public float speed = 0;
@@ -17,4 +18,5 @@ public class AnimalState {
     public Vector3 spineHeading = Vector3.forward;
 
     public Transform transform;
+
 }

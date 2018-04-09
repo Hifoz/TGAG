@@ -12,6 +12,7 @@ public class ChunkData {
     public List<GameObject> waterChunk = new List<GameObject>();
     public GameObject[] trees;
     public Mesh[] treeColliders;
+    public GameObject windParticleSystem;
 
     private bool collidersEnabled = false;
 

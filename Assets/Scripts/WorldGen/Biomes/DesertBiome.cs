@@ -5,6 +5,7 @@
 class DesertBiome : BiomeBase {
     public DesertBiome() :
         base(
+            name: "desert",
             //General
             minGroundHeight:30,
             maxGroundHeight:160,
