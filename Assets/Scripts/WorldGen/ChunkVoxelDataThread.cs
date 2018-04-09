@@ -13,6 +13,8 @@ public class ChunkVoxelData {
     public Vector3[] treePositions;
     public MeshData windData;
 
+    public BlockDataMap blockDataMap;
+
     public ChunkVoxelData(Vector3 position) {
         this.chunkPos = position;
     }
@@ -208,6 +210,7 @@ public class ChunkVoxelDataThread {
         result.trees = trees.ToArray();
         result.treeTrunks = treeTrunks.ToArray();
         result.treePositions = treePositions.ToArray();
+        result.blockDataMap = chunkBlockData;
         return result;
     }
 

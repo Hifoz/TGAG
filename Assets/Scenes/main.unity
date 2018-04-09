@@ -137,7 +137,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 27318558}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -842, y: 504.54846, z: -12}
+  m_LocalPosition: {x: -852.73486, y: 504, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 546177072}
@@ -206,7 +206,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 31442308}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 519.54846, z: 0}
+  m_LocalPosition: {x: 0, y: 519, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1087241528}
@@ -353,7 +353,7 @@ SkinnedMeshRenderer:
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
   m_SkinnedMotionVectors: 1
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   m_Bones: []
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 0}
@@ -576,7 +576,7 @@ SkinnedMeshRenderer:
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
   m_SkinnedMotionVectors: 1
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   m_Bones: []
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 0}
@@ -890,7 +890,7 @@ SkinnedMeshRenderer:
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
   m_SkinnedMotionVectors: 1
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   m_Bones: []
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 0}
@@ -927,6 +927,7 @@ GameObject:
   - component: {fileID: 988479787}
   - component: {fileID: 988479786}
   - component: {fileID: 988479788}
+  - component: {fileID: 988479789}
   m_Layer: 0
   m_Name: WorldGenManager
   m_TagString: Untagged
@@ -986,6 +987,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   materialWater: {fileID: 2100000, guid: ea4f3b82432ff774398582c639fab0d7, type: 2}
   sun: {fileID: 642251867}
+--- !u!114 &988479789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 988479785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a467e4206c9d864384ee45cbb33a95c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  worldGenManager: {fileID: 988479786}
 --- !u!1 &1058874300
 GameObject:
   m_ObjectHideFlags: 0
@@ -1136,7 +1149,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1087241527}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 642, y: 0, z: 0}
+  m_LocalPosition: {x: 652.73486, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 31442309}
@@ -1265,8 +1278,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1106974668}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 820.5, y: 462, z: 0}
-  m_LocalScale: {x: 0.8546875, y: 0.8546875, z: 0.8546875}
+  m_LocalPosition: {x: 844, y: 469.5, z: 0}
+  m_LocalScale: {x: 0.86944443, y: 0.86944443, z: 0.86944443}
   m_Children:
   - {fileID: 27318559}
   - {fileID: 1087241528}
@@ -1458,7 +1471,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1315024354}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ec19ce45adafd94394a7c5934375e89, type: 3}
+  m_Script: {fileID: 11500000, guid: 77833c7e7aa3105478d0b0a076f7ea80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1481660122
@@ -1713,12 +1726,12 @@ Prefab:
     - target: {fileID: 224585344475224754, guid: 21c3dc74cc9631145afcea40629523ac,
         type: 2}
       propertyPath: m_LocalPosition.x
-      value: 820.5
+      value: 844
       objectReference: {fileID: 0}
     - target: {fileID: 224585344475224754, guid: 21c3dc74cc9631145afcea40629523ac,
         type: 2}
       propertyPath: m_LocalPosition.y
-      value: 462
+      value: 469.5
       objectReference: {fileID: 0}
     - target: {fileID: 224585344475224754, guid: 21c3dc74cc9631145afcea40629523ac,
         type: 2}

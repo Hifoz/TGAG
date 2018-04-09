@@ -144,6 +144,14 @@ public class WorldGenManager : MonoBehaviour {
         return worldOffset;
     }
 
+    /// <summary>
+    /// Gets chunkgrid
+    /// </summary>
+    /// <returns></returns>
+    public ChunkData[,] getChunkGrid() {
+        return chunkGrid;
+    }
+
     //    __  __       _          __                  _   _                 
     //   |  \/  |     (_)        / _|                | | (_)                
     //   | \  / | __ _ _ _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -157,18 +165,11 @@ public class WorldGenManager : MonoBehaviour {
     /// Handles animals
     /// </summary>
     private void handleAnimals() {
-        enableColliders(player.position);
         foreach (GameObjectPool animalPool in animalPools) {
             Stack<GameObject> deSpawn = new Stack<GameObject>();
             foreach (GameObject animalObj in animalPool.activeList) {
                 if (!orderedAnimals.Contains(animalObj) && isAnimalTooFarAway(animalObj.transform.position)) {
                     deSpawn.Push(animalObj);
-                } else {
-                    if (!orderedAnimals.Contains(animalObj)) {
-                    }
-                    if (animalObj.activeSelf) {
-                        enableColliders(animalObj.transform.position);
-                    }
                 }
             }
             while (deSpawn.Count > 0) {
@@ -218,12 +219,6 @@ public class WorldGenManager : MonoBehaviour {
                 foreach(var tree in activeChunks[i].trees) {
                     tree.transform.parent = transform;
                     treePool.returnObject(tree);                    
-                }
-
-                foreach (var treeCollider in activeChunks[i].treeColliders) {
-                    if (treeCollider != null) {
-                        Destroy(treeCollider);
-                    }
                 }
 
                 activeChunks.RemoveAt(i);
@@ -316,6 +311,7 @@ public class WorldGenManager : MonoBehaviour {
         chunk.name = "chunk";
         chunk.transform.parent = transform;
         cd.chunkParent = chunk;
+        cd.blockDataMap = chunkMeshData.blockDataMap;
 
         // Create terrain subchunks
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
@@ -325,9 +321,6 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.transform.position = chunkMeshData.chunkPos;
             subChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
-            subChunk.GetComponent<MeshCollider>().isTrigger = false;
-            subChunk.GetComponent<MeshCollider>().convex = false;
-            subChunk.GetComponent<MeshCollider>().enabled = false;
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
@@ -343,9 +336,6 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.transform.position = chunkMeshData.chunkPos;
             waterChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
-            waterChunk.GetComponent<MeshCollider>().convex = true;
-            waterChunk.GetComponent<MeshCollider>().isTrigger = true;
-            waterChunk.GetComponent<MeshCollider>().enabled = false;
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
@@ -362,9 +352,6 @@ public class WorldGenManager : MonoBehaviour {
             windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
             windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
             MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
-            windChunk.GetComponent<MeshCollider>().convex = true;
-            windChunk.GetComponent<MeshCollider>().isTrigger = true;
-            windChunk.GetComponent<MeshCollider>().enabled = false;
             windChunk.name = "windSubChunk";
             windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
             windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
@@ -405,12 +392,11 @@ public class WorldGenManager : MonoBehaviour {
             tree.transform.position = chunkMeshData.treePositions[i] + chunkMeshData.chunkPos;
             tree.transform.parent = chunk.transform;
             MeshDataGenerator.applyMeshData(tree.GetComponent<MeshFilter>(), chunkMeshData.trees[i]);
-            treeColliders[i] = MeshDataGenerator.applyMeshData(chunkMeshData.treeTrunks[i]);
-            tree.GetComponent<MeshCollider>().enabled = false;
+            MeshDataGenerator.applyMeshData(tree.GetComponent<MeshCollider>(), chunkMeshData.treeTrunks[i]);
+            tree.GetComponent<MeshCollider>().enabled = true;
             trees[i] = tree;
         }
         cd.trees = trees;
-        cd.treeColliders = treeColliders;
         activeChunks.Add(cd);
         return cd;
     }
@@ -422,7 +408,6 @@ public class WorldGenManager : MonoBehaviour {
     private IEnumerator orderAnimals(ChunkData cd) {
         const float animalSpawnChance = 0.02f; //This means that a chunk has a 2% chance to spawn an animal
         if (UnityEngine.Random.Range(0f, 1f) < animalSpawnChance) {
-            cd.tryEnableColliders();
             yield return new WaitForSeconds(1f); //Give the colliders a frame to initialize
 
             //Calculate spawn position
@@ -493,7 +478,6 @@ public class WorldGenManager : MonoBehaviour {
             foreach (ChunkData chunk in activeChunks) {
                 chunk.chunkParent.transform.position -= offset;
                 chunk.pos -= offset;
-                chunk.disableColliders();
             }
 
             foreach (GameObjectPool pool in animalPools) {
@@ -541,23 +525,6 @@ public class WorldGenManager : MonoBehaviour {
     }
 
     /// <summary>
-    /// Enables colliders in the area
-    /// </summary>
-    /// <param name="worldPos">Position to use</param>
-    private void enableColliders(Vector3 worldPos) {
-        Vector3Int index = world2ChunkPos(worldPos);
-        for (int x = index.x - 1; x <= index.x + 1; x++) {
-            for (int z = index.z - 1; z <= index.z + 1; z++) {
-                if (checkBounds(x, z) && chunkGrid[x, z] != null && chunkGrid[x, z].chunkParent.activeSelf) {
-                    if(chunkGrid[x, z].tryEnableColliders()) {
-                        stats.aggregateValues[WorldGenManagerStatsType.ENABLED_COLLIDERS]++;
-                    }
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// Takes a nomral world pos and turns it into a chunkpos (chunkSize normalized)
     /// </summary>
     /// <param name="pos"></param>
@@ -583,17 +550,17 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="worldPos">Worldpos to convert</param>
     /// <returns>chunkpos</returns>
-    private Vector3Int world2ChunkPos(Vector3 worldPos) {
+    public Vector3Int world2ChunkPos(Vector3 worldPos) {
         Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / WorldGenConfig.chunkSize;
         return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
-    } 
+    }
 
     /// <summary>
     /// Calculates worldpos from chunkpos (ChunkGrid index)
     /// </summary>
     /// <param name="chunkPos">Chunkpos to convert</param>
     /// <returns>Wolrd pos</returns>
-    private Vector3 chunkPos2world(Vector3 chunkPos) {
+    public Vector3 chunkPos2world(Vector3 chunkPos) {
         Vector3 world = chunkPos * WorldGenConfig.chunkSize + offset + getPlayerPos();
         return world;
     }
@@ -604,7 +571,7 @@ public class WorldGenManager : MonoBehaviour {
     /// <param name="x">x index</param>
     /// <param name="y">y index (worldspace z)</param>
     /// <returns>bool in bound</returns>
-    private bool checkBounds(int x, int y) {
+    public bool checkBounds(int x, int y) {
         return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
     }
 
@@ -696,12 +663,6 @@ public class WorldGenManager : MonoBehaviour {
 
             foreach (var tree in activeChunks[0].trees) {
                 Destroy(tree);
-            }
-
-            foreach (var treeCollider in activeChunks[0].treeColliders) {
-                if (treeCollider != null) {
-                    Destroy(treeCollider);
-                }
             }
 
             activeChunks.RemoveAt(0);
