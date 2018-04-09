@@ -69,6 +69,8 @@ public class WorldGenManager : MonoBehaviour {
     public GameObject chunkPrefab;
     public Material materialWater;
     public Material materialTerrain;
+    public Material materialWindDebug;
+    public GameObject windParticleSystemPrefab;
     public GameObject treePrefab;
     public GameObject landAnimalPrefab;
     public GameObject airAnimalPrefab;
@@ -98,6 +100,14 @@ public class WorldGenManager : MonoBehaviour {
 
     // Biomes
     private BiomeManager biomeManager;
+
+    /// <summary>
+    /// Create biome manager
+    /// </summary>
+    void Awake() {
+        biomeManager = new BiomeManager();
+    }
+
 
     /// <summary>
     /// Generate an initial set of chunks in the world
@@ -196,6 +206,11 @@ public class WorldGenManager : MonoBehaviour {
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
                     activeChunks[i].waterChunk[j].transform.parent = this.transform;
                     chunkPool.returnObject(activeChunks[i].waterChunk[j]);
+                }
+                if(chunk != null) {
+                    Transform windParticleEffect = chunk.transform.Find("WindPE");
+                    if (windParticleEffect != null)
+                        Destroy(windParticleEffect.gameObject);
                 }
 
                 Destroy(chunk);
@@ -299,14 +314,16 @@ public class WorldGenManager : MonoBehaviour {
 
         GameObject chunk = new GameObject();
         chunk.name = "chunk";
-        chunk.transform.parent = this.transform;
+        chunk.transform.parent = transform;
         cd.chunkParent = chunk;
 
+        // Create terrain subchunks
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
             GameObject subChunk = chunkPool.getObject();
             subChunk.layer = 8;
             subChunk.transform.parent = chunk.transform;
             subChunk.transform.position = chunkMeshData.chunkPos;
+            subChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
             subChunk.GetComponent<MeshCollider>().isTrigger = false;
             subChunk.GetComponent<MeshCollider>().convex = false;
@@ -314,14 +331,17 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.name = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
+            subChunk.GetComponent<MeshRenderer>().enabled = true;
             cd.terrainChunk.Add(subChunk);
         }
 
+        // Create water subchunks
         for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
             GameObject waterChunk = chunkPool.getObject();
             waterChunk.layer = 4;
             waterChunk.transform.parent = chunk.transform;
             waterChunk.transform.position = chunkMeshData.chunkPos;
+            waterChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
             waterChunk.GetComponent<MeshCollider>().convex = true;
             waterChunk.GetComponent<MeshCollider>().isTrigger = true;
@@ -329,8 +349,54 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.name = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+            waterChunk.GetComponent<MeshRenderer>().enabled = true;
             cd.waterChunk.Add(waterChunk);
         }
+
+        if(chunkMeshData.chunkPos.magnitude > 100) {
+
+            // Create wind mesh
+            GameObject windChunk = chunkPool.getObject();
+            windChunk.layer = 10;
+            windChunk.transform.parent = chunk.transform;
+            windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
+            windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
+            MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
+            windChunk.GetComponent<MeshCollider>().convex = true;
+            windChunk.GetComponent<MeshCollider>().isTrigger = true;
+            windChunk.GetComponent<MeshCollider>().enabled = false;
+            windChunk.name = "windSubChunk";
+            windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
+            windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            windChunk.GetComponent<MeshRenderer>().enabled = false;
+            cd.waterChunk.Add(windChunk);
+            
+
+            // Add wind particle system to chunks
+            GameObject particleSystem = Instantiate(windParticleSystemPrefab);
+            particleSystem.transform.SetParent(chunk.transform);
+            particleSystem.gameObject.name = "WindPE";
+            particleSystem.transform.position = chunkMeshData.chunkPos;
+
+            float heightPos = 150;
+            if (biomeManager.getClosestBiome(new Vector2Int((int)chunkMeshData.chunkPos.x, (int)chunkMeshData.chunkPos.z)).biomeName == "ocean") {
+                heightPos += WorldGenConfig.waterEndLevel;
+            } else {
+                heightPos += WindController.globalWindHeight;
+            }
+            particleSystem.transform.position += new Vector3(0, heightPos, 0);
+
+            // Set the velocity
+            ParticleSystem ps = particleSystem.GetComponent<ParticleSystem>();
+            ParticleSystem.VelocityOverLifetimeModule psVOL = ps.velocityOverLifetime;
+            Vector2 vel = new Vector2(chunkMeshData.chunkPos.x, chunkMeshData.chunkPos.z).normalized * -WindController.globalWindSpeed;
+            psVOL.x = vel.x;
+            psVOL.y = -0.15f;
+            psVOL.z = vel.y;
+
+            cd.windParticleSystem = particleSystem;
+        }
+
 
         GameObject[] trees = new GameObject[chunkMeshData.trees.Length];
         Mesh[] treeColliders = new Mesh[chunkMeshData.trees.Length];
@@ -676,6 +742,14 @@ public class WorldGenManager : MonoBehaviour {
     //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                                                                   
     //         
+
+    /// <summary>
+    /// Returns the biomemanager
+    /// </summary>
+    public BiomeManager getBiomeManager() {
+        return biomeManager;
+    }
+
 
     /// <summary>
     /// Produces a string that contains debug data

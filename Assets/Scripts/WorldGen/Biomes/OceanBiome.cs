@@ -1,27 +1,27 @@
 ﻿using UnityEngine;
 /// <summary>
-/// Lowlands w/ larger lakes and dense forest
+/// Big ocean
 /// </summary>
-class LowlandForestBiome : BiomeBase {
-    public LowlandForestBiome() :
+class OceanBiome : BiomeBase {
+    public OceanBiome() :
         base(
-            name:"lowlands",
+            name: "ocean",
             //General
-            minGroundHeight:1,
-            maxGroundHeight:90,
+            minGroundHeight:0,
+            maxGroundHeight:30,
             snowHeight: 80,
             //2D noise settings
-            frequency2D: 0.0005f,
+            frequency2D: 0.005f,
             noiseExponent2D: 3,
             octaves2D: 6,
             //3D noise settings
             structure3DRate: 0.5f,
             unstructure3DRate: 0.3f,
             frequency3D: 0.0045f,
-            corruptionRate: 0.5f,
-            corruptionFrequency: 0.025f,
+            corruptionRate: 0f,
+            corruptionFrequency: 0f,
             //Foliage
-            maxTreesPerChunk: 14,
+            maxTreesPerChunk: 4,
             treeLineLength: 2.0f,
             treeVoxelSize: 1.0f,
             treeThickness: 0.5f,

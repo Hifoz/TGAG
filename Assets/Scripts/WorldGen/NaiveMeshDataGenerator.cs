@@ -50,7 +50,7 @@ class NaiveMeshDataGenerator {
             for (int y = 0; y < blockDataMap.GetLength(1); y++) {
                 for (int z = 1; z < blockDataMap.GetLength(2) - 1; z++) {
                     if ((meshDataType != MeshDataGenerator.MeshDataType.WATER && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) ||
-                        (meshDataType == MeshDataGenerator.MeshDataType.WATER && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER)) {
+                        ((meshDataType == MeshDataGenerator.MeshDataType.WATER || meshDataType == MeshDataGenerator.MeshDataType.BASIC) && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER)) {
                         GenerateCube(new Vector3Int(x, y, z), blockDataMap.mapdata[blockDataMap.index1D(x, y, z)], voxelSize);
                     }
                 }
@@ -93,6 +93,7 @@ class NaiveMeshDataGenerator {
     protected bool checkVoxel(Vector3Int voxelPos) {
         switch (meshDataType) {
             case MeshDataGenerator.MeshDataType.WATER:
+            case MeshDataGenerator.MeshDataType.BASIC:
                 return blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER;
             default:
                 return !(blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.NONE ||
@@ -163,6 +164,15 @@ class NaiveMeshDataGenerator {
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
         triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
 
+//<<<<<<< HEAD
+//        if (meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
+//            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
+//        } else {
+//            addTextureCoordinates(blockData, dir);
+//            if (meshDataType != MeshDataGenerator.MeshDataType.BASIC) {
+//                addSliceData(blockData, dir);
+//            }
+//=======
 
         switch (meshDataType) {
             case MeshDataGenerator.MeshDataType.ANIMAL:
@@ -174,6 +184,10 @@ class NaiveMeshDataGenerator {
                 break;
             case MeshDataGenerator.MeshDataType.TREE:
                 addColorDataTree(blockData, dir);
+                addTextureCoordinates(blockData, dir);
+                break;
+            case MeshDataGenerator.MeshDataType.BASIC:
+            case MeshDataGenerator.MeshDataType.WATER:
                 addTextureCoordinates(blockData, dir);
                 break;
         }

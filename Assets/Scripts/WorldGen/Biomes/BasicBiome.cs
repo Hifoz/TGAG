@@ -4,6 +4,7 @@
 class BasicBiome : BiomeBase {
     public BasicBiome() :
         base(
+            name:"basic",
             //General
             minGroundHeight: 1,
             maxGroundHeight: 200,

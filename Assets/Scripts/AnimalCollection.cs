@@ -38,6 +38,9 @@ public class AnimalCollection : MonoBehaviour {
 
     private void Start() {
         transform.localScale = new Vector3(0, 0, 0);
+        foreach(GameObject a in new GameObject[] {waterDisplayAnimal, airDisplayAnimal, landDisplayAnimal }) {
+            a.GetComponent<MeshFilter>().mesh = new Mesh();
+        }
     }
 
     private void Update() {
