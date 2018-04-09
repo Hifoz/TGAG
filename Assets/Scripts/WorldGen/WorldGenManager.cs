@@ -370,6 +370,7 @@ public class WorldGenManager : MonoBehaviour {
             windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             windChunk.GetComponent<MeshRenderer>().enabled = false;
             cd.waterChunk.Add(windChunk);
+            
 
             // Add wind particle system to chunks
             GameObject particleSystem = Instantiate(windParticleSystemPrefab);
