@@ -39,10 +39,6 @@ public abstract class Animal : MonoBehaviour {
     protected abstract void Update();
 
 
-    private void LateUpdate() {
-        state.inWindArea = (transform.position.y > WindController.globalWindHeight);
-    }
-
     //    _____       _     _ _         __                  _   _                 
     //   |  __ \     | |   | (_)       / _|                | | (_)                
     //   | |__) |   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -553,6 +549,9 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void OnTriggerExit(Collider other) {
         if (other.name == "waterSubChunk") {
             state.inWater = false;
+        }
+        if (other.name == "windSubChunk") {
+            state.inWindArea = false;
         }
     }
 

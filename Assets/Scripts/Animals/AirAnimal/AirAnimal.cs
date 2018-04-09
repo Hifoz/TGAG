@@ -297,7 +297,7 @@ public class AirAnimal : Animal {
         if (state.inWater)
             velocity *= 0.25f;
 
-        if (state.inWindArea && !state.grounded && !state.inWater && transform.position.magnitude > 20f) {
+        if ((state.inWindArea || transform.position.y > WindController.globalWindHeight) && !state.grounded && !state.inWater && transform.position.magnitude > 20f) {
             velocity *= 0.6f;
             velocity += WindController.globalWindDirection * WindController.globalWindSpeed;
         }
