@@ -355,7 +355,7 @@ public abstract class Animal : MonoBehaviour {
     //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
     //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                  __/ |                                                            
-    //                 |___/                                                             
+    //                 |___/                                                            
 
     /// <summary>
     /// Does the physics for gravity
@@ -539,10 +539,7 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual public void OnVoxelEnter(BlockData.BlockType type) {
-        if (VoxelPhysics.isSolid(type)) {
-            state.speed *= 0.8f;
-            gravity = Vector3.zero;
-        }
+
     }
 
     virtual public void OnVoxelExit(BlockData.BlockType type) {

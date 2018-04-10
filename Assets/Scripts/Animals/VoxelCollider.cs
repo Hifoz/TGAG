@@ -2,7 +2,6 @@
 using System.Collections;
 
 public class VoxelCollider : MonoBehaviour {
-    private Vector3 oldPos;
     private Rigidbody rb;
     private Animal animal;
 
@@ -11,27 +10,40 @@ public class VoxelCollider : MonoBehaviour {
     // Use this for initialization
     void Start() {
         rb = GetComponent<Rigidbody>();
-        oldPos = transform.position;
         animal = GetComponent<Animal>();
     }
 
-    // Update is called once per frame
-    void Update() {
-        if (VoxelPhysics.Ready) {
-            BlockData.BlockType voxelAtPos = VoxelPhysics.voxelAtPos(transform.position);
-            if (VoxelPhysics.isSolid(voxelAtPos)) {
-                transform.position = transform.position + (oldPos - transform.position).normalized * 0.2f;
-            }
+    private void FixedUpdate() {
+        physicsMessages();
+        preventCollision();
+    }
 
-            if (voxelAtPos == lastVoxel) {
-                animal.OnVoxelStay(lastVoxel);
-            } else if (voxelAtPos != lastVoxel) {
-                animal.OnVoxelEnter(voxelAtPos);
-                animal.OnVoxelExit(lastVoxel);
-            }
-
-            lastVoxel = voxelAtPos;
+    /// <summary>
+    /// Triggers OnVoxel/Enter/Stay/Exit
+    /// </summary>
+    private void physicsMessages() {
+        BlockData.BlockType voxelAtPos = VoxelPhysics.voxelAtPos(transform.position);
+        if (voxelAtPos == lastVoxel) {
+            animal.OnVoxelStay(lastVoxel);
+        } else if (voxelAtPos != lastVoxel) {
+            animal.OnVoxelEnter(voxelAtPos);
+            animal.OnVoxelExit(lastVoxel);
         }
-        oldPos = transform.position;
+        lastVoxel = voxelAtPos;
+    }
+
+    /// <summary>
+    /// Adjusts velocity to avoid collision, last step in velocity calculations
+    /// </summary>
+    protected void preventCollision() {
+        Vector3 vel = Vector3.zero;
+        for (int i = 0; i < 3; i++) {
+            vel[i] = rb.velocity[i];
+            Vector3 nextPos = transform.position + vel * Time.fixedDeltaTime;
+            if (VoxelPhysics.isSolid(VoxelPhysics.voxelAtPos(nextPos))) {
+                vel[i] = 0;
+            }
+        }
+        rb.velocity = vel;
     }
 }
