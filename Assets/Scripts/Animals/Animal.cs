@@ -293,10 +293,9 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="complete">Attempt to do a complete CCD or partial?</param>
     /// <returns></returns>
     protected bool groundLimb(List<Bone> limb, float maxRange = 1f, bool complete = true) {
-        RaycastHit hit;
         Vector3 effector = limb[limb.Count - 1].bone.position;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(effector + Vector3.up * 10, Vector3.down), out hit, 40f, layerMask)) {
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(effector + Vector3.up * 10, Vector3.down), 40f, VoxelRayCastTarget.SOLID);
+        if (hit.type != BlockData.BlockType.NONE) {
             if (effector.y - hit.point.y <= maxRange) {
                 if (complete) {
                     return ccdComplete(limb, hit.point, 20);
@@ -362,13 +361,12 @@ public abstract class Animal : MonoBehaviour {
     /// Does the physics for gravity
     /// </summary>
     virtual protected void doGravity() {
-        int layerMaskWater = 1 << 4;
-        RaycastHit hitWater;
-        int layerMaskGround = 1 << 8;
-        RaycastHit hitGround;
+        Ray ray = new Ray(spineBone.bone.position, -spineBone.bone.up);
+        VoxelRayCastHit hitGround = VoxelPhysics.rayCast(ray, 200f, VoxelRayCastTarget.SOLID);
+        VoxelRayCastHit hitWater = VoxelPhysics.rayCast(ray, 200f, VoxelRayCastTarget.WATER);
 
-        bool flagHitGround = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround);
-        bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 200f, layerMaskWater);
+        bool flagHitGround = VoxelPhysics.isSolid(hitGround.type);
+        bool flagHitWater = VoxelPhysics.isWater(hitWater.type);
 
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
@@ -415,7 +413,7 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="hit">Point where raycast hit the ground</param>
     /// <param name="spine">Spine of animal</param>
     /// <param name="stanceHeight">The height of the stance</param>
-    virtual protected void groundedGravity(RaycastHit hit, Bone spine, float stanceHeight) {
+    virtual protected void groundedGravity(VoxelRayCastHit hit, Bone spine, float stanceHeight) {
         float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
         float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
         if (distFromStance <= stanceHeight) {
@@ -446,7 +444,7 @@ public abstract class Animal : MonoBehaviour {
     /// <summary>
     /// Gravity calculations for water surface
     /// </summary>
-    virtual protected void waterSurfaceGravity(RaycastHit hit) {
+    virtual protected void waterSurfaceGravity(VoxelRayCastHit hit) {
         state.grounded = false;
         
         if (hit.distance > 0.5f) {
@@ -482,11 +480,9 @@ public abstract class Animal : MonoBehaviour {
         Vector3 point1 = spineBone.bone.position + axis * length / 2f + Vector3.up * 20;
         Vector3 point2 = spineBone.bone.position - axis * length / 2f + Vector3.up * 20;
 
-        int layerMask = 1 << 8;
-        RaycastHit hit1;
-        RaycastHit hit2;
-        Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
-        Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
+        VoxelRayCastHit hit1 = VoxelPhysics.rayCast(new Ray(point1, Vector3.down), 100f, VoxelRayCastTarget.SOLID); 
+        VoxelRayCastHit hit2 = VoxelPhysics.rayCast(new Ray(point2, Vector3.down), 100f, VoxelRayCastTarget.SOLID);        
+       
         point1 = spineBone.bone.position + currentAxis * length / 2f;
         point2 = spineBone.bone.position - currentAxis * length / 2f;
         Vector3 a = hit1.point - hit2.point;

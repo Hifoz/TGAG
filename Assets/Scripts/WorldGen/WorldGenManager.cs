@@ -152,6 +152,36 @@ public class WorldGenManager : MonoBehaviour {
         return chunkGrid;
     }
 
+    /// <summary>
+    /// Calculates the cunkPos (Index in chunkgrid) from world pos
+    /// </summary>
+    /// <param name="worldPos">Worldpos to convert</param>
+    /// <returns>chunkpos</returns>
+    public Vector3Int world2ChunkIndex(Vector3 worldPos) {
+        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / WorldGenConfig.chunkSize;
+        return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
+    }
+
+    /// <summary>
+    /// Calculates worldpos from chunkpos (ChunkGrid index)
+    /// </summary>
+    /// <param name="chunkPos">Chunkpos to convert</param>
+    /// <returns>Wolrd pos</returns>
+    public Vector3 chunkIndex2world(Vector3 chunkPos) {
+        Vector3 world = chunkPos * WorldGenConfig.chunkSize + offset + getPlayerPos();
+        return world;
+    }
+
+    /// <summary>
+    /// Checks if X and Y are in bound for the ChunkGrid array.
+    /// </summary>
+    /// <param name="x">x index</param>
+    /// <param name="y">y index (worldspace z)</param>
+    /// <returns>bool in bound</returns>
+    public bool checkBounds(int x, int y) {
+        return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
+    }
+
     //    __  __       _          __                  _   _                 
     //   |  \/  |     (_)        / _|                | | (_)                
     //   | \  / | __ _ _ _ __   | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -195,7 +225,7 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     private void updateChunkGrid() {
         for (int i = 0; i < activeChunks.Count; i++) {
-            Vector3Int chunkPos = world2ChunkPos(activeChunks[i].pos);
+            Vector3Int chunkPos = world2ChunkIndex(activeChunks[i].pos);
             if (checkBounds(chunkPos.x, chunkPos.z)) {
                 chunkGrid[chunkPos.x, chunkPos.z] = activeChunks[i];
             } else {
@@ -233,7 +263,7 @@ public class WorldGenManager : MonoBehaviour {
     private void orderNewChunks() {
         for (int x = 0; x < WorldGenConfig.chunkCount; x++) {
             for (int z = 0; z < WorldGenConfig.chunkCount; z++) {
-                Vector3 chunkPos = chunkPos2world(new Vector3(x, 0, z)) + worldOffset;
+                Vector3 chunkPos = chunkIndex2world(new Vector3(x, 0, z)) + worldOffset;
                 if (chunkGrid[x, z] == null && !pendingChunks.Contains(chunkPos)) {
                     orders.Add(new Order(chunkPos, Task.CHUNK));
                     pendingChunks.Add(chunkPos);
@@ -257,7 +287,7 @@ public class WorldGenManager : MonoBehaviour {
                 launchOrderedChunk(result);
                 return;                
             } else {
-                Vector3Int chunkPos = world2ChunkPos(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
+                Vector3Int chunkPos = world2ChunkIndex(waitingChunks[i].chunkVoxelData.chunkPos - worldOffset);
                 if (!checkBounds(chunkPos.x, chunkPos.z)) {
                     pendingChunks.Remove(waitingChunks[i].chunkVoxelData.chunkPos);
                     waitingChunks.RemoveAt(i);
@@ -545,36 +575,6 @@ public class WorldGenManager : MonoBehaviour {
         return calculateChunkPos(player.position);
     }
 
-    /// <summary>
-    /// Calculates the cunkPos (Index in chunkgrid) from world pos
-    /// </summary>
-    /// <param name="worldPos">Worldpos to convert</param>
-    /// <returns>chunkpos</returns>
-    public Vector3Int world2ChunkPos(Vector3 worldPos) {
-        Vector3 chunkPos = (worldPos - offset - getPlayerPos()) / WorldGenConfig.chunkSize;
-        return new Vector3Int((int)chunkPos.x, (int)chunkPos.y, (int)chunkPos.z);
-    }
-
-    /// <summary>
-    /// Calculates worldpos from chunkpos (ChunkGrid index)
-    /// </summary>
-    /// <param name="chunkPos">Chunkpos to convert</param>
-    /// <returns>Wolrd pos</returns>
-    public Vector3 chunkPos2world(Vector3 chunkPos) {
-        Vector3 world = chunkPos * WorldGenConfig.chunkSize + offset + getPlayerPos();
-        return world;
-    }
-
-    /// <summary>
-    /// Checks if X and Y are in bound for the ChunkGrid array.
-    /// </summary>
-    /// <param name="x">x index</param>
-    /// <param name="y">y index (worldspace z)</param>
-    /// <returns>bool in bound</returns>
-    public bool checkBounds(int x, int y) {
-        return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
-    }
-
     //    ____                  _                          _       __                  _   _                 
     //   |  _ \                | |                        | |     / _|                | | (_)                
     //   | |_) | ___ _ __   ___| |__  _ __ ___   __ _ _ __| | __ | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -639,12 +639,15 @@ public class WorldGenManager : MonoBehaviour {
             AnimalUtils.addAnimalBrainPlayer(playerAnimal);
             playerObj.GetComponent<Player>().initPlayer(animalPools);
         }
+
+        VoxelPhysics.init(this);
     }
 
     /// <summary>
     /// Clears and resets the WorldGenManager, used when changing WorldGen settings at runtime.
     /// </summary>
     public void clear() {
+        VoxelPhysics.clear();
         stopThreads();
         orderedAnimals.Clear();
         pendingChunks.Clear();
@@ -742,9 +745,11 @@ public class WorldGenManager : MonoBehaviour {
 
     private void OnDestroy() {
         stopThreads();
+        VoxelPhysics.clear();
     }
 
     private void OnApplicationQuit() {
         stopThreads();
+        VoxelPhysics.clear();
     }
 }

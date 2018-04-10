@@ -60,7 +60,7 @@ public class BoxManager : MonoBehaviour {
     /// </summary>
     /// <param name="animal"></param>
     private void boxForAnimal(GameObject animal) {
-        Vector3Int chunkIndex = worldGenManager.world2ChunkPos(animal.transform.position);
+        Vector3Int chunkIndex = worldGenManager.world2ChunkIndex(animal.transform.position);
         if (worldGenManager.checkBounds(chunkIndex.x, chunkIndex.y) && chunkGrid[chunkIndex.x, chunkIndex.z] != null) {
             ChunkData chunk = chunkGrid[chunkIndex.x, chunkIndex.z];
             PremissiveBlockDataMap map = new PremissiveBlockDataMap(chunk.pos, chunk.blockDataMap, biomeManager);
