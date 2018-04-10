@@ -60,25 +60,25 @@ public static class VoxelPhysics {
             switch (target) {
                 case VoxelRayCastTarget.SOLID:
                     if (isSolid(currentBlock)) {
-                        return createVoxelRayCastHit(ray.origin, sample, currentBlock);
+                        return createVoxelRayCastHit(ray, sample, currentBlock);
                     }
                     break;
                 case VoxelRayCastTarget.WATER:
                     if (currentBlock == BlockData.BlockType.WATER) {
-                        return createVoxelRayCastHit(ray.origin, sample, currentBlock);
+                        return createVoxelRayCastHit(ray, sample, currentBlock);
                     }
                     break;
             }
         }
-        return createVoxelRayCastHit(ray.origin, Vector3.down, BlockData.BlockType.NONE);
+        return createVoxelRayCastHit(ray, Vector3.down, BlockData.BlockType.NONE);
     }
 
-    private static VoxelRayCastHit createVoxelRayCastHit(Vector3 origin, Vector3 sample, BlockData.BlockType type) {
+    private static VoxelRayCastHit createVoxelRayCastHit(Ray ray, Vector3 sample, BlockData.BlockType type) {
         VoxelRayCastHit hit = new VoxelRayCastHit();
         hit.blockPos = Utils.floorVector(sample);
-        hit.point = hit.blockPos + Vector3.up * 0.5f;
-        hit.type = type;
-        hit.distance = Vector3.Distance(origin, hit.blockPos);
+        hit.distance = Vector3.Distance(ray.origin, hit.blockPos) - 0.5f;
+        hit.point = ray.origin + ray.direction * hit.distance;
+        hit.type = type;        
         return hit;
     }
 }
