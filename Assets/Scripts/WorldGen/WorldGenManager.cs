@@ -436,22 +436,20 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="cd">chunkdata</param>
     private IEnumerator orderAnimals(ChunkData cd) {
-        const float animalSpawnChance = 0.02f; //This means that a chunk has a 2% chance to spawn an animal
+        const float animalSpawnChance = 0.08f; //This means that a chunk has a 2% chance to spawn an animal
         if (UnityEngine.Random.Range(0f, 1f) < animalSpawnChance) {
             yield return new WaitForSeconds(1f); //Give the colliders a frame to initialize
 
             //Calculate spawn position
             Vector3 spawnPos = cd.pos + Vector3.up * (WorldGenConfig.chunkHeight + 10) + new Vector3(WorldGenConfig.chunkSize / 2, 0, WorldGenConfig.chunkSize / 2);
             
-            int layerMaskWater = 1 << 4;
-            RaycastHit hitWater;
-            bool water = Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitWater, WorldGenConfig.chunkHeight * 1.2f, layerMaskWater);
+            VoxelRayCastHit hitWater = VoxelPhysics.rayCast(new Ray(spawnPos, Vector3.down), 200, VoxelRayCastTarget.WATER);
+            bool water = VoxelPhysics.isWater(hitWater.type);
             if (water) {
                 spawnPos = hitWater.point;
             } else {
-                int layerMaskGround = 1 << 8;
-                RaycastHit hitGround;
-                if (Physics.Raycast(new Ray(spawnPos, Vector3.down), out hitGround, WorldGenConfig.chunkHeight * 1.2f, layerMaskGround)) {
+                VoxelRayCastHit hitGround = VoxelPhysics.rayCast(new Ray(spawnPos, Vector3.down), 200, VoxelRayCastTarget.SOLID);
+                if (VoxelPhysics.isSolid(hitGround.type)) {
                     spawnPos = hitGround.point + Vector3.up * 4;
                 } else {
                     Debug.Log("INFO: AnimalOrder, failed to find spawn point for animal, will drop from sky");

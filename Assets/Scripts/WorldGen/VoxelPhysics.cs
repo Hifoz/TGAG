@@ -35,10 +35,13 @@ public static class VoxelPhysics {
 
     public static BlockData.BlockType voxelAtPos(Vector3 worldPos) {
         Vector3Int index = worldGenManager.world2ChunkIndex(worldPos);
-        if (!worldGenManager.checkBounds(index.x, index.y)) {
+        if (!worldGenManager.checkBounds(index.x, index.z)) {
             return BlockData.BlockType.NONE;
         }
         ChunkData chunk = world[index.x, index.z];
+        if (chunk == null) {
+            return BlockData.BlockType.NONE;
+        }
         Vector3Int blockIndex = Utils.floorVectorToInt(worldPos - chunk.pos);
         return chunk.blockDataMap.get(blockIndex).blockType;
     } 
