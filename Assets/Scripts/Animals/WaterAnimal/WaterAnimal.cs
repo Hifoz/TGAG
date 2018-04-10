@@ -219,8 +219,10 @@ public class WaterAnimal : Animal {
         flagFlapBackToWater = false;
     }
 
-    override protected void OnTriggerExit(Collider other) {
-        base.OnTriggerExit(other);
-        waterExitPoint = transform.position;
+    override public void OnVoxelExit(BlockData.BlockType type) {
+        base.OnVoxelExit(type);
+        if (VoxelPhysics.isWater(type)) {
+            waterExitPoint = transform.position;
+        }
     }
 }

@@ -225,9 +225,8 @@ public class LandAnimal : Animal {
         flagJumping = false;
     }
 
-    override protected void OnCollisionEnter(Collision collision) {
-        base.OnCollisionEnter(collision);
-        gravity = Vector3.zero;
+    override public void OnVoxelEnter(BlockData.BlockType type) {
+        base.OnVoxelEnter(type);
         flagJumping = false;
     }
 

@@ -538,31 +538,31 @@ public abstract class Animal : MonoBehaviour {
         }
     }
 
-    virtual protected void OnTriggerEnter(Collider other) {
-
+    virtual public void OnVoxelEnter(BlockData.BlockType type) {
+        if (VoxelPhysics.isSolid(type)) {
+            state.speed *= 0.8f;
+            gravity = Vector3.zero;
+        }
     }
 
-    virtual protected void OnTriggerExit(Collider other) {
-        if (other.name == "waterSubChunk") {
+    virtual public void OnVoxelExit(BlockData.BlockType type) {
+        if (VoxelPhysics.isWater(type)) {
             state.inWater = false;
         }
-        if (other.name == "windSubChunk") {
-            state.inWindArea = false;
-        }
+
+        //if (other.name == "windSubChunk") {
+        //    state.inWindArea = false;
+        //}
     }
 
-    virtual protected void OnTriggerStay(Collider other) {
-        if (other.name == "waterSubChunk") {
+    virtual public void OnVoxelStay(BlockData.BlockType type) {
+        if (VoxelPhysics.isWater(type)) {
             state.inWater = true;
         }
 
-        if (other.name == "windSubChunk") {
-            state.inWindArea = true;
-        }
-    }
-
-    virtual protected void OnCollisionEnter(Collision collision) {
-        brain.OnCollisionEnter();
+        //if (other.name == "windSubChunk") {
+        //    state.inWindArea = true;
+        //}
     }
 
    virtual protected void OnDisable() {

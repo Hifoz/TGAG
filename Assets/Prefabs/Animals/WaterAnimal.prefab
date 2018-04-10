@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 54460439417021166}
   - component: {fileID: 137735899441580680}
   - component: {fileID: 114425799742034090}
+  - component: {fileID: 114950175688954132}
   m_Layer: 0
   m_Name: WaterAnimal
   m_TagString: Untagged
@@ -66,6 +67,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d0826150418aa54c9b271369f409b26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &114950175688954132
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1162195383910464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77fc1364f8f0b3b48915464e49626629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!137 &137735899441580680

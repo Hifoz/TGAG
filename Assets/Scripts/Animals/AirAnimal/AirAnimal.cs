@@ -402,8 +402,8 @@ public class AirAnimal : Animal {
         flagAscending = false;
     }
 
-    override protected void OnCollisionEnter(Collision collision) {
-        base.OnCollisionEnter(collision);
+    override public void OnVoxelEnter(BlockData.BlockType type) {
+        base.OnVoxelEnter(type);
         flagLaunching = false;
     }
 
