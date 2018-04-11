@@ -23,6 +23,7 @@ public class VoxelCollider : MonoBehaviour {
     /// </summary>
     private void physicsMessages() {
         BlockData.BlockType voxelAtPos = VoxelPhysics.voxelAtPos(transform.position);
+
         if (voxelAtPos == lastVoxel) {
             animal.OnVoxelStay(lastVoxel);
         } else if (voxelAtPos != lastVoxel) {
@@ -37,11 +38,12 @@ public class VoxelCollider : MonoBehaviour {
     /// </summary>
     protected void preventCollision() {
         Vector3 vel = Vector3.zero;
-        for (int i = 0; i < 3; i++) {
-            vel[i] = rb.velocity[i];
+        int[] axis = new int[] { 1, 0, 2 };
+        for (int i = 0; i < axis.Length; i++) {
+            vel[axis[i]] = rb.velocity[axis[i]];
             Vector3 nextPos = transform.position + vel * Time.fixedDeltaTime;
             if (VoxelPhysics.isSolid(VoxelPhysics.voxelAtPos(nextPos))) {
-                vel[i] = 0;
+                vel[axis[i]] = 0;
             }
         }
         rb.velocity = vel;

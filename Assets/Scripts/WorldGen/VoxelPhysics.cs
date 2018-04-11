@@ -67,7 +67,7 @@ public static class VoxelPhysics {
                     }
                     break;
                 case VoxelRayCastTarget.WATER:
-                    if (currentBlock == BlockData.BlockType.WATER) {
+                    if (isWater(currentBlock)) {
                         return createVoxelRayCastHit(ray, sample, currentBlock);
                     }
                     break;

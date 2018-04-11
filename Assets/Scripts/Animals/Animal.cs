@@ -362,35 +362,28 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     virtual protected void doGravity() {
         Ray ray = new Ray(spineBone.bone.position, -spineBone.bone.up);
-        VoxelRayCastHit hitGround = VoxelPhysics.rayCast(ray, 200f, VoxelRayCastTarget.SOLID);
-        VoxelRayCastHit hitWater = VoxelPhysics.rayCast(ray, 200f, VoxelRayCastTarget.WATER);
+        VoxelRayCastHit hitGround = VoxelPhysics.rayCast(ray, 100f, VoxelRayCastTarget.SOLID);
 
         bool flagHitGround = VoxelPhysics.isSolid(hitGround.type);
-        bool flagHitWater = VoxelPhysics.isWater(hitWater.type);
 
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
-        bool canStand = false;
+        state.canStand = false;      
 
-        //Calculate water state
-        if (flagHitWater) {
-            if (hitWater.distance < 2f) {
-                state.onWaterSurface = true;
-            } else {
-                state.onWaterSurface = false;
-            }
+        if (!state.inWater) {
+            state.onWaterSurface = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));
         } else {
-            state.onWaterSurface = false;           
-        }       
-
-        if (flagHitGround) {
-            canStand = hitGround.distance <= stanceHeight;
+            state.onWaterSurface = false;
         }
 
-        if (canStand || !state.inWater) {
+        if (flagHitGround) {
+            state.canStand = hitGround.distance <= stanceHeight;
+        }
+
+        if (state.canStand || (!state.inWater && !state.onWaterSurface)) {
             groundedGravity(hitGround, spineBone, stanceHeight);
         } else if (state.onWaterSurface) {
-            waterSurfaceGravity(hitWater);
+            waterSurfaceGravity();
         } else if (state.inWater) {
             waterGravity();
         } else {
@@ -404,6 +397,7 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void notGroundedGravity() {
         state.grounded = false;
         state.inWater = false;
+        state.onWaterSurface = false;
         gravity += Physics.gravity * Time.deltaTime;
     }
 
@@ -414,12 +408,13 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="spine">Spine of animal</param>
     /// <param name="stanceHeight">The height of the stance</param>
     virtual protected void groundedGravity(VoxelRayCastHit hit, Bone spine, float stanceHeight) {
+        const float stanceTolerance = 16f;
         float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
         float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
         if (distFromStance <= stanceHeight) {
             state.grounded = true;
             float sign = Mathf.Sign(dist2ground - stanceHeight);
-            if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+            if (distFromStance > (stanceHeight / stanceTolerance)) {
                 gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
             } else {
                 gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
@@ -434,7 +429,7 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <param name="hit">Point where raycast hit</param>
     virtual protected void waterGravity() {
-        state.grounded = false;
+        state.grounded = false;  
         gravity = -Physics.gravity;
         if (!spineIsCorrect) {            
             tryCorrectSpine();
@@ -444,14 +439,9 @@ public abstract class Animal : MonoBehaviour {
     /// <summary>
     /// Gravity calculations for water surface
     /// </summary>
-    virtual protected void waterSurfaceGravity(VoxelRayCastHit hit) {
+    virtual protected void waterSurfaceGravity() {
         state.grounded = false;
-        
-        if (hit.distance > 0.5f) {
-            gravity = Physics.gravity;
-        } else {
-            gravity = Vector3.zero;
-        }
+        gravity = Vector3.zero;
         if (!spineIsCorrect) {
             tryCorrectSpine();
         }
@@ -546,23 +536,32 @@ public abstract class Animal : MonoBehaviour {
         if (VoxelPhysics.isWater(type)) {
             state.inWater = false;
         }
-
-        //if (other.name == "windSubChunk") {
-        //    state.inWindArea = false;
-        //}
     }
 
     virtual public void OnVoxelStay(BlockData.BlockType type) {
         if (VoxelPhysics.isWater(type)) {
             state.inWater = true;
-        }
-
-        //if (other.name == "windSubChunk") {
-        //    state.inWindArea = true;
-        //}
+        }       
     }
 
-   virtual protected void OnDisable() {
+    private void OnTriggerExit(Collider other) {
+        if (other.name == "windSubChunk") {
+            state.inWindArea = false;
+        }
+    }
+
+    private void OnTriggerStay(Collider other) {
+        if (other.name == "windSubChunk") {
+            state.inWindArea = true;
+        }
+    }
+
+    //This is only triggered for trees now. 
+    private void OnCollisionEnter(Collision collision) {
+        brain.OnCollisionEnter();
+    }
+
+    virtual protected void OnDisable() {
         flagSpineCorrecting = false;
         flagAnimationTransition = false;
     }
@@ -585,6 +584,7 @@ public abstract class Animal : MonoBehaviour {
     public string getDebugString() {
         string s = "";
         s += "Grounded: " + state.grounded.ToString() + "\n";
+        s += "CanStand: " + state.canStand.ToString() + "\n";
         s += "InWater: " + state.inWater.ToString() + "\n";
         s += "OnWaterSurface: " + state.onWaterSurface.ToString() + "\n";
         s += "InWindArea: " + state.inWindArea.ToString() + "\n\n";
@@ -593,7 +593,8 @@ public abstract class Animal : MonoBehaviour {
         s += "Desired heading: " + state.desiredHeading + "\n\n";
 
         s += "Speed: " + state.speed + "\n";
-        s += "Position: " + transform.position + "\n\n";
+        s += "Position: " + transform.position + "\n";
+        s += "Gravity: " + gravity + "\n\n";
 
         s += "Animation in transition: " + flagAnimationTransition.ToString();
         return s;

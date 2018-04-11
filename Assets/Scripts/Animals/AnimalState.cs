@@ -9,6 +9,7 @@ public class AnimalState {
     public bool inWater = false;
     public bool grounded = false;
     public bool inWindArea = false;
+    public bool canStand = false;
 
     public float desiredSpeed = 0;
     public float speed = 0;
