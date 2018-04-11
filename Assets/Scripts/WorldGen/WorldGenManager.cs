@@ -453,7 +453,7 @@ public class WorldGenManager : MonoBehaviour {
             } else {
                 VoxelRayCastHit hitGround = VoxelPhysics.rayCast(new Ray(spawnPos, Vector3.down), 200, VoxelRayCastTarget.SOLID);
                 if (VoxelPhysics.isSolid(hitGround.type)) {
-                    spawnPos = hitGround.point + Vector3.up * 4;
+                    spawnPos = hitGround.point + Vector3.up * 10;
                 } else {
                     Debug.Log("INFO: AnimalOrder, failed to find spawn point for animal, will drop from sky");
                 }

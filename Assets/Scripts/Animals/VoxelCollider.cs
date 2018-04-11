@@ -26,6 +26,11 @@ public class VoxelCollider : MonoBehaviour {
     private void physicsMessages() {
         BlockData.BlockType voxelAtPos = VoxelPhysics.voxelAtPos(transform.position);
 
+        if (VoxelPhysics.isSolid(voxelAtPos)) { //Unstuck
+            Debug.Log("Unstucking");
+            transform.position += Vector3.up;
+        }
+
         if (voxelAtPos == lastVoxel) {
             animal.OnVoxelStay(lastVoxel);
         } else if (voxelAtPos != lastVoxel) {
