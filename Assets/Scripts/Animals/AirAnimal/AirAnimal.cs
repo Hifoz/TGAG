@@ -334,6 +334,29 @@ public class AirAnimal : Animal {
     }
 
     /// <summary>
+    /// Gravity calculation for when you are grounded
+    /// </summary>
+    /// <param name="hit">Point where raycast hit the ground</param>
+    /// <param name="spine">Spine of animal</param>
+    /// <param name="stanceHeight">The height of the stance</param>
+    override protected void groundedGravity(VoxelRayCastHit hit, Bone spine, float stanceHeight) {
+        const float stanceTolerance = 16f;
+        float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
+        float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
+        if (distFromStance <= stanceHeight) {
+            state.grounded = true;
+            float sign = Mathf.Sign(dist2ground - stanceHeight);
+            if (distFromStance > (stanceHeight / stanceTolerance) && !flagLaunching) {
+                gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+            } else {
+                gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
+            }
+        } else {
+            notGroundedGravity();
+        }
+    }
+
+    /// <summary>
     /// Gravity calculations for when you are not grounded
     /// </summary>
     override protected void notGroundedGravity() {
@@ -402,8 +425,8 @@ public class AirAnimal : Animal {
         flagAscending = false;
     }
 
-    override protected void OnCollisionEnter(Collision collision) {
-        base.OnCollisionEnter(collision);
+    override public void OnVoxelEnter(BlockData.BlockType type) {
+        base.OnVoxelEnter(type);
         flagLaunching = false;
     }
 

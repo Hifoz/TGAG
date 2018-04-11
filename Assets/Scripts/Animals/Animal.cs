@@ -293,10 +293,9 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="complete">Attempt to do a complete CCD or partial?</param>
     /// <returns></returns>
     protected bool groundLimb(List<Bone> limb, float maxRange = 1f, bool complete = true) {
-        RaycastHit hit;
         Vector3 effector = limb[limb.Count - 1].bone.position;
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(effector + Vector3.up * 10, Vector3.down), out hit, 40f, layerMask)) {
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(effector + Vector3.up * 10, Vector3.down), 40f, VoxelRayCastTarget.SOLID);
+        if (hit.type != BlockData.BlockType.NONE) {
             if (effector.y - hit.point.y <= maxRange) {
                 if (complete) {
                     return ccdComplete(limb, hit.point, 20);
@@ -356,43 +355,35 @@ public abstract class Animal : MonoBehaviour {
     //   | |    | | | | |_| \__ \ | (__\__ \ | | | |_| | | | | (__| |_| | (_) | | | \__ \
     //   |_|    |_| |_|\__, |___/_|\___|___/ |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                  __/ |                                                            
-    //                 |___/                                                             
+    //                 |___/                                                            
 
     /// <summary>
     /// Does the physics for gravity
     /// </summary>
     virtual protected void doGravity() {
-        int layerMaskWater = 1 << 4;
-        RaycastHit hitWater;
-        int layerMaskGround = 1 << 8;
-        RaycastHit hitGround;
+        Ray ray = new Ray(spineBone.bone.position, -spineBone.bone.up);
+        VoxelRayCastHit hitGround = VoxelPhysics.rayCast(ray, 100f, VoxelRayCastTarget.SOLID);
 
-        bool flagHitGround = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround);
-        bool flagHitWater = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitWater, 200f, layerMaskWater);
+        bool flagHitGround = VoxelPhysics.isSolid(hitGround.type);
 
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
-        bool canStand = false;
+        state.canStand = false;      
 
-        //Calculate water state
-        if (flagHitWater) {
-            if (hitWater.distance < 2f) {
-                state.onWaterSurface = true;
-            } else {
-                state.onWaterSurface = false;
-            }
+        if (!state.inWater) {
+            state.onWaterSurface = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));
         } else {
-            state.onWaterSurface = false;           
-        }       
-
-        if (flagHitGround) {
-            canStand = hitGround.distance <= stanceHeight;
+            state.onWaterSurface = false;
         }
 
-        if (canStand || !state.inWater) {
+        if (flagHitGround) {
+            state.canStand = hitGround.distance <= stanceHeight;
+        }
+
+        if (state.canStand || (!state.inWater && !state.onWaterSurface)) {
             groundedGravity(hitGround, spineBone, stanceHeight);
         } else if (state.onWaterSurface) {
-            waterSurfaceGravity(hitWater);
+            waterSurfaceGravity();
         } else if (state.inWater) {
             waterGravity();
         } else {
@@ -406,6 +397,7 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void notGroundedGravity() {
         state.grounded = false;
         state.inWater = false;
+        state.onWaterSurface = false;
         gravity += Physics.gravity * Time.deltaTime;
     }
 
@@ -415,13 +407,14 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="hit">Point where raycast hit the ground</param>
     /// <param name="spine">Spine of animal</param>
     /// <param name="stanceHeight">The height of the stance</param>
-    virtual protected void groundedGravity(RaycastHit hit, Bone spine, float stanceHeight) {
+    virtual protected void groundedGravity(VoxelRayCastHit hit, Bone spine, float stanceHeight) {
+        const float stanceTolerance = 16f;
         float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
         float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
         if (distFromStance <= stanceHeight) {
             state.grounded = true;
             float sign = Mathf.Sign(dist2ground - stanceHeight);
-            if (distFromStance > stanceHeight / 16f && gravity.magnitude < Physics.gravity.magnitude * 1.5f) {
+            if (distFromStance > (stanceHeight / stanceTolerance)) {
                 gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
             } else {
                 gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
@@ -436,7 +429,7 @@ public abstract class Animal : MonoBehaviour {
     /// </summary>
     /// <param name="hit">Point where raycast hit</param>
     virtual protected void waterGravity() {
-        state.grounded = false;
+        state.grounded = false;  
         gravity = -Physics.gravity;
         if (!spineIsCorrect) {            
             tryCorrectSpine();
@@ -446,14 +439,9 @@ public abstract class Animal : MonoBehaviour {
     /// <summary>
     /// Gravity calculations for water surface
     /// </summary>
-    virtual protected void waterSurfaceGravity(RaycastHit hit) {
+    virtual protected void waterSurfaceGravity() {
         state.grounded = false;
-        
-        if (hit.distance > 0.5f) {
-            gravity = Physics.gravity;
-        } else {
-            gravity = Vector3.zero;
-        }
+        gravity = Vector3.zero;
         if (!spineIsCorrect) {
             tryCorrectSpine();
         }
@@ -482,11 +470,9 @@ public abstract class Animal : MonoBehaviour {
         Vector3 point1 = spineBone.bone.position + axis * length / 2f + Vector3.up * 20;
         Vector3 point2 = spineBone.bone.position - axis * length / 2f + Vector3.up * 20;
 
-        int layerMask = 1 << 8;
-        RaycastHit hit1;
-        RaycastHit hit2;
-        Physics.Raycast(new Ray(point1, Vector3.down), out hit1, 100f, layerMask);
-        Physics.Raycast(new Ray(point2, Vector3.down), out hit2, 100f, layerMask);
+        VoxelRayCastHit hit1 = VoxelPhysics.rayCast(new Ray(point1, Vector3.down), 100f, VoxelRayCastTarget.SOLID); 
+        VoxelRayCastHit hit2 = VoxelPhysics.rayCast(new Ray(point2, Vector3.down), 100f, VoxelRayCastTarget.SOLID);        
+       
         point1 = spineBone.bone.position + currentAxis * length / 2f;
         point2 = spineBone.bone.position - currentAxis * length / 2f;
         Vector3 a = hit1.point - hit2.point;
@@ -542,34 +528,40 @@ public abstract class Animal : MonoBehaviour {
         }
     }
 
-    virtual protected void OnTriggerEnter(Collider other) {
+    virtual public void OnVoxelEnter(BlockData.BlockType type) {
 
     }
 
-    virtual protected void OnTriggerExit(Collider other) {
-        if (other.name == "waterSubChunk") {
+    virtual public void OnVoxelExit(BlockData.BlockType type) {
+        if (VoxelPhysics.isWater(type)) {
             state.inWater = false;
         }
+    }
+
+    virtual public void OnVoxelStay(BlockData.BlockType type) {
+        if (VoxelPhysics.isWater(type)) {
+            state.inWater = true;
+        }       
+    }
+
+    private void OnTriggerExit(Collider other) {
         if (other.name == "windSubChunk") {
             state.inWindArea = false;
         }
     }
 
-    virtual protected void OnTriggerStay(Collider other) {
-        if (other.name == "waterSubChunk") {
-            state.inWater = true;
-        }
-
+    private void OnTriggerStay(Collider other) {
         if (other.name == "windSubChunk") {
             state.inWindArea = true;
         }
     }
 
-    virtual protected void OnCollisionEnter(Collision collision) {
+    //This is only triggered for trees now. 
+    private void OnCollisionEnter(Collision collision) {
         brain.OnCollisionEnter();
     }
 
-   virtual protected void OnDisable() {
+    virtual protected void OnDisable() {
         flagSpineCorrecting = false;
         flagAnimationTransition = false;
     }
@@ -592,6 +584,7 @@ public abstract class Animal : MonoBehaviour {
     public string getDebugString() {
         string s = "";
         s += "Grounded: " + state.grounded.ToString() + "\n";
+        s += "CanStand: " + state.canStand.ToString() + "\n";
         s += "InWater: " + state.inWater.ToString() + "\n";
         s += "OnWaterSurface: " + state.onWaterSurface.ToString() + "\n";
         s += "InWindArea: " + state.inWindArea.ToString() + "\n\n";
@@ -600,7 +593,8 @@ public abstract class Animal : MonoBehaviour {
         s += "Desired heading: " + state.desiredHeading + "\n\n";
 
         s += "Speed: " + state.speed + "\n";
-        s += "Position: " + transform.position + "\n\n";
+        s += "Position: " + transform.position + "\n";
+        s += "Gravity: " + gravity + "\n\n";
 
         s += "Animation in transition: " + flagAnimationTransition.ToString();
         return s;

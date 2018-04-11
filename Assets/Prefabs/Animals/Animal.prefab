@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 137209522713128248}
   - component: {fileID: 54107521443445702}
   - component: {fileID: 114351977304659876}
+  - component: {fileID: 114225443696531374}
   m_Layer: 0
   m_Name: Animal
   m_TagString: Untagged
@@ -57,6 +58,17 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 1
+--- !u!114 &114225443696531374
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1129599488531734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77fc1364f8f0b3b48915464e49626629, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114351977304659876
 MonoBehaviour:
   m_ObjectHideFlags: 1

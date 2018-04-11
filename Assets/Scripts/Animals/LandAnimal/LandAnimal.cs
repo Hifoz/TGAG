@@ -122,11 +122,11 @@ public class LandAnimal : Animal {
     /// Function for handling ragdoll effects when free falling
     /// </summary>
     private void handleRagdoll() {
-        if (state.grounded || state.inWater) {
+        if (state.grounded || state.inWater || state.onWaterSurface) {
             ragDolling = false;
         } else if (!state.grounded && !ragDolling && !state.inWater) {
             ragDolling = true;
-            ragDollCondition condition = () => { return (!state.grounded && !state.inWater); };
+            ragDollCondition condition = () => { return (!state.grounded && !state.inWater && !state.onWaterSurface); };
             for (int i = 0; i < skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS); i++) {
                 StartCoroutine(ragdollLimb(landSkeleton.getLeg(true, i), skeleton.getLines(BodyPart.RIGHT_LEGS)[i], condition, true));
                 StartCoroutine(ragdollLimb(landSkeleton.getLeg(false, i), skeleton.getLines(BodyPart.LEFT_LEGS)[i], condition, true));
@@ -162,7 +162,7 @@ public class LandAnimal : Animal {
             velocity = state.heading.normalized * state.speed;
         }
 
-        if (state.inWater)
+        if (state.inWater || state.onWaterSurface)
             velocity *= 0.4f;
 
 
@@ -204,11 +204,35 @@ public class LandAnimal : Animal {
     }
 
     /// <summary>
+    /// Gravity calculation for when you are grounded
+    /// </summary>
+    /// <param name="hit">Point where raycast hit the ground</param>
+    /// <param name="spine">Spine of animal</param>
+    /// <param name="stanceHeight">The height of the stance</param>
+    override protected void groundedGravity(VoxelRayCastHit hit, Bone spine, float stanceHeight) {
+        const float stanceTolerance = 16f;
+        float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
+        float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
+        if (distFromStance <= stanceHeight) {
+            state.grounded = true;
+            float sign = Mathf.Sign(dist2ground - stanceHeight);
+            if (distFromStance > (stanceHeight / stanceTolerance) && !flagJumping) {
+                gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
+            } else {
+                gravity += sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2) * Time.deltaTime;
+            }
+        } else {
+            notGroundedGravity();
+        }
+    }
+
+
+    /// <summary>
     /// Tries to jump
     /// </summary>
     /// <returns>success flag</returns>
     private bool tryJump() {
-        if (!flagJumping) {
+        if (!flagJumping && state.grounded) {
             StartCoroutine(jump());
         }
         return !flagJumping;
@@ -221,13 +245,12 @@ public class LandAnimal : Animal {
     private IEnumerator jump() {
         flagJumping = true;
         gravity += -Physics.gravity * 2f;
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.25f);
         flagJumping = false;
     }
 
-    override protected void OnCollisionEnter(Collision collision) {
-        base.OnCollisionEnter(collision);
-        gravity = Vector3.zero;
+    override public void OnVoxelEnter(BlockData.BlockType type) {
+        base.OnVoxelEnter(type);
         flagJumping = false;
     }
 
