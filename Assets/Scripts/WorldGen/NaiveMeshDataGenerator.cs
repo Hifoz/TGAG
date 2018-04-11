@@ -212,6 +212,12 @@ class NaiveMeshDataGenerator {
                     new Color(colorIndex2, colorIndex2, 0, 0), new Color(colorIndex2, colorIndex2, 0, 0)
                 });
                 break;
+            case FaceDirection.ym:
+                colors.AddRange(new Color[4] {
+                    new Color(colorIndex1, colorIndex1, 0, 0), new Color(colorIndex1, colorIndex1, 0, 0),
+                    new Color(colorIndex1, colorIndex1, 0, 0), new Color(colorIndex1, colorIndex1, 0, 0)
+                });
+                break;
             default:
                 colors.AddRange(new Color[4] {
                     new Color(colorIndex1, colorIndex2, 0, 0), new Color(colorIndex1, colorIndex2, 0, 0),

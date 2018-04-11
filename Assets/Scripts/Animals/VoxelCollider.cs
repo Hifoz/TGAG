@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 
+/// <summary>
+/// Collider that collides with the voxel world.
+/// </summary>
 public class VoxelCollider : MonoBehaviour {
     private Rigidbody rb;
     private Animal animal;
