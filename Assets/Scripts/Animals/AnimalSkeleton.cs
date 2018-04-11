@@ -144,6 +144,7 @@ public abstract class AnimalSkeleton {
         mesh.uv = meshData.uvs;
         mesh.boneWeights = weights.ToArray();
         mesh.bindposes = bindPoses.ToArray();
+        mesh.name = "AnimalSkeleton";
         renderer.sharedMesh = mesh;
     }    
 

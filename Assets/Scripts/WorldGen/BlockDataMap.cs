@@ -47,6 +47,15 @@ public class BlockDataMap {
     }
 
     /// <summary>
+    /// Gets block at index
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public BlockData get(Vector3Int index) {
+        return mapdata[index1D(index)];
+    }
+
+    /// <summary>
     /// Gets the length of the array, either the full length, or the length of x, y, or z
     /// </summary>
     /// <param name="i">index of dimension to get length of.

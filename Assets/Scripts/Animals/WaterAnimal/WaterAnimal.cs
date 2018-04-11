@@ -132,10 +132,10 @@ public class WaterAnimal : Animal {
     /// </summary>
     override protected void doGravity() {
         if (!state.inWater) {
-            int layerMaskGround = 1 << 8;
-            RaycastHit hitGround;
+            Ray ray = new Ray(spineBone.bone.position, -spineBone.bone.up);
+            VoxelRayCastHit hitGround = VoxelPhysics.rayCast(ray, 200f, VoxelRayCastTarget.SOLID);
 
-            bool flagHitGround = Physics.Raycast(new Ray(spineBone.bone.position, -spineBone.bone.up), out hitGround, 200f, layerMaskGround);
+            bool flagHitGround = VoxelPhysics.isSolid(hitGround.type);
 
             if (flagHitGround) {
                 if (hitGround.distance < 1f) {
@@ -219,8 +219,10 @@ public class WaterAnimal : Animal {
         flagFlapBackToWater = false;
     }
 
-    override protected void OnTriggerExit(Collider other) {
-        base.OnTriggerExit(other);
-        waterExitPoint = transform.position;
+    override public void OnVoxelExit(BlockData.BlockType type) {
+        base.OnVoxelExit(type);
+        if (VoxelPhysics.isWater(type)) {
+            waterExitPoint = transform.position;
+        }
     }
 }

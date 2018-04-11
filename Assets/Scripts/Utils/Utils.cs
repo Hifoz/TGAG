@@ -85,4 +85,20 @@ public static class Utils {
     public static Vector3 elementWiseMult(Vector3 a, Vector3 b) {
         return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
+
+    /// <summary>
+    /// Returns the index of the biggest axis
+    /// </summary>
+    /// <param name="vec">Vector to check</param>
+    /// <returns>Axis</returns>
+    public static int biggestAxis(Vector3 vec) {
+        int biggest = 0;
+        float max = 0;
+        for (int i = 0; i < 3; i++) {
+            if (Mathf.Abs(vec[i]) > max) {
+                biggest = i;
+            }
+        }
+        return biggest;
+    }
 }

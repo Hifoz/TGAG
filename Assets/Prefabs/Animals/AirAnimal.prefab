@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 54108426050496222}
   - component: {fileID: 137557102691660816}
   - component: {fileID: 114036176626946552}
+  - component: {fileID: 114058950109531782}
   m_Layer: 0
   m_Name: AirAnimal
   m_TagString: Untagged
@@ -66,6 +67,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 77833c7e7aa3105478d0b0a076f7ea80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &114058950109531782
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1263446260787308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77fc1364f8f0b3b48915464e49626629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!137 &137557102691660816
