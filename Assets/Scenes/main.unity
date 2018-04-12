@@ -1482,7 +1482,7 @@ GameObject:
   - component: {fileID: 1409900443}
   - component: {fileID: 1409900442}
   m_Layer: 0
-  m_Name: AudioController
+  m_Name: AudioManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1499,6 +1499,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 909044700e087184b89e5e809aa951fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldGenManager: {fileID: 988479786}
+  playerCamera: {fileID: 1058874303}
+  waterSearchRadius: 2
 --- !u!4 &1409900443
 Transform:
   m_ObjectHideFlags: 0

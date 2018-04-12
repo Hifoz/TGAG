@@ -33,6 +33,7 @@ class AudioManager : MonoBehaviour{
         // TODO : Load volume settings from PlayerPrefs
 
         StartCoroutine(musicPlayer());
+        StartCoroutine(environmentPlayer());
     }
 
     private void Update() {
@@ -60,45 +61,68 @@ class AudioManager : MonoBehaviour{
     }
 
 
+    private IEnumerator environmentPlayer() {
+        GameObject oceanPlayer = new GameObject() { name = "oceanSoundPlayer" };
+        oceanSource = oceanPlayer.AddComponent<AudioSource>();
+        oceanSource.volume = 0;
+        oceanSource.loop = true;
+        oceanSource.clip = Resources.Load<AudioClip>("Audio/water_lapping_sea_waves_sandy_beach_5_meters_01");
+        oceanSource.Play();
+
+        yield return new WaitForSeconds(1);
+        while (true) {
+            updateWaterVolume();
+            yield return null;
+        }
+
+    }
+
+
     /// <summary>
     /// Uses the world chunk data to find closest water block and base sound level off of that.
     /// </summary>
     private void updateWaterVolume() {
         /*
-         * Find closest x chunks
-         *  Search these to try find closest water block
-         *   Update water volume wit this
-         * 
+         TODO 
+             check if the camera is IN water first
          */
+
+
 
         Vector3 cameraPos = playerCamera.transform.position;
         Vector2 cameraPosXZ = new Vector2(cameraPos.x, cameraPos.z);
         float closestWaterBlockDist = waterSearchRadius;
 
         // Find the radius of chunks that need to be checked
-        int chunkRadius = Mathf.CeilToInt(waterSearchRadius / (float)WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize + 1;
-
-        // Search all inrange chunks for the closest wataer block
-        foreach(ChunkData chunk in worldGenManager.getChunkGrid()) {
-            Vector3 inChunkPosition = cameraPos - chunk.pos;
-            if (new Vector2(inChunkPosition.x, inChunkPosition.z).magnitude > chunkRadius)
+        int chunkRadius = 2;// Mathf.CeilToInt(waterSearchRadius / (float)WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize + 1;
+        int c = 0;
+        int d = 0;
+        // Search all inrange chunks for the closest water block
+        foreach (ChunkData chunk in worldGenManager.getChunkGrid()) {
+            if (chunk == null)
                 continue;
 
+            Vector3 inChunkPosition = cameraPos - chunk.pos;
+            if (new Vector2(inChunkPosition.x, inChunkPosition.z).magnitude > 50)
+                continue;
+            d++;
             for (int x = -waterSearchRadius; x < waterSearchRadius; x++) {
                 for (int y = -waterSearchRadius; y < waterSearchRadius; y++) {
                     for (int z = -waterSearchRadius; z < waterSearchRadius; z++) {
-
-                        Vector3 blockPosition = new Vector3(x, y, z) + chunk.pos;
-                        float distFromBlock = Vector3.Distance(blockPosition, cameraPos);
-                        if (distFromBlock < closestWaterBlockDist) {
+                        float distFromBlock = Vector3.Distance(new Vector3(x, y, z) + chunk.pos, cameraPos);
+                        if (distFromBlock < closestWaterBlockDist && chunk.blockDataMap.mapdata[chunk.blockDataMap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER) {
                             closestWaterBlockDist = distFromBlock;
                         }
+                        c++;
                     }
                 }
             }
         }
-
-        oceanSource.volume = (waterSearchRadius - closestWaterBlockDist) / closestWaterBlockDist * gameVolume;
+        Debug.Log(c + "  ---  " + d);
+        if (closestWaterBlockDist < waterSearchRadius)
+            oceanSource.volume = closestWaterBlockDist / closestWaterBlockDist * gameVolume;
+        else
+            oceanSource.volume = 0;
         oceanSource.pitch = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position)) ? 0.2f : 1f;
 
     }
