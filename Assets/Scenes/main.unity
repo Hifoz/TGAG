@@ -1501,7 +1501,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   worldGenManager: {fileID: 988479786}
   playerCamera: {fileID: 1058874303}
-  waterSearchRadius: 2
+  waterSearchRadius: 50
 --- !u!4 &1409900443
 Transform:
   m_ObjectHideFlags: 0

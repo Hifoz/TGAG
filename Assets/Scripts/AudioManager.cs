@@ -88,37 +88,32 @@ class AudioManager : MonoBehaviour{
          */
 
 
-
+        ChunkData[,] chunks = worldGenManager.getChunkGrid();
         Vector3 cameraPos = playerCamera.transform.position;
         Vector2 cameraPosXZ = new Vector2(cameraPos.x, cameraPos.z);
         float closestWaterBlockDist = waterSearchRadius;
 
-        // Find the radius of chunks that need to be checked
-        int chunkRadius = 2;// Mathf.CeilToInt(waterSearchRadius / (float)WorldGenConfig.chunkSize) * WorldGenConfig.chunkSize + 1;
         int c = 0;
-        int d = 0;
-        // Search all inrange chunks for the closest water block
-        foreach (ChunkData chunk in worldGenManager.getChunkGrid()) {
-            if (chunk == null)
-                continue;
 
-            Vector3 inChunkPosition = cameraPos - chunk.pos;
-            if (new Vector2(inChunkPosition.x, inChunkPosition.z).magnitude > 50)
-                continue;
-            d++;
-            for (int x = -waterSearchRadius; x < waterSearchRadius; x++) {
+        for (int x = -waterSearchRadius; x < waterSearchRadius; x++) {
+            for (int z = -waterSearchRadius; z < waterSearchRadius; z++) {
+                float corruptionOffset = Corruption.corruptWaterHeight(0, Corruption.corruptionFactor(cameraPos));
                 for (int y = -waterSearchRadius; y < waterSearchRadius; y++) {
-                    for (int z = -waterSearchRadius; z < waterSearchRadius; z++) {
-                        float distFromBlock = Vector3.Distance(new Vector3(x, y, z) + chunk.pos, cameraPos);
-                        if (distFromBlock < closestWaterBlockDist && chunk.blockDataMap.mapdata[chunk.blockDataMap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER) {
+                    float distFromBlock = new Vector3(x, y, z).magnitude;
+                    if (distFromBlock < closestWaterBlockDist && y + cameraPos.y < WorldGenConfig.waterEndLevel + corruptionOffset &&  y + cameraPos.y > corruptionOffset) {
+                        // Find what chunk this position is in:
+                        Vector3Int blockWorldPos = Utils.floorVectorToInt(cameraPos) + new Vector3Int(x, y, z);
+                        BlockData.BlockType block = VoxelPhysics.voxelAtPos(blockWorldPos);
+
+                        if(block == BlockData.BlockType.WATER)
                             closestWaterBlockDist = distFromBlock;
-                        }
                         c++;
                     }
                 }
             }
         }
-        Debug.Log(c + "  ---  " + d);
+
+        Debug.Log(c);
         if (closestWaterBlockDist < waterSearchRadius)
             oceanSource.volume = closestWaterBlockDist / closestWaterBlockDist * gameVolume;
         else
