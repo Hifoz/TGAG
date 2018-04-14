@@ -352,6 +352,7 @@ public class WorldGenManager : MonoBehaviour {
             subChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(subChunk.GetComponent<MeshFilter>(), chunkMeshData.meshData[i]);
             subChunk.name = "terrainSubChunk";
+            subChunk.tag = "terrainSubChunk";
             subChunk.GetComponent<MeshRenderer>().sharedMaterial = materialTerrain;
             subChunk.GetComponent<MeshRenderer>().material.renderQueue = subChunk.GetComponent<MeshRenderer>().material.shader.renderQueue - 1;
             subChunk.GetComponent<MeshRenderer>().enabled = true;
@@ -367,16 +368,17 @@ public class WorldGenManager : MonoBehaviour {
             waterChunk.transform.localScale = Vector3.one;
             MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
             waterChunk.name = "waterSubChunk";
+            waterChunk.tag = "waterSubChunk";
             waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
             waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
             waterChunk.GetComponent<MeshRenderer>().enabled = true;
             cd.waterChunk.Add(waterChunk);
         }
 
-        if (chunkMeshData.chunkPos.magnitude > 100) {
-
+        GameObject windChunk = null;
+        if (chunkMeshData.windData.vertices.Length > 0) {
+            windChunk = chunkPool.getObject();
             // Create wind mesh
-            GameObject windChunk = chunkPool.getObject();
             windChunk.layer = 10;
             windChunk.transform.parent = chunk.transform;
             windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
@@ -386,11 +388,16 @@ public class WorldGenManager : MonoBehaviour {
             windChunk.GetComponent<MeshCollider>().isTrigger = true;
             MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshCollider>(), chunkMeshData.windData);
             windChunk.name = "windSubChunk";
+            windChunk.tag = "windSubChunk";
             windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
             windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             windChunk.GetComponent<MeshRenderer>().enabled = false;
             cd.waterChunk.Add(windChunk);
+        }
 
+        if (chunkMeshData.chunkPos.magnitude > 100) {
+            if (windChunk != null)
+            windChunk.transform.position += new Vector3(0, 200, 0);
 
             // Add wind particle system to chunks
             GameObject particleSystem = Instantiate(windParticleSystemPrefab);
@@ -575,6 +582,7 @@ public class WorldGenManager : MonoBehaviour {
     private Vector3 getPlayerPos() {
         return calculateChunkPos(player.position);
     }
+
 
     //    ____                  _                          _       __                  _   _                 
     //   |  _ \                | |                        | |     / _|                | | (_)                
