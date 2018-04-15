@@ -38,7 +38,7 @@ class AudioManager : MonoBehaviour{
     private AudioClip[] musicClips;
 
     // Animal
-    private static AudioClip animalSound;
+    private static AudioClip[] animalSounds;
     public float animalVolume = 0.6f;
 
     private GameObject audioPlayersParent;
@@ -48,7 +48,11 @@ class AudioManager : MonoBehaviour{
         rng = new System.Random(12345);
         updateVolume();
 
-        animalSound = Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018");
+        animalSounds = new AudioClip[]{
+            Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018"),
+            Resources.Load<AudioClip>("Audio/Movement/dirt"),
+            Resources.Load<AudioClip>("Audio/Movement/leaf")
+        };
     }
 
 
@@ -68,7 +72,7 @@ class AudioManager : MonoBehaviour{
     /// </summary>
     /// <param name="aa"></param>
     public static void initAnimalAudio(AnimalAudio aa) {
-        aa.init(rng.Next(), animalSound);
+        aa.init(rng.Next(), animalSounds);
     }
 
     #region audio player coroutines
