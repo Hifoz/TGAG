@@ -29,16 +29,34 @@ class AudioManager : MonoBehaviour{
     private AudioSource musicSource;
     private AudioClip[] musicClips;
 
+    // Animal
+    private static AudioClip animalSound;
+    private static float animalVolume;
 
-    private void Start() {
+    private static System.Random rng;
+
+    private void Awake() {
+        rng = new System.Random(12345);
         updateVolume();
 
+        animalSound = Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018");
+        animalVolume = 1f;
+    }
+
+
+
+    private void Start() {
         StartCoroutine(musicPlayer());
 
         // No gameplay sounds in main menu
         if(SceneManager.GetActiveScene().name == "main") {
             StartCoroutine(gameplayPlayer());
         }
+    }
+
+
+    public static void initAnimalAudio(AnimalAudio aa) {
+        aa.init(rng.Next(), animalSound);
     }
 
     #region audio player coroutines
@@ -216,7 +234,20 @@ class AudioManager : MonoBehaviour{
             waterSource.volume = 0;
         waterSource.pitch = inWater ? 0.2f : 1f;
     }
-    
+
+    /// <summary>
+    /// Update the volume of all animals
+    /// </summary>
+    private void updateAnimalVolume() {
+        List<GameObject> animals = GameObject.FindGameObjectsWithTag("Animal").ToList();
+        animals.Add(GameObject.FindGameObjectWithTag("Player"));
+        foreach(GameObject animal in animals) {
+            if(animal.GetComponent<Player>() == null) {
+                animal.GetComponent<AnimalAudio>().updateVolume(AnimalVolume);
+            }
+        }
+    }
+
     #endregion
 
     #region accessors
@@ -248,6 +279,26 @@ class AudioManager : MonoBehaviour{
 
         private set {
             musicVolume = value;
+        }
+    }
+
+    public static float AnimalVolume {
+        get {
+            return animalVolume * gameVolume * masterVolume;
+        }
+
+        private set {
+            animalVolume = value;
+        }
+    }
+
+    public static AudioClip AnimalSound {
+        get {
+            return animalSound;
+        }
+
+        private set {
+            animalSound = value;
         }
     }
 
