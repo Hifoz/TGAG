@@ -545,7 +545,6 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual public void OnVoxelCollisionEnter(BlockData.BlockType type) {
-        Debug.Log("COLLISION");
         brain.OnCollisionEnter();
     }
 

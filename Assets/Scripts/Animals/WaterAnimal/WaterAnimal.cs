@@ -178,7 +178,7 @@ public class WaterAnimal : Animal {
             bool flagHitGround = VoxelPhysics.isSolid(hitGround.type);
 
             if (flagHitGround) {
-                if (hitGround.distance < 1f) {
+                if (hitGround.distance < 5f) {
                     state.grounded = true;
                 } else {
                     state.grounded = false;
@@ -191,7 +191,7 @@ public class WaterAnimal : Animal {
         if (state.inWater) {
             waterGravity();
         } else if (state.grounded && !flagFlap) {
-            gravity = Vector3.zero;
+            gravity = -Physics.gravity;
         } else {
             notGroundedGravity();
         }
