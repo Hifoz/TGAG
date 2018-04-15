@@ -104,7 +104,7 @@
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
 				fixed3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 2);
-				fixed3 light = (i.diff + specular * 0.15) * shadow  + i.ambient;
+				fixed3 light = (i.diff + specular * 0.15) * shadow  + i.ambient * 0.5;
 				//Color
 				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
 				//LOD works by making block 100% modifier color at a distance, so grass block would become 100% green at a distance
