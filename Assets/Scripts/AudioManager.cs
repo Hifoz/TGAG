@@ -12,8 +12,6 @@ class AudioManager : MonoBehaviour{
 
     public WorldGenManager worldGenManager;
     public Camera playerCamera;
-    public int waterSoundRange;
-    public int oceanSoundRange;
 
     private static float masterVolume = 1;
     private static float gameVolume = 1;
@@ -22,7 +20,17 @@ class AudioManager : MonoBehaviour{
 
     // Environment
     private AudioSource oceanSource;
+    public float oceanVolume = 1f;
+    public int oceanSoundRange = 100;
+
     private AudioSource waterSource;
+    public float waterVolume = 0.2f;
+    public int waterSoundRange = 100;
+
+    private AudioSource windSource;
+    public float windVolume = 0.5f;
+    public int windSoundRange = 50;
+
     private AudioSource ambientSource;
 
     // Music
@@ -31,8 +39,9 @@ class AudioManager : MonoBehaviour{
 
     // Animal
     private static AudioClip animalSound;
-    private static float animalVolume;
+    public float animalVolume = 0.6f;
 
+    private GameObject audioPlayersParent;
     private static System.Random rng;
 
     private void Awake() {
@@ -40,11 +49,12 @@ class AudioManager : MonoBehaviour{
         updateVolume();
 
         animalSound = Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018");
-        animalVolume = 1f;
     }
 
 
     private void Start() {
+        audioPlayersParent = new GameObject() { name = "EnvironmentAudioPlayers" };
+
         StartCoroutine(musicPlayer());
 
         // No gameplay sounds in main menu
@@ -68,8 +78,9 @@ class AudioManager : MonoBehaviour{
     /// </summary>
     private IEnumerator musicPlayer() {
         musicClips = Resources.LoadAll<AudioClip>("Audio/Music/");
-        GameObject musicObj = new GameObject() { name = "MusicPlayer" };
-        musicSource = musicObj.AddComponent<AudioSource>();
+        GameObject musicPlayer = new GameObject() { name = "MusicPlayer" };
+        musicPlayer.transform.parent = audioPlayersParent.transform;
+        musicSource = musicPlayer.AddComponent<AudioSource>();
         musicSource.volume = MusicVolume * MasterVolume;
 
         // TODO: Make the music clips fade in/out with overlap to make the transition between the tracks smoother
@@ -88,24 +99,36 @@ class AudioManager : MonoBehaviour{
     /// </summary>
     /// <returns></returns>
     private IEnumerator gameplayPlayer() {
-        GameObject oceanPlayer = new GameObject() { name = "oceanSoundPlayer" };
+
+        GameObject oceanPlayer = new GameObject() { name = "OceanSoundPlayer"};
+        oceanPlayer.transform.parent = audioPlayersParent.transform;
         oceanSource = oceanPlayer.AddComponent<AudioSource>();
         oceanSource.volume = 0;
         oceanSource.loop = true;
         oceanSource.clip = Resources.Load<AudioClip>("Audio/water_lapping_sea_waves_sandy_beach_5_meters_01");
         oceanSource.Play();
 
-        GameObject waterPlayer = new GameObject() { name = "waterSoundPlayer" };
+        GameObject waterPlayer = new GameObject() { name = "WaterSoundPlayer" };
+        waterPlayer.transform.parent = audioPlayersParent.transform;
         waterSource = waterPlayer.AddComponent<AudioSource>();
         waterSource.volume = 0;
         waterSource.loop = true;
         waterSource.clip = Resources.Load<AudioClip>("Audio/Lake3_Kevin_Durr_sonissGDC2017");
         waterSource.Play();
 
+        GameObject windPlayer = new GameObject() { name = "WindSoundPlayer" };
+        windPlayer.transform.parent = audioPlayersParent.transform;
+        windSource = windPlayer.AddComponent<AudioSource>();
+        windSource.volume = 0;
+        windSource.loop = true;
+        windSource.clip = Resources.Load<AudioClip>("Audio/wind_Hzandbits_sonissGDC2018"); // TODO : Look for a better track, this one is kinda meh..
+        windSource.Play();
+
         yield return new WaitForSeconds(1);
         while (true) {
             updateOceanVolume();
             updateWaterVolume();
+            updateWindVolume();
             yield return null;
         }
     }
@@ -136,7 +159,7 @@ class AudioManager : MonoBehaviour{
         Vector3 camPosX0Z = playerCamera.transform.position;
         camPosX0Z.y = 0;
 
-        foreach(GameObject windArea in windAreas) {
+        foreach (GameObject windArea in windAreas) {
             Vector3 windAreaCenter = windArea.transform.position + new Vector3(WorldGenConfig.chunkSize * 0.5f, 0, WorldGenConfig.chunkSize * 0.5f);
             windAreaCenter.y = 0;
             float dist = Vector3.Distance(windAreaCenter, camPosX0Z);
@@ -157,14 +180,14 @@ class AudioManager : MonoBehaviour{
             diff = new Vector2(corruptionYOffset - playerCamera.transform.position.y, closestRange);
         }
         // Calculate new closestRange with the y distance in account
-        if(diff != Vector2.zero) {
+        if (diff != Vector2.zero) {
             diff.x *= 0.5f;
             closestRange = diff.magnitude;
         }
 
         // Update the volume
         if (closestRange <= oceanSoundRange) {
-            oceanSource.volume = (1 - closestRange / oceanSoundRange) * GameVolume; // TODO this should not be a linear dropoff
+            oceanSource.volume = (1 - closestRange / oceanSoundRange) * oceanVolume * gameVolume * masterVolume; // TODO this should not be a linear dropoff
         } else {
             oceanSource.volume = 0;
         }
@@ -177,7 +200,6 @@ class AudioManager : MonoBehaviour{
     /// Updates the volume of (non-ocean) water
     /// </summary>
     private void updateWaterVolume() {
-        const float waterVolume = 0.2f;
         bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
         waterSource.pitch = inWater ? 0.2f : 1f;
 
@@ -238,6 +260,44 @@ class AudioManager : MonoBehaviour{
             waterSource.volume = 0;
         }
     }
+
+    /// <summary>
+    /// Update volume of wind
+    /// </summary>
+    private void updateWindVolume() {
+        // If we're in water: no wind sound
+        if (VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position))) {
+            windSource.volume = 0;
+            return;
+        }
+        float closestRange = WindController.globalWindHeight - playerCamera.transform.position.y;
+        // If we're above global wind height: max wind volume
+        if (closestRange <= 0) {
+            windSource.volume = windVolume * gameVolume * masterVolume;
+            return;
+        }
+
+
+        GameObject[] windAreas = GameObject.FindGameObjectsWithTag("windSubChunk"); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
+
+        Vector3 camPosX0Z = playerCamera.transform.position;
+        camPosX0Z.y = 0;
+
+        foreach (GameObject windArea in windAreas) {
+            Vector3 windAreaCenter = windArea.transform.position + new Vector3(WorldGenConfig.chunkSize * 0.5f, 0, WorldGenConfig.chunkSize * 0.5f);
+            windAreaCenter.y = 0;
+            float dist = Vector3.Distance(windAreaCenter, camPosX0Z);
+
+            if (dist < closestRange) {
+                closestRange = dist;
+            }
+        }
+
+        windSource.volume = (1 - closestRange / windSoundRange) * windVolume * gameVolume * masterVolume;
+
+
+    }
+
 
     /// <summary>
     /// Update the volume of all animals
