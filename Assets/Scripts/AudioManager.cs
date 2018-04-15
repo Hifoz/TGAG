@@ -15,9 +15,9 @@ class AudioManager : MonoBehaviour{
     public int waterSoundRange;
     public int oceanSoundRange;
 
-    public static float masterVolume = 1;
-    public static float gameVolume = 1;
-    public static float musicVolume = 1;
+    private static float masterVolume = 1;
+    private static float gameVolume = 1;
+    private static float musicVolume = 1;
 
 
     // Environment
@@ -28,7 +28,6 @@ class AudioManager : MonoBehaviour{
     // Music
     private AudioSource musicSource;
     private AudioClip[] musicClips;
-
 
 
     private void Start() {
@@ -42,27 +41,16 @@ class AudioManager : MonoBehaviour{
         }
     }
 
+    #region audio player coroutines
 
     /// <summary>
-    /// Updates the main audio volumes from PlayerPrefs
-    /// </summary>
-    public void updateVolume() {
-        Debug.Log("updating volume");
-        masterVolume = PlayerPrefs.GetFloat("Master Volume", 100) / 100f;
-        gameVolume = PlayerPrefs.GetFloat("Gameplay Volume", 100) / 100f;
-        musicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f;
-        if (musicSource != null)
-            musicSource.volume = musicVolume * masterVolume;
-    }
-
-    /// <summary>
-    /// Cycles through all the music tracks
+    /// Starts music player and keeps cycling through them
     /// </summary>
     private IEnumerator musicPlayer() {
         musicClips = Resources.LoadAll<AudioClip>("Audio/Music/");
         GameObject musicObj = new GameObject() { name = "MusicPlayer" };
         musicSource = musicObj.AddComponent<AudioSource>();
-        musicSource.volume = musicVolume * masterVolume;
+        musicSource.volume = MusicVolume * MasterVolume;
 
         // TODO: Make the music clips fade in/out with overlap to make the transition between the tracks smoother
 
@@ -75,11 +63,14 @@ class AudioManager : MonoBehaviour{
         }
     }
 
-
+    /// <summary>
+    /// Starts gameplay audio players and keeps volumes up-to-date
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator gameplayPlayer() {
         GameObject oceanPlayer = new GameObject() { name = "oceanSoundPlayer" };
         oceanSource = oceanPlayer.AddComponent<AudioSource>();
-        oceanSource.volume = musicVolume;
+        oceanSource.volume = 0;
         oceanSource.loop = true;
         oceanSource.clip = Resources.Load<AudioClip>("Audio/water_lapping_sea_waves_sandy_beach_5_meters_01");
         oceanSource.Play();
@@ -88,7 +79,7 @@ class AudioManager : MonoBehaviour{
         waterSource = waterPlayer.AddComponent<AudioSource>();
         waterSource.volume = 0;
         waterSource.loop = true;
-        waterSource.clip = Resources.Load<AudioClip>("Audio/Lake3_Kevin_Durr_sonissGDC2017"); // Find new water sound for this
+        waterSource.clip = Resources.Load<AudioClip>("Audio/Lake3_Kevin_Durr_sonissGDC2017");
         waterSource.Play();
 
         yield return new WaitForSeconds(1);
@@ -97,7 +88,21 @@ class AudioManager : MonoBehaviour{
             updateWaterVolume();
             yield return null;
         }
+    }
 
+    #endregion
+
+    #region volume updators
+
+    /// <summary>
+    /// Updates the main audio volumes from PlayerPrefs
+    /// </summary>
+    public void updateVolume() {
+        MasterVolume = PlayerPrefs.GetFloat("Master Volume", 100) / 100f;
+        GameVolume = PlayerPrefs.GetFloat("Gameplay Volume", 100) / 100f;
+        MusicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f;
+        if (musicSource != null)
+            musicSource.volume = MusicVolume * MasterVolume;
     }
 
 
@@ -124,30 +129,45 @@ class AudioManager : MonoBehaviour{
 
         float corruptionYOffset = Corruption.corruptWaterHeight(0, Corruption.corruptionFactor(playerCamera.transform.position + worldGenManager.getWorldOffset()));
 
-
-        if (playerCamera.transform.position.y > corruptionYOffset + WorldGenConfig.waterEndLevel) {
-            Vector2 a = new Vector2(playerCamera.transform.position.y - (corruptionYOffset + WorldGenConfig.waterEndLevel), closestRange);
-            a.x *= 0.5f;
-            closestRange = a.magnitude;
-        } else if (playerCamera.transform.position.y < corruptionYOffset) {
-            Vector2 a = new Vector2(corruptionYOffset - playerCamera.transform.position.y, closestRange);
-            a.x *= 0.5f;
-            closestRange = a.magnitude;
+        // Take the Y distance between the camera and water into account:
+        Vector2 diff = Vector2.zero;
+        if (playerCamera.transform.position.y > corruptionYOffset + WorldGenConfig.waterEndLevel) { // camera above water 
+            diff = new Vector2(playerCamera.transform.position.y - (corruptionYOffset + WorldGenConfig.waterEndLevel), closestRange);
+        } else if (playerCamera.transform.position.y < corruptionYOffset) { // player underneath water (not submerged in water, but actually under it)
+            diff = new Vector2(corruptionYOffset - playerCamera.transform.position.y, closestRange);
+        }
+        // Calculate new closestRange with the y distance in account
+        if(diff != Vector2.zero) {
+            diff.x *= 0.5f;
+            closestRange = diff.magnitude;
         }
 
-        if (closestRange < oceanSoundRange)
-            oceanSource.volume = (1 - closestRange / oceanSoundRange) * gameVolume; // TODO this should not be a linear dropoff
+        // Update the volume
+        if (closestRange <= oceanSoundRange)
+            oceanSource.volume = (1 - closestRange / oceanSoundRange) * GameVolume; // TODO this should not be a linear dropoff
         else
             oceanSource.volume = 0;
+
         oceanSource.pitch = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position)) ? 0.2f : 1f;
     }
 
+
     /// <summary>
-    /// Uses the world chunk data to find closest water block and base sound level off of that.
-    /// This method is fairly expensive, so only use for small ranges
+    /// Updates the volume of (non-ocean) water
     /// </summary>
     private void updateWaterVolume() {
-        List<GameObject> waterChunks = GameObject.FindGameObjectsWithTag("waterSubChunk").ToList(); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
+        const float waterVolume = 0.2f;
+        bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
+
+        waterSource.pitch = inWater ? 0.2f : 1f;
+
+        if (VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position))) {
+            waterSource.volume =  waterVolume * GameVolume * MasterVolume;
+            return;
+        }
+
+
+        List<GameObject> waterChunks = GameObject.FindGameObjectsWithTag("waterSubChunk").ToList();
         float closestRange = waterSoundRange;
 
 
@@ -189,13 +209,47 @@ class AudioManager : MonoBehaviour{
             }
         }
 
+
         if (closestRange < waterSoundRange)
-            waterSource.volume = (1 - closestRange / waterSoundRange) * gameVolume * masterVolume * 0.2f;
+            waterSource.volume = (1 - closestRange / waterSoundRange) * waterVolume * GameVolume * MasterVolume;
         else
             waterSource.volume = 0;
-        waterSource.pitch = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position)) ? 0.2f : 1f;
+        waterSource.pitch = inWater ? 0.2f : 1f;
+    }
+    
+    #endregion
+
+    #region accessors
+
+    public static float MasterVolume {
+        get {
+            return masterVolume;
+        }
+
+        private set {
+            masterVolume = value;
+        }
     }
 
+    public static float GameVolume {
+        get {
+            return gameVolume;
+        }
 
+        private set {
+            gameVolume = value;
+        }
+    }
 
+    public static float MusicVolume {
+        get {
+            return musicVolume;
+        }
+
+        private set {
+            musicVolume = value;
+        }
+    }
+
+    #endregion
 }
