@@ -3,7 +3,9 @@ using System.Collections;
 using UnityEngine;
 
 
-
+/// <summary>
+/// Audio Player for an animal
+/// </summary>
 [RequireComponent(typeof(AudioSource))]
 class AnimalAudio : MonoBehaviour {
     private AudioClip clip;
@@ -19,16 +21,25 @@ class AnimalAudio : MonoBehaviour {
         AudioManager.initAnimalAudio(this);
     }
 
+
+    /// <summary>
+    /// Initializes the audio player
+    /// </summary>
+    /// <param name="seed"></param>
+    /// <param name="animalSound"></param>
     public void init(int seed, AudioClip animalSound) {
         source = GetComponent<AudioSource>();
-        clip = AudioManager.AnimalSound;
+        clip = animalSound;
         source.clip = clip;
         rng = new System.Random(seed);
 
         StartCoroutine(player());
     }
 
-
+    /// <summary>
+    /// Plays animal sounds at psuedo random interval
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator player() {
         while (true) {
             if (GetComponent<Player>() == null) {
@@ -36,7 +47,7 @@ class AnimalAudio : MonoBehaviour {
                 source.Play();
             }
 
-            yield return new WaitForSeconds(clip.length + new System.Random().Next(speakDelay.first, speakDelay.second));
+            yield return new WaitForSeconds(clip.length + rng.Next(speakDelay.first, speakDelay.second));
         }
     }
 

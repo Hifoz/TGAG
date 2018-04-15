@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Class resposible for handling of audio
+/// Class resposible for management of audio
 /// </summary>
 class AudioManager : MonoBehaviour{
 
@@ -44,7 +44,6 @@ class AudioManager : MonoBehaviour{
     }
 
 
-
     private void Start() {
         StartCoroutine(musicPlayer());
 
@@ -54,7 +53,10 @@ class AudioManager : MonoBehaviour{
         }
     }
 
-
+    /// <summary>
+    /// Used for initializing an AnimalAudio component
+    /// </summary>
+    /// <param name="aa"></param>
     public static void initAnimalAudio(AnimalAudio aa) {
         aa.init(rng.Next(), animalSound);
     }
@@ -161,10 +163,11 @@ class AudioManager : MonoBehaviour{
         }
 
         // Update the volume
-        if (closestRange <= oceanSoundRange)
+        if (closestRange <= oceanSoundRange) {
             oceanSource.volume = (1 - closestRange / oceanSoundRange) * GameVolume; // TODO this should not be a linear dropoff
-        else
+        } else {
             oceanSource.volume = 0;
+        }
 
         oceanSource.pitch = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position)) ? 0.2f : 1f;
     }
@@ -176,34 +179,35 @@ class AudioManager : MonoBehaviour{
     private void updateWaterVolume() {
         const float waterVolume = 0.2f;
         bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
-
         waterSource.pitch = inWater ? 0.2f : 1f;
 
-        if (VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position))) {
+        if (inWater) {
             waterSource.volume =  waterVolume * GameVolume * MasterVolume;
             return;
         }
 
 
         List<GameObject> waterChunks = GameObject.FindGameObjectsWithTag("waterSubChunk").ToList();
-        float closestRange = waterSoundRange;
+        float closestVertDist = waterSoundRange;
+        float closestChunkDist = waterSoundRange + WorldGenConfig.chunkSize;
 
 
-        float closestChunkDist = float.MaxValue;
-        // Sort chunks and find closest
-        waterChunks = waterChunks.OrderBy(delegate (GameObject go) {
-            Vector3 chunkPos = go.transform.position;
-            chunkPos.y = 0;
-            Vector3 camPos = playerCamera.transform.position;
-            camPos.y = 0;
-            float dist = Vector3.Distance(chunkPos, camPos);
-        if (dist < closestChunkDist && go.GetComponent<MeshFilter>().mesh.vertices.Length > 0)
-                closestChunkDist = dist;
+        // Sort chunks and find closest that contains vertices
+        waterChunks = waterChunks.OrderBy(
+            delegate (GameObject go) {
+                Vector3 chunkPos = go.transform.position;
+                Vector3 camPos = playerCamera.transform.position;
+                chunkPos.y = 0;
+                camPos.y = 0;
+                float dist = Vector3.Distance(chunkPos, camPos);
+                if (dist < closestChunkDist && go.GetComponent<MeshFilter>().mesh.vertices.Length > 0) {
+                    closestChunkDist = dist;
+                }
+                return dist;
+            }
+        ).ToList();
 
-            return dist;
-        }).ToList();
-
-        if(closestChunkDist < waterSoundRange) {
+        if(closestChunkDist < waterSoundRange + WorldGenConfig.chunkSize) {
             // Remove all chunks that are to far away to be in contention for closest vertex
             waterChunks = waterChunks.Where(
                 delegate (GameObject go) {
@@ -220,19 +224,19 @@ class AudioManager : MonoBehaviour{
                 foreach (Vector3 vert in waterChunk.GetComponent<MeshFilter>().mesh.vertices) {
                     Vector3 vertWorldPos = chunkPos + vert;
                     float dist = Vector3.Distance(vertWorldPos, playerCamera.transform.position);
-                    if (dist < closestRange) {
-                        closestRange = dist;
+                    if (dist < closestVertDist) {
+                        closestVertDist = dist;
                     }
                 }
             }
         }
 
-
-        if (closestRange < waterSoundRange)
-            waterSource.volume = (1 - closestRange / waterSoundRange) * waterVolume * GameVolume * MasterVolume;
-        else
+        // Update the volume
+        if (closestVertDist < waterSoundRange) {
+            waterSource.volume = (1 - closestVertDist / waterSoundRange) * waterVolume * GameVolume * MasterVolume;
+        } else {
             waterSource.volume = 0;
-        waterSource.pitch = inWater ? 0.2f : 1f;
+        }
     }
 
     /// <summary>
@@ -242,9 +246,7 @@ class AudioManager : MonoBehaviour{
         List<GameObject> animals = GameObject.FindGameObjectsWithTag("Animal").ToList();
         animals.Add(GameObject.FindGameObjectWithTag("Player"));
         foreach(GameObject animal in animals) {
-            if(animal.GetComponent<Player>() == null) {
-                animal.GetComponent<AnimalAudio>().updateVolume(AnimalVolume);
-            }
+            animal.GetComponent<AnimalAudio>().updateVolume(animalVolume * gameVolume * masterVolume);
         }
     }
 
@@ -279,26 +281,6 @@ class AudioManager : MonoBehaviour{
 
         private set {
             musicVolume = value;
-        }
-    }
-
-    public static float AnimalVolume {
-        get {
-            return animalVolume * gameVolume * masterVolume;
-        }
-
-        private set {
-            animalVolume = value;
-        }
-    }
-
-    public static AudioClip AnimalSound {
-        get {
-            return animalSound;
-        }
-
-        private set {
-            animalSound = value;
         }
     }
 
