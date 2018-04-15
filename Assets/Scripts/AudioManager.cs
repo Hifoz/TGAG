@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Class resposible for handling of audio
@@ -18,7 +19,6 @@ class AudioManager : MonoBehaviour{
     public static float gameVolume = 1;
     public static float musicVolume = 1;
 
-    private bool isUnderWater;
 
     // Environment
     private AudioSource oceanSource;
@@ -32,16 +32,27 @@ class AudioManager : MonoBehaviour{
 
 
     private void Start() {
-        worldGenManager = GameObject.Find("WorldGenManager").GetComponent<WorldGenManager>();
-
-        // TODO : Load volume settings from PlayerPrefs
+        updateVolume();
 
         StartCoroutine(musicPlayer());
-        StartCoroutine(environmentPlayer());
+
+        // No gameplay sounds in main menu
+        if(SceneManager.GetActiveScene().name == "main") {
+            StartCoroutine(gameplayPlayer());
+        }
     }
 
-    private void Update() {
-        
+
+    /// <summary>
+    /// Updates the main audio volumes from PlayerPrefs
+    /// </summary>
+    public void updateVolume() {
+        Debug.Log("updating volume");
+        masterVolume = PlayerPrefs.GetFloat("Master Volume", 100) / 100f;
+        gameVolume = PlayerPrefs.GetFloat("Gameplay Volume", 100) / 100f;
+        musicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f;
+        if (musicSource != null)
+            musicSource.volume = musicVolume * masterVolume;
     }
 
     /// <summary>
@@ -51,7 +62,7 @@ class AudioManager : MonoBehaviour{
         musicClips = Resources.LoadAll<AudioClip>("Audio/Music/");
         GameObject musicObj = new GameObject() { name = "MusicPlayer" };
         musicSource = musicObj.AddComponent<AudioSource>();
-        musicSource.volume = 0;
+        musicSource.volume = musicVolume * masterVolume;
 
         // TODO: Make the music clips fade in/out with overlap to make the transition between the tracks smoother
 
@@ -65,10 +76,10 @@ class AudioManager : MonoBehaviour{
     }
 
 
-    private IEnumerator environmentPlayer() {
+    private IEnumerator gameplayPlayer() {
         GameObject oceanPlayer = new GameObject() { name = "oceanSoundPlayer" };
         oceanSource = oceanPlayer.AddComponent<AudioSource>();
-        oceanSource.volume = 0;
+        oceanSource.volume = musicVolume;
         oceanSource.loop = true;
         oceanSource.clip = Resources.Load<AudioClip>("Audio/water_lapping_sea_waves_sandy_beach_5_meters_01");
         oceanSource.Play();
@@ -82,7 +93,7 @@ class AudioManager : MonoBehaviour{
 
         yield return new WaitForSeconds(1);
         while (true) {
-            //updateOceanVolume();
+            updateOceanVolume();
             updateWaterVolume();
             yield return null;
         }
@@ -91,7 +102,7 @@ class AudioManager : MonoBehaviour{
 
 
     /// <summary>
-    /// 
+    /// Update volume of ocean water
     /// </summary>
     private void updateOceanVolume() {
         GameObject[] windAreas = GameObject.FindGameObjectsWithTag("windSubChunk"); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
@@ -136,21 +147,10 @@ class AudioManager : MonoBehaviour{
     /// This method is fairly expensive, so only use for small ranges
     /// </summary>
     private void updateWaterVolume() {
-
-        /*
-         * A possible optimizsation for this new water sound sampling would be to check if we're in a ocean biome (can probably get the data from updateOceanVolume)
-         *      and just not run this function if we're in an ocean biome (and fade it out as we get closer to the ocean biome)
-         *  ... if this optimization is needed of course
-         */
-
-
         List<GameObject> waterChunks = GameObject.FindGameObjectsWithTag("waterSubChunk").ToList(); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
         float closestRange = waterSoundRange;
-        /*
-        
-        Vector3 camPosX0Z = playerCamera.transform.position;
-        camPosX0Z.y = 0;
-        */
+
+
         float closestChunkDist = float.MaxValue;
         // Sort chunks and find closest
         waterChunks = waterChunks.OrderBy(delegate (GameObject go) {
@@ -166,18 +166,17 @@ class AudioManager : MonoBehaviour{
         }).ToList();
 
         if(closestChunkDist < waterSoundRange) {
-
-            // Remove all chunks that are to far away
+            // Remove all chunks that are to far away to be in contention for closest vertex
             waterChunks = waterChunks.Where(
                 delegate (GameObject go) {
                     Vector3 chunkPos = go.transform.position;
                     Vector3 camPos = playerCamera.transform.position;
                     chunkPos.y = 0;
                     camPos.y = 0;
-                    return Vector3.Distance(chunkPos, camPos) < closestChunkDist + WorldGenConfig.chunkSize;
+                    return Vector3.Distance(chunkPos, camPos) < closestChunkDist + WorldGenConfig.chunkSize * 2;
                 }).ToList();
 
-
+            // Find closest vertex
             foreach(GameObject waterChunk in waterChunks) {
                 Vector3 chunkPos = waterChunk.transform.position;
                 foreach (Vector3 vert in waterChunk.GetComponent<MeshFilter>().mesh.vertices) {
@@ -191,7 +190,7 @@ class AudioManager : MonoBehaviour{
         }
 
         if (closestRange < waterSoundRange)
-            waterSource.volume = (1 - closestRange / waterSoundRange) * gameVolume * 0.25f;
+            waterSource.volume = (1 - closestRange / waterSoundRange) * gameVolume * masterVolume * 0.2f;
         else
             waterSource.volume = 0;
         waterSource.pitch = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position)) ? 0.2f : 1f;

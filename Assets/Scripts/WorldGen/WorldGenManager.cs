@@ -393,12 +393,14 @@ public class WorldGenManager : MonoBehaviour {
             windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             windChunk.GetComponent<MeshRenderer>().enabled = false;
             cd.waterChunk.Add(windChunk);
+
+            if(chunkMeshData.chunkPos.magnitude < 100) {
+                windChunk.name = "inactiveWindSubChunk";
+            }
         }
 
-        if (chunkMeshData.chunkPos.magnitude > 100) {
-            if (windChunk != null)
-            windChunk.transform.position += new Vector3(0, 200, 0);
 
+        if (chunkMeshData.chunkPos.magnitude > 100) {
             // Add wind particle system to chunks
             GameObject particleSystem = Instantiate(windParticleSystemPrefab);
             particleSystem.transform.SetParent(chunk.transform);
