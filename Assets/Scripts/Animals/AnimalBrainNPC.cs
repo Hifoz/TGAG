@@ -33,17 +33,19 @@ override public void Spawn(Vector3 pos) {
         state.desiredHeading.y = 0;
     }
 
+    override public void OnCollisionEnter() {
+        avoidObstacle();
+    }
+
     /// <summary>
     /// Tries to avoid obstacle
     /// </summary>
     protected virtual void avoidObstacle() {
         int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(state.transform.position, state.desiredHeading), 10f, layerMask)) {
+        Ray ray = new Ray(state.transform.position, state.desiredHeading);
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(ray, 3f, VoxelRayCastTarget.SOLID, 1f);
+        if (VoxelPhysics.isSolid(hit.type) || Physics.Raycast(ray, 2f, layerMask)) {
             state.desiredHeading = -state.desiredHeading;
         }
-    }
-
-    public override void OnCollisionEnter() {
-        avoidObstacle();
     }
 }

@@ -544,6 +544,10 @@ public abstract class Animal : MonoBehaviour {
         }       
     }
 
+    virtual public void OnVoxelCollisionEnter(BlockData.BlockType type) {
+        brain.OnCollisionEnter();
+    }
+
     private void OnTriggerExit(Collider other) {
         if (other.name == "windSubChunk") {
             state.inWindArea = false;

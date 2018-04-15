@@ -10,9 +10,9 @@ using UnityEngine;
 public enum WorldGenManagerStatsType {
     GENERATED_CHUNKS = 0,
     ORDERED_CHUNKS,
-    GENERATED_ANIMALS,
     CANCELLED_CHUNKS,
-    ENABLED_COLLIDERS,
+    DISCARDED_CHUNKS,
+    GENERATED_ANIMALS,
 }
 
 /// <summary>
@@ -292,6 +292,7 @@ public class WorldGenManager : MonoBehaviour {
                     pendingChunks.Remove(waitingChunks[i].chunkVoxelData.chunkPos);
                     waitingChunks.RemoveAt(i);
                     i--;
+                    stats.aggregateValues[WorldGenManagerStatsType.DISCARDED_CHUNKS]++;
                 }
             }
         }
@@ -462,7 +463,7 @@ public class WorldGenManager : MonoBehaviour {
             } else {
                 VoxelRayCastHit hitGround = VoxelPhysics.rayCast(new Ray(spawnPos, Vector3.down), 200, VoxelRayCastTarget.SOLID);
                 if (VoxelPhysics.isSolid(hitGround.type)) {
-                    spawnPos = hitGround.point + Vector3.up * 4;
+                    spawnPos = hitGround.point + Vector3.up * 10;
                 } else {
                     Debug.Log("INFO: AnimalOrder, failed to find spawn point for animal, will drop from sky");
                 }

@@ -23,26 +23,28 @@ public class WaterAnimalBrainPlayer : AnimalBrainPlayer {
         }
 
         Vector3 finalHeading = Vector3.zero;
-
-        if (state.inWater) {
-            if (Input.GetKey(KeyCode.W)) {
-                finalHeading += state.desiredHeading;
-            }
-            if (Input.GetKey(KeyCode.S)) {
-                finalHeading -= state.desiredHeading;
-            }
-            if (Input.GetKey(KeyCode.A)) {
-                finalHeading += Quaternion.AngleAxis(-90, up) * state.desiredHeading;
-            }
-            if (Input.GetKey(KeyCode.D)) {
-                finalHeading += Quaternion.AngleAxis(90, up) * state.desiredHeading;
-            }
-            if (Input.GetKey(KeyCode.Space)) {
+ 
+        if (Input.GetKey(KeyCode.W)) {
+            finalHeading += state.desiredHeading;
+        }
+        if (Input.GetKey(KeyCode.S)) {
+            finalHeading -= state.desiredHeading;
+        }
+        if (Input.GetKey(KeyCode.A)) {
+            finalHeading += Quaternion.AngleAxis(-90, up) * state.desiredHeading;
+        }
+        if (Input.GetKey(KeyCode.D)) {
+            finalHeading += Quaternion.AngleAxis(90, up) * state.desiredHeading;
+        }
+        if (Input.GetKey(KeyCode.Space)) {
+            if (state.grounded) {
+                actions["flap"]();
+            } else {
                 finalHeading += Quaternion.AngleAxis(-45, right) * state.desiredHeading;
             }
-            if (Input.GetKey(KeyCode.C)) {
-                finalHeading += Quaternion.AngleAxis(45, right) * state.desiredHeading;
-            }
+        }
+        if (Input.GetKey(KeyCode.C)) {
+            finalHeading += Quaternion.AngleAxis(45, right) * state.desiredHeading;
         }
 
         if (finalHeading != Vector3.zero) {
@@ -55,8 +57,8 @@ public class WaterAnimalBrainPlayer : AnimalBrainPlayer {
     /// Sets speed based on input
     /// </summary>
     private void setSpeed() {
-        if (Input.GetKey(KeyCode.LeftShift)) {
-            state.desiredSpeed = fastSpeed;           
+        if (Input.GetKey(KeyCode.LeftShift) && state.inWater) {
+            state.desiredSpeed = fastSpeed;
         } else {
             state.desiredSpeed = slowSpeed;
         }

@@ -100,7 +100,7 @@
 				fixed shadow = SHADOW_ATTENUATION(i);
 				//light
 				float3 specular = calcSpecular(i.lightDirEye, i.eyeNormal, i.posEye, 5);
-				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient;
+				fixed3 light = (i.diff + specular * 0.5) * shadow  + i.ambient * 0.5;
 				//Color
 				//colorIndex gets encoded into uv as such: uv.x = index / COLOR_COUNT + small float	
 				fixed3 color = calculateColor(i.worldPos, i.color.r * COLOR_COUNT);
