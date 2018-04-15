@@ -140,7 +140,7 @@ public class Player : MonoBehaviour {
 
         other.AddComponent<Player>().transferPlayer(magicTrail, animalPool, GetComponent<Player>().worldOffset);
 
-        Camera.main.GetComponent<CameraController>().target = other.transform;
+        Camera.main.GetComponent<CameraController>().setTarget(other.transform);
 
         Destroy(GetComponent<Player>());
     }    

@@ -650,6 +650,7 @@ public class WorldGenManager : MonoBehaviour {
             playerAnimal.setSkeleton(skeleton);
             AnimalUtils.addAnimalBrainPlayer(playerAnimal);
             playerObj.GetComponent<Player>().initPlayer(animalPools);
+            Camera.main.GetComponent<CameraController>().setTarget(player);
         }
 
         VoxelPhysics.init(this);

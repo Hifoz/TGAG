@@ -9,7 +9,7 @@ public class CameraController : MonoBehaviour {
 
 
     public Transform target;
-    public float targetDistance = 5;
+    public float targetDistance = 20;
     public float cameraHeight = 0.75f;
 
     public GameObject underwaterOverlay;
@@ -39,7 +39,15 @@ public class CameraController : MonoBehaviour {
 
         transform.eulerAngles = rotation;
 
-        this.transform.position = target.position - transform.forward * targetDistance + transform.TransformDirection(0, cameraHeight, 0);
+        Vector3 newPos = target.position - transform.forward * targetDistance + transform.TransformDirection(0, cameraHeight, 0);
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(target.position, newPos - target.position), targetDistance, VoxelRayCastTarget.SOLID);
+        
+        if (VoxelPhysics.isSolid(hit.type)) {
+            transform.position = target.position - transform.forward * (hit.distance - 1) + transform.TransformDirection(0, cameraHeight, 0);
+        } else {
+            transform.position = newPos;
+        }
+
 
 
         if (VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position))) {
@@ -49,6 +57,24 @@ public class CameraController : MonoBehaviour {
         }
 
         cameraDir.set(transform.rotation * Vector3.forward);
+    }
+
+    /// <summary>
+    /// Sets the target of the camera
+    /// </summary>
+    /// <param name="target"></param>
+    public void setTarget(Transform target) {
+        this.target = target;
+        Animal animal = target.gameObject.GetComponent<Animal>();
+        float scale = animal.getSkeleton().getBodyParameter<float>(BodyParameter.SCALE);
+        if (animal.GetType().Equals(typeof(WaterAnimal))) {
+            float spineLen = animal.getSkeleton().getBodyParameter<float>(BodyParameter.SPINE_LENGTH);
+            targetDistance = 15 + 0.5f * scale * spineLen;
+        } else if (animal.GetType().Equals(typeof(AirAnimal))) {
+            targetDistance = 20 + 2 * scale;
+        } else if (animal.GetType().Equals(typeof(LandAnimal))) {
+            targetDistance = 20 + 2 * scale;
+        }
     }
 
     /// <summary>
