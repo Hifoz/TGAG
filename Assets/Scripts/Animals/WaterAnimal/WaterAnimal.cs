@@ -4,10 +4,11 @@ using System.Collections.Generic;
 
 public class WaterAnimal : Animal {
     //Coroutine flags
-    private bool flagFlapBackToWater = false;
+    private bool flagFlap = false;
 
     //Animation stuff
     private AnimalAnimation swimAnimation;
+    private AnimalAnimation flapAnimation;
     private const float speedAnimScaling = 0.2f;
 
     //Physics stuff
@@ -44,7 +45,7 @@ public class WaterAnimal : Animal {
         base.setSkeleton(skeleton);
 
         generateAnimations();
-        flagFlapBackToWater = false;
+        flagFlap = false;
     }
 
     /// <summary>
@@ -53,6 +54,7 @@ public class WaterAnimal : Animal {
     /// <param name="brain"></param>
     public override void setAnimalBrain(AnimalBrain brain) {
         base.setAnimalBrain(brain);
+        brain.addAction("flap", tryFlap);
     }
 
 
@@ -69,6 +71,12 @@ public class WaterAnimal : Animal {
     /// Handles animations
     /// </summary>
     private void handleAnimations() {
+        if (state.inWater && swimAnimation != currentAnimation) {
+            tryAnimationTransition(swimAnimation, speedAnimScaling, speedAnimScaling, 0.5f);
+        } else if (!state.inWater && flapAnimation != currentAnimation) {
+            tryAnimationTransition(flapAnimation, speedAnimScaling, speedAnimScaling, 0.5f);
+        }
+
         currentAnimation.animate(speedAnimScaling * state.speed);
     }
 
@@ -77,17 +85,32 @@ public class WaterAnimal : Animal {
     /// </summary>
     private void generateAnimations() {
         //Getting relevant bones
+        generateSwimAnimation();
+        generateFlapAnimation();
+        currentAnimation = swimAnimation;
+    }
+
+    /// <summary>
+    /// Generates the swimming animation
+    /// </summary>
+    private void generateSwimAnimation() {
         List<Bone> spine = skeleton.getBones(BodyPart.SPINE);
+        Bone head = spine[0];
         Bone firstSpine = spine[1];
         spine = spine.GetRange(2, spine.Count - 2);
 
         swimAnimation = new AnimalAnimation();
         int swimAnimationFrameCount = 2;
 
+        Vector3[] spineFrames0 = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, 0) };
         Vector3[] spineFrames1 = new Vector3[] { new Vector3(0, -45, 0), new Vector3(0, 45, 0) };
         Vector3[] spineFrames2 = Utils.multVectorArray(spineFrames1, -2);
 
-        BoneKeyFrames boneKeyFrames = new BoneKeyFrames(firstSpine, swimAnimationFrameCount);
+        BoneKeyFrames boneKeyFrames = new BoneKeyFrames(head, swimAnimationFrameCount);
+        boneKeyFrames.setRotations(spineFrames0);
+        swimAnimation.add(boneKeyFrames);
+
+        boneKeyFrames = new BoneKeyFrames(firstSpine, swimAnimationFrameCount);
         boneKeyFrames.setRotations(spineFrames1);
         swimAnimation.add(boneKeyFrames);
 
@@ -98,7 +121,24 @@ public class WaterAnimal : Animal {
 
             spineFrames2 = Utils.multVectorArray(spineFrames2, -1);
         }
-        currentAnimation = swimAnimation;
+    }
+
+    /// <summary>
+    /// Generates the flapping animation
+    /// </summary>
+    private void generateFlapAnimation() {
+        List<Bone> spine = skeleton.getBones(BodyPart.SPINE);
+
+        flapAnimation = new AnimalAnimation();
+        int flapAnimationFrameCount = 2;
+
+        Vector3[] spineFrames = new Vector3[] { new Vector3(-15, 0, 0), new Vector3(15, 0, 0) };
+
+        foreach (Bone bone in spine) {
+            BoneKeyFrames boneKeyFrames = new BoneKeyFrames(bone, flapAnimationFrameCount);
+            boneKeyFrames.setRotations(spineFrames);
+            flapAnimation.add(boneKeyFrames);
+        }
     }
 
     //    _____  _               _             __                  _   _                 
@@ -150,9 +190,8 @@ public class WaterAnimal : Animal {
 
         if (state.inWater) {
             waterGravity();
-        } else if (state.grounded) {
+        } else if (state.grounded && !flagFlap) {
             gravity = Vector3.zero;
-            tryFlapBackIntoWater();
         } else {
             notGroundedGravity();
         }
@@ -173,56 +212,32 @@ public class WaterAnimal : Animal {
         Vector3 velocity = state.heading.normalized * state.speed;
         rb.velocity = velocity + gravity;
         transform.LookAt(state.transform.position + state.heading);
+
+        if (state.grounded && !flagFlap) {
+            rb.velocity = Vector3.zero;
+        }
     }   
    
     /// <summary>
     /// Tries to flap back to water
     /// </summary>
     /// <returns>success flag</returns>
-    private bool tryFlapBackIntoWater() {
-        if (!flagFlapBackToWater) {
-            StartCoroutine(flapBackToWater());
+    private bool tryFlap() {
+        if (!flagFlap) {
+            StartCoroutine(flap());
         }
-        return !flagFlapBackToWater;
+        return !flagFlap;
     }
 
     /// <summary>
     /// Makes the fish flap back into water
     /// </summary>
     /// <returns></returns>
-    private IEnumerator flapBackToWater() {
-        flagFlapBackToWater = true;
-        if (brain.GetType().Equals(typeof(WaterAnimalBrainNPC))) {
-            state.desiredHeading = ((AnimalBrainNPC)brain).RoamCenter - transform.position;
-            state.desiredHeading.y = 0;
-            state.desiredHeading.Normalize();
-        }
-
-        const float speed = 100;
-        Vector3 currentPos = transform.position;
-        Vector3 halfwayControlPoint = Vector3.Lerp(currentPos, waterExitPoint, 0.5f) + Vector3.up * 100f;
-
-        float totalDist = (halfwayControlPoint - currentPos).magnitude + (waterExitPoint - halfwayControlPoint).magnitude;
-        float delta = speed / totalDist;
-
-        for (float t = 0; t < 1f; t += Time.deltaTime * delta) { // Spline lerp
-            Vector3 first = Vector3.Lerp(currentPos, halfwayControlPoint, t);
-            Vector3 second = Vector3.Lerp(halfwayControlPoint, waterExitPoint, t);
-            transform.position = Vector3.Lerp(first, second, t);
-            yield return 0;
-        }
-        if (brain.GetType().Equals(typeof(WaterAnimalBrainNPC))) {
-            state.desiredHeading = ((AnimalBrainNPC)brain).RoamCenter - transform.position;
-            state.desiredHeading.y = 0;
-            state.desiredHeading.Normalize();
-        }
-        flagFlapBackToWater = false;
-    }
-
-    override public void OnVoxelExit(BlockData.BlockType type) {
-        base.OnVoxelExit(type);
-        if (VoxelPhysics.isWater(type)) {
-            waterExitPoint = transform.position;
-        }
+    private IEnumerator flap() {
+        flagFlap = true;
+        state.speed = brain.fastSpeed / 4;
+        gravity += -Physics.gravity * 2f;
+        yield return new WaitForSeconds(0.25f);
+        flagFlap = false;
     }
 }

@@ -19,15 +19,24 @@ public class WaterAnimalBrainNPC : AnimalBrainNPC {
         if (dist > roamDist && Vector3.Angle(toCenter, state.desiredHeading) > 90) {
             state.desiredHeading = -state.desiredHeading;
             state.desiredHeading = Quaternion.AngleAxis(80 * Random.Range(-1f, 1f), Vector3.up) * state.desiredHeading;
-        }        
+        }   
+        
+        if (state.inWater) {
+            stayInWater();
+        }
+
+        if (state.grounded) {
+            actions["flap"]();
+        }
     }
 
     /// <summary>
-    /// Tries to avoid obstacle
+    /// Tries to avoid swimming out of the water
     /// </summary>
-    protected override void avoidObstacle() {
-        int layerMask = 1 << 8;
-        if (Physics.Raycast(new Ray(state.transform.position, state.desiredHeading), 10f, layerMask)) {
+   private void stayInWater() {
+        Ray ray = new Ray(state.transform.position, state.desiredHeading);
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(ray, 4f, VoxelRayCastTarget.WATER, 2f);
+        if (!VoxelPhysics.isWater(hit.type)) {
             state.desiredHeading = -state.desiredHeading;
         }
     }

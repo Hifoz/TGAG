@@ -44,15 +44,20 @@ public class VoxelCollider : MonoBehaviour {
     /// Adjusts velocity to avoid collision, last step in velocity calculations
     /// </summary>
     protected void preventCollision() {
+        bool collision = false;
         Vector3 vel = Vector3.zero;
-        int[] axis = new int[] { 1, 0, 2 };
-        for (int i = 0; i < axis.Length; i++) {
-            vel[axis[i]] = rb.velocity[axis[i]];
+        for (int i = 0; i < 3; i++) {
+            vel[i] = rb.velocity[i];
             Vector3 nextPos = transform.position + vel * Time.fixedDeltaTime;
             if (VoxelPhysics.isSolid(VoxelPhysics.voxelAtPos(nextPos))) {
-                vel[axis[i]] = 0;
+                vel[i] = 0;
+                collision = true;
             }
         }
         rb.velocity = vel;
+
+        if (collision) {
+            animal.OnVoxelCollisionEnter(VoxelPhysics.voxelAtPos(transform.position + rb.velocity * Time.fixedDeltaTime));
+        }
     }
 }

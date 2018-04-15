@@ -10,9 +10,9 @@ using UnityEngine;
 public enum WorldGenManagerStatsType {
     GENERATED_CHUNKS = 0,
     ORDERED_CHUNKS,
-    GENERATED_ANIMALS,
     CANCELLED_CHUNKS,
-    ENABLED_COLLIDERS,
+    DISCARDED_CHUNKS,
+    GENERATED_ANIMALS,
 }
 
 /// <summary>
@@ -292,6 +292,7 @@ public class WorldGenManager : MonoBehaviour {
                     pendingChunks.Remove(waitingChunks[i].chunkVoxelData.chunkPos);
                     waitingChunks.RemoveAt(i);
                     i--;
+                    stats.aggregateValues[WorldGenManagerStatsType.DISCARDED_CHUNKS]++;
                 }
             }
         }
