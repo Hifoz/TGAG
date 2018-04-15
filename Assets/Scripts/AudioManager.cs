@@ -197,7 +197,7 @@ class AudioManager : MonoBehaviour{
             Vector3 camPos = playerCamera.transform.position;
             camPos.y = 0;
             float dist = Vector3.Distance(chunkPos, camPos);
-            if (dist < closestChunkDist)
+        if (dist < closestChunkDist && go.GetComponent<MeshFilter>().mesh.vertices.Length > 0)
                 closestChunkDist = dist;
 
             return dist;
