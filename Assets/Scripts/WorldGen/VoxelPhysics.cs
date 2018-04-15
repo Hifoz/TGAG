@@ -91,9 +91,9 @@ public static class VoxelPhysics {
     /// <param name="length">Length of cast</param>
     /// <param name="target">Target type for cast</param>
     /// <returns>Data about the hit for the raycast</returns>
-    public static VoxelRayCastHit rayCast(Ray ray, float length, VoxelRayCastTarget target) {
+    public static VoxelRayCastHit rayCast(Ray ray, float length, VoxelRayCastTarget target, float start = 0f) {
         const float delta = 1f;
-        for (float t = 0; t <= length; t += delta) {
+        for (float t = start; t <= length; t += delta) {
             Vector3 sample = ray.origin + ray.direction * t;
             BlockData.BlockType currentBlock = voxelAtPos(sample);
 

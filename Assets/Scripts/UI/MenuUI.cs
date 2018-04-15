@@ -19,6 +19,10 @@ public class MenuUI : MonoBehaviour {
 
     public GameObject collectionButtons;
 
+    //Variables for tracking player stats
+    private Vector3 oldPlayerPos = Vector3.zero;
+    private float distanceTraveled = 0;
+    private float timeSpent = 0;
 
     // Use this for initialization
     void Start() {
@@ -36,7 +40,14 @@ public class MenuUI : MonoBehaviour {
     // Update is called once per frame
     void Update () {
         if(SceneManager.GetActiveScene().name == "main") {
-            if (Input.GetKeyDown(KeyCode.Escape)) {
+            Vector3 playerPos = Player.playerPos.get();
+            distanceTraveled += Vector3.Distance(oldPlayerPos, playerPos);
+            oldPlayerPos = playerPos;
+            timeSpent += Time.deltaTime;
+
+            if (Corruption.corruptionFactor(playerPos) >= 1f) {
+                openWinScreen();
+            } else if (Input.GetKeyDown(KeyCode.Escape)) {
                 if (GetComponent<Canvas>().enabled) {
                     onResume();
                 } else {
@@ -165,6 +176,24 @@ public class MenuUI : MonoBehaviour {
         title.text = "Animal Collection";
         collectionButtons.SetActive(true);
         mainButtons.SetActive(false);
+    }
+
+    /// <summary>
+    /// Opens win screen
+    /// </summary>
+    public void openWinScreen() {
+        title.text = string.Format(
+                    "You won! Distance: {0}, Minutes: {1}",
+                    distanceTraveled.ToString("N2"),
+                    (timeSpent / 60f).ToString("N2")
+                );
+        if (!GetComponent<Canvas>().enabled) {
+            GetComponent<Canvas>().enabled = true;
+            Time.timeScale = 0;
+            Cursor.lockState = CursorLockMode.None;
+            collectionButtons.SetActive(false);
+            mainButtons.SetActive(true);
+        }       
     }
 
 
