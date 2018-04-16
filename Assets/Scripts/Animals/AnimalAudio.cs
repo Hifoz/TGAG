@@ -7,9 +7,9 @@ using UnityEngine;
 /// Audio Player for an animal
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
-class AnimalAudio : MonoBehaviour {
+public class AnimalAudio : MonoBehaviour {
     private enum SoundName {
-        TALK, WALK_DIRT, WALK_LEAF
+        TALK, WALK_DIRT, WALK_LEAF, WING_FLAP
     }
 
     private AnimalState state;
@@ -20,10 +20,6 @@ class AnimalAudio : MonoBehaviour {
 
     private System.Random rng;
 
-    private float talkVolume;
-    private float moveVolume = 1;
-
-
     private static float basePitch = 1;
     private static float pitchRange = 0.4f;
     private static Pair<int, int> speakDelay = new Pair<int, int>(10, 20);
@@ -32,6 +28,7 @@ class AnimalAudio : MonoBehaviour {
     private void Awake() {
         animal = GetComponent<Animal>();
         state = animal.getState();
+        source = GetComponent<AudioSource>();
     }
 
 
@@ -46,14 +43,10 @@ class AnimalAudio : MonoBehaviour {
     /// <param name="seed"></param>
     /// <param name="animalSound"></param>
     public void init(int seed, AudioClip[] animalSounds) {
-        source = GetComponent<AudioSource>();
-        source.volume = 1;
         clips = animalSounds;
         rng = new System.Random(seed);
 
-        //StartCoroutine(player());
-        if(GetComponent<Player>() != null)
-            StartCoroutine(movementPlayer());
+        StartCoroutine(player());
     }
 
     /// <summary>
@@ -76,19 +69,23 @@ class AnimalAudio : MonoBehaviour {
     /// </summary>
     /// <param name="newVol">New volume</param>
     public void updateVolume(float newVol) {
-        talkVolume = newVol;
-        //source.volume = newVol;
+        source.volume = newVol;
     }
 
 
-    /*
-     * Leaving the movement sound un-implemented for the time being. The resaon for this is because of the 
-     *  effort that it is going to take just to sync the tracks to the animation with the method I have
-     *  currently started on. A better implementation would probably be to somehow incorporate playing of 
-     *  the tracks into the animation cycle so that it would be up to the person working on the animations 
-     *  to make sure foot-steps and such is played at the right time.
-     * 
-     */
+
+    public void playWalkSound() {
+        source.pitch = 1;
+        source.PlayOneShot(clips[(int)SoundName.WALK_DIRT]);
+    }
+
+
+    public void playWingSound() {
+        source.pitch = 1;
+        source.PlayOneShot(clips[(int)SoundName.WING_FLAP]);
+    }
+
+    // THIS WILL BE REPLACED: 
     /// <summary>
     /// Plays animal movement sounds
     /// </summary>

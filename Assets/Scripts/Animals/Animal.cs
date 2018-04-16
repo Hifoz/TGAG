@@ -4,10 +4,12 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(AnimalAudio))]
 public abstract class Animal : MonoBehaviour {
     protected AnimalSkeleton skeleton;
     protected AnimalBrain brain;
     protected AnimalState state = new AnimalState();
+    protected AnimalAudio animalAudio;
 
     //Coroutine flags
     private bool flagSpineCorrecting = false;
@@ -31,6 +33,7 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void Awake() {
         rb = GetComponent<Rigidbody>();
         state.transform = transform;
+        animalAudio = GetComponent<AnimalAudio>();
     }
 
     virtual protected void Start() {

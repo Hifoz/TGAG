@@ -39,25 +39,26 @@ class AudioManager : MonoBehaviour{
 
     // Animal
     private static AudioClip[] animalSounds;
-    public float animalVolume = 0.6f;
+    public float animalVolume = 1f;
 
     private GameObject audioPlayersParent;
     private static System.Random rng;
 
     private void Awake() {
         rng = new System.Random(12345);
-        updateVolume();
 
         animalSounds = new AudioClip[]{
             Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018"),
             Resources.Load<AudioClip>("Audio/Movement/dirt"),
-            Resources.Load<AudioClip>("Audio/Movement/leaf")
+            Resources.Load<AudioClip>("Audio/Movement/leaf"),
+            Resources.Load<AudioClip>("Audio/Movement/zapsplat_animals_bird_flap_wings_short_on_ground_004_15038")
         };
     }
 
 
     private void Start() {
         audioPlayersParent = new GameObject() { name = "EnvironmentAudioPlayers" };
+        updateVolume();
 
         StartCoroutine(musicPlayer());
 
@@ -150,6 +151,8 @@ class AudioManager : MonoBehaviour{
         MusicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f * 0.25f;
         if (musicSource != null)
             musicSource.volume = MusicVolume * MasterVolume;
+
+        updateAnimalVolume();
     }
 
 

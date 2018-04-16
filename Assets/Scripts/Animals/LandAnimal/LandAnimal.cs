@@ -66,8 +66,12 @@ public class LandAnimal : Animal {
 
         walkingAnimation = new AnimalAnimation();
         int walkingAnimationFrameCount = 4;
-        //Example trigger setup
-        KeyFrameTrigger[] triggers = new KeyFrameTrigger[]{ () => { Debug.Log("TriggerTest!"); }, null, null, null };
+        KeyFrameTrigger[] triggers = new KeyFrameTrigger[]{
+            () => animalAudio.playWalkSound(),
+            null,
+            () => animalAudio.playWalkSound(),
+            null
+        };
         Vector3[] legJoint1Frames = new Vector3[] { new Vector3(0, -45, 45), new Vector3(0, 0, 45), new Vector3(0, 45, 45), new Vector3(0, 0, 75) };
         Vector3[] legJoint2Frames = new Vector3[] { new Vector3(0, 0, -90), new Vector3(0, 0, -90), new Vector3(0, 0, -90), new Vector3(0, 0, -45) };
         for (int i = 0; i < legPairs; i++) {
@@ -84,11 +88,10 @@ public class LandAnimal : Animal {
             leg2_1.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint1Frames, -1), 2));
             leg2_2.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint2Frames, -1), 2));
 
-            //Set the triggers
             leg1_1.setTriggers(triggers);
-            leg1_2.setTriggers(triggers);
-            leg2_1.setTriggers(triggers);
-            leg2_2.setTriggers(triggers);
+            //leg1_2.setTriggers(triggers);
+            //leg2_1.setTriggers(triggers); currently only playing the sound on one leg, because the current walking sound sounds bad with multiple instances playing at almost the exact same time
+            //leg2_2.setTriggers(triggers);
 
             walkingAnimation.add(leg1_1);
             walkingAnimation.add(leg1_2);
