@@ -111,7 +111,6 @@ class AnimalAudio : MonoBehaviour {
 
 
             //source.volume = talkVolume;
-            Debug.Log(animal.getAnimationSpeed() + " -- " + state.speed);
 
             yield return new WaitForSeconds(0.5f);// animal.getAnimationSpeed());
         }
