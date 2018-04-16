@@ -13,18 +13,25 @@ class AnimalAudio : MonoBehaviour {
     }
 
     private AnimalState state;
+    private Animal animal;
 
     private AudioClip[] clips;
     private AudioSource source;
 
     private System.Random rng;
 
+    private float talkVolume;
+    private float moveVolume = 1;
+
+
     private static float basePitch = 1;
     private static float pitchRange = 0.4f;
     private static Pair<int, int> speakDelay = new Pair<int, int>(10, 20);
 
+
     private void Awake() {
-        state = GetComponent<Animal>().getState();
+        animal = GetComponent<Animal>();
+        state = animal.getState();
     }
 
 
@@ -40,11 +47,13 @@ class AnimalAudio : MonoBehaviour {
     /// <param name="animalSound"></param>
     public void init(int seed, AudioClip[] animalSounds) {
         source = GetComponent<AudioSource>();
+        source.volume = 1;
         clips = animalSounds;
         rng = new System.Random(seed);
 
-        StartCoroutine(player());
-        StartCoroutine(movementPlayer());
+        //StartCoroutine(player());
+        if(GetComponent<Player>() != null)
+            StartCoroutine(movementPlayer());
     }
 
     /// <summary>
@@ -67,37 +76,44 @@ class AnimalAudio : MonoBehaviour {
     /// </summary>
     /// <param name="newVol">New volume</param>
     public void updateVolume(float newVol) {
-        source.volume = newVol;
+        talkVolume = newVol;
+        //source.volume = newVol;
     }
 
 
+    /*
+     * Leaving the movement sound un-implemented for the time being. The resaon for this is because of the 
+     *  effort that it is going to take just to sync the tracks to the animation with the method I have
+     *  currently started on. A better implementation would probably be to somehow incorporate playing of 
+     *  the tracks into the animation cycle so that it would be up to the person working on the animations 
+     *  to make sure foot-steps and such is played at the right time.
+     * 
+     */
     /// <summary>
     /// Plays animal movement sounds
     /// </summary>
     /// <returns></returns>
     private IEnumerator movementPlayer() {
-        /*
-         * TODO:
-         * - Make movement sound have higher volume
-         * - Add wing flapping if flying animal in air
-         * - Add Swimming sounds (maybe have to be different per animal type?)
-         * - Add fish flapping on ground sound
-         * - Make the pace of the walk differ depending on animal type, and not  just play every 2 seconds
-         * 
-         */
-
-
         while (true){
             source.pitch = 1;
+            //source.volume = moveVolume;
+            // Play sound
             if (state.grounded) {
-                Debug.Log("playing walking sound");
                 BlockData.BlockType bt = VoxelPhysics.voxelAtPos(transform.position);
-                if (bt == BlockData.BlockType.LEAF || bt == BlockData.BlockType.WOOD)
+                if (bt == BlockData.BlockType.LEAF || bt == BlockData.BlockType.WOOD) {
                     source.PlayOneShot(clips[(int)SoundName.WALK_LEAF]);
-                else
+                } else {
                     source.PlayOneShot(clips[(int)SoundName.WALK_DIRT]);
+                }
+            } else if(animal.GetType() == typeof(AirAnimal) && !state.inWater) {
+                ; // Play wing flapping
             }
-            yield return new WaitForSeconds(2);
+
+
+            //source.volume = talkVolume;
+            Debug.Log(animal.getAnimationSpeed() + " -- " + state.speed);
+
+            yield return new WaitForSeconds(0.5f);// animal.getAnimationSpeed());
         }
     }
 

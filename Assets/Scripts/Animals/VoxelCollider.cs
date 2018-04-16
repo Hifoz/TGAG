@@ -27,7 +27,6 @@ public class VoxelCollider : MonoBehaviour {
         BlockData.BlockType voxelAtPos = VoxelPhysics.voxelAtPos(transform.position);
 
         if (VoxelPhysics.isSolid(voxelAtPos)) { //Unstuck
-            Debug.Log("Unstucking");
             transform.position += Vector3.up;
         }
 

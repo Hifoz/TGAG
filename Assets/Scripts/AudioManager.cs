@@ -147,7 +147,7 @@ class AudioManager : MonoBehaviour{
     public void updateVolume() {
         MasterVolume = PlayerPrefs.GetFloat("Master Volume", 100) / 100f;
         GameVolume = PlayerPrefs.GetFloat("Gameplay Volume", 100) / 100f;
-        MusicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f;
+        MusicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f * 0.25f;
         if (musicSource != null)
             musicSource.volume = MusicVolume * MasterVolume;
     }

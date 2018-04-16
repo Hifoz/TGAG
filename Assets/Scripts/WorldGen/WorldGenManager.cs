@@ -113,7 +113,6 @@ public class WorldGenManager : MonoBehaviour {
     /// Generate an initial set of chunks in the world
     /// </summary>
     void Start () {
-        Debug.Log("THREADS: " + Settings.WorldGenThreads);
         biomeManager = new BiomeManager();
         Reset();
     }

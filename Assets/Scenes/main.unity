@@ -1518,8 +1518,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   worldGenManager: {fileID: 988479786}
   playerCamera: {fileID: 1058874303}
-  waterSoundRange: 100
+  oceanVolume: 1
   oceanSoundRange: 70
+  waterVolume: 0.2
+  waterSoundRange: 100
+  windVolume: 0.5
+  windSoundRange: 50
+  animalVolume: 0.6
 --- !u!4 &1409900443
 Transform:
   m_ObjectHideFlags: 0
