@@ -120,7 +120,7 @@ public class AirAnimal : Animal {
 
         AnimalAnimation flyingAnimation = new AnimalAnimation();
         int flyingAnimationFrameCount = 2;
-        KeyFrameTrigger[] triggers = new KeyFrameTrigger[] {
+        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[] {
             null,
             () => animalAudio.playWingSound()
         };
@@ -137,8 +137,8 @@ public class AirAnimal : Animal {
         wing2_1.setRotations(Utils.multVectorArray(wingRot1, -1));
         wing2_2.setRotations(Utils.multVectorArray(wingRot2, -1));
 
-        wing1_1.setTriggers(triggers);
-        wing2_1.setTriggers(triggers);
+        wing1_1.setTriggers(soundTriggers);
+        wing2_1.setTriggers(soundTriggers);
 
         flyingAnimation.add(spine);
         flyingAnimation.add(wing1_1);

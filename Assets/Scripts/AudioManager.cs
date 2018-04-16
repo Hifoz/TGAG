@@ -47,11 +47,12 @@ class AudioManager : MonoBehaviour{
     private void Awake() {
         rng = new System.Random(12345);
 
-        animalSounds = new AudioClip[]{
+        animalSounds = new AudioClip[]{ // Should be aligned with AnimalAudio.SoundName
             Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018"),
             Resources.Load<AudioClip>("Audio/Movement/dirt"),
             Resources.Load<AudioClip>("Audio/Movement/leaf"),
-            Resources.Load<AudioClip>("Audio/Movement/zapsplat_animals_bird_flap_wings_short_on_ground_004_15038")
+            Resources.Load<AudioClip>("Audio/Movement/zapsplat_animals_bird_flap_wings_short_on_ground_004_15038"),
+            Resources.Load<AudioClip>("Audio/Movement/leaf") // TODO replace with actual swimming sound
         };
     }
 

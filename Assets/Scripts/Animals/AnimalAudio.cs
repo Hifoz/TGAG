@@ -9,7 +9,7 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class AnimalAudio : MonoBehaviour {
     private enum SoundName {
-        TALK, WALK_DIRT, WALK_LEAF, WING_FLAP
+        TALK, WALK_DIRT, LEAF, WING_FLAP, SWIM
     }
 
     private AnimalState state;
@@ -76,7 +76,13 @@ public class AnimalAudio : MonoBehaviour {
 
     public void playWalkSound() {
         source.pitch = 1;
-        source.PlayOneShot(clips[(int)SoundName.WALK_DIRT]);
+        BlockData.BlockType bt = VoxelPhysics.voxelAtPos(transform.position);
+        if (state.inWater || state.onWaterSurface) {
+            source.PlayOneShot(clips[(int)SoundName.SWIM]);
+            // todo pitch change when under water?
+        } else {
+            source.PlayOneShot(clips[(int)SoundName.WALK_DIRT]);
+        }
     }
 
 
@@ -85,32 +91,9 @@ public class AnimalAudio : MonoBehaviour {
         source.PlayOneShot(clips[(int)SoundName.WING_FLAP]);
     }
 
-    // THIS WILL BE REPLACED: 
-    /// <summary>
-    /// Plays animal movement sounds
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator movementPlayer() {
-        while (true){
-            source.pitch = 1;
-            //source.volume = moveVolume;
-            // Play sound
-            if (state.grounded) {
-                BlockData.BlockType bt = VoxelPhysics.voxelAtPos(transform.position);
-                if (bt == BlockData.BlockType.LEAF || bt == BlockData.BlockType.WOOD) {
-                    source.PlayOneShot(clips[(int)SoundName.WALK_LEAF]);
-                } else {
-                    source.PlayOneShot(clips[(int)SoundName.WALK_DIRT]);
-                }
-            } else if(animal.GetType() == typeof(AirAnimal) && !state.inWater) {
-                ; // Play wing flapping
-            }
-
-
-            //source.volume = talkVolume;
-
-            yield return new WaitForSeconds(0.5f);// animal.getAnimationSpeed());
-        }
+    public void playLeafCollision() {
+        source.pitch = 1;
+        source.PlayOneShot(clips[(int)SoundName.LEAF]);
     }
 
 }

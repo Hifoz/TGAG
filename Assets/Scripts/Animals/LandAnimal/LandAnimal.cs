@@ -66,7 +66,7 @@ public class LandAnimal : Animal {
 
         walkingAnimation = new AnimalAnimation();
         int walkingAnimationFrameCount = 4;
-        KeyFrameTrigger[] triggers = new KeyFrameTrigger[]{
+        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[]{
             () => animalAudio.playWalkSound(),
             null,
             () => animalAudio.playWalkSound(),
@@ -88,7 +88,7 @@ public class LandAnimal : Animal {
             leg2_1.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint1Frames, -1), 2));
             leg2_2.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint2Frames, -1), 2));
 
-            leg1_1.setTriggers(triggers);
+            leg1_1.setTriggers(soundTriggers);
             //leg1_2.setTriggers(triggers);
             //leg2_1.setTriggers(triggers); currently only playing the sound on one leg, because the current walking sound sounds bad with multiple instances playing at almost the exact same time
             //leg2_2.setTriggers(triggers);
