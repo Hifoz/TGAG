@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+public delegate void KeyFrameTrigger();
+
 /// <summary>
 /// Class for a bone and keyframes
 /// </summary>
@@ -22,11 +24,13 @@ public class BoneKeyFrames {
     int frameCount;
     float animTime;
     float timer;
+    int lastFrame;
 
     float[] frameTimes;
     Vector3[] rotations;
     Vector3[] positions;
     Vector3[] scales;
+    KeyFrameTrigger[] triggers;
 
     public Bone Bone { get { return bone; } }
     public int FrameCount { get { return frameCount; } }
@@ -49,6 +53,7 @@ public class BoneKeyFrames {
         this.bone = bone;
         this.frameCount = frameCount;
         this.animTime = animTime;
+        lastFrame = 0;
 
         timer = 0.1f;
         frameTimes = new float[frameCount];
@@ -59,6 +64,7 @@ public class BoneKeyFrames {
         rotations = null;
         positions = null;
         scales = null;
+        triggers = null;
     }
 
     /// <summary>
@@ -110,6 +116,18 @@ public class BoneKeyFrames {
     }
 
     /// <summary>
+    /// Sets the triggers of the BoneKeyFrames
+    /// </summary>
+    /// <param name="triggers"></param>
+    public void setTriggers(KeyFrameTrigger[] triggers) {
+        if (triggers.Length != frameCount) {
+            throw new System.Exception("BoneKeyFrames, setTriggers error! The provided array is not the correct length");
+        }
+
+        this.triggers = triggers;
+    }
+
+    /// <summary>
     /// Animates the bone with the given keyframes, provied the time as an argument
     /// </summary>
     /// <param name="speed">the animation speed, 1f for normal speed</param>
@@ -121,6 +139,8 @@ public class BoneKeyFrames {
         bone.bone.localRotation = Quaternion.Euler(values[0]);
         bone.bone.localPosition = values[1];
         bone.bone.localScale = values[2];
+
+        checkTrigger(frameTimeData);
     }
 
     /// <summary>
@@ -145,6 +165,8 @@ public class BoneKeyFrames {
         bone.bone.localRotation = Quaternion.Euler(Vector3.Lerp(thisValues[0], otherValues[0], t));
         bone.bone.localPosition = Vector3.Lerp(thisValues[1], otherValues[1], t);
         bone.bone.localScale = Vector3.Lerp(thisValues[2], otherValues[2], t);
+
+        checkTrigger(frameTimeData);
     }
 
     /// <summary>
@@ -172,6 +194,21 @@ public class BoneKeyFrames {
         values[1] = (positions != null) ? Vector3.Lerp(positions[frameTimeData.thisFrame], positions[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localPosition;
         values[2] = (scales != null) ? Vector3.Lerp(scales[frameTimeData.thisFrame], scales[frameTimeData.nextFrame], frameTimeData.frameFraction) : bone.bone.localScale;
         return values;
+    }
+
+    /// <summary>
+    /// Checks if a trigger should be called, and calls if it should
+    /// </summary>
+    /// <param name="frameTimeData">data needed to make decision</param>
+    private void checkTrigger(FrameTimeData frameTimeData) {
+        if (triggers != null) {
+            if (lastFrame != frameTimeData.thisFrame) {
+                if (triggers[frameTimeData.thisFrame] != null) {
+                    triggers[frameTimeData.thisFrame]();
+                }
+                lastFrame = frameTimeData.thisFrame;
+            }
+        }
     }
 
     /// <summary>
