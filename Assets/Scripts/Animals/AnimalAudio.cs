@@ -9,7 +9,7 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class AnimalAudio : MonoBehaviour {
     private enum SoundName {
-        TALK, WALK_DIRT, LEAF, WING_FLAP, SWIM
+        TALK, WALK_DIRT, WING_FLAP, SWIM, SPLASH
     }
 
     private AnimalState state;
@@ -73,27 +73,33 @@ public class AnimalAudio : MonoBehaviour {
     }
 
 
-
+    /// <summary>
+    /// Plays walking/swimming sounds
+    /// </summary>
     public void playWalkSound() {
         source.pitch = 1;
         BlockData.BlockType bt = VoxelPhysics.voxelAtPos(transform.position);
         if (state.inWater || state.onWaterSurface) {
-            source.PlayOneShot(clips[(int)SoundName.SWIM]);
+            //source.PlayOneShot(clips[(int)SoundName.SWIM]); Disabled until a swimming sound is found
             // todo pitch change when under water?
-        } else {
+        } else if(state.grounded){
             source.PlayOneShot(clips[(int)SoundName.WALK_DIRT]);
         }
     }
 
-
+    /// <summary>
+    /// Plays the sound of an animal's wings
+    /// </summary>
     public void playWingSound() {
         source.pitch = 1;
         source.PlayOneShot(clips[(int)SoundName.WING_FLAP]);
     }
 
-    public void playLeafCollision() {
+    /// <summary>
+    /// Plays a splashing sound
+    /// </summary>
+    public void playWaterEntrySound() {
         source.pitch = 1;
-        source.PlayOneShot(clips[(int)SoundName.LEAF]);
+        source.PlayOneShot(clips[(int)SoundName.SPLASH]);
     }
-
 }

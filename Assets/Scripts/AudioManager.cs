@@ -20,18 +20,19 @@ class AudioManager : MonoBehaviour{
 
     // Environment
     private AudioSource oceanSource;
-    public float oceanVolume = 1f;
+    public float oceanVolume = 0.7f;
     public int oceanSoundRange = 100;
 
     private AudioSource waterSource;
-    public float waterVolume = 0.2f;
+    public float waterVolume = 0.1f;
     public int waterSoundRange = 100;
 
     private AudioSource windSource;
-    public float windVolume = 0.5f;
+    public float windVolume = 0.3f;
     public int windSoundRange = 50;
 
-    private AudioSource ambientSource;
+    private AudioSource ambienceSource;
+    public float ambienceVolume = 0.05f;
 
     // Music
     private AudioSource musicSource;
@@ -49,10 +50,10 @@ class AudioManager : MonoBehaviour{
 
         animalSounds = new AudioClip[]{ // Should be aligned with AnimalAudio.SoundName
             Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018"),
-            Resources.Load<AudioClip>("Audio/Movement/dirt"),
-            Resources.Load<AudioClip>("Audio/Movement/leaf"),
-            Resources.Load<AudioClip>("Audio/Movement/zapsplat_animals_bird_flap_wings_short_on_ground_004_15038"),
-            Resources.Load<AudioClip>("Audio/Movement/leaf") // TODO replace with actual swimming sound
+            Resources.Load<AudioClip>("Audio/dirt"),
+            Resources.Load<AudioClip>("Audio/wing_flap"),
+            null, // TODO add swimming sound
+            Resources.Load<AudioClip>("Audio/watersplash")
         };
     }
 
@@ -89,8 +90,6 @@ class AudioManager : MonoBehaviour{
         musicSource = musicPlayer.AddComponent<AudioSource>();
         musicSource.volume = MusicVolume * MasterVolume;
 
-        // TODO: Make the music clips fade in/out with overlap to make the transition between the tracks smoother
-
         int clipIndex = UnityEngine.Random.Range(0, musicClips.Length);
         while (true) {
             musicSource.PlayOneShot(musicClips[clipIndex]);
@@ -106,12 +105,20 @@ class AudioManager : MonoBehaviour{
     /// <returns></returns>
     private IEnumerator gameplayPlayer() {
 
-        GameObject oceanPlayer = new GameObject() { name = "OceanSoundPlayer"};
+        GameObject ambiencePlayer = new GameObject() { name = "AmbienceSoundPlayer" };
+        ambiencePlayer.transform.parent = audioPlayersParent.transform;
+        ambienceSource = ambiencePlayer.AddComponent<AudioSource>();
+        ambienceSource.volume = ambienceVolume * GameVolume * MasterVolume;
+        ambienceSource.loop = true;
+        ambienceSource.clip = Resources.Load<AudioClip>("Audio/ambient_ivo_vivic_sonissGDC2018");
+        ambienceSource.Play();
+
+        GameObject oceanPlayer = new GameObject() { name = "OceanSoundPlayer" };
         oceanPlayer.transform.parent = audioPlayersParent.transform;
         oceanSource = oceanPlayer.AddComponent<AudioSource>();
         oceanSource.volume = 0;
         oceanSource.loop = true;
-        oceanSource.clip = Resources.Load<AudioClip>("Audio/water_lapping_sea_waves_sandy_beach_5_meters_01");
+        oceanSource.clip = Resources.Load<AudioClip>("Audio/seaWaves_RedSonic_sonissGDC2018");
         oceanSource.Play();
 
         GameObject waterPlayer = new GameObject() { name = "WaterSoundPlayer" };
@@ -138,7 +145,6 @@ class AudioManager : MonoBehaviour{
             yield return null;
         }
     }
-
     #endregion
 
     #region volume updators
@@ -147,11 +153,13 @@ class AudioManager : MonoBehaviour{
     /// Updates the main audio volumes from PlayerPrefs
     /// </summary>
     public void updateVolume() {
-        MasterVolume = PlayerPrefs.GetFloat("Master Volume", 100) / 100f;
+        MasterVolume = PlayerPrefs.GetFloat("Master Volume", 100) / 100f ;
         GameVolume = PlayerPrefs.GetFloat("Gameplay Volume", 100) / 100f;
         MusicVolume = PlayerPrefs.GetFloat("Music Volume", 100) / 100f * 0.25f;
         if (musicSource != null)
             musicSource.volume = MusicVolume * MasterVolume;
+        if (ambienceSource != null)
+            ambienceSource.volume = ambienceVolume * GameVolume * MasterVolume;
 
         updateAnimalVolume();
     }

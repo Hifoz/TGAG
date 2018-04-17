@@ -371,7 +371,7 @@ public abstract class Animal : MonoBehaviour {
 
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
-        state.canStand = false;      
+        state.canStand = false;
 
         if (!state.inWater) {
             state.onWaterSurface = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));
@@ -532,7 +532,8 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual public void OnVoxelEnter(BlockData.BlockType type) {
-
+        if (VoxelPhysics.isWater(type))
+            animalAudio.playWaterEntrySound();
     }
 
     virtual public void OnVoxelExit(BlockData.BlockType type) {
@@ -544,7 +545,7 @@ public abstract class Animal : MonoBehaviour {
     virtual public void OnVoxelStay(BlockData.BlockType type) {
         if (VoxelPhysics.isWater(type)) {
             state.inWater = true;
-        }       
+        }
     }
 
     virtual public void OnVoxelCollisionEnter(BlockData.BlockType type) {
@@ -562,6 +563,7 @@ public abstract class Animal : MonoBehaviour {
             state.inWindArea = true;
         }
     }
+
 
     //This is only triggered for trees now. 
     private void OnCollisionEnter(Collision collision) {

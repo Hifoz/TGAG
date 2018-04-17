@@ -1439,40 +1439,40 @@ AudioSource:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 2
-      time: 0.02
-      value: 1
-      inSlope: -19.01808
-      outSlope: -19.01808
+      time: 0.022506256
+      value: 0.99632263
+      inSlope: -5.532582
+      outSlope: -5.532582
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.06506256
-      value: 0.5036926
-      inSlope: -4.7450204
-      outSlope: -4.7450204
+      time: 0.08511261
+      value: 0.77685547
+      inSlope: -3.1888745
+      outSlope: -3.1888745
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.1476651
-      value: 0.25
-      inSlope: -1.6786867
-      outSlope: -1.6786867
+      time: 0.26045805
+      value: 0.43826294
+      inSlope: -1.561997
+      outSlope: -1.561997
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.24772277
-      value: 0.125
-      inSlope: -0.60578024
-      outSlope: -0.60578024
+      time: 0.36552826
+      value: 0.33172607
+      inSlope: -1.0576099
+      outSlope: -1.0576099
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.36512023
-      value: 0.069885254
+      time: 0.53554565
+      value: 0.20277405
       inSlope: -0.3563573
       outSlope: -0.3563573
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.65004027
-      value: 0.016479492
-      inSlope: -0.04884758
-      outSlope: -0.04884758
+      time: 0.7252356
+      value: 0.10874939
+      inSlope: -0.40924975
+      outSlope: -0.40924975
       tangentMode: 0
     - serializedVersion: 2
       time: 1
@@ -1554,6 +1554,7 @@ MonoBehaviour:
   waterSoundRange: 100
   windVolume: 0.5
   windSoundRange: 50
+  ambienceVolume: 0.2
   animalVolume: 0.6
 --- !u!4 &1409900443
 Transform:
