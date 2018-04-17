@@ -76,8 +76,9 @@ public class WaterAnimal : Animal {
         } else if (!state.inWater && flapAnimation != currentAnimation) {
             tryAnimationTransition(flapAnimation, speedAnimScaling, speedAnimScaling, 0.5f);
         }
-
-        currentAnimation.animate(speedAnimScaling * state.speed);
+        if (!flagAnimationTransition) {
+            currentAnimation.animate(speedAnimScaling * state.speed);
+        }
     }
 
     /// <summary>
@@ -164,7 +165,7 @@ public class WaterAnimal : Animal {
         } else {
             state.heading = state.desiredHeading;
         }
-        
+
         if (Mathf.Abs(state.desiredSpeed - state.speed) > 0.2f) {
             state.speed += Mathf.Sign(state.desiredSpeed - state.speed) * Time.deltaTime * acceleration;
         } else {
@@ -177,26 +178,13 @@ public class WaterAnimal : Animal {
     /// </summary>
     override protected void doGravity() {
         if (!state.inWater) {
-            Ray ray = new Ray(spineBone.bone.position, -spineBone.bone.up);
-            VoxelRayCastHit hitGround = VoxelPhysics.rayCast(ray, 200f, VoxelRayCastTarget.SOLID);
-
-            bool flagHitGround = VoxelPhysics.isSolid(hitGround.type);
-
-            if (flagHitGround) {
-                if (hitGround.distance < 5f) {
-                    state.grounded = true;
-                } else {
-                    state.grounded = false;
-                }
-            } else {
-                state.grounded = false;
-            }
+            state.grounded = VoxelPhysics.isSolid(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));            
         } 
 
         if (state.inWater) {
             waterGravity();
         } else if (state.grounded && !flagFlap) {
-            gravity = -Physics.gravity;
+            gravity = Physics.gravity;
         } else {
             notGroundedGravity();
         }
@@ -214,13 +202,13 @@ public class WaterAnimal : Animal {
     /// Does velocity calculations
     /// </summary>
     override protected void calcVelocity() {
-        Vector3 velocity = state.heading.normalized * state.speed;
-        rb.velocity = velocity + gravity;
-        transform.LookAt(state.transform.position + state.heading);
-
         if (state.grounded && !flagFlap) {
-            rb.velocity = Vector3.zero;
+            rb.velocity = gravity;
+        } else {
+            Vector3 velocity = state.heading.normalized * state.speed;
+            rb.velocity = velocity + gravity;
         }
+        transform.LookAt(state.transform.position + state.heading);
     }   
    
     /// <summary>
@@ -240,8 +228,8 @@ public class WaterAnimal : Animal {
     /// <returns></returns>
     private IEnumerator flap() {
         flagFlap = true;
-        state.speed = brain.fastSpeed / 4;
-        gravity += -Physics.gravity * 2f;
+        state.speed = brain.slowSpeed;
+        gravity += -Physics.gravity * 3f;
         yield return new WaitForSeconds(0.25f);
         flagFlap = false;
     }

@@ -68,4 +68,10 @@ public class Corruption : MonoBehaviour {
         float t = (pos.y - biome.minGroundHeight) / biome.maxGroundHeight;
         return Mathf.Lerp(noise01, 1, t * t); //Because you don't want an ugly flat "ceiling" everywhere.
     }
+
+    private void OnDestroy() {
+        //reset corruption when ending a play session
+        RenderSettings.skybox.SetFloat("_CorruptionFactor", 0);
+        materialWater.SetFloat("_CorruptionFactor", 0);
+    }
 }
