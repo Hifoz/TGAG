@@ -286,6 +286,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 605e869ea8e31d541a530bcaeb261499, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  la: {fileID: 1129599488531734, guid: 3bb2ffea5f9e1f2408edb5992e08eacb, type: 2}
+  aa: {fileID: 1263446260787308, guid: 70d74767b31c04843b941187b0032569, type: 2}
+  wa: {fileID: 1162195383910464, guid: af550f6cfee173545a3424f00e543179, type: 2}
 --- !u!33 &2007194575
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -307,7 +310,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 25605bf9ee4f35849a8775317a3442e1, type: 2}
+  - {fileID: 2100000, guid: 7232d2ef9391219479cbb8afe39d86d6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

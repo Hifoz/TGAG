@@ -61,12 +61,11 @@ public abstract class AnimalSkeleton {
     protected int seed;
 
     //Skeleton related members
-    protected MixedDictionary<BodyParameter> bodyParametersRange;
     protected Transform rootBone;
+    protected MixedDictionary<BodyParameter> bodyParametersRange;
     protected MixedDictionary<BodyParameter> bodyParameters = new MixedDictionary<BodyParameter>();
-
-    protected Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
     protected Dictionary<BodyPart, List<LineSegment>> skeletonLines = new Dictionary<BodyPart, List<LineSegment>>();
+    protected Dictionary<BodyPart, List<Bone>> skeletonBones = new Dictionary<BodyPart, List<Bone>>();
 
     //Mesh related member variables
     private MeshData meshData;
