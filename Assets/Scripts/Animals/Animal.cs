@@ -470,14 +470,15 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="currentAxis">Current state of axis</param>
     /// <param name="length">Length to check with</param>
     private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
-        Vector3 point1 = spineBone.bone.position + axis * length / 2f + Vector3.up * 20;
-        Vector3 point2 = spineBone.bone.position - axis * length / 2f + Vector3.up * 20;
+        Vector3 point1 = spineBone.bone.position + axis * length / 2f;
+        Vector3 point2 = spineBone.bone.position - axis * length / 2f;
 
-        VoxelRayCastHit hit1 = VoxelPhysics.rayCast(new Ray(point1, Vector3.down), 100f, VoxelRayCastTarget.SOLID); 
-        VoxelRayCastHit hit2 = VoxelPhysics.rayCast(new Ray(point2, Vector3.down), 100f, VoxelRayCastTarget.SOLID);        
-       
+        VoxelRayCastHit hit1 = VoxelPhysics.findSurfacePoint(point1);
+        VoxelRayCastHit hit2 = VoxelPhysics.findSurfacePoint(point2);
+
         point1 = spineBone.bone.position + currentAxis * length / 2f;
         point2 = spineBone.bone.position - currentAxis * length / 2f;
+
         Vector3 a = hit1.point - hit2.point;
         Vector3 b = point1 - point2;
 

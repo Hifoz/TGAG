@@ -5,6 +5,7 @@
 /// </summary>
 public enum VoxelRayCastTarget {
     SOLID,
+    NON_SOLID,
     WATER
 }
 
@@ -103,6 +104,11 @@ public static class VoxelPhysics {
                         return createVoxelRayCastHit(ray, sample, currentBlock);
                     }
                     break;
+                case VoxelRayCastTarget.NON_SOLID:
+                    if (!isSolid(currentBlock)) {
+                        return createVoxelRayCastHit(ray, sample, currentBlock);
+                    }
+                    break;
                 case VoxelRayCastTarget.WATER:
                     if (isWater(currentBlock)) {
                         return createVoxelRayCastHit(ray, sample, currentBlock);
@@ -126,6 +132,23 @@ public static class VoxelPhysics {
         hit.distance = Vector3.Distance(ray.origin, hit.blockPos) - 0.5f;
         hit.point = ray.origin + ray.direction * hit.distance;
         hit.type = type;        
+        return hit;
+    }
+
+    /// <summary>
+    /// Finds the surface point from the provided origin.
+    /// It either raycast up at empty space if origin is inside a solid
+    /// or raycasts down at solids if origin is outside a solid
+    /// </summary>
+    /// <param name="origin">point to find surface for</param>
+    /// <returns>hit for surface point</returns>
+    public static VoxelRayCastHit findSurfacePoint(Vector3 origin) {
+        VoxelRayCastHit hit;
+        if (!isSolid(voxelAtPos(origin))) {
+            hit = rayCast(new Ray(origin, Vector3.down), 100f, VoxelRayCastTarget.SOLID);
+        } else {
+            hit = rayCast(new Ray(origin, Vector3.up), 100f, VoxelRayCastTarget.NON_SOLID);
+        }
         return hit;
     }
 }
