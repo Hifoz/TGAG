@@ -137,6 +137,7 @@ public class Player : MonoBehaviour {
         AnimalBrainNPC otherBrain = (AnimalBrainNPC)AnimalUtils.addAnimalBrainNPC(myAnimal);
         otherBrain.takeOverPlayer();
 
+
         other.AddComponent<Player>().transferPlayer(magicTrail, animalPool, GetComponent<Player>().worldOffset);
 
         Camera.main.GetComponent<CameraController>().setTarget(other.transform);

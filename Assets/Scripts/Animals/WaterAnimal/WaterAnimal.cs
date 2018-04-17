@@ -101,6 +101,10 @@ public class WaterAnimal : Animal {
 
         swimAnimation = new AnimalAnimation();
         int swimAnimationFrameCount = 2;
+        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[] {
+            () => animalAudio.playWalkSound(),
+            () => animalAudio.playWalkSound()
+        };
 
         Vector3[] spineFrames0 = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, 0) };
         Vector3[] spineFrames1 = new Vector3[] { new Vector3(0, -45, 0), new Vector3(0, 45, 0) };
@@ -112,6 +116,7 @@ public class WaterAnimal : Animal {
 
         boneKeyFrames = new BoneKeyFrames(firstSpine, swimAnimationFrameCount);
         boneKeyFrames.setRotations(spineFrames1);
+        boneKeyFrames.setTriggers(soundTriggers);
         swimAnimation.add(boneKeyFrames);
 
         foreach (Bone bone in spine) {

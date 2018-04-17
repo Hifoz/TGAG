@@ -86,11 +86,40 @@ public class SettingsUI : MonoBehaviour {
             minval: 1, 
             maxval: Environment.ProcessorCount, 
             isInt: true,
-            func: delegate {
+            saveFunc: delegate {
                 Settings.WorldGenThreads = (int)PlayerPrefs.GetFloat("WorldGenThreads", Settings.WorldGenThreads);
                 return null;
             }
         );
+
+
+        // AUDIO SETTINGS:
+        GameObject audioSettings = addSection("Audio", panel);
+
+        GameObject masterVolume = addSliderOption("Master Volume", 
+            parent: audioSettings, 
+            minval: 0, 
+            maxval: 100,
+            isInt: true,
+            saveFunc: delegate {
+                GameObject audioManager = GameObject.Find("AudioManager");
+                if(audioManager != null) {
+                    audioManager.GetComponent<AudioManager>().updateVolume();
+                }
+                return null;
+            });
+
+        GameObject musicVolume = addSliderOption("Music Volume",
+            parent: audioSettings,
+            minval: 0, 
+            maxval: 100,
+            isInt: true);
+
+        GameObject gameplayVolume = addSliderOption("Gameplay Volume",
+            parent: audioSettings,
+            minval: 0, 
+            maxval: 100,
+            isInt: true);
 
 
         // VIDEO SETTINGS:
@@ -98,9 +127,9 @@ public class SettingsUI : MonoBehaviour {
 
         string[] resolutions = new string[] { "2560x1440", "1920x1080", "1280x720", "1024x768" };
         GameObject resolution = addDropdownOption("Resolution",
-            videoSettings,
-            resolutions,
-            delegate { // Update screen resolution
+            parent: videoSettings,
+            elements: resolutions,
+            saveFunc: delegate { // Update screen resolution
                 string[] dimensions = resolutions[PlayerPrefs.GetInt("Resolution")].Split('x');
                 Screen.SetResolution(Int32.Parse(dimensions[0]), Int32.Parse(dimensions[1]), Screen.fullScreen);
                 return null;
@@ -108,24 +137,24 @@ public class SettingsUI : MonoBehaviour {
         );
 
         GameObject windowMode = addDropdownOption("Window Mode",
-            videoSettings,
-            new string[] { "Windowed", "Fullscreen" },
-            delegate {
+            parent: videoSettings,
+            elements: new string[] { "Windowed", "Fullscreen" },
+            saveFunc: delegate {
                 Screen.fullScreen = PlayerPrefs.GetInt("Window Mode", 0) == 1;
                 return null;
             }
         );
 
         GameObject vsync = addDropdownOption("Vsync",
-            videoSettings,
-            new string[] { "Off", "On" },
-            delegate {
+            parent: videoSettings,
+            elements: new string[] { "Off", "On" },
+            saveFunc: delegate {
                 QualitySettings.vSyncCount = PlayerPrefs.GetInt("Vsync", 1);
                 return null;
             }
         );
         
-        pack(panel);
+        buildUI(panel);
     }
 
     /// <summary>
@@ -230,9 +259,9 @@ public class SettingsUI : MonoBehaviour {
     /// <param name="optionName">Name used to store setting value in PlayerPrefs, also used as default display name</param>
     /// <param name="parent">parent section</param>
     /// <param name="placeholderText">Placeholder text when field is empty</param>
-    /// <param name="func">A function containing extra fuctionalty to run on save (Eg. change resolution to what is set by the resolution setting)</param>
+    /// <param name="saveFunc">A function containing extra fuctionalty to run on save (Eg. change resolution to what is set by the resolution setting)</param>
     /// <returns>the dropdown menu</returns>
-    private GameObject addTextOption(string optionName, GameObject parent, string placeholderText = "", Func<object> func = null) {
+    private GameObject addTextOption(string optionName, GameObject parent, string placeholderText = "", Func<object> saveFunc = null) {
         GameObject option = addBasicOption(optionName, parent);
         option.AddComponent<Image>();
         InputField inf = option.AddComponent<InputField>();
@@ -268,7 +297,7 @@ public class SettingsUI : MonoBehaviour {
 
 
         _inputFields.Add(optionName, inf);
-        _settingExcecutions.Add(optionName, func);
+        _settingExcecutions.Add(optionName, saveFunc);
 
         return option;
     }
@@ -281,9 +310,9 @@ public class SettingsUI : MonoBehaviour {
     /// <param name="minval">lowest value on slider</param>
     /// <param name="maxval">highset value on slider</param>
     /// <param name="isInt">Should the value be integers only?</param>
-    /// <param name="func">A function containing extra fuctionalty to run on save. (Eg. change resolution to what is set by the resolution setting)</param>
+    /// <param name="saveFunc">A function containing extra fuctionalty to run on save. (Eg. change resolution to what is set by the resolution setting)</param>
     /// <returns>the dropdown menu</returns>
-    private GameObject addSliderOption(string optionName, GameObject parent, int minval, int maxval, bool isInt = false, Func<object> func = null) {
+    private GameObject addSliderOption(string optionName, GameObject parent, int minval, int maxval, bool isInt = false, Func<object> saveFunc = null) {
         GameObject option = addBasicOption(optionName, parent);
         Slider slider = option.AddComponent<Slider>();
         slider.minValue = minval;
@@ -336,7 +365,7 @@ public class SettingsUI : MonoBehaviour {
 
 
         _sliders.Add(optionName, slider);
-        _settingExcecutions.Add(optionName, func);
+        _settingExcecutions.Add(optionName, saveFunc);
 
 
         return option;
@@ -348,9 +377,9 @@ public class SettingsUI : MonoBehaviour {
     /// <param name="optionName">Name used to store setting value in PlayerPrefs, also used as default display name</param>
     /// <param name="parent">parent section</param>
     /// <param name="elements">The elements to display in the dropdown</param>
-    /// <param name="func">A function containing extra fuctionalty to run on save. (Eg. change resolution to what is set by the resolution setting)</param>
+    /// <param name="saveFunc">A function containing extra fuctionalty to run on save. (Eg. change resolution to what is set by the resolution setting)</param>
     /// <returns>the dropdown menu</returns>
-    private GameObject addDropdownOption(string optionName, GameObject parent, string[] elements, Func<object> func = null) {
+    private GameObject addDropdownOption(string optionName, GameObject parent, string[] elements, Func<object> saveFunc = null) {
         GameObject option = addBasicOption(optionName, parent);
         option.AddComponent<Image>();
         Dropdown dropdown = option.AddComponent<Dropdown>();
@@ -421,7 +450,7 @@ public class SettingsUI : MonoBehaviour {
 
 
         _dropdowns.Add(optionName, dropdown);
-        _settingExcecutions.Add(optionName, func);
+        _settingExcecutions.Add(optionName, saveFunc);
 
         return option;
     }
@@ -430,7 +459,7 @@ public class SettingsUI : MonoBehaviour {
     /// Resize the panel and sections inside so that they fit the number of settings and size of the window
     /// </summary>
     /// <param name="panel">panel to resize</param>
-    private void pack(GameObject panel) {
+    private void buildUI(GameObject panel) {
         int totalHeight = 0;
 
         for (int i = 0; i < panel.transform.childCount; i++) {

@@ -4,10 +4,12 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(SkinnedMeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(AnimalAudio))]
 public abstract class Animal : MonoBehaviour {
     protected AnimalSkeleton skeleton;
     protected AnimalBrain brain;
     protected AnimalState state = new AnimalState();
+    protected AnimalAudio animalAudio;
 
     //Coroutine flags
     private bool flagSpineCorrecting = false;
@@ -31,6 +33,7 @@ public abstract class Animal : MonoBehaviour {
     virtual protected void Awake() {
         rb = GetComponent<Rigidbody>();
         state.transform = transform;
+        animalAudio = GetComponent<AnimalAudio>();
     }
 
     virtual protected void Start() {
@@ -368,7 +371,7 @@ public abstract class Animal : MonoBehaviour {
 
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
-        state.canStand = false;      
+        state.canStand = false;
 
         if (!state.inWater) {
             state.onWaterSurface = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));
@@ -529,7 +532,8 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual public void OnVoxelEnter(BlockData.BlockType type) {
-
+        if (VoxelPhysics.isWater(type))
+            animalAudio.playWaterEntrySound();
     }
 
     virtual public void OnVoxelExit(BlockData.BlockType type) {
@@ -541,7 +545,7 @@ public abstract class Animal : MonoBehaviour {
     virtual public void OnVoxelStay(BlockData.BlockType type) {
         if (VoxelPhysics.isWater(type)) {
             state.inWater = true;
-        }       
+        }
     }
 
     virtual public void OnVoxelCollisionEnter(BlockData.BlockType type) {
@@ -559,6 +563,7 @@ public abstract class Animal : MonoBehaviour {
             state.inWindArea = true;
         }
     }
+
 
     //This is only triggered for trees now. 
     private void OnCollisionEnter(Collision collision) {

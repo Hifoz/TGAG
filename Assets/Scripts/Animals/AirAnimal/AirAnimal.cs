@@ -120,6 +120,10 @@ public class AirAnimal : Animal {
 
         AnimalAnimation flyingAnimation = new AnimalAnimation();
         int flyingAnimationFrameCount = 2;
+        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[] {
+            null,
+            () => animalAudio.playWingSound()
+        };
 
         BoneKeyFrames spine = new BoneKeyFrames(spineBone, flyingAnimationFrameCount);
         BoneKeyFrames wing1_1 = new BoneKeyFrames(rightWing[0], flyingAnimationFrameCount);
@@ -132,6 +136,9 @@ public class AirAnimal : Animal {
         wing1_2.setRotations(wingRot2);
         wing2_1.setRotations(Utils.multVectorArray(wingRot1, -1));
         wing2_2.setRotations(Utils.multVectorArray(wingRot2, -1));
+
+        wing1_1.setTriggers(soundTriggers);
+        wing2_1.setTriggers(soundTriggers);
 
         flyingAnimation.add(spine);
         flyingAnimation.add(wing1_1);
@@ -164,6 +171,12 @@ public class AirAnimal : Animal {
 
         walkingAnimation = new AnimalAnimation();
         int walkingAnimationFrameCount = 4;
+        KeyFrameTrigger[] triggers = new KeyFrameTrigger[]{
+            () => animalAudio.playWalkSound(),
+            null,
+            () => animalAudio.playWalkSound(),
+            null
+        };
 
         BoneKeyFrames wing1_1 = new BoneKeyFrames(rightWing[0], walkingAnimationFrameCount, 2);
         BoneKeyFrames wing1_2 = new BoneKeyFrames(rightWing[1], walkingAnimationFrameCount, 2);
@@ -182,6 +195,9 @@ public class AirAnimal : Animal {
         leg1_2.setRotations(Utils.shiftArray(wing1_2.Rotations, 2));
         leg2_1.setRotations(Utils.shiftArray(wing2_1.Rotations, 2));
         leg2_2.setRotations(Utils.shiftArray(wing2_2.Rotations, 2));
+
+        leg1_1.setTriggers(triggers);
+        //leg2_1.setTriggers(triggers);
 
         walkingAnimation.add(wing1_1);
         walkingAnimation.add(wing1_2);
