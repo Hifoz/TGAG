@@ -231,8 +231,6 @@ class AudioManager : MonoBehaviour{
             waterSource.volume =  waterVolume * GameVolume * MasterVolume;
             return;
         }
-        StopWatch sw = new StopWatch();
-        sw.start();
 
         // Get chunks in a range
         ChunkData[,] chunks = worldGenManager.getChunkGrid();
@@ -294,7 +292,6 @@ class AudioManager : MonoBehaviour{
                 }
             }
         }
-        sw.done("time spent finding closest water");
 
         // Update the volume
         if (closestVertDist < waterSoundRange) {
