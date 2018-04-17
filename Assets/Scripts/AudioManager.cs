@@ -224,14 +224,22 @@ class AudioManager : MonoBehaviour{
             return;
         }
 
+        // Get chunks in a range
+        ChunkData[,] chunks = worldGenManager.getChunkGrid();
+        List<GameObject> waterChunks = new List<GameObject>();
+        foreach(ChunkData cd in chunks) {
+            if(cd != null) {
+                waterChunks.AddRange(cd.waterChunk.Where((GameObject go) => (go.name == "waterSubChunk")));
+            }
+        }
 
-        List<GameObject> waterChunks = GameObject.FindGameObjectsWithTag("waterSubChunk").ToList();
+
         float closestVertDist = waterSoundRange;
         float closestChunkDist = waterSoundRange + WorldGenConfig.chunkSize;
 
 
         // Sort chunks and find closest that contains vertices
-        waterChunks = waterChunks.OrderBy(
+        /*waterChunks = waterChunks.OrderBy(
             delegate (GameObject go) {
                 Vector3 chunkPos = go.transform.position;
                 Vector3 camPos = playerCamera.transform.position;
@@ -244,7 +252,7 @@ class AudioManager : MonoBehaviour{
                 return dist;
             }
         ).ToList();
-
+        */
         if(closestChunkDist < waterSoundRange + WorldGenConfig.chunkSize) {
             // Remove all chunks that are to far away to be in contention for closest vertex
             waterChunks = waterChunks.Where(
@@ -256,8 +264,14 @@ class AudioManager : MonoBehaviour{
                     return Vector3.Distance(chunkPos, camPos) < closestChunkDist + WorldGenConfig.chunkSize * 2;
                 }).ToList();
 
+            Vector3 chunkOffset = new Vector3(1, 0, 1) * WorldGenConfig.chunkSize * 0.5f;
+            float chunkDiag = Mathf.Sqrt(Mathf.Pow(WorldGenConfig.chunkSize, 2) * 2);
             // Find closest vertex
-            foreach(GameObject waterChunk in waterChunks) {
+            foreach (GameObject waterChunk in waterChunks) {
+                float distFromChunkCenter = Vector3.Distance(playerCamera.transform.position, waterChunk.transform.position + chunkOffset);
+                if (distFromChunkCenter > chunkDiag + WorldGenConfig.chunkSize * 0.5f + closestVertDist)
+                    continue;
+
                 Vector3 chunkPos = waterChunk.transform.position;
                 foreach (Vector3 vert in waterChunk.GetComponent<MeshFilter>().mesh.vertices) {
                     Vector3 vertWorldPos = chunkPos + vert;

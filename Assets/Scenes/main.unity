@@ -1551,10 +1551,10 @@ MonoBehaviour:
   oceanVolume: 1
   oceanSoundRange: 70
   waterVolume: 0.2
-  waterSoundRange: 100
+  waterSoundRange: 40
   windVolume: 0.5
   windSoundRange: 50
-  ambienceVolume: 0.2
+  ambienceVolume: 0.05
   animalVolume: 0.6
 --- !u!4 &1409900443
 Transform:
