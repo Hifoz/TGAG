@@ -139,8 +139,7 @@ class AudioManager : MonoBehaviour{
 
         yield return new WaitForSeconds(1);
         while (true) {
-            updateOceanVolume();
-            updateWaterVolume();
+            updateWaterVolume(updateOceanVolume());
             updateWindVolume();
             yield return null;
         }
@@ -168,7 +167,16 @@ class AudioManager : MonoBehaviour{
     /// <summary>
     /// Update volume of ocean water
     /// </summary>
-    private void updateOceanVolume() {
+    private float updateOceanVolume() {
+        bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
+        waterSource.pitch = inWater ? 0.2f : 1f;
+
+        if (inWater) {
+            waterSource.volume = waterVolume * GameVolume * MasterVolume;
+            return 0;
+        }
+
+
         GameObject[] windAreas = GameObject.FindGameObjectsWithTag("windSubChunk"); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
         float closestRange = oceanSoundRange;
 
@@ -208,14 +216,14 @@ class AudioManager : MonoBehaviour{
             oceanSource.volume = 0;
         }
 
-        oceanSource.pitch = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position)) ? 0.2f : 1f;
+        return closestRange;
     }
 
 
     /// <summary>
     /// Updates the volume of (non-ocean) water
     /// </summary>
-    private void updateWaterVolume() {
+    private void updateWaterVolume(float oceanDist) {
         bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
         waterSource.pitch = inWater ? 0.2f : 1f;
 
@@ -223,6 +231,8 @@ class AudioManager : MonoBehaviour{
             waterSource.volume =  waterVolume * GameVolume * MasterVolume;
             return;
         }
+        StopWatch sw = new StopWatch();
+        sw.start();
 
         // Get chunks in a range
         ChunkData[,] chunks = worldGenManager.getChunkGrid();
@@ -233,13 +243,11 @@ class AudioManager : MonoBehaviour{
             }
         }
 
-
-        float closestVertDist = waterSoundRange;
+        float closestVertDist = Mathf.Min(waterSoundRange, oceanDist);
         float closestChunkDist = waterSoundRange + WorldGenConfig.chunkSize;
 
-
         // Sort chunks and find closest that contains vertices
-        /*waterChunks = waterChunks.OrderBy(
+        waterChunks = waterChunks.OrderBy(
             delegate (GameObject go) {
                 Vector3 chunkPos = go.transform.position;
                 Vector3 camPos = playerCamera.transform.position;
@@ -252,29 +260,33 @@ class AudioManager : MonoBehaviour{
                 return dist;
             }
         ).ToList();
-        */
+        
         if(closestChunkDist < waterSoundRange + WorldGenConfig.chunkSize) {
+            Vector3 chunkOffset = new Vector3(1, 0, 1) * WorldGenConfig.chunkSize * 0.5f;
+            float chunkDiag = Mathf.Sqrt(Mathf.Pow(WorldGenConfig.chunkSize, 2) * 2);
+
             // Remove all chunks that are to far away to be in contention for closest vertex
-            waterChunks = waterChunks.Where(
-                delegate (GameObject go) {
+            waterChunks.RemoveAll(
+                (go) => {
                     Vector3 chunkPos = go.transform.position;
                     Vector3 camPos = playerCamera.transform.position;
                     chunkPos.y = 0;
                     camPos.y = 0;
-                    return Vector3.Distance(chunkPos, camPos) < closestChunkDist + WorldGenConfig.chunkSize * 2;
-                }).ToList();
+                    return Vector3.Distance(chunkPos, camPos) > chunkDiag * 1.5f + closestVertDist;
+                }
+            );
 
-            Vector3 chunkOffset = new Vector3(1, 0, 1) * WorldGenConfig.chunkSize * 0.5f;
-            float chunkDiag = Mathf.Sqrt(Mathf.Pow(WorldGenConfig.chunkSize, 2) * 2);
             // Find closest vertex
             foreach (GameObject waterChunk in waterChunks) {
                 float distFromChunkCenter = Vector3.Distance(playerCamera.transform.position, waterChunk.transform.position + chunkOffset);
-                if (distFromChunkCenter > chunkDiag + WorldGenConfig.chunkSize * 0.5f + closestVertDist)
+                if (distFromChunkCenter > chunkDiag * 1.5f + closestVertDist)
                     continue;
 
                 Vector3 chunkPos = waterChunk.transform.position;
-                foreach (Vector3 vert in waterChunk.GetComponent<MeshFilter>().mesh.vertices) {
-                    Vector3 vertWorldPos = chunkPos + vert;
+
+                Vector3[] verts = waterChunk.GetComponent<MeshFilter>().mesh.vertices;
+                for (int i = 0; i < verts.Length; i+= 16) {
+                    Vector3 vertWorldPos = chunkPos + verts[i];
                     float dist = Vector3.Distance(vertWorldPos, playerCamera.transform.position);
                     if (dist < closestVertDist) {
                         closestVertDist = dist;
@@ -282,6 +294,7 @@ class AudioManager : MonoBehaviour{
                 }
             }
         }
+        sw.done("time spent finding closest water");
 
         // Update the volume
         if (closestVertDist < waterSoundRange) {

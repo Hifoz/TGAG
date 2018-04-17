@@ -1551,7 +1551,7 @@ MonoBehaviour:
   oceanVolume: 1
   oceanSoundRange: 70
   waterVolume: 0.2
-  waterSoundRange: 40
+  waterSoundRange: 50
   windVolume: 0.5
   windSoundRange: 50
   ambienceVolume: 0.05
