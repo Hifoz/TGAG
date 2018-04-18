@@ -49,9 +49,10 @@ class NaiveMeshDataGenerator {
         for (int x = 1; x < blockDataMap.GetLength(0) - 1; x++) {
             for (int y = 0; y < blockDataMap.GetLength(1); y++) {
                 for (int z = 1; z < blockDataMap.GetLength(2) - 1; z++) {
-                    if ((meshDataType != MeshDataGenerator.MeshDataType.WATER && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType != BlockData.BlockType.WATER) ||
-                        ((meshDataType == MeshDataGenerator.MeshDataType.WATER || meshDataType == MeshDataGenerator.MeshDataType.BASIC) && blockDataMap.mapdata[blockDataMap.index1D(x, y, z)].blockType == BlockData.BlockType.WATER)) {
-                        GenerateCube(new Vector3Int(x, y, z), blockDataMap.mapdata[blockDataMap.index1D(x, y, z)], voxelSize);
+                    BlockData block = blockDataMap.mapdata[blockDataMap.index1D(x, y, z)];
+                    if ((meshDataType != MeshDataGenerator.MeshDataType.WATER && block.blockType != BlockData.BlockType.NONE && block.blockType != BlockData.BlockType.WATER && block.blockType != BlockData.BlockType.WIND) ||
+                        (meshDataType == MeshDataGenerator.MeshDataType.WATER && block.blockType == BlockData.BlockType.WATER)) {
+                        GenerateCube(new Vector3Int(x, y, z), block, voxelSize);
                     }
                 }
             }
@@ -91,13 +92,15 @@ class NaiveMeshDataGenerator {
     ///     If meshDataType == WATER: Whether the voxel is something other than water.
     /// </returns>
     protected bool checkVoxel(Vector3Int voxelPos) {
+        BlockData.BlockType type = blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType;
         switch (meshDataType) {
             case MeshDataGenerator.MeshDataType.WATER:
             case MeshDataGenerator.MeshDataType.BASIC:
-                return blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER;
+                return type == BlockData.BlockType.WATER;
             default:
-                return !(blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.NONE ||
-                            blockDataMap.mapdata[blockDataMap.index1D(voxelPos.x, voxelPos.y, voxelPos.z)].blockType == BlockData.BlockType.WATER);
+                return !(type == BlockData.BlockType.NONE  ||
+                         type == BlockData.BlockType.WATER ||
+                         type == BlockData.BlockType.WIND);
         }
     }
 

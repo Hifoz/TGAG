@@ -36,31 +36,20 @@ public static class LSystemTreeGenerator {
         '[', //Push to stack
         ']'  //Pop from stack
     };
-    private const string start = "DDN";
-    private static Dictionary<char, string> rules = new Dictionary<char, string>();
-    private const float angle = 25f;
+    private const string start = "DDN"; //Start condition of string
+    private const float angle = 25f;    //Absolute angle to rotate turtle
+    private static Dictionary<char, string> rules = new Dictionary<char, string>() {
+        // '|' delimits the different rules that can apply to one variable
+        { 'N', "[-ZND]+M+XD[-D+XD]N" + "|-YDN-Y" },
+        { 'M', "D[+N]-X" }
+    };
 
-    private static Dictionary<Axis, Vector3> axis = new Dictionary<Axis, Vector3>();
+    private static Dictionary<Axis, Vector3> axis = new Dictionary<Axis, Vector3>() {
+        { Axis.X, new Vector3(1, 0, 0) },
+        { Axis.Y, new Vector3(0, 1, 0) },
+        { Axis.Z, new Vector3(0, 0, 1) }
+    };
     private const float boundingBoxModifier = 2.0f; //Constant that modifies the size of the bounding box for the tree
-
-    /// <summary>
-    /// Constructor, populates the dictionaries.
-    /// </summary>
-    static LSystemTreeGenerator() {
-        //The rules that apply to the language
-        //The '|' character delimits the different rules
-        // for the given character.
-        //Rules are chosen in a stochastic manner when more then one apply.
-        rules.Add('N', "[-ZND]+M+XD[-D+XD]N" +
-            "|-YDN-Y" +
-            "|ZDDM+ZD-");
-        rules.Add('M', "D[+N]-X");
-        //rules.Add('N', "ND"); Generates straight trees
-
-        axis.Add(Axis.X, new Vector3(1, 0, 0));
-        axis.Add(Axis.Y, new Vector3(0, 1, 0));
-        axis.Add(Axis.Z, new Vector3(0, 0, 1));
-    }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //  __  __           _           __  _____      _       _   __  __                _____          _      	//

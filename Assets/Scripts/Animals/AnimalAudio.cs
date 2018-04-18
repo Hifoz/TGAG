@@ -20,6 +20,9 @@ public class AnimalAudio : MonoBehaviour {
 
     private System.Random rng;
 
+    private const float splashCooldownTime = 0.5f;
+    private bool splashReady = true;
+
     private static float basePitch = 1;
     private static float pitchRange = 0.4f;
     private static Pair<int, int> speakDelay = new Pair<int, int>(10, 20);
@@ -99,7 +102,20 @@ public class AnimalAudio : MonoBehaviour {
     /// Plays a splashing sound
     /// </summary>
     public void playWaterEntrySound() {
-        source.pitch = 1;
-        source.PlayOneShot(clips[(int)SoundName.SPLASH]);
+        if (splashReady) {
+            source.pitch = 1;
+            source.PlayOneShot(clips[(int)SoundName.SPLASH]);
+            StartCoroutine(doSplashCooldown());
+        } 
+    }
+
+    /// <summary>
+    /// Does a cooldown for splash sound
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator doSplashCooldown() {
+        splashReady = false;
+        yield return new WaitForSeconds(splashCooldownTime);
+        splashReady = true;
     }
 }

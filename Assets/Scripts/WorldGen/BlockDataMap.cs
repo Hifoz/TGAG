@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public class BlockDataMap {
     public BlockData[] mapdata;
+    public bool hasWind = false;
+    public bool hasWater = false;
 
     private int sizeX;
     private int sizeY;

@@ -41,15 +41,15 @@ public class AirAnimalBrainNPC : AnimalBrainNPC {
             }
         }
 
-        if (state.grounded || state.inWater) {
+        if (state.grounded || state.inWater || state.onWaterSurface) {
             state.desiredSpeed = slowSpeed;
         } else {
             state.desiredSpeed = fastSpeed;
         }
 
-        if ((state.grounded || state.inWater) && flying) {
+        if ((state.grounded || state.inWater || state.onWaterSurface) && flying) {
             actions["ascend"]();
-        } else if (!(state.grounded || state.inWater) && !flying) {
+        } else if (!(state.grounded || state.inWater || state.onWaterSurface) && !flying) {
             timer = 0;
             state.desiredSpeed = 0;
         }
