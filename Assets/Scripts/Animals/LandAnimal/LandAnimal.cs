@@ -176,9 +176,9 @@ public class LandAnimal : Animal {
             velocity *= 0.4f;
 
 
-        if ((state.inWindArea || transform.position.y > WindController.globalWindHeight) && !state.grounded && !state.inWater && transform.position.magnitude > 20f) {
-            velocity *= 0.7f;
-            velocity += WindController.globalWindDirection * WindController.globalWindSpeed * 0.7f;
+        if ((state.inWindArea || transform.position.y > WindController.globalWindHeight) && !state.grounded && !state.inWater && !state.onWaterSurface && transform.position.magnitude > 20f) {
+            velocity *= 0.9f;
+            velocity += WindController.globalWindDirection * WindController.globalWindSpeed * 0.4f;
         }
 
 
@@ -197,8 +197,8 @@ public class LandAnimal : Animal {
             state.heading = state.desiredHeading;
         }
 
-        if (state.inWater) {
-            preventDownardMovement();
+        if ((state.inWater || state.onWaterSurface) && !state.canStand) {
+            enforceWaterdMovement();
         }
         if (Mathf.Abs(state.desiredSpeed - state.speed) > 0.2f) {
             if (state.grounded) {

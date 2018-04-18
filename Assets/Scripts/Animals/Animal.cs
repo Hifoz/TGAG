@@ -372,11 +372,15 @@ public abstract class Animal : MonoBehaviour {
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
         state.canStand = false;
-
+        bool oldWaterSurface = state.onWaterSurface;
         if (!state.inWater) {
             state.onWaterSurface = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));
         } else {
             state.onWaterSurface = false;
+        }
+
+        if (!oldWaterSurface && state.onWaterSurface) {
+            animalAudio.playWaterEntrySound();
         }
 
         if (flagHitGround) {
@@ -519,17 +523,13 @@ public abstract class Animal : MonoBehaviour {
     }
 
     /// <summary>
-    /// Calling this function removes negative y from headings
+    /// Enforce water movement
     /// </summary>
-    protected void preventDownardMovement() {
-        if (state.heading.y < 0) {
-            state.heading.y = 0;
-            state.heading.Normalize();
-        }
-        if (state.spineHeading.y < 0) {
-            state.spineHeading.y = 0;
-            state.spineHeading.Normalize();
-        }
+    protected void enforceWaterdMovement() {
+        state.heading.y = 0;
+        state.heading.Normalize();
+        state.spineHeading.y = 0;
+        state.spineHeading.Normalize();
     }
 
     virtual public void OnVoxelEnter(BlockData.BlockType type) {

@@ -313,11 +313,10 @@ public class AirAnimal : Animal {
         if (state.inWater)
             velocity *= 0.25f;
 
-        if ((state.inWindArea || transform.position.y > WindController.globalWindHeight) && !state.grounded && !state.inWater && transform.position.magnitude > 20f) {
+        if ((state.inWindArea || transform.position.y > WindController.globalWindHeight) && !state.grounded && !state.inWater && !state.onWaterSurface && transform.position.magnitude > 20f) {
             velocity *= 0.6f;
             velocity += WindController.globalWindDirection * WindController.globalWindSpeed;
         }
-
 
         rb.velocity = velocity + gravity;
     }
@@ -333,13 +332,13 @@ public class AirAnimal : Animal {
         }
 
 
-        if (state.inWater) {
-            preventDownardMovement();
+        if ((state.inWater || state.onWaterSurface) && !state.canStand) {
+            enforceWaterdMovement();
         }
         if (state.desiredSpeed - state.speed > 0.2f) { //Acceleration           
             state.speed += Time.deltaTime * acceleration;            
         } else if (state.speed - state.desiredSpeed > 0.2f) { //Deceleration
-            if (state.grounded || state.inWater) {
+            if (state.grounded || state.inWater || state.onWaterSurface) {
                 state.speed -= Time.deltaTime * acceleration;       
             } else {
                 state.speed -= Time.deltaTime * acceleration * glideDrag;
@@ -439,11 +438,6 @@ public class AirAnimal : Animal {
         }
         state.desiredHeading = originalHeading;
         flagAscending = false;
-    }
-
-    override public void OnVoxelEnter(BlockData.BlockType type) {
-        base.OnVoxelEnter(type);
-        flagLaunching = false;
     }
 
     override protected void OnDisable() {
