@@ -307,7 +307,7 @@ public abstract class Animal : MonoBehaviour {
     /// <returns></returns>
     protected bool groundLimb(List<Bone> limb, float maxRange = 1f, bool complete = true) {
         Vector3 effector = limb[limb.Count - 1].bone.position;
-        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(effector + Vector3.up * 10, Vector3.down), 40f, VoxelRayCastTarget.SOLID);
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(effector + Vector3.up * 4, Vector3.down), 40f, VoxelRayCastTarget.SOLID);
         if (hit.type != BlockData.BlockType.NONE) {
             if (effector.y - hit.point.y <= maxRange) {
                 if (complete) {
