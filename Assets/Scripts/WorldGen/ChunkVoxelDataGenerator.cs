@@ -205,7 +205,7 @@ public static class ChunkVoxelDataGenerator {
                     } else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y)) {
                         data.mapdata[data.index1D(x, Corruption.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
                         data.hasWater = true;
-                    } else if (biomemap[x, z][0].first.biomeName == "ocean") { //Add wind blocks to oceans
+                    } else if (biomemap[x, z][0].first.biomeName == "ocean" && block.blockType != BlockData.BlockType.WATER) { //Add wind blocks to oceans
                         data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WIND;
                         data.hasWind = true;
                         //data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.STONE; If you want to look at the wind areas
