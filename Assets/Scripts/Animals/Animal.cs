@@ -29,6 +29,9 @@ public abstract class Animal : MonoBehaviour {
     protected Rigidbody rb;
     protected Vector3 gravity;
 
+    //Misc
+    protected bool displayMode = false;
+
 
     virtual protected void Awake() {
         rb = GetComponent<Rigidbody>();
@@ -130,6 +133,13 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="pos"></param>
     public void Spawn(Vector3 pos) {
         brain.Spawn(pos);
+    }
+
+    /// <summary>
+    /// Sets the animal in display mode
+    /// </summary>
+    public void enableDisplayMode() {
+        displayMode = true;
     }
 
     //    _   _                               _     _ _         __                  _   _                 
@@ -297,7 +307,7 @@ public abstract class Animal : MonoBehaviour {
     /// <returns></returns>
     protected bool groundLimb(List<Bone> limb, float maxRange = 1f, bool complete = true) {
         Vector3 effector = limb[limb.Count - 1].bone.position;
-        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(effector + Vector3.up * 10, Vector3.down), 40f, VoxelRayCastTarget.SOLID);
+        VoxelRayCastHit hit = VoxelPhysics.rayCast(new Ray(effector + Vector3.up * 4, Vector3.down), 40f, VoxelRayCastTarget.SOLID);
         if (hit.type != BlockData.BlockType.NONE) {
             if (effector.y - hit.point.y <= maxRange) {
                 if (complete) {
@@ -344,7 +354,7 @@ public abstract class Animal : MonoBehaviour {
             if (!flagAnimationTransition) {
                 break;
             }
-            currentAnimation.animateLerp(next, t, state.speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
+            currentAnimation.animateLerp(next, t, Time.timeScale * state.speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
             yield return 0;
         }
         currentAnimation = next;
@@ -372,11 +382,15 @@ public abstract class Animal : MonoBehaviour {
         float stanceHeight = skeleton.getBodyParameter<float>(BodyParameter.LEG_LENGTH) / 2;
 
         state.canStand = false;
-
+        bool oldWaterSurface = state.onWaterSurface;
         if (!state.inWater) {
             state.onWaterSurface = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(transform.position + Vector3.down));
         } else {
             state.onWaterSurface = false;
+        }
+
+        if (!oldWaterSurface && state.onWaterSurface) {
+            animalAudio.playWaterEntrySound();
         }
 
         if (flagHitGround) {
@@ -470,14 +484,15 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="currentAxis">Current state of axis</param>
     /// <param name="length">Length to check with</param>
     private void levelSpineWithAxis(Vector3 axis, Vector3 currentAxis, float length) {
-        Vector3 point1 = spineBone.bone.position + axis * length / 2f + Vector3.up * 20;
-        Vector3 point2 = spineBone.bone.position - axis * length / 2f + Vector3.up * 20;
+        Vector3 point1 = spineBone.bone.position + axis * length / 2f;
+        Vector3 point2 = spineBone.bone.position - axis * length / 2f;
 
-        VoxelRayCastHit hit1 = VoxelPhysics.rayCast(new Ray(point1, Vector3.down), 100f, VoxelRayCastTarget.SOLID); 
-        VoxelRayCastHit hit2 = VoxelPhysics.rayCast(new Ray(point2, Vector3.down), 100f, VoxelRayCastTarget.SOLID);        
-       
+        VoxelRayCastHit hit1 = VoxelPhysics.findSurfacePoint(point1);
+        VoxelRayCastHit hit2 = VoxelPhysics.findSurfacePoint(point2);
+
         point1 = spineBone.bone.position + currentAxis * length / 2f;
         point2 = spineBone.bone.position - currentAxis * length / 2f;
+
         Vector3 a = hit1.point - hit2.point;
         Vector3 b = point1 - point2;
 
@@ -518,17 +533,13 @@ public abstract class Animal : MonoBehaviour {
     }
 
     /// <summary>
-    /// Calling this function removes negative y from headings
+    /// Enforce water movement
     /// </summary>
-    protected void preventDownardMovement() {
-        if (state.heading.y < 0) {
-            state.heading.y = 0;
-            state.heading.Normalize();
-        }
-        if (state.spineHeading.y < 0) {
-            state.spineHeading.y = 0;
-            state.spineHeading.Normalize();
-        }
+    protected void enforceWaterdMovement() {
+        state.heading.y = 0;
+        state.heading.Normalize();
+        state.spineHeading.y = 0;
+        state.spineHeading.Normalize();
     }
 
     virtual public void OnVoxelEnter(BlockData.BlockType type) {
@@ -537,33 +548,16 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual public void OnVoxelExit(BlockData.BlockType type) {
-        if (VoxelPhysics.isWater(type)) {
-            state.inWater = false;
-        }
     }
 
     virtual public void OnVoxelStay(BlockData.BlockType type) {
-        if (VoxelPhysics.isWater(type)) {
-            state.inWater = true;
-        }
+        state.inWater = VoxelPhysics.isWater(type);
+        state.inWindArea = VoxelPhysics.isWind(type);
     }
 
     virtual public void OnVoxelCollisionEnter(BlockData.BlockType type) {
         brain.OnCollisionEnter();
     }
-
-    private void OnTriggerExit(Collider other) {
-        if (other.name == "windSubChunk") {
-            state.inWindArea = false;
-        }
-    }
-
-    private void OnTriggerStay(Collider other) {
-        if (other.name == "windSubChunk") {
-            state.inWindArea = true;
-        }
-    }
-
 
     //This is only triggered for trees now. 
     private void OnCollisionEnter(Collision collision) {

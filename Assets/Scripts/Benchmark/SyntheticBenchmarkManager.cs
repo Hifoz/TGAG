@@ -266,22 +266,6 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
 
         if (chunkMeshData.chunkPos.magnitude > 100) {
 
-            // Create wind mesh
-            GameObject windChunk = createChunk();
-            windChunk.transform.parent = chunk.transform;
-            windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
-            windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
-            MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
-            windChunk.GetComponent<MeshCollider>().convex = true;
-            windChunk.GetComponent<MeshCollider>().isTrigger = true;
-            windChunk.GetComponent<MeshCollider>().enabled = false;
-            windChunk.name = "windSubChunk";
-            windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
-            windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            windChunk.GetComponent<MeshRenderer>().enabled = false;
-            cd.waterChunk.Add(windChunk);
-
-
             // Add wind particle system to chunks
             GameObject particleSystem = Instantiate(windParticleSystemPrefab);
             particleSystem.transform.SetParent(chunk.transform);

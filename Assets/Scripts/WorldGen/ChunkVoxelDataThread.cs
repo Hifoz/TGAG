@@ -11,9 +11,10 @@ public class ChunkVoxelData {
     public MeshData[] trees;
     public MeshData[] treeTrunks;
     public Vector3[] treePositions;
-    public MeshData windData;
 
     public BlockDataMap blockDataMap;
+
+    public bool hasWind;
 
     public ChunkVoxelData(Vector3 position) {
         this.chunkPos = position;
@@ -177,12 +178,9 @@ public class ChunkVoxelDataThread {
         //Generate the chunk terrain:
         BlockDataMap chunkBlockData = ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager);
         result.meshData = MeshDataGenerator.GenerateMeshData(chunkBlockData);
-        result.waterMeshData = MeshDataGenerator.GenerateMeshData(chunkBlockData, meshDataType: MeshDataGenerator.MeshDataType.WATER);
-
-
-        //Generate wind area:
-        result.windData = MeshDataGenerator.GenerateMeshData(ChunkVoxelDataGenerator.getWindAreaData(order.position, biomeManager), meshDataType: MeshDataGenerator.MeshDataType.BASIC, genMode: MeshDataGenerator.GeneratorMode.GREEDY)[0];
-
+        if (chunkBlockData.hasWater) {
+            result.waterMeshData = MeshDataGenerator.GenerateMeshData(chunkBlockData, meshDataType: MeshDataGenerator.MeshDataType.WATER);
+        }
 
         //Generate the trees in the chunk:
         int maxTrees = biomeManager.getClosestBiome(new Vector2Int((int)order.position.x, (int)order.position.z)).maxTreesPerChunk;

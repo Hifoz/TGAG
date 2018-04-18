@@ -23,7 +23,9 @@ public struct BlockData { // 2 bytes. 1 byte per blocktype stored
         SNOW,
 
         ALLWHITE,
-        COUNT
+        COUNT,
+
+        WIND
     }
 
     public static BlockData Empty = new BlockData(BlockType.NONE);

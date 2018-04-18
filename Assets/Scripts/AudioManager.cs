@@ -139,8 +139,27 @@ class AudioManager : MonoBehaviour{
 
         yield return new WaitForSeconds(1);
         while (true) {
-            updateWaterVolume(updateOceanVolume());
-            updateWindVolume();
+            //Instead of finding them from scratch mutliple times
+            List<GameObject> windAreas = new List<GameObject>();
+            List<GameObject> waterAreas = new List<GameObject>();
+            ChunkData[,] chunkgrid = worldGenManager.getChunkGrid();
+            Vector3Int cameraIndex = worldGenManager.world2ChunkIndex(playerCamera.transform.position);
+            for (int x = cameraIndex.x - 2; x <= cameraIndex.x + 2; x++) {
+                for (int z = cameraIndex.z - 2; z <= cameraIndex.z + 2; z++) {                    
+                    if (worldGenManager.checkBounds(x, z) && chunkgrid[x, z] != null) {
+                        if (chunkgrid[x, z].blockDataMap.hasWind) {
+                            windAreas.Add(chunkgrid[x, z].terrainChunk[0]);
+                        }
+                        if (chunkgrid[x, z].blockDataMap.hasWater) {
+                            waterAreas.AddRange(chunkgrid[x, z].waterChunk);
+                        }
+
+                    }
+                }
+            }
+
+            updateWaterVolume(waterAreas, updateOceanVolume(windAreas));
+            updateWindVolume(windAreas);
             yield return null;
         }
     }
@@ -167,17 +186,15 @@ class AudioManager : MonoBehaviour{
     /// <summary>
     /// Update volume of ocean water
     /// </summary>
-    private float updateOceanVolume() {
+    private float updateOceanVolume(List<GameObject> windAreas) {
         bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
         waterSource.pitch = inWater ? 0.2f : 1f;
 
         if (inWater) {
             waterSource.volume = waterVolume * GameVolume * MasterVolume;
             return 0;
-        }
+        }       
 
-
-        GameObject[] windAreas = GameObject.FindGameObjectsWithTag("windSubChunk"); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
         float closestRange = oceanSoundRange;
 
         Vector3 camPosX0Z = playerCamera.transform.position;
@@ -223,22 +240,13 @@ class AudioManager : MonoBehaviour{
     /// <summary>
     /// Updates the volume of (non-ocean) water
     /// </summary>
-    private void updateWaterVolume(float oceanDist) {
+    private void updateWaterVolume(List<GameObject> waterChunks, float oceanDist) {
         bool inWater = VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position));
         waterSource.pitch = inWater ? 0.2f : 1f;
 
         if (inWater) {
             waterSource.volume =  waterVolume * GameVolume * MasterVolume;
             return;
-        }
-
-        // Get chunks in a range
-        ChunkData[,] chunks = worldGenManager.getChunkGrid();
-        List<GameObject> waterChunks = new List<GameObject>();
-        foreach(ChunkData cd in chunks) {
-            if(cd != null) {
-                waterChunks.AddRange(cd.waterChunk.Where((GameObject go) => (go.name == "waterSubChunk")));
-            }
         }
 
         float closestVertDist = Mathf.Min(waterSoundRange, oceanDist);
@@ -304,7 +312,7 @@ class AudioManager : MonoBehaviour{
     /// <summary>
     /// Update volume of wind
     /// </summary>
-    private void updateWindVolume() {
+    private void updateWindVolume(List<GameObject> windAreas) {
         // If we're in water: no wind sound
         if (VoxelPhysics.isWater(VoxelPhysics.voxelAtPos(playerCamera.transform.position))) {
             windSource.volume = 0;
@@ -316,9 +324,6 @@ class AudioManager : MonoBehaviour{
             windSource.volume = windVolume * gameVolume * masterVolume;
             return;
         }
-
-
-        GameObject[] windAreas = GameObject.FindGameObjectsWithTag("windSubChunk"); // Just checking for wind chunks, because at this point in time windchunks are exclusivly for (all) ocean biome chunks
 
         Vector3 camPosX0Z = playerCamera.transform.position;
         camPosX0Z.y = 0;

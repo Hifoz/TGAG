@@ -103,7 +103,9 @@ public class AnimalCollection : MonoBehaviour {
             displayCollection[displayIndex].skeletonSeed
         );
         animalSkeleton.generateInThread();
+        displayAnimal.GetComponent<Animal>().enableDisplayMode();
         displayAnimal.GetComponent<Animal>().setSkeleton(animalSkeleton);
+        AnimalUtils.addAnimalBrainNPC(displayAnimal.GetComponent<Animal>());
         displayAnimal.SetActive(true);
         displayAnimal.transform.localPosition =  new Vector3(0, 0, 20);
         displayAnimal.transform.Rotate(new Vector3(0, 180, 0));

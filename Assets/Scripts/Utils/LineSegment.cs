@@ -4,7 +4,11 @@
 /// Class representing a line
 /// Mainly used for trees and animals
 /// </summary>
-public class LineSegment { 
+public class LineSegment {
+    public Vector3 a; //Start
+    public Vector3 b; //End
+    public bool endLine; //Last line in chain?
+    public float radius; //Radius of line
 
     /// <summary>
     /// Constructor for line
@@ -19,11 +23,6 @@ public class LineSegment {
         this.radius = radius;
         this.endLine = endLine;
     }
-
-    public Vector3 a;
-    public Vector3 b;
-    public bool endLine;
-    public float radius;
 
     public Vector3 direction { get { return (b - a).normalized; } }
     public float length { get { return (b - a).magnitude; } }
