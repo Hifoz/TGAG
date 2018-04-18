@@ -17,10 +17,11 @@ public class Player : MonoBehaviour {
 
     private Rigidbody rb;
 
+    private WorldGenManager worldGenManager;
+
     // Use this for initialization
     void Start() {
-        WorldGenManager cm = GameObject.FindObjectOfType<WorldGenManager>();
-        cm.player = transform;
+        worldGenManager = GameObject.FindObjectOfType<WorldGenManager>();
 
         if (magicTrailPrefab != null) {
             magicTrail = Instantiate(magicTrailPrefab);
@@ -103,6 +104,7 @@ public class Player : MonoBehaviour {
         if (bestIndex != -1 && bestAngle < maxAngle) {
             if (!magicTrail.activeSelf) {
                 StartCoroutine(moveMagicTrail(animalPool[bestPool].activeList[bestIndex]));
+                worldGenManager.player = animalPool[bestPool].activeList[bestIndex].transform;
                 animalPool[bestPool].activeList[bestIndex] = gameObject;
             }
         }
