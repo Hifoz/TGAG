@@ -28,13 +28,18 @@ public class AirAnimal : Animal {
 
     override protected void Update() {
         if (skeleton != null) {
-            if(brain != null)
-                brain.move();
-            calculateSpeedAndHeading();
-            doGravity();
-            calcVelocity();
-            levelSpine();
-            handleAnimations();
+            if (!displayMode) {
+                if (brain != null)
+                    brain.move();
+                calculateSpeedAndHeading();
+                doGravity();
+                calcVelocity();
+                levelSpine();
+                handleAnimations();
+            } else {
+                rb.velocity = Vector3.zero;
+                glidingAnimation.animate(brain.fastSpeed * animSpeedScalingAir);
+            }
         }
     }
 
@@ -120,10 +125,14 @@ public class AirAnimal : Animal {
 
         AnimalAnimation flyingAnimation = new AnimalAnimation();
         int flyingAnimationFrameCount = 2;
-        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[] {
-            null,
-            () => animalAudio.playWingSound()
-        };
+
+        KeyFrameTrigger[] soundTriggers = null;
+        if (!displayMode) {
+            soundTriggers = new KeyFrameTrigger[] {
+                null,
+                () => animalAudio.playWingSound()
+            };
+        }
 
         BoneKeyFrames spine = new BoneKeyFrames(spineBone, flyingAnimationFrameCount);
         BoneKeyFrames wing1_1 = new BoneKeyFrames(rightWing[0], flyingAnimationFrameCount);
@@ -137,8 +146,10 @@ public class AirAnimal : Animal {
         wing2_1.setRotations(Utils.multVectorArray(wingRot1, -1));
         wing2_2.setRotations(Utils.multVectorArray(wingRot2, -1));
 
-        wing1_1.setTriggers(soundTriggers);
-        wing2_1.setTriggers(soundTriggers);
+        if (soundTriggers != null) {
+            wing1_1.setTriggers(soundTriggers);
+            wing2_1.setTriggers(soundTriggers);
+        }
 
         flyingAnimation.add(spine);
         flyingAnimation.add(wing1_1);
@@ -171,12 +182,16 @@ public class AirAnimal : Animal {
 
         walkingAnimation = new AnimalAnimation();
         int walkingAnimationFrameCount = 4;
-        KeyFrameTrigger[] triggers = new KeyFrameTrigger[]{
-            () => animalAudio.playWalkSound(),
-            null,
-            () => animalAudio.playWalkSound(),
-            null
-        };
+
+        KeyFrameTrigger[] triggers = null;
+        if (!displayMode) {
+            triggers = new KeyFrameTrigger[]{
+                () => animalAudio.playWalkSound(),
+                null,
+                () => animalAudio.playWalkSound(),
+                null
+            };
+        }
 
         BoneKeyFrames wing1_1 = new BoneKeyFrames(rightWing[0], walkingAnimationFrameCount, 2);
         BoneKeyFrames wing1_2 = new BoneKeyFrames(rightWing[1], walkingAnimationFrameCount, 2);
@@ -196,8 +211,9 @@ public class AirAnimal : Animal {
         leg2_1.setRotations(Utils.shiftArray(wing2_1.Rotations, 2));
         leg2_2.setRotations(Utils.shiftArray(wing2_2.Rotations, 2));
 
-        leg1_1.setTriggers(triggers);
-        //leg2_1.setTriggers(triggers);
+        if (triggers != null) {
+            leg1_1.setTriggers(triggers);
+        }
 
         walkingAnimation.add(wing1_1);
         walkingAnimation.add(wing1_2);
@@ -223,7 +239,7 @@ public class AirAnimal : Animal {
     /// </summary>
     private void handleAnimations() {
         if (!flagAnimationTransition) {
-            currentAnimation.animate(state.speed * ((state.grounded) ? animSpeedScalingGround : animSpeedScalingAir));
+            currentAnimation.animate(Time.timeScale * state.speed * ((state.grounded) ? animSpeedScalingGround : animSpeedScalingAir));
             if (currentAnimation == walkingAnimation) {
                 groundLegsAndWings();
             }

@@ -21,14 +21,19 @@ public class LandAnimal : Animal {
     // Update is called once per frame
     override protected void Update() {
         if (skeleton != null) {
-            calculateSpeedAndHeading();
-            if(brain != null)
-                brain.move();
-            calcVelocity();
-            levelSpine();
-            doGravity();
-            handleRagdoll();
-            handleAnimations();
+            if (!displayMode) {
+                calculateSpeedAndHeading();
+                if (brain != null)
+                    brain.move();
+                calcVelocity();
+                levelSpine();
+                doGravity();
+                handleRagdoll();
+                handleAnimations();
+            } else {
+                rb.velocity = Vector3.zero;
+                walkingAnimation.animate(brain.slowSpeed * speedAnimScaling);
+            }
         }
     }
 
@@ -66,12 +71,16 @@ public class LandAnimal : Animal {
 
         walkingAnimation = new AnimalAnimation();
         int walkingAnimationFrameCount = 4;
-        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[]{
-            () => animalAudio.playWalkSound(),
-            null,
-            () => animalAudio.playWalkSound(),
-            null
-        };
+
+        KeyFrameTrigger[] soundTriggers = null;
+        if (!displayMode) {
+            soundTriggers = new KeyFrameTrigger[]{
+                () => animalAudio.playWalkSound(),
+                null,
+                () => animalAudio.playWalkSound(),
+                null
+            };
+        }
         Vector3[] legJoint1Frames = new Vector3[] { new Vector3(0, -45, 45), new Vector3(0, 0, 45), new Vector3(0, 45, 45), new Vector3(0, 0, 75) };
         Vector3[] legJoint2Frames = new Vector3[] { new Vector3(0, 0, -90), new Vector3(0, 0, -90), new Vector3(0, 0, -90), new Vector3(0, 0, -45) };
         for (int i = 0; i < legPairs; i++) {
@@ -88,10 +97,9 @@ public class LandAnimal : Animal {
             leg2_1.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint1Frames, -1), 2));
             leg2_2.setRotations(Utils.shiftArray(Utils.multVectorArray(legJoint2Frames, -1), 2));
 
-            leg1_1.setTriggers(soundTriggers);
-            //leg1_2.setTriggers(triggers);
-            //leg2_1.setTriggers(triggers); currently only playing the sound on one leg, because the current walking sound sounds bad with multiple instances playing at almost the exact same time
-            //leg2_2.setTriggers(triggers);
+            if (soundTriggers != null) {
+                leg1_1.setTriggers(soundTriggers);
+            }
 
             walkingAnimation.add(leg1_1);
             walkingAnimation.add(leg1_2);
@@ -119,7 +127,7 @@ public class LandAnimal : Animal {
     /// </summary>
     private void handleAnimations() {
         if (!ragDolling) {
-            currentAnimation.animate(state.speed * speedAnimScaling);
+            currentAnimation.animate(Time.timeScale * state.speed * speedAnimScaling);
             int legPairs = skeleton.getBodyParameter<int>(BodyParameter.LEG_PAIRS);
             for (int i = 0; i < legPairs; i++) {
                 groundLimb(landSkeleton.getLeg(true, i), 0.5f);

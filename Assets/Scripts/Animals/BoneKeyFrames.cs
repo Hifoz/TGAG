@@ -133,7 +133,7 @@ public class BoneKeyFrames {
     /// <param name="speed">the animation speed, 1f for normal speed</param>
     public void animate(float speed) {
         FrameTimeData frameTimeData = calculateFrameTimeData(speed);
-        timer += Time.deltaTime * frameTimeData.timeModifier;
+        timer += Time.unscaledDeltaTime * frameTimeData.timeModifier;
         Vector3[] values = getValuesAtTime(timer, frameTimeData);
 
         bone.bone.localRotation = Quaternion.Euler(values[0]);
@@ -158,7 +158,7 @@ public class BoneKeyFrames {
 
         FrameTimeData frameTimeData = calculateFrameTimeData(speed);
         FrameTimeData frameTimeDataOther = other.calculateFrameTimeData(speed);
-        timer += Time.deltaTime * Mathf.Lerp(frameTimeData.timeModifier, frameTimeDataOther.timeModifier, t);
+        timer += Time.unscaledDeltaTime * Mathf.Lerp(frameTimeData.timeModifier, frameTimeDataOther.timeModifier, t);
         Vector3[] thisValues = getValuesAtTime(timer, frameTimeData);
         Vector3[] otherValues = other.getValuesAtTime(timer, speed);
 

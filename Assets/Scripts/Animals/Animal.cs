@@ -29,6 +29,9 @@ public abstract class Animal : MonoBehaviour {
     protected Rigidbody rb;
     protected Vector3 gravity;
 
+    //Misc
+    protected bool displayMode = false;
+
 
     virtual protected void Awake() {
         rb = GetComponent<Rigidbody>();
@@ -130,6 +133,13 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="pos"></param>
     public void Spawn(Vector3 pos) {
         brain.Spawn(pos);
+    }
+
+    /// <summary>
+    /// Sets the animal in display mode
+    /// </summary>
+    public void enableDisplayMode() {
+        displayMode = true;
     }
 
     //    _   _                               _     _ _         __                  _   _                 
@@ -344,7 +354,7 @@ public abstract class Animal : MonoBehaviour {
             if (!flagAnimationTransition) {
                 break;
             }
-            currentAnimation.animateLerp(next, t, state.speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
+            currentAnimation.animateLerp(next, t, Time.timeScale * state.speed * Mathf.Lerp(speedScaling, nextSpeedScaling, t));
             yield return 0;
         }
         currentAnimation = next;

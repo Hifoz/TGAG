@@ -20,12 +20,17 @@ public class WaterAnimal : Animal {
 
     override protected void Update() {
         if (skeleton != null) {
-            calculateSpeedAndHeading();
-            if(brain != null)
-                brain.move();
-            calcVelocity();
-            doGravity();
-            handleAnimations();
+            if (!displayMode) {
+                calculateSpeedAndHeading();
+                if (brain != null)
+                    brain.move();
+                calcVelocity();
+                doGravity();
+                handleAnimations();
+            } else {
+                rb.velocity = Vector3.zero;
+                swimAnimation.animate(brain.slowSpeed * speedAnimScaling / 2f);
+            }
         }
     }
 
@@ -77,7 +82,7 @@ public class WaterAnimal : Animal {
             tryAnimationTransition(flapAnimation, speedAnimScaling, speedAnimScaling, 0.5f);
         }
         if (!flagAnimationTransition) {
-            currentAnimation.animate(speedAnimScaling * state.speed);
+            currentAnimation.animate(Time.timeScale * speedAnimScaling * state.speed);
         }
     }
 
@@ -102,10 +107,13 @@ public class WaterAnimal : Animal {
 
         swimAnimation = new AnimalAnimation();
         int swimAnimationFrameCount = 2;
-        KeyFrameTrigger[] soundTriggers = new KeyFrameTrigger[] {
-            () => animalAudio.playWalkSound(),
-            () => animalAudio.playWalkSound()
-        };
+        KeyFrameTrigger[] soundTriggers = null;
+        if (!displayMode) {
+            soundTriggers = new KeyFrameTrigger[] {
+                () => animalAudio.playWalkSound(),
+                () => animalAudio.playWalkSound()
+            };
+        }
 
         Vector3[] spineFrames0 = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, 0) };
         Vector3[] spineFrames1 = new Vector3[] { new Vector3(0, -45, 0), new Vector3(0, 45, 0) };
@@ -117,7 +125,9 @@ public class WaterAnimal : Animal {
 
         boneKeyFrames = new BoneKeyFrames(firstSpine, swimAnimationFrameCount);
         boneKeyFrames.setRotations(spineFrames1);
-        boneKeyFrames.setTriggers(soundTriggers);
+        if (soundTriggers != null) {
+            boneKeyFrames.setTriggers(soundTriggers);
+        }
         swimAnimation.add(boneKeyFrames);
 
         foreach (Bone bone in spine) {
