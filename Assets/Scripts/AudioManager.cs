@@ -145,19 +145,18 @@ class AudioManager : MonoBehaviour{
             ChunkData[,] chunkgrid = worldGenManager.getChunkGrid();
             Vector3Int cameraIndex = worldGenManager.world2ChunkIndex(playerCamera.transform.position);
             for (int x = cameraIndex.x - 2; x <= cameraIndex.x + 2; x++) {
-                for (int z = cameraIndex.z - 2; z <= cameraIndex.z + 2; z++) {
+                for (int z = cameraIndex.z - 2; z <= cameraIndex.z + 2; z++) {                    
                     if (worldGenManager.checkBounds(x, z) && chunkgrid[x, z] != null) {
-                        if (chunkgrid[x, z].hasWind) {
-                            windAreas.Add(chunkgrid[x, z].chunkParent);
+                        if (chunkgrid[x, z].blockDataMap.hasWind) {
+                            windAreas.Add(chunkgrid[x, z].terrainChunk[0]);
                         }
-                        if (chunkgrid[x, z].waterChunk.Count > 0) {
-                            windAreas.AddRange(chunkgrid[x, z].waterChunk);
+                        if (chunkgrid[x, z].blockDataMap.hasWater) {
+                            waterAreas.AddRange(chunkgrid[x, z].waterChunk);
                         }
 
                     }
                 }
             }
-
 
             updateWaterVolume(waterAreas, updateOceanVolume(windAreas));
             updateWindVolume(windAreas);

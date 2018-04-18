@@ -178,7 +178,9 @@ public class ChunkVoxelDataThread {
         //Generate the chunk terrain:
         BlockDataMap chunkBlockData = ChunkVoxelDataGenerator.getChunkVoxelData(order.position, biomeManager);
         result.meshData = MeshDataGenerator.GenerateMeshData(chunkBlockData);
-        result.waterMeshData = MeshDataGenerator.GenerateMeshData(chunkBlockData, meshDataType: MeshDataGenerator.MeshDataType.WATER);
+        if (chunkBlockData.hasWater) {
+            result.waterMeshData = MeshDataGenerator.GenerateMeshData(chunkBlockData, meshDataType: MeshDataGenerator.MeshDataType.WATER);
+        }
 
         //Generate the trees in the chunk:
         int maxTrees = biomeManager.getClosestBiome(new Vector2Int((int)order.position.x, (int)order.position.z)).maxTreesPerChunk;

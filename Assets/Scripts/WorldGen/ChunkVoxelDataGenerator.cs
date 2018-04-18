@@ -200,14 +200,15 @@ public static class ChunkVoxelDataGenerator {
             for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                     BlockData block = data.mapdata[data.index1D(x, y, z)];
-                    if (block.blockType != BlockData.BlockType.NONE && block.blockType != BlockData.BlockType.WATER)
+                    if (block.blockType != BlockData.BlockType.NONE && block.blockType != BlockData.BlockType.WATER) {
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
-                    else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y))
+                    } else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y)) {
                         data.mapdata[data.index1D(x, Corruption.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
-                    else if (biomemap[x, z][0].first.biomeName == "ocean") { //Add wind blocks to oceans
+                        data.hasWater = true;
+                    } else if (biomemap[x, z][0].first.biomeName == "ocean") { //Add wind blocks to oceans
                         data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WIND;
-                        //data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.STONE; If you want to look at the wind areas
                         data.hasWind = true;
+                        //data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.STONE; If you want to look at the wind areas
                     }
                 }
             }

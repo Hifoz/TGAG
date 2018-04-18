@@ -351,7 +351,6 @@ public class WorldGenManager : MonoBehaviour {
         chunk.transform.parent = transform;
         cd.chunkParent = chunk;
         cd.blockDataMap = chunkMeshData.blockDataMap;
-        cd.hasWind = chunkMeshData.blockDataMap.hasWind;
 
         // Create terrain subchunks
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
@@ -370,19 +369,21 @@ public class WorldGenManager : MonoBehaviour {
         }
 
         // Create water subchunks
-        for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
-            GameObject waterChunk = chunkPool.getObject();
-            waterChunk.layer = 4;
-            waterChunk.transform.parent = chunk.transform;
-            waterChunk.transform.position = chunkMeshData.chunkPos;
-            waterChunk.transform.localScale = Vector3.one;
-            MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
-            waterChunk.name = "waterSubChunk";
-            waterChunk.tag = "waterSubChunk";
-            waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
-            waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
-            waterChunk.GetComponent<MeshRenderer>().enabled = true;
-            cd.waterChunk.Add(waterChunk);
+        if (chunkMeshData.waterMeshData != null) {
+            for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
+                GameObject waterChunk = chunkPool.getObject();
+                waterChunk.layer = 4;
+                waterChunk.transform.parent = chunk.transform;
+                waterChunk.transform.position = chunkMeshData.chunkPos;
+                waterChunk.transform.localScale = Vector3.one;
+                MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
+                waterChunk.name = "waterSubChunk";
+                waterChunk.tag = "waterSubChunk";
+                waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
+                waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+                waterChunk.GetComponent<MeshRenderer>().enabled = true;
+                cd.waterChunk.Add(waterChunk);
+            }
         }
 
         if (chunkMeshData.chunkPos.magnitude > 100) {
