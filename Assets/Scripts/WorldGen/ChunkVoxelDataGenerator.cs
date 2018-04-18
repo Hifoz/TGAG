@@ -121,7 +121,7 @@ public static class ChunkVoxelDataGenerator {
         for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
             for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                 Vector3 xzPos = new Vector3(x, 0, z);
-                biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z));
+                biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z), true);
                 corruptionMap[x, z] = Corruption.corruptionFactor(pos + xzPos);
                 heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z], corruptionMap[x, z]);
 
@@ -199,37 +199,21 @@ public static class ChunkVoxelDataGenerator {
         for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
             for (int y = 0; y < WorldGenConfig.chunkHeight; y++) {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
-                    if (data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.NONE && data.mapdata[data.index1D(x, y, z)].blockType != BlockData.BlockType.WATER)
+                    BlockData block = data.mapdata[data.index1D(x, y, z)];
+                    if (block.blockType != BlockData.BlockType.NONE && block.blockType != BlockData.BlockType.WATER)
                         decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
                     else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y))
                         data.mapdata[data.index1D(x, Corruption.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
-                }
-            }
-        }
-
-        return data;
-    }
-
-
-    /// <summary>
-    /// Generates data for windarea in chunk
-    /// </summary>
-    /// <param name="pos">position of chunk</param>
-    /// <param name="biomeManager">biome manager</param>
-    /// <returns></returns>
-    public static BlockDataMap getWindAreaData(Vector3 pos, BiomeManager biomeManager) {
-        BlockDataMap data = new BlockDataMap(WorldGenConfig.chunkSize + 2, 3, WorldGenConfig.chunkSize + 2);
-
-        for (int x = 0; x < WorldGenConfig.chunkSize + 2; x++) {
-            for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
-                if (biomeManager.getClosestBiome(new Vector2Int(x + (int)pos.x, z + (int)pos.z)).biomeName == "ocean") {
-                    data.mapdata[data.index1D(x, 1, z)].blockType = BlockData.BlockType.WATER;
+                    else if (biomemap[x, z][0].first.biomeName == "ocean") { //Add wind blocks to oceans
+                        data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.WIND;
+                        //data.mapdata[data.index1D(x, y, z)].blockType = BlockData.BlockType.STONE; If you want to look at the wind areas
+                        data.hasWind = true;
+                    }
                 }
             }
         }
         return data;
     }
-
 
     /// <summary>
     /// Used to decide what type of block goes on a position

@@ -82,6 +82,7 @@ public class WorldGenManager : MonoBehaviour {
     private ChunkData[,] chunkGrid;
     private GameObjectPool chunkPool;
     private GameObjectPool treePool;
+    private GameObjectPool windPool;
 
     // Thread communication
     private ChunkVoxelDataThread[] CVDT;
@@ -125,7 +126,8 @@ public class WorldGenManager : MonoBehaviour {
         orderNewChunks();
         consumeThreadResults();
         handleAnimals();
-    }   
+    }
+#region public functions
 
     /// <summary>
     /// Gets animals
@@ -149,6 +151,13 @@ public class WorldGenManager : MonoBehaviour {
     /// <returns></returns>
     public ChunkData[,] getChunkGrid() {
         return chunkGrid;
+    }
+
+    /// <summary>
+    /// Returns the biomemanager
+    /// </summary>
+    public BiomeManager getBiomeManager() {
+        return biomeManager;
     }
 
     /// <summary>
@@ -180,6 +189,8 @@ public class WorldGenManager : MonoBehaviour {
     public bool checkBounds(int x, int y) {
         return (x >= 0 && x < WorldGenConfig.chunkCount && y >= 0 && y < WorldGenConfig.chunkCount);
     }
+#endregion
+#region main functions
 
     //    __  __       _          __                  _   _                 
     //   |  \/  |     (_)        / _|                | | (_)                
@@ -230,19 +241,17 @@ public class WorldGenManager : MonoBehaviour {
             } else {
                 GameObject chunk = activeChunks[i].chunkParent;
                 for (int j = 0; j < activeChunks[i].terrainChunk.Count; j++) {
-                    activeChunks[i].terrainChunk[j].transform.parent = this.transform;
+                    activeChunks[i].terrainChunk[j].transform.parent = transform;
                     chunkPool.returnObject(activeChunks[i].terrainChunk[j]);
                 }
                 for (int j = 0; j < activeChunks[i].waterChunk.Count; j++) {
-                    activeChunks[i].waterChunk[j].transform.parent = this.transform;
+                    activeChunks[i].waterChunk[j].transform.parent = transform;
                     chunkPool.returnObject(activeChunks[i].waterChunk[j]);
                 }
-                if(chunk != null) {
-                    Transform windParticleEffect = chunk.transform.Find("WindPE");
-                    if (windParticleEffect != null)
-                        Destroy(windParticleEffect.gameObject);
+                if (activeChunks[i].windParticleSystem != null) {
+                    activeChunks[i].windParticleSystem.transform.parent = transform;
+                    windPool.returnObject(activeChunks[i].windParticleSystem);
                 }
-
                 Destroy(chunk);
 
                 foreach(var tree in activeChunks[i].trees) {
@@ -342,6 +351,7 @@ public class WorldGenManager : MonoBehaviour {
         chunk.transform.parent = transform;
         cd.chunkParent = chunk;
         cd.blockDataMap = chunkMeshData.blockDataMap;
+        cd.hasWind = chunkMeshData.blockDataMap.hasWind;
 
         // Create terrain subchunks
         for (int i = 0; i < chunkMeshData.meshData.Length; i++) {
@@ -375,36 +385,10 @@ public class WorldGenManager : MonoBehaviour {
             cd.waterChunk.Add(waterChunk);
         }
 
-        GameObject windChunk = null;
-        if (chunkMeshData.windData.vertices.Length > 0) {
-            windChunk = chunkPool.getObject();
-            // Create wind mesh
-            windChunk.layer = 10;
-            windChunk.transform.parent = chunk.transform;
-            windChunk.transform.position = chunkMeshData.chunkPos - new Vector3(0, WorldGenConfig.chunkHeight * 0.5f, 0);
-            windChunk.transform.localScale = new Vector3(1, WorldGenConfig.chunkHeight, 1);
-            MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshFilter>(), chunkMeshData.windData);
-            windChunk.GetComponent<MeshCollider>().convex = true;
-            windChunk.GetComponent<MeshCollider>().isTrigger = true;
-            MeshDataGenerator.applyMeshData(windChunk.GetComponent<MeshCollider>(), chunkMeshData.windData);
-            windChunk.name = "windSubChunk";
-            windChunk.tag = "windSubChunk";
-            windChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWindDebug;
-            windChunk.GetComponent<MeshRenderer>().material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            windChunk.GetComponent<MeshRenderer>().enabled = false;
-            cd.waterChunk.Add(windChunk);
-
-            if(chunkMeshData.chunkPos.magnitude < 100) {
-                windChunk.name = "inactiveWindSubChunk";
-            }
-        }
-
-
         if (chunkMeshData.chunkPos.magnitude > 100) {
             // Add wind particle system to chunks
-            GameObject particleSystem = Instantiate(windParticleSystemPrefab);
+            GameObject particleSystem = windPool.getObject();
             particleSystem.transform.SetParent(chunk.transform);
-            particleSystem.gameObject.name = "WindPE";
             particleSystem.transform.position = chunkMeshData.chunkPos;
 
             float heightPos = 150;
@@ -529,6 +513,8 @@ public class WorldGenManager : MonoBehaviour {
         }        
     }
 
+    #endregion
+#region helper functions
     //    _    _      _                    __                  _   _                 
     //   | |  | |    | |                  / _|                | | (_)                
     //   | |__| | ___| |_ __   ___ _ __  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -584,8 +570,8 @@ public class WorldGenManager : MonoBehaviour {
     private Vector3 getPlayerPos() {
         return calculateChunkPos(player.position);
     }
-
-
+    #endregion
+#region benchmark functions
     //    ____                  _                          _       __                  _   _                 
     //   |  _ \                | |                        | |     / _|                | | (_)                
     //   | |_) | ___ _ __   ___| |__  _ __ ___   __ _ _ __| | __ | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -627,6 +613,7 @@ public class WorldGenManager : MonoBehaviour {
 
         chunkPool = new GameObjectPool(chunkPrefab, transform, "chunk", false);
         treePool = new GameObjectPool(treePrefab, transform, "tree", false);
+        windPool = new GameObjectPool(windParticleSystemPrefab, transform, "WindPE", false);
 
         if (landAnimalPrefab != null) {
             foreach(GameObjectPool animalPool in animalPools) {
@@ -689,6 +676,9 @@ public class WorldGenManager : MonoBehaviour {
         if (treePool != null) {
             treePool.destroyAllGameObjects();
         }
+        if (windPool != null) {
+            windPool.destroyAllGameObjects();
+        }
 
         foreach (var animalPool in animalPools) {
             if (animalPool != null) {
@@ -709,7 +699,8 @@ public class WorldGenManager : MonoBehaviour {
             }
         }
     }
-
+    #endregion
+#region misc functions
     //    __  __ _             __                  _   _                 
     //   |  \/  (_)           / _|                | | (_)                
     //   | \  / |_ ___  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
@@ -717,15 +708,7 @@ public class WorldGenManager : MonoBehaviour {
     //   | |  | | \__ \ (__  | | | |_| | | | | (__| |_| | (_) | | | \__ \
     //   |_|  |_|_|___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
     //                                                                   
-    //         
-
-    /// <summary>
-    /// Returns the biomemanager
-    /// </summary>
-    public BiomeManager getBiomeManager() {
-        return biomeManager;
-    }
-
+    //        
 
     /// <summary>
     /// Produces a string that contains debug data
@@ -764,4 +747,5 @@ public class WorldGenManager : MonoBehaviour {
         stopThreads();
         VoxelPhysics.clear();
     }
+#endregion
 }

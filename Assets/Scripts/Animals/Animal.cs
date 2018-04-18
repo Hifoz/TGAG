@@ -538,33 +538,16 @@ public abstract class Animal : MonoBehaviour {
     }
 
     virtual public void OnVoxelExit(BlockData.BlockType type) {
-        if (VoxelPhysics.isWater(type)) {
-            state.inWater = false;
-        }
     }
 
     virtual public void OnVoxelStay(BlockData.BlockType type) {
-        if (VoxelPhysics.isWater(type)) {
-            state.inWater = true;
-        }
+        state.inWater = VoxelPhysics.isWater(type);
+        state.inWindArea = VoxelPhysics.isWind(type);
     }
 
     virtual public void OnVoxelCollisionEnter(BlockData.BlockType type) {
         brain.OnCollisionEnter();
     }
-
-    private void OnTriggerExit(Collider other) {
-        if (other.name == "windSubChunk") {
-            state.inWindArea = false;
-        }
-    }
-
-    private void OnTriggerStay(Collider other) {
-        if (other.name == "windSubChunk") {
-            state.inWindArea = true;
-        }
-    }
-
 
     //This is only triggered for trees now. 
     private void OnCollisionEnter(Collision collision) {

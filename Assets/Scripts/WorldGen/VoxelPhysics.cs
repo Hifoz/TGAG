@@ -73,7 +73,7 @@ public static class VoxelPhysics {
     /// <param name="type">block to check</param>
     /// <returns>true/false</returns>
     public static bool isSolid(BlockData.BlockType type) {
-        return !(type == BlockData.BlockType.WATER || type == BlockData.BlockType.NONE);
+        return !(type == BlockData.BlockType.WATER || type == BlockData.BlockType.NONE || type == BlockData.BlockType.WIND);
     }
 
     /// <summary>
@@ -83,6 +83,15 @@ public static class VoxelPhysics {
     /// <returns>true/false</returns>
     public static bool isWater(BlockData.BlockType type) {
         return type == BlockData.BlockType.WATER;
+    }
+
+    /// <summary>
+    /// Checks if the block is wind
+    /// </summary>
+    /// <param name="type">Type of block</param>
+    /// <returns>true/false</returns>
+    public static bool isWind(BlockData.BlockType type) {
+        return type == BlockData.BlockType.WIND;
     }
 
     /// <summary>

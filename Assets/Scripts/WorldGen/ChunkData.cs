@@ -12,6 +12,7 @@ public class ChunkData {
     public List<GameObject> waterChunk = new List<GameObject>();
     public GameObject[] trees;
     public GameObject windParticleSystem;
+    public bool hasWind = true;
     public BlockDataMap blockDataMap;
 
 

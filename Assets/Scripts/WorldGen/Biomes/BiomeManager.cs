@@ -75,9 +75,9 @@ public class BiomeManager {
     /// Gets the biomes for this position.
     /// </summary>
     /// <param name="pos">position to sample</param>
-    /// <param name="range">Range to check. If no value is passed, the range wil use the distance from the closest biome + borderWidth</param>
+    /// <param name="ordered">Should the results be ordered by weight? (descending)</param>
     /// <returns>Biomes for this position and the distance from the sample pos to the biome point</returns>
-    public List<Pair<BiomeBase, float>> getInRangeBiomes(Vector2Int pos) {
+    public List<Pair<BiomeBase, float>> getInRangeBiomes(Vector2Int pos, bool ordered = false) {
         pos = modifyPosition(pos);
 
 
@@ -121,6 +121,9 @@ public class BiomeManager {
             p.second = (p.second / tot);
         }
 
+        if (ordered) {
+            inRangeBiomes.OrderByDescending(item => item.second);
+        }
         return inRangeBiomes;
     }
     
