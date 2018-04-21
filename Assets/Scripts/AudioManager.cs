@@ -34,6 +34,12 @@ class AudioManager : MonoBehaviour{
     private AudioSource ambienceSource;
     public float ambienceVolume = 0.05f;
 
+    private static bool existing = false;
+
+    public static bool exists() {
+        return existing;
+    }
+
     // Music
     private AudioSource musicSource;
     private AudioClip[] musicClips;
@@ -47,6 +53,7 @@ class AudioManager : MonoBehaviour{
 
     private void Awake() {
         rng = new System.Random(12345);
+        existing = true;
 
         animalSounds = new AudioClip[]{ // Should be aligned with AnimalAudio.SoundName
             Resources.Load<AudioClip>("Audio/fun_monster_stephane_fuf_dufour_sonissGDC2018"),

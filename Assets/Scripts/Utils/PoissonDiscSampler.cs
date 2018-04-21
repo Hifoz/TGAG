@@ -72,21 +72,6 @@ class PoissonDiscSampler {
 
     #region public functions
 
-    /* Using PoissonDiscSampler.sample():
-     * 
-     * 
-     * foreach(Vector2 sample in sampler.sampler())
-     *      // Do stuff with sample here
-     * 
-     * ------- or -------
-     * 
-     * using System.Linq; // Needed for ToList() functionality
-     * ...
-     * Vector2[] samplesAsList = sampler.sample().ToList();
-     * // Do stuff with samplesAsList
-     * 
-     */
-
     /// <summary>
     /// Returns an enumerable for use in foreach loops.
     /// </summary>

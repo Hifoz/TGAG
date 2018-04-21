@@ -55,6 +55,8 @@ public static class VoxelPhysics {
     /// <param name="worldPos"></param>
     /// <returns></returns>
     public static BlockData.BlockType voxelAtPos(Vector3 worldPos) {
+        if (worldGenManager == null)
+            return BlockData.BlockType.NONE;
         Vector3Int index = worldGenManager.world2ChunkIndex(worldPos);
         if (!worldGenManager.checkBounds(index.x, index.z)) {
             return BlockData.BlockType.NONE;
