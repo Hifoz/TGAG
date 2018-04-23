@@ -46,8 +46,8 @@
 			};
 
 			static const int COLOR_COUNT = 5;
-			static const float lodDist = 250; //250
-			static const float lodStartDist = 100; //100
+			static const float lodDist = 2500000; //250
+			static const float lodStartDist = 1000000; //100
 
 			static float frequencies[COLOR_COUNT] = {
 				7.74,	//Dirt
@@ -114,8 +114,9 @@
 				float lod = dist < lodDist;
 				float lodStart = dist > lodStartDist;
 				float lodLevel = saturate((dist - lodStart) / lodDist);
-				fixed3 color1 = calculateColor(i.worldPos, i.color.r * COLOR_COUNT, lodStart);
-				fixed3 color2 = calculateColor(i.worldPos, i.color.g * COLOR_COUNT, lodStart);
+				fixed3 color1 = calculateColor(i.worldPos, i.color.r + 0.01, lodStart);
+				fixed3 color2 = calculateColor(i.worldPos, i.color.g + 0.01, lodStart);
+				
 				//work out modifiers, for side blending
 				float blendingNoise = noise(i.worldPos, 6.4) / 10;
 				fixed normal = (i.uv.y  < ((0.8 + blendingNoise * (1 - lodStart)) * (1 - lodLevel))) * lod;
