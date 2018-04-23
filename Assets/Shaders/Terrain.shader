@@ -46,8 +46,8 @@
 			};
 
 			static const int COLOR_COUNT = 5;
-			static const float lodDist = 2500000; //250
-			static const float lodStartDist = 1000000; //100
+			static const float lodDist = 250; //250
+			static const float lodStartDist = 100; //100
 
 			static float frequencies[COLOR_COUNT] = {
 				7.74,	//Dirt
