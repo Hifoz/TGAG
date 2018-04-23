@@ -203,10 +203,8 @@ class NaiveMeshDataGenerator {
     /// <param name="blockData">Data of the block</param>
     /// <param name="faceDir">Direction of the face</param>
     protected void addColorDataTerrain(BlockData blockData, FaceDirection faceDir) {
-        const float COLOR_COUNT = 5; //Size of colors array in shader
-        const float smallDelta = 0.01f; //To make the int index = colorIndex * COLOR_COUNT conversion stable
-        float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType) / COLOR_COUNT + smallDelta; //5 because COLOR_COUNT in shader is 5
-        float colorIndex2 = (blockData.modifier == BlockData.BlockType.NONE) ? colorIndex1 : BlockData.blockTypeToColorIndex(blockData.modifier) / COLOR_COUNT + smallDelta;
+        float colorIndex1 = BlockData.blockTypeToColorIndex(blockData.blockType); //5 because COLOR_COUNT in shader is 5
+        float colorIndex2 = (blockData.modifier == BlockData.BlockType.NONE) ? colorIndex1 : BlockData.blockTypeToColorIndex(blockData.modifier);
 
         switch (faceDir) {
             case FaceDirection.yp:
@@ -252,14 +250,8 @@ class NaiveMeshDataGenerator {
     /// </summary>
     /// <param name="verticies">Verticies to encode into colors</param>
     protected void encodePositionalData(List<Vector3> verts) {
-        Vector3 scalingVector = new Vector3(blockDataMap.GetLength(0), blockDataMap.GetLength(1), blockDataMap.GetLength(2));
         foreach (Vector3 vert in verts) {
-            colors.Add(new Color(
-                    vert.x / scalingVector.x,
-                    vert.y / scalingVector.y,
-                    vert.z / scalingVector.z
-                )
-            );
+            colors.Add(new Color(vert.x, vert.y, vert.z));
             uvs.Add(animalData);
         }
     }

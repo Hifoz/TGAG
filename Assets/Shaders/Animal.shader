@@ -84,7 +84,7 @@
 				color1 += half3(1, 1, 1) * (1 - nonZero);
 				
 				float3 seed = float3(1, 1, 1) * 841.4 * i.animalData.y;
-				float frequency = 111.3 * i.animalData.x;
+				float frequency = 1.3 * i.animalData.x;
 
 				float n = noise(i.noisePos * frequency + seed) * 0.8f + 0.1;
 
