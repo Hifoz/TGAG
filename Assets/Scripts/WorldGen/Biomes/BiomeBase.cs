@@ -65,15 +65,6 @@ public abstract class BiomeBase {
 
 
     /// <summary>
-    /// Loads a biome from a file
-    /// </summary>
-    /// <param name="filepath">path to file</param>
-    public void loadFromFile(String filepath) {
-        throw new NotImplementedException("Biome.loadFromFile(String filepath) not yet implemented.");
-    }
-
-
-    /// <summary>
     /// Get the blocktype for a block. This is the default settings for blocktype decisions
     /// </summary>
     /// <param name="data"></param>

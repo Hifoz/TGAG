@@ -356,7 +356,9 @@ class AudioManager : MonoBehaviour{
     /// </summary>
     private void updateAnimalVolume() {
         List<GameObject> animals = GameObject.FindGameObjectsWithTag("Animal").ToList();
-        animals.Add(GameObject.FindGameObjectWithTag("Player"));
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if(player != null)
+            animals.Add(player);
         foreach(GameObject animal in animals) {
             animal.GetComponent<AnimalAudio>().updateVolume(animalVolume * gameVolume * masterVolume);
         }

@@ -14,8 +14,9 @@ class PoissonDiscSamplerTest : MonoBehaviour {
 
 
     private void Start() {
-        sampler = new PoissonDiscSampler(5, 1000, 1000, true);
+        sampler = new PoissonDiscSampler(5, 100, 100, true);
         StartCoroutine(run());
+        //randomComparion();
     }
 
     public IEnumerator run() {
@@ -32,6 +33,14 @@ class PoissonDiscSamplerTest : MonoBehaviour {
         }
 
         sw.done("w=100, h=100, r=5; result:" + count + " spheres.");
+    }
+
+    public void randomComparion() {
+        System.Random rng = new System.Random();
+        for(int i = 0; i < 273; i++) { // 273 because that was the number of spheres generated during the test for pds
+            GameObject ob = Instantiate(testObject);
+            ob.transform.position = new Vector3(rng.Next(0, 100), 0, rng.Next(0, 100));
+        }
     }
 
 }

@@ -5,7 +5,7 @@ using System.Linq;
 
 
 /**
- * Implementation of Poisson Dsic Sampling
+ * Implementation of Poisson Dis    c Sampling
  * Inspired by https://bl.ocks.org/mbostock/19168c663618b7f07158
  *             http://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf
  */
