@@ -250,14 +250,8 @@ class NaiveMeshDataGenerator {
     /// </summary>
     /// <param name="verticies">Verticies to encode into colors</param>
     protected void encodePositionalData(List<Vector3> verts) {
-        Vector3 scalingVector = new Vector3(blockDataMap.GetLength(0), blockDataMap.GetLength(1), blockDataMap.GetLength(2));
         foreach (Vector3 vert in verts) {
-            colors.Add(new Color(
-                    vert.x / scalingVector.x,
-                    vert.y / scalingVector.y,
-                    vert.z / scalingVector.z
-                )
-            );
+            colors.Add(new Color(vert.x, vert.y, vert.z));
             uvs.Add(animalData);
         }
     }
