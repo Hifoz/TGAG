@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+
+
+/// <summary>
+/// Biome Manager
+/// </summary>
 public class BiomeManager {
     private List<BiomeBase> biomes = new List<BiomeBase>();
     private List<Pair<BiomeBase, Vector2Int>> biomePoints = new List<Pair<BiomeBase, Vector2Int>>();
@@ -14,10 +19,11 @@ public class BiomeManager {
     private int gridWidth = 500;
     private int gridHeight = 500;
 
-
     public static float borderWidth = 50;
 
     private System.Random rng;
+
+
 
     #region public functions
 
@@ -76,13 +82,13 @@ public class BiomeManager {
     /// </summary>
     /// <param name="pos">position to sample</param>
     /// <param name="ordered">Should the results be ordered by weight? (descending)</param>
-    /// <returns>Biomes for this position and the distance from the sample pos to the biome point</returns>
+    /// <returns>Biomes for this position and their weights</returns>
     public List<Pair<BiomeBase, float>> getInRangeBiomes(Vector2Int pos, bool ordered = false) {
         pos = modifyPosition(pos);
 
 
         // Find all points in range
-        List<Pair<BiomeBase, float>> inRangeBiomes = new List<Pair<BiomeBase, float>>();    // Might want to separate the biome from the weight, because we often just use one of them at the time.
+        List<Pair<BiomeBase, float>> inRangeBiomes = new List<Pair<BiomeBase, float>>();
 
         float closestPointDistance = closestBiomePoint(pos).second;
         float range = closestPointDistance + borderWidth;
@@ -104,21 +110,21 @@ public class BiomeManager {
             }
         }
 
-        // Calculate the weights:
-
         if (inRangeBiomes.Count == 1) {
             inRangeBiomes[0].second = 1;
             return inRangeBiomes;
         }
 
 
-        float tot = 0;
+        // Calculate the weights:
+        float total = 0;
         foreach (Pair<BiomeBase, float> p in inRangeBiomes) {
             p.second = Mathf.Pow(1 - (p.second - closestPointDistance) / borderWidth, 2);
-            tot += p.second;
+            total += p.second;
         }
+        // Normalize the weigths:
         foreach (Pair<BiomeBase, float> p in inRangeBiomes) {
-            p.second = (p.second / tot);
+            p.second = (p.second / total);
         }
 
         if (ordered) {
@@ -172,7 +178,11 @@ public class BiomeManager {
 
     #endregion
 
-
+    /// <summary>
+    /// Get a position modified using 1d simplex noise 
+    /// </summary>
+    /// <param name="vec"></param>
+    /// <returns></returns>
     private Vector2Int modifyPosition(Vector2Int vec) {
         vec.x += (int)(SimplexNoise.Simplex1D(new Vector2(vec.x, vec.y), 0.01f) * 15);
         vec.y += (int)(SimplexNoise.Simplex1D(new Vector2(vec.y + 1234, vec.x + 4444), 0.01f) * 15);
@@ -180,18 +190,12 @@ public class BiomeManager {
         return vec;
     }
 
-
+    /// <summary>
+    /// Get the radius
+    /// </summary>
+    /// <returns></returns>
     public float getRadius() {
         return radius * gridScale;
     }
 
-
-
-    /// <summary>
-    /// Loads biomes from a folder
-    /// </summary>
-    /// <param name="folderpath">path to folder containing biome files</param>
-    public void loadFromFile(String folderpath) {
-        throw new NotImplementedException("BiomeManager.loadFromFile(...) not yet implemented.");
-    }
 }

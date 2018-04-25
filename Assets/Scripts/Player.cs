@@ -83,7 +83,7 @@ public class Player : MonoBehaviour {
         const float maxAngle = 40;
         const float maxDist = 50;
 
-        float bestAngle = 9999;
+        float bestAngle = maxAngle;
         int bestIndex = -1;
         int bestPool = -1;
 
@@ -101,7 +101,7 @@ public class Player : MonoBehaviour {
             }
         }
 
-        if (bestIndex != -1 && bestAngle < maxAngle) {
+        if (bestIndex != -1) {
             if (!magicTrail.activeSelf) {
                 StartCoroutine(moveMagicTrail(animalPool[bestPool].activeList[bestIndex]));
                 worldGenManager.player = animalPool[bestPool].activeList[bestIndex].transform;

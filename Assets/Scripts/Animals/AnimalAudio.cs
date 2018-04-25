@@ -36,7 +36,8 @@ public class AnimalAudio : MonoBehaviour {
 
 
     private void Start() {
-        AudioManager.initAnimalAudio(this);
+        if(AudioManager.exists())
+            AudioManager.initAnimalAudio(this);
     }
 
 

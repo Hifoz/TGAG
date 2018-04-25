@@ -9,7 +9,7 @@ public static class WorldGenConfig {
     //General
     public static int seed = 1337; //161 for watery start
     public static int chunkSize = 40;
-    public static int chunkCount = 20;
+    public static int chunkCount = 50;
     public static int chunkHeight = 200;
     public const int waterEndLevel = 18; 
     //2D noise settings

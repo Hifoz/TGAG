@@ -111,10 +111,10 @@ public static class ChunkVoxelDataGenerator {
     public static BlockDataMap getChunkVoxelData(Vector3 pos, BiomeManager biomeManager) {
         BlockDataMap data = new BlockDataMap(WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkHeight, WorldGenConfig.chunkSize + 2);
         /*
-         * Pre-calculate 2d heightmap and biomemap:
+         * Pre-calculate 2d heightmap biomemap and corruption map:
          */
 
-        List<Pair<BiomeBase, float>>[,] biomemap = new List<Pair<BiomeBase, float>>[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2]; // Very proud of this beautiful thing /jk
+        List<Pair<BiomeBase, float>>[,] biomemap = new List<Pair<BiomeBase, float>>[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
         int[,] heightmap = new int[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
         float[,] corruptionMap = new float[WorldGenConfig.chunkSize + 2, WorldGenConfig.chunkSize + 2];
 
@@ -123,7 +123,7 @@ public static class ChunkVoxelDataGenerator {
                 Vector3 xzPos = new Vector3(x, 0, z);
                 biomemap[x, z] = biomeManager.getInRangeBiomes(new Vector2Int(x + (int)pos.x, z + (int)pos.z), true);
                 corruptionMap[x, z] = Corruption.corruptionFactor(pos + xzPos);
-                heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z], corruptionMap[x, z]);
+                heightmap[x, z] = (int)calcHeight(pos + xzPos,  biomemap[x, z]);
 
                 // Initialize the blockdata map with heightmap data
                 for (int y = 0; y < heightmap[x, z]; y++) {
@@ -201,7 +201,7 @@ public static class ChunkVoxelDataGenerator {
                 for (int z = 0; z < WorldGenConfig.chunkSize + 2; z++) {
                     BlockData block = data.mapdata[data.index1D(x, y, z)];
                     if (block.blockType != BlockData.BlockType.NONE && block.blockType != BlockData.BlockType.WATER) {
-                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng); // TODO make this use biomes in some way?
+                        decideBlockType(data, new Vector3Int(x, y, z), biomemap[x, z], rng);
                     } else if (corruptionMap[x, z] < 1 && WorldGenConfig.heightInWater(y)) {
                         data.mapdata[data.index1D(x, Corruption.corruptWaterHeight(y, corruptionMap[x, z]), z)].blockType = BlockData.BlockType.WATER;
                         data.hasWater = true;
@@ -268,11 +268,9 @@ public static class ChunkVoxelDataGenerator {
     /// <param name="pos">position of voxel</param>
     /// <param name="corruptionFactor">float for corruptionFactor</param>
     /// <returns>float height</returns>
-    public static float calcHeight(Vector3 pos, List<Pair<BiomeBase, float>> biomes, float corruptionFactor) {
-        // TODO: Currently, this locks all biomes to the same octaveCount and noiseExponent2D, it might be nice if this was not the case, so one could have differing octave counts and stuff
-        //       Left it like this for now though, as all biomes currently made has the same settings for these 2 variables anyways.
-        //We calculate the octaves wrong, we should multiplie frequency by octave strength, and not multiply samplePos by octaveStrength.
-        pos = new Vector3(pos.x, pos.z, 0); 
+    public static float calcHeight(Vector3 pos, List<Pair<BiomeBase, float>> biomes) {
+        //We calculate the octaves wrong, we should multiply frequency by octave strength, and not multiply samplePos by octaveStrength.
+        pos = new Vector3(pos.x, pos.z, 0);
         float finalNoise = 0;
         float noiseScaler = 0;
         float octaveStrength = 1;
@@ -303,7 +301,7 @@ public static class ChunkVoxelDataGenerator {
             }
         }
 
-        return minH + finalNoise * maxH;
+        return minH + finalNoise * (maxH - minH);
     }
 
     /// <summary>
