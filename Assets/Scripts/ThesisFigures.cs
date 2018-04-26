@@ -13,7 +13,12 @@ public class ThesisFigures : MonoBehaviour {
     void Start() {
         //generate1Voxel();
         //voxelLine();
-        animalShowCase();
+        //animalShowCase();
+        //generateNoisePlane();
+        //noiseCalcVisuals(new Vector3(0.5f, 0.4f));
+        //noiseCalcVisuals(new Vector3(-0.045f, 0.4f));
+        //noiseCalcVisuals(new Vector3(5.5f, 5.714f));
+        generateSimplexGrid();
     }
 
     // Update is called once per frame
@@ -79,5 +84,127 @@ public class ThesisFigures : MonoBehaviour {
         animal.setSkeleton(skeleton);
         AnimalUtils.addAnimalBrainPlayer(animal);
         animal.enabled = false;
+    }
+
+    private void generateNoisePlane() {
+        GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        Texture2D tex = new Texture2D(1000, 1000);
+
+        for(int i = 0; i < 1000; i++) {
+            for (int j = 0; j < 1000; j++) {
+                float noise = SimplexNoise.Simplex2D(new Vector3(i, j, 0), 0.1f);
+                noise = (noise + 1) / 2;
+                tex.SetPixel(i, j, new Color(noise, noise, noise));
+            }
+        }
+        tex.Apply();
+
+        obj.GetComponent<MeshRenderer>().material.mainTexture = tex;
+    }
+
+    float squaresToTriangles = (3f - Mathf.Sqrt(3f)) / 6f; //Converts points from square grid to triangel grid
+    float trianglesToSquares = (Mathf.Sqrt(3f) - 1f) / 2f; //Converts points from triangle grid to square grid
+
+    private void noiseCalcVisuals(Vector3 point, bool pointm = true) {
+        if (pointm)
+            pointMake(point, Color.blue);
+
+        float skew = (point.x + point.y) * trianglesToSquares; //Transform the triangle grid to a cube grid
+        float sx = point.x + skew;
+        float sy = point.y + skew;
+
+        int ix = Mathf.FloorToInt(sx);
+        int iy = Mathf.FloorToInt(sy);
+
+        List<Vector3> triangleSkew = new List<Vector3>();
+        List<Vector3> triangleUnskew = new List<Vector3>();
+
+        triangleUnskew.Add(Simplex2DPart(point, ix, iy));
+        triangleUnskew.Add(Simplex2DPart(point, ix + 1, iy + 1));
+
+        triangleSkew.Add(new Vector3(ix, iy));
+        triangleSkew.Add(new Vector3(ix + 1, iy + 1));
+
+        if (sx - ix >= sy - iy) { // Work out which triangle the point is inside
+            triangleUnskew.Add(Simplex2DPart(point, ix + 1, iy));
+            triangleSkew.Add(new Vector3(ix + 1, iy));
+        } else {
+            triangleUnskew.Add(Simplex2DPart(point, ix, iy + 1));
+            triangleSkew.Add(new Vector3(ix, iy + 1));
+        }
+
+        StartCoroutine(drawTriangle(triangleSkew, Color.red));
+        StartCoroutine(drawTriangle(triangleUnskew, Color.green));
+    }
+
+    private Vector3 Simplex2DPart(Vector3 point, int ix, int iy) {
+        float unskew = (ix + iy) * squaresToTriangles;
+        return new Vector3(ix - unskew, iy - unskew);
+    }
+
+    private IEnumerator drawTriangle(List<Vector3> triangle, Color color) {
+        Debug.Log(color.ToString());
+        foreach (var vert in triangle) {
+            Debug.Log(vert);
+        }
+
+        while (true) {
+            for (int i = 0; i < triangle.Count; i++) {
+                Debug.DrawLine(triangle[i], triangle[(i + 1) % triangle.Count], color);
+            }
+            yield return 0;
+        }
+    }
+
+    private void pointMake(Vector3 point, Color color) {
+        var p = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        p.transform.position = point;
+        p.transform.localScale = Vector3.one * 0.1f;
+        p.GetComponent<MeshRenderer>().material.color = color;
+    }
+
+    private void generateSimplexGrid() {
+        for (float x = 0; x < 5; x += 0.5f) {
+            for (float y = 0; y < 5; y += 0.5f) {
+                noiseCalcVisuals2(new Vector3(x, y), false);
+            }
+        }
+    }
+
+    private void noiseCalcVisuals2(Vector3 point, bool pointm = true) {
+        if (pointm)
+            pointMake(point, Color.blue);
+
+        float skew = 0;
+        float sx = point.x + skew;
+        float sy = point.y + skew;
+
+        int ix = Mathf.FloorToInt(sx);
+        int iy = Mathf.FloorToInt(sy);
+
+        List<Vector3> triangleSkew = new List<Vector3>();
+        List<Vector3> triangleUnskew = new List<Vector3>();
+
+        triangleUnskew.Add(Simplex2DPart2(point, ix, iy));
+        triangleUnskew.Add(Simplex2DPart2(point, ix + 1, iy + 1));
+
+        triangleSkew.Add(new Vector3(ix, iy));
+        triangleSkew.Add(new Vector3(ix + 1, iy + 1));
+
+        if (sx - ix >= sy - iy) { // Work out which triangle the point is inside
+            triangleUnskew.Add(Simplex2DPart2(point, ix + 1, iy));
+            triangleSkew.Add(new Vector3(ix + 1, iy));
+        } else {
+            triangleUnskew.Add(Simplex2DPart2(point, ix, iy + 1));
+            triangleSkew.Add(new Vector3(ix, iy + 1));
+        }
+
+        StartCoroutine(drawTriangle(triangleSkew, Color.red));
+        StartCoroutine(drawTriangle(triangleUnskew, Color.green));
+    }
+
+    private Vector3 Simplex2DPart2(Vector3 point, int ix, int iy) {
+        float unskew = (ix + iy) * squaresToTriangles;
+        return new Vector3(ix - unskew, iy - unskew);
     }
 }
