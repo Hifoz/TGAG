@@ -77,22 +77,6 @@ public class SettingsUI : MonoBehaviour {
     private void generateMenu() {
         GameObject panel = transform.GetChild(0).gameObject;
 
-
-        // DEV TOOLS:
-        GameObject devTools = addSection("Dev tools", panel);
-
-        GameObject threadCount = addSliderOption("WorldGenThreads", 
-            parent: devTools, 
-            minval: 1, 
-            maxval: Environment.ProcessorCount, 
-            isInt: true,
-            saveFunc: delegate {
-                Settings.WorldGenThreads = (int)PlayerPrefs.GetFloat("WorldGenThreads", Settings.WorldGenThreads);
-                return null;
-            }
-        );
-
-
         // AUDIO SETTINGS:
         GameObject audioSettings = addSection("Audio", panel);
 

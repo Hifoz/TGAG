@@ -435,7 +435,7 @@ public class WorldGenManager : MonoBehaviour {
     private IEnumerator orderAnimals(ChunkData cd) {
         const float animalSpawnChance = 0.08f; //This means that a chunk has a 2% chance to spawn an animal
         if (UnityEngine.Random.Range(0f, 1f) < animalSpawnChance) {
-            yield return new WaitForSeconds(1f); //Give the colliders a frame to initialize
+            yield return 0; //Give the chunks spawning this animal time to end up in physics system
 
             //Calculate spawn position
             Vector3 spawnPos = cd.pos + Vector3.up * (WorldGenConfig.chunkHeight + 10) + new Vector3(WorldGenConfig.chunkSize / 2, 0, WorldGenConfig.chunkSize / 2);
@@ -587,7 +587,6 @@ public class WorldGenManager : MonoBehaviour {
     /// </summary>
     /// <param name="threadCount">Threadcount to use after reset</param>
     public void Reset(int threadCount = 0) {
-        Settings.load();
         clear();
         worldOffset = Vector3.zero;
 
