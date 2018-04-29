@@ -19,6 +19,8 @@ public class MenuUI : MonoBehaviour {
 
     public GameObject collectionButtons;
 
+    public GameObject benchmarkButtons;
+
     //Variables for tracking player stats
     private Vector3 oldPlayerPos = Vector3.zero;
     private float distanceTraveled = 0;
@@ -54,6 +56,10 @@ public class MenuUI : MonoBehaviour {
                     GetComponent<Canvas>().enabled = true;
                     Time.timeScale = 0;
                 }
+            }
+        } else {
+            if (Input.GetKeyDown(KeyCode.F1)) {
+                benchmarkButtons.SetActive(!benchmarkButtons.activeInHierarchy);
             }
         }
 	}
