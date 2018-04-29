@@ -125,11 +125,12 @@ public class MenuUI : MonoBehaviour {
     /// </summary>
     public void startGame() {
         string seed = GameObject.Find("seedInputField").GetComponent<InputField>().text;
+        int maxSeedVal = 100000;
         if(seed.Trim() == "") {
             System.Random rng = new System.Random(System.DateTime.UtcNow.Millisecond); // Use c# epoch time as rng seed
-            WorldGenConfig.seed = rng.Next(0, int.MaxValue);
+            WorldGenConfig.seed = rng.Next(0, maxSeedVal);
         } else {
-            WorldGenConfig.seed = int.Parse(seed);
+            WorldGenConfig.seed = (int)(long.Parse(seed) % maxSeedVal);
         }
 
         SceneManager.LoadScene("main");
