@@ -8,9 +8,10 @@ public static class Settings {
         get {
             int threads = Environment.ProcessorCount;
             switch (threads) {
+                case 1: //Do single cores still exist?
                 case 2: //non HT dual core
                     return 1;
-                case 4: //non HT quad core
+                case 4: //non HT quad core or HT dual core
                     return 3;
                 case 6:
                     return 4;
