@@ -10,6 +10,7 @@ public class DebugUIController : MonoBehaviour {
 
     public GameObject chunkManagerDebug;
     public Text chunkManagerDebugText;
+    public GameObject fpsDisplay;
 
     public GameObject animalDebugger;
     private HashSet<GameObject> debuggedAnimals;
@@ -28,6 +29,8 @@ public class DebugUIController : MonoBehaviour {
     void Update() {
         if (Input.GetKeyDown(KeyCode.F1)) {
             toggleDebugInfo();
+        } else if (Input.GetKeyDown(KeyCode.F2)) {
+            fpsDisplay.SetActive(!fpsDisplay.activeInHierarchy);
         }
 
         if (chunkManagerDebug.activeSelf) {
