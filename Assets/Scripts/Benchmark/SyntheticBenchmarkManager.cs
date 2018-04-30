@@ -252,15 +252,17 @@ public class SyntheticBenchmarkManager : BenchmarkChunkManager {
             cd.terrainChunk.Add(subChunk);
         }
 
-        for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
-            GameObject waterChunk = createChunk();
-            waterChunk.transform.parent = chunk.transform;
-            waterChunk.transform.position = chunkMeshData.chunkPos;
-            MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
-            waterChunk.name = "waterSubChunk";
-            waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
-            waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
-            cd.waterChunk.Add(waterChunk);
+        if (chunkMeshData.waterMeshData != null) {
+            for (int i = 0; i < chunkMeshData.waterMeshData.Length; i++) {
+                GameObject waterChunk = createChunk();
+                waterChunk.transform.parent = chunk.transform;
+                waterChunk.transform.position = chunkMeshData.chunkPos;
+                MeshDataGenerator.applyMeshData(waterChunk.GetComponent<MeshFilter>(), chunkMeshData.waterMeshData[i]);
+                waterChunk.name = "waterSubChunk";
+                waterChunk.GetComponent<MeshRenderer>().sharedMaterial = materialWater;
+                waterChunk.GetComponent<MeshRenderer>().material.renderQueue = waterChunk.GetComponent<MeshRenderer>().material.shader.renderQueue;
+                cd.waterChunk.Add(waterChunk);
+            }
         }
 
         if (chunkMeshData.chunkPos.magnitude > 100) {

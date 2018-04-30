@@ -84,10 +84,6 @@ public class RealWorldBenchmarkManager : BenchmarkChunkManager {
                     lastSample = stopwatch.Elapsed.TotalSeconds;
                 }
 
-                if (UnityEngine.Random.Range(0f, 1f) < 0.01f) {
-                    dir = Quaternion.AngleAxis(UnityEngine.Random.Range(-45, 45), Vector3.up) * dir;
-                }
-
                 Vector3 playerPos = dummyPlayer.position;
                 playerPos += dir * playerSpeed * Time.deltaTime;
                 dummyPlayer.position = playerPos;
