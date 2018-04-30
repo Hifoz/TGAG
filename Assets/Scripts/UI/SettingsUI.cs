@@ -114,7 +114,7 @@ public class SettingsUI : MonoBehaviour {
             parent: videoSettings,
             elements: resolutions,
             saveFunc: delegate { // Update screen resolution
-                string[] dimensions = resolutions[PlayerPrefs.GetInt("Resolution")].Split('x');
+                string[] dimensions = resolutions[PlayerPrefs.GetInt("Resolution", 1)].Split('x');
                 Screen.SetResolution(Int32.Parse(dimensions[0]), Int32.Parse(dimensions[1]), Screen.fullScreen);
                 return null;
             }
@@ -133,7 +133,7 @@ public class SettingsUI : MonoBehaviour {
             parent: videoSettings,
             elements: new string[] { "Off", "On" },
             saveFunc: delegate {
-                QualitySettings.vSyncCount = PlayerPrefs.GetInt("Vsync", 1);
+                QualitySettings.vSyncCount = PlayerPrefs.GetInt("Vsync", 0);
                 return null;
             }
         );
