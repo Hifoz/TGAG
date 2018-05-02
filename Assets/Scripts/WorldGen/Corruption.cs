@@ -41,7 +41,6 @@ public class Corruption : MonoBehaviour {
     public static float corruptionFactor(Vector3 pos) {
         pos.y = 0;
         float corruptionFactor = (pos.magnitude - pristineWorldDistance) / (maxWorldDistance - pristineWorldDistance);
-        corruptionFactor = Mathf.Clamp01(corruptionFactor);
         return Mathf.Clamp01(corruptionFactor);
     }
 
@@ -52,8 +51,8 @@ public class Corruption : MonoBehaviour {
     /// <param name="corruptionFactor">corruption factor float</param>
     /// <returns>new height</returns>
     public static int corruptWaterHeight(int y, float corruptionFactor) {
-        int relativeWaterPos = WorldGenConfig.waterEndLevel - y;
-        return (int)Mathf.Lerp(WorldGenConfig.waterEndLevel, WorldGenConfig.chunkHeight * 0.75f, corruptionFactor) - relativeWaterPos;
+        float maxWaterHeight = WorldGenConfig.chunkHeight * 0.75f - WorldGenConfig.waterEndLevel;
+        return (int)(maxWaterHeight * corruptionFactor) + y;
     }
 
     /// <summary>

@@ -20,6 +20,9 @@ public class WaterAnimalBrainPlayer : AnimalBrainPlayer {
 
             state.desiredHeading = Camera.main.transform.forward;
             state.desiredHeading.Normalize();
+            oldHeading = state.desiredHeading;
+        } else {
+            state.desiredHeading = oldHeading;
         }
 
         Vector3 finalHeading = Vector3.zero;

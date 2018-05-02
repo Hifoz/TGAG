@@ -17,6 +17,9 @@ public class LandAnimalBrainPlayer : AnimalBrainPlayer {
             state.desiredHeading = Camera.main.transform.forward;
             state.desiredHeading.y = 0;
             state.desiredHeading.Normalize();
+            oldHeading = state.desiredHeading;
+        } else {
+            state.desiredHeading = oldHeading;
         }
 
         Vector3 finalHeading = Vector3.zero;

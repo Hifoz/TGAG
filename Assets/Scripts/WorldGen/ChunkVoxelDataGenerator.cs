@@ -15,7 +15,7 @@ public static class ChunkVoxelDataGenerator {
         bool inHeight = pos.y < height;
         bool inStructure = structure3DRate > structure;
         bool inUnstructure = unstructure3DRate < unstructure;
-        bool inCorruption = Mathf.Lerp(0, corruptionRate, corruptionFactor) > corruption;
+        bool inCorruption = corruptionRate * corruptionFactor > corruption;
         return (inHeight || inStructure || inCorruption) && (inUnstructure);
     }
 
@@ -38,7 +38,6 @@ public static class ChunkVoxelDataGenerator {
         else if (pos.y > biome.maxGroundHeight)
             return false;
         else {
-            float corruption = Corruption.corruptionNoise(pos, biome);
             return posContainsVoxel(
                 pos, height,
                 biome.structure3DRate, biome.unstructure3DRate, biome.corruptionRate,
