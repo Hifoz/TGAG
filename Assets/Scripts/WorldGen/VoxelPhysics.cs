@@ -4,19 +4,19 @@
 /// Target type for a raycast
 /// </summary>
 public enum VoxelRayCastTarget {
-    SOLID,
-    NON_SOLID,
-    WATER
+    SOLID,      //Block such as dirt and sand
+    NON_SOLID,  //Water, wind, none
+    WATER       //Only water
 }
 
 /// <summary>
 /// Result of a VoxelPhysics.rayCast
 /// </summary>
 public class VoxelRayCastHit {
-    public BlockData.BlockType type;
-    public Vector3 blockPos;
-    public Vector3 point;
-    public float distance;
+    public BlockData.BlockType type;    //block type of hit block
+    public Vector3 blockPos;            //Position of hit block
+    public Vector3 point;               //Position of hit
+    public float distance;              //Distance of hit to ray origin
 }
 
 /// <summary>
