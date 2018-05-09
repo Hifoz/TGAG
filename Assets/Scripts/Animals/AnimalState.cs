@@ -19,5 +19,4 @@ public class AnimalState {
     public Vector3 spineHeading = Vector3.forward;
 
     public Transform transform;
-
 }
