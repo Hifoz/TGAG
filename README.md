@@ -5,4 +5,6 @@ As you move further out into the world, you will notice the world starting to be
 You play as an animal, and can take over any animal that you meet in the world to take over their abilities. This will come in handy as not all animals can traverse every area in the world. For example: if you find yourself unable to fly over something, it might be because strong winds are pushing you back. 
 The wind always blows towards where you started, so if you have lost your direction you can use it to figure out what way you need to go!
 
+This is a bachelor project, made by Michael Bråten and Martin Bjerknes, students at NTNU in Gjøvik who are studying Game Programming.
+
 Please see [wiki](https://github.com/Hifoz/TGAG/wiki) for more information.
