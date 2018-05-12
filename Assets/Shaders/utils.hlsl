@@ -48,10 +48,6 @@ float noise(float3 x, float freq) {
 	return noise(x * freq);
 }
 
-float noise(float3 x, float3 freq) {
-	return noise(x * freq);
-}
-
 /*
 	A HLSL port of ingio quilez's noise function written in GLSL i found in a unity forum
 	https://forum.unity.com/threads/perlin-noise-procedural-shader.33725/

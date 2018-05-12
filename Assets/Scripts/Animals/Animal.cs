@@ -426,11 +426,10 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="stanceHeight">The height of the stance</param>
     virtual protected void groundedGravity(VoxelRayCastHit hit, Bone spine, float stanceHeight) {
         const float stanceTolerance = 16f;
-        float dist2ground = Vector3.Distance(hit.point, spine.bone.position);
-        float distFromStance = Mathf.Abs(stanceHeight - dist2ground);
+        float distFromStance = Mathf.Abs(stanceHeight - hit.distance);
         if (distFromStance <= stanceHeight) {
             state.grounded = true;
-            float sign = Mathf.Sign(dist2ground - stanceHeight);
+            float sign = Mathf.Sign(hit.distance - stanceHeight);
             if (distFromStance > (stanceHeight / stanceTolerance)) {
                 gravity = sign * Physics.gravity * Mathf.Pow(distFromStance / stanceHeight, 2);
             } else {
