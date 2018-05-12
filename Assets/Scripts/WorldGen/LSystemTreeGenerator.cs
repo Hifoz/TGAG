@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -24,7 +23,7 @@ public static class LSystemTreeGenerator {
     }
 
     //Defenition of language (the array is not used in the code)
-    private static char[] language = new char[] {
+    private static char[] alphabet = new char[] {
         'N', //Variable
         'M', //Second Variable
         'D', //Draw
