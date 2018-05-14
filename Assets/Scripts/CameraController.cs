@@ -20,7 +20,7 @@ public class CameraController : MonoBehaviour {
     private Vector3 rotationSmoothVelocity;
 
     private void Start() {
-        toggleMouse();
+        //toggleMouse();
     }
 
 
@@ -28,9 +28,9 @@ public class CameraController : MonoBehaviour {
     /// Update the rotation of the camera
     /// </summary>
 	void LateUpdate () {
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.L)) {
-            toggleMouse();
-        }
+        //if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.L)) {
+        //    toggleMouse();
+        //}
 
         yaw += Input.GetAxis("Mouse X");
         pitch = Mathf.Clamp(pitch - Input.GetAxis("Mouse Y"), -80, 80);

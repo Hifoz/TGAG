@@ -32,6 +32,8 @@ public class MenuUI : MonoBehaviour {
         if (SceneManager.GetActiveScene().name == "main") {
             GetComponent<Canvas>().enabled = false;
             Time.timeScale = 1;
+
+            Cursor.lockState = CursorLockMode.Locked;
         }
     }
 
@@ -52,9 +54,11 @@ public class MenuUI : MonoBehaviour {
             } else if (Input.GetKeyDown(KeyCode.Escape)) {
                 if (GetComponent<Canvas>().enabled) {
                     onResume();
+                    Cursor.lockState = CursorLockMode.Locked;
                 } else {
                     GetComponent<Canvas>().enabled = true;
                     Time.timeScale = 0;
+                    Cursor.lockState = CursorLockMode.None;
                 }
             }
         } else {
