@@ -137,7 +137,7 @@ public class MenuUI : MonoBehaviour {
             WorldGenConfig.seed = (int)(long.Parse(seed) % maxSeedVal);
         }
 
-        SceneManager.LoadScene("main");
+        SceneManager.LoadSceneAsync("main");
     }
 
     /// <summary>
