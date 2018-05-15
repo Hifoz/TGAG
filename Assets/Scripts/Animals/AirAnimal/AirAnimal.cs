@@ -75,6 +75,7 @@ public class AirAnimal : Animal {
         base.setAnimalBrain(brain);
         brain.addAction("launch", tryLaunch);
         brain.addAction("ascend", tryAscend);
+        acceleration = 5;
     }
 
     //                   _                 _   _                __                  _   _                 
