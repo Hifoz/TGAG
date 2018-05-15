@@ -148,7 +148,7 @@ public abstract class Animal : MonoBehaviour {
     /// <param name="offset">Offset value to apply</param>
     public void applyOffset(Vector3 offset) {
         transform.position -= offset;
-        if (brain.GetType().Equals(typeof(AnimalBrainNPC))) {
+        if (brain.GetType().IsSubclassOf(typeof(AnimalBrainNPC))) {
             ((AnimalBrainNPC)brain).applyOffset(offset);
         }
     }
