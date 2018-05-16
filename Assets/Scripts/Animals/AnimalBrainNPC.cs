@@ -7,11 +7,19 @@ public abstract class AnimalBrainNPC : AnimalBrain {
     virtual public float roamDist { get { return 50f; } }
     virtual public Vector3 RoamCenter { get { return roamCenter; } }
 
-/// <summary>
-/// Spawns the animal at position
-/// </summary>
-/// <param name="pos">Vector3 pos</param>
-override public void Spawn(Vector3 pos) {
+    /// <summary>
+    /// Applies offset to brain
+    /// </summary>
+    /// <param name="offset">Offset to use</param>
+    public void applyOffset(Vector3 offset) {
+        roamCenter -= offset;
+    }
+
+    /// <summary>
+    /// Spawns the animal at position
+    /// </summary>
+    /// <param name="pos">Vector3 pos</param>
+    override public void Spawn(Vector3 pos) {
         state.transform.position = pos;
         roamCenter = pos;
         roamCenter.y = 0;

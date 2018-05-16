@@ -142,6 +142,17 @@ public abstract class Animal : MonoBehaviour {
         displayMode = true;
     }
 
+    /// <summary>
+    /// Applies world shift offset to animal.
+    /// </summary>
+    /// <param name="offset">Offset value to apply</param>
+    public void applyOffset(Vector3 offset) {
+        transform.position -= offset;
+        if (brain.GetType().IsSubclassOf(typeof(AnimalBrainNPC))) {
+            ((AnimalBrainNPC)brain).applyOffset(offset);
+        }
+    }
+
     //    _   _                               _     _ _         __                  _   _                 
     //   | \ | |                             | |   | (_)       / _|                | | (_)                
     //   |  \| | ___  _ __ ______ _ __  _   _| |__ | |_  ___  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
