@@ -24,7 +24,7 @@ class NaiveMeshDataGenerator {
     protected Vector2 animalData; //This vector will populate the animal UV, contains data used for noise seed and animal skin type.
 
     public enum FaceDirection {
-        xp, xm, yp, ym, zp, zm
+        xp, yp, zp, xm, ym, zm
     }
 
 
@@ -115,9 +115,44 @@ class NaiveMeshDataGenerator {
         int vertIndex = vertices.Count;
 
         float delta = voxelSize / 2f;
-        pointPos = (pointPos - offset) * voxelSize;
+        pointPos = (pointPos - offset) * voxelSize + new Vector3(delta, delta, delta);
+
+
+        Vector3 dv = Vector3.zero;
+        Vector3 du = Vector3.zero;
+
+        int d = (int)dir % 3;
+        int u = (d + 1) % 3;
+        int v = (d + 2) % 3;
+        bool positive = (int)dir < 3;
+
+
+        du[u] = 2 * -delta;
+
+        dv[v] = 2 * -delta;
+
+
+        Vector3[] verts = new Vector3[] {
+            pointPos,
+            pointPos + du,
+            pointPos + du + dv,
+            pointPos      + dv
+        };
+
+        if (positive) {
+            vertices.AddRange(new Vector3[] { verts[0], verts[1], verts[2], verts[3] });
+        } else {
+            for (int i = 0; i < 4; i++) {
+                verts[i][d] -= 2 * delta;
+            }
+            vertices.AddRange(new Vector3[] { verts[2], verts[1], verts[0], verts[3] });
+        }
+
+
 
         Vector3 normalDir = Vector3.zero;
+        normalDir[d] = positive ? 1 : -1;
+        /*
         switch (dir) {
             case FaceDirection.xp:
                 vertices.AddRange(new Vector3[]{pointPos + new Vector3(delta, -delta, -delta),
@@ -161,21 +196,12 @@ class NaiveMeshDataGenerator {
                                             pointPos + new Vector3(delta,   delta, -delta)});
                 normalDir = new Vector3(0, 0, -1);
                 break;
-        }
+        }*/
         normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
 
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
-        triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
+        triangles.AddRange(new int[] { vertIndex, vertIndex + 2, vertIndex + 3 });
 
-//<<<<<<< HEAD
-//        if (meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
-//            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
-//        } else {
-//            addTextureCoordinates(blockData, dir);
-//            if (meshDataType != MeshDataGenerator.MeshDataType.BASIC) {
-//                addSliceData(blockData, dir);
-//            }
-//=======
 
         switch (meshDataType) {
             case MeshDataGenerator.MeshDataType.ANIMAL:
