@@ -24,7 +24,7 @@ class NaiveMeshDataGenerator {
     protected Vector2 animalData; //This vector will populate the animal UV, contains data used for noise seed and animal skin type.
 
     public enum FaceDirection {
-        xp, xm, yp, ym, zp, zm
+        xp, yp, zp, xm, ym, zm
     }
 
 
@@ -108,90 +108,61 @@ class NaiveMeshDataGenerator {
     /// <summary>
     /// Generates the mesh data for a face of a cube
     /// </summary>
-    /// <param name="dir">direction of face</param>
+    /// <param name="faceDir">direction of face</param>
     /// <param name="pointPos">point position of the cube</param>
     /// <param name="cubetype">what type of cube it is, used to color the cube</param>
-    protected void GenerateCubeFace(FaceDirection dir, Vector3 pointPos, BlockData blockData, float voxelSize) {
+    protected void GenerateCubeFace(FaceDirection faceDir, Vector3 pointPos, BlockData blockData, float voxelSize) {
         int vertIndex = vertices.Count;
 
-        float delta = voxelSize / 2f;
-        pointPos = (pointPos - offset) * voxelSize;
+        pointPos = (pointPos - offset + (Vector3.one * 0.5f)) * voxelSize;
+
+        int dir = (int)faceDir % 3;
+
+        Vector3 du = Vector3.zero;
+        Vector3 dv = Vector3.zero;
+
+        du[(dir + 1) % 3] = -voxelSize; // Offset in "relative x direction" \ Relative as if you were facing down a
+        dv[(dir + 2) % 3] = -voxelSize; // Offset in "relative y direction" / 2d perspective of the face direction
+
+        Vector3[] verts = new Vector3[] {
+            pointPos,
+            pointPos + du,
+            pointPos + du + dv,
+            pointPos      + dv
+        };
+
+        if ((int)faceDir < 3) {
+            vertices.AddRange(new Vector3[] { verts[0], verts[1], verts[2], verts[3] });
+        } else {
+            for (int i = 0; i < 4; i++) {
+                verts[i][dir] -= voxelSize;
+            }
+            vertices.AddRange(new Vector3[] { verts[2], verts[1], verts[0], verts[3] });
+        }
 
         Vector3 normalDir = Vector3.zero;
-        switch (dir) {
-            case FaceDirection.xp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(delta, -delta, -delta),
-                                            pointPos + new Vector3(delta,  delta, -delta),
-                                            pointPos + new Vector3(delta, -delta,  delta),
-                                            pointPos + new Vector3(delta,  delta,  delta)});
-                normalDir = new Vector3(1, 0, 0);
-                break;
-            case FaceDirection.xm:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
-                                            pointPos + new Vector3(-delta, -delta,  delta),
-                                            pointPos + new Vector3(-delta,  delta, -delta),
-                                            pointPos + new Vector3(-delta,  delta,  delta)});
-                normalDir = new Vector3(-1, 0, 0);
-                break;
-            case FaceDirection.yp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, delta, -delta),
-                                            pointPos + new Vector3(-delta, delta,  delta),
-                                            pointPos + new Vector3(delta,  delta, -delta),
-                                            pointPos + new Vector3(delta,  delta,  delta)});
-                normalDir = new Vector3(0, 1, 0);
-                break;
-            case FaceDirection.ym:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
-                                            pointPos + new Vector3(delta,  -delta, -delta),
-                                            pointPos + new Vector3(-delta, -delta,  delta),
-                                            pointPos + new Vector3(delta,  -delta,  delta)});
-                normalDir = new Vector3(0, -1, 0);
-                break;
-            case FaceDirection.zp:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, delta),
-                                            pointPos + new Vector3(delta,  -delta, delta),
-                                            pointPos + new Vector3(-delta,  delta, delta),
-                                            pointPos + new Vector3(delta,   delta, delta)});
-                normalDir = new Vector3(0, 0, 1);
-                break;
-            case FaceDirection.zm:
-                vertices.AddRange(new Vector3[]{pointPos + new Vector3(-delta, -delta, -delta),
-                                            pointPos + new Vector3(-delta,  delta, -delta),
-                                            pointPos + new Vector3(delta,  -delta, -delta),
-                                            pointPos + new Vector3(delta,   delta, -delta)});
-                normalDir = new Vector3(0, 0, -1);
-                break;
-        }
+        normalDir[dir] = (int)faceDir < 3 ? 1 : -1;
         normals.AddRange(new Vector3[] { normalDir, normalDir, normalDir, normalDir });
 
         triangles.AddRange(new int[] { vertIndex, vertIndex + 1, vertIndex + 2 });
-        triangles.AddRange(new int[] { vertIndex + 2, vertIndex + 1, vertIndex + 3 });
+        triangles.AddRange(new int[] { vertIndex, vertIndex + 2, vertIndex + 3 });
 
-//<<<<<<< HEAD
-//        if (meshDataType == MeshDataGenerator.MeshDataType.ANIMAL) {
-//            addSliceData(vertices.GetRange(vertices.Count - 4, 4));
-//        } else {
-//            addTextureCoordinates(blockData, dir);
-//            if (meshDataType != MeshDataGenerator.MeshDataType.BASIC) {
-//                addSliceData(blockData, dir);
-//            }
-//=======
 
         switch (meshDataType) {
             case MeshDataGenerator.MeshDataType.ANIMAL:
                 encodePositionalData(vertices.GetRange(vertices.Count - 4, 4));
                 break;
             case MeshDataGenerator.MeshDataType.TERRAIN:
-                addColorDataTerrain(blockData, dir);
-                addTextureCoordinates(blockData, dir);
+                addColorDataTerrain(blockData, faceDir);
+                addTextureCoordinates(blockData, faceDir);
                 break;
             case MeshDataGenerator.MeshDataType.TREE:
-                addColorDataTree(blockData, dir);
-                addTextureCoordinates(blockData, dir);
+                addColorDataTree(blockData, faceDir);
+                addTextureCoordinates(blockData, faceDir);
                 break;
             case MeshDataGenerator.MeshDataType.BASIC:
             case MeshDataGenerator.MeshDataType.WATER:
-                addTextureCoordinates(blockData, dir);
+                addTextureCoordinates(blockData, faceDir);
                 break;
         }
     }
@@ -264,37 +235,20 @@ class NaiveMeshDataGenerator {
     /// <param name="isBaseType">Whether it is the base block type, if false it is a modifier type</param>
     protected void addTextureCoordinates(BlockData blockData, FaceDirection faceDir) {
 
+        // Texture coordinates in default order.
         Vector2[] coords = new Vector2[]{
-        new Vector2(0, 0), new Vector2(0, 1),
-        new Vector2(1, 0), new Vector2(1, 1)
-    };
+            new Vector2(0, 1), new Vector2(1, 0),
+            new Vector2(0, 0), new Vector2(1, 1)
+        };
 
-        int[,] rotations = new int[,] {
-        { 0, 1, 2, 3 },
-        { 2, 0, 3, 1 },
-        { 3, 2, 1, 0 },
-        { 1, 3, 0, 2 }
-    };
-
-        // Select a rotation for the texture
-        int rotation;
-
-        switch (faceDir) {
-            case FaceDirection.xp:
-            case FaceDirection.zm:
-                rotation = 0;
-                break;
-            case FaceDirection.xm:
-            case FaceDirection.zp:
-                rotation = 1;
-                break;
-            default: // yp & ym
-                rotation = 2;
-                break;
-        }
+        // The offsets for the texture coords for each direction. 
+        // Y directions are set to 10 because the rotation doesn't matter in our context, and we don't use the texcoords in y-direction anyways.
+        int[] offsets = new int[] {
+            0, 10, 3, 1, 10, 2
+        };
 
         for (int i = 0; i < 4; i++) {
-            uvs.Add(coords[rotations[rotation, i]]);
+            uvs.Add(coords[(i + offsets[(int)faceDir]) % 4]);
         }
 
     }
