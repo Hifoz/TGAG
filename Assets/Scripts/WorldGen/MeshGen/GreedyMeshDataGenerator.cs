@@ -65,11 +65,11 @@ class GreedyMeshDataGenerator {
     /// <summary>
     /// Generates the meshdata
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Mesh Data</returns>
     public MeshData[] generateMeshData() {
         // Go over the it in the three dimensions
         for(int d = 0; d < 3; d++) {
-            int u = (d+1) % 3; // u and v are the other two dimensions, kinda like the "local" x and y in this dimension d
+            int u = (d+1) % 3; // u and v are the other two dimensions, kinda like the "local" x and y in the current dimension "d"
             int v = (d+2) % 3;
             Vector3Int x = Vector3Int.zero; // Contains the position of the voxel in xyz space
             Vector3Int q = Vector3Int.zero; // Offset for second voxel to check
