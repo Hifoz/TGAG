@@ -43,7 +43,7 @@ public class BiomeManager {
 
         // Initialize biome points
         biomeGrid = new Pair<BiomeBase, Vector2Int>[gridWidth, gridHeight];
-        poissonSampler = new PoissonDiscSampler(radius, gridWidth, gridHeight, wrap: true, seed: WorldGenConfig.seed);
+        poissonSampler = new PoissonDiscSampler(radius, gridWidth, gridHeight, seed: WorldGenConfig.seed, wrap: false);
         Vector2Int offset = new Vector2Int(gridWidth / 2, gridHeight / 2);
         foreach (Vector2Int sample in poissonSampler.sample()) {
             biomeGrid[sample.x, sample.y] = new Pair<BiomeBase, Vector2Int>(biomes[rng.Next(0, biomes.Count)], (sample - offset) * gridScale);

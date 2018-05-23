@@ -35,7 +35,6 @@ public class BlockDataMap {
     /// <param name="z">z of 3d index</param>
     /// <returns>1d index</returns>
     public int index1D(int x, int y, int z) {
-        //Got index out of bounds errors, seemed to be an off by 1 error, so added -1 to sizes
         return Mathf.Clamp(x, 0, sizeX - 1) + (Mathf.Clamp(y, 0, sizeY - 1) + Mathf.Clamp(z, 0, sizeZ - 1) * sizeY) * sizeX;
     }
 

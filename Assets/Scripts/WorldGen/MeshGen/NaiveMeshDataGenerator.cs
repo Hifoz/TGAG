@@ -4,6 +4,9 @@ using System.Linq;
 using UnityEngine;
 
 
+/// <summary>
+/// Used to generate MeshData for a BlockDataMap
+/// </summary>
 class NaiveMeshDataGenerator {
     BlockDataMap blockDataMap;
 
@@ -27,7 +30,14 @@ class NaiveMeshDataGenerator {
         xp, yp, zp, xm, ym, zm
     }
 
-
+    /// <summary>
+    /// Initialize the generator
+    /// </summary>
+    /// <param name="blockDataMap">BlockDataMap to generate MeshData for</param>
+    /// <param name="voxelSize">Voxel scaling</param>
+    /// <param name="offset">Voxel offset</param>
+    /// <param name="meshDataType">What type of mesh we are generating</param>
+    /// <param name="seed">Used for seeding an animal's textures</param>
     public NaiveMeshDataGenerator(BlockDataMap blockDataMap, float voxelSize = 1f, Vector3 offset = default(Vector3),
                                   MeshDataGenerator.MeshDataType meshDataType = MeshDataGenerator.MeshDataType.TERRAIN,
                                   int seed = -1) {
@@ -45,6 +55,10 @@ class NaiveMeshDataGenerator {
         }
     }
 
+    /// <summary>
+    /// Generates the Mesh Data
+    /// </summary>
+    /// <returns>Mesh Data, separated into pieces that are small enough for the Mesh class to handle</returns>
     public MeshData[] generateMeshData() {
         for (int x = 1; x < blockDataMap.GetLength(0) - 1; x++) {
             for (int y = 0; y < blockDataMap.GetLength(1); y++) {

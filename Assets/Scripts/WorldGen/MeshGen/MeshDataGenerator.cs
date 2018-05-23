@@ -33,7 +33,6 @@ public class MeshDataGenerator {
         if (seed == -1)
             seed = seedGen.randomInt();
 
-        // DONT USE GREEDY MESH GEN FOR ALL THINGS
         if (genMode == GeneratorMode.GREEDY && meshDataType != MeshDataType.ANIMAL) { // Cannot use greedy generator with animals meshes because of movement
             GreedyMeshDataGenerator gmg = new GreedyMeshDataGenerator(pointmap, voxelSize, offset, meshDataType);
             return gmg.generateMeshData();
