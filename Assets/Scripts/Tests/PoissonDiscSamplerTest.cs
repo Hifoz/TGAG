@@ -14,7 +14,7 @@ class PoissonDiscSamplerTest : MonoBehaviour {
 
 
     private void Start() {
-        sampler = new PoissonDiscSampler(5, 100, 100, true);
+        sampler = new PoissonDiscSampler(5, 100, 100, 1337, true);
         StartCoroutine(run());
         //randomComparion();
     }

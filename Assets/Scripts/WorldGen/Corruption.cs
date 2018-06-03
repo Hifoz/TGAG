@@ -14,7 +14,7 @@ public class Corruption : MonoBehaviour {
     private Vector3 lastSunTarget = new Vector3(50, -30, 0);
     private float timer = 1;
 
-    private const float maxWorldDistance = 20000f; //Distance to edge of the world
+    private const float maxWorldDistance = 5000f; //Distance to edge of the world
     private const float pristineWorldDistance = 1000f;
 
     private void Update() {

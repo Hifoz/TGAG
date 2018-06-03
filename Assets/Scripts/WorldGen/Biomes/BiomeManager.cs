@@ -16,8 +16,8 @@ public class BiomeManager {
 
     private PoissonDiscSampler poissonSampler;
     private int radius = 5;
-    private int gridWidth = 500;
-    private int gridHeight = 500;
+    private int gridWidth = 200;
+    private int gridHeight = 200;
 
     public static float borderWidth = 50;
 
